@@ -10,6 +10,9 @@ All notable changes to this package are documented here. Format follows
   loaded document is taller than the visible editor area.
 
 ### Added
+- Line numbers in the gutter, toggled by the new "Lines" toolbar button;
+  scroll-synced with the text. (Numbers are per logical line, so they can
+  drift beside wrapped lines when Wrap is on.)
 - Multiple open files as tabs: New/Open create tabs, opening an
   already-open file switches to its tab, per-tab dirty guard on close
   (middle-click or × to close). Open tabs survive domain reloads.
