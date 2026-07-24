@@ -5,6 +5,10 @@ All notable changes to this package are documented here. Format follows
 
 ## [Unreleased]
 
+### Fixed
+- Status bar no longer gets pushed off the bottom of the window when the
+  loaded document is taller than the visible editor area.
+
 ### Added
 - Project window context menu item **Assets → Open in ADKOM Text Editor**
   for `.cs` files; reuses the existing editor window when one is open.
