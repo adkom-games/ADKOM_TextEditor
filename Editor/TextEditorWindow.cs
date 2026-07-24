@@ -20,9 +20,12 @@ namespace ADKOM.TextEditor
         [SerializeField] List<TextDocument> _docs = new List<TextDocument>();
         [SerializeField] int _active;
         [SerializeField] bool _wordWrap = true;
+        [SerializeField] bool _showLineNumbers;
 
         TextField _textField;
         VisualElement _gutter;
+        Label _gutterLabel;
+        int _gutterLineCount = -1;
         VisualElement _tabBar;
         Label _statusLeft;
         Label _statusRight;
@@ -81,6 +84,9 @@ namespace ADKOM.TextEditor
             toolbar.Add(ToolbarBtn("Save", () => SaveFile(false)));
             toolbar.Add(ToolbarBtn("Save As", () => SaveFile(true)));
             toolbar.Add(new ToolbarSpacer { flex = true });
+            var linesToggle = new ToolbarToggle { text = "Lines", value = _showLineNumbers };
+            linesToggle.RegisterValueChangedCallback(e => { _showLineNumbers = e.newValue; ApplyLineNumbers(); });
+            toolbar.Add(linesToggle);
             var wrapToggle = new ToolbarToggle { text = "Wrap", value = _wordWrap };
             wrapToggle.RegisterValueChangedCallback(e => { _wordWrap = e.newValue; ApplyWrap(); });
             toolbar.Add(wrapToggle);
@@ -96,7 +102,8 @@ namespace ADKOM.TextEditor
             editorRow.style.flexDirection = FlexDirection.Row;
 
             _gutter = new VisualElement { name = "gutter" };
-            _gutter.style.display = DisplayStyle.None; // reserved for line numbers
+            _gutterLabel = new Label();
+            _gutter.Add(_gutterLabel);
             editorRow.Add(_gutter);
 
             _textField = new TextField { multiline = true, name = "text-area" };
@@ -119,9 +126,16 @@ namespace ADKOM.TextEditor
             root.Add(status);
 
             ApplyWrap();
+            ApplyLineNumbers();
             RebuildTabs();
             UpdateTitle();
             UpdateStatus();
+
+            // The internal ScrollView exists once the field is built; mirror its
+            // vertical offset onto the gutter so numbers track the text.
+            var scrollView = _textField.Q<ScrollView>();
+            if (scrollView != null)
+                scrollView.verticalScroller.valueChanged += _ => SyncGutterScroll();
 
             // Caret moves don't fire value changes; poll cheaply for line:col.
             root.schedule.Execute(UpdateStatus).Every(200);
@@ -133,6 +147,7 @@ namespace ADKOM.TextEditor
         void OnTextChanged(ChangeEvent<string> e)
         {
             Active.Content = e.newValue;
+            UpdateGutter();
             if (!Active.IsDirty)
             {
                 Active.IsDirty = true;
@@ -155,6 +170,46 @@ namespace ADKOM.TextEditor
             if (_textField == null) return;
             var input = _textField.Q(className: "unity-text-field__input") ?? _textField;
             input.style.whiteSpace = _wordWrap ? WhiteSpace.Normal : WhiteSpace.NoWrap;
+        }
+
+        // --- Line numbers ---
+
+        void ApplyLineNumbers()
+        {
+            if (_gutter == null) return;
+            _gutter.style.display = _showLineNumbers ? DisplayStyle.Flex : DisplayStyle.None;
+            _gutterLineCount = -1; // force rebuild
+            UpdateGutter();
+            SyncGutterScroll();
+        }
+
+        void UpdateGutter()
+        {
+            if (!_showLineNumbers || _gutterLabel == null) return;
+
+            int lines = 1;
+            string content = Active.Content;
+            for (int i = 0; i < content.Length; i++)
+                if (content[i] == '\n') lines++;
+            if (lines == _gutterLineCount) return;
+            _gutterLineCount = lines;
+
+            var sb = new System.Text.StringBuilder(lines * 3);
+            for (int n = 1; n <= lines; n++) sb.Append(n).Append('\n');
+            _gutterLabel.text = sb.ToString(0, sb.Length - 1);
+
+            // Match the text input's top padding so row 1 lines up with line 1.
+            var input = _textField?.Q(className: "unity-text-field__input");
+            if (input != null)
+                _gutterLabel.style.marginTop = input.resolvedStyle.paddingTop;
+        }
+
+        void SyncGutterScroll()
+        {
+            if (!_showLineNumbers || _gutterLabel == null || _textField == null) return;
+            var scrollView = _textField.Q<ScrollView>();
+            if (scrollView != null)
+                _gutterLabel.style.translate = new Translate(0, -scrollView.scrollOffset.y);
         }
 
         // --- Tabs ---
@@ -196,6 +251,8 @@ namespace ADKOM.TextEditor
             EnsureDocs();
             _active = Mathf.Clamp(index, 0, _docs.Count - 1);
             _textField?.SetValueWithoutNotify(_formatter.Format(Active.Content));
+            _gutterLineCount = -1;
+            UpdateGutter();
             RebuildTabs();
             UpdateTitle();
             UpdateStatus();

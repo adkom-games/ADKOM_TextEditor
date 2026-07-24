@@ -58,10 +58,22 @@
 
 #gutter {
     min-width: 40px;
+    flex-shrink: 0;
+    overflow: hidden;
     border-right-width: 1px;
     border-right-color: rgba(128, 128, 128, 0.35);
-    -unity-text-align: upper-right;
     padding-right: 4px;
+}
+
+#gutter Label {
+    /* Must match #text-area input metrics so rows align with lines. */
+    font-size: 13px;
+    -unity-font-style: normal;
+    -unity-text-align: upper-right;
+    white-space: nowrap;
+    opacity: 0.55;
+    margin: 0;
+    padding: 0;
 }
 
 #status-bar {
