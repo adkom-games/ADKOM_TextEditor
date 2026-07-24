@@ -7,8 +7,13 @@ namespace ADKOM.TextEditor
     /// A named editor color theme. Each theme carries a dark and a light
     /// palette; <see cref="Current"/> follows the Unity Editor skin.
     /// </summary>
+    public enum ThemeMode { Auto, Dark, Light }
+
     public sealed class HighlightTheme
     {
+        /// <summary>Global palette mode: Auto follows the Unity Editor skin.</summary>
+        public static ThemeMode Mode = ThemeMode.Auto;
+
         public sealed class Palette
         {
             public string Text;
@@ -29,7 +34,12 @@ namespace ADKOM.TextEditor
         public string Name { get; }
         public Palette Dark { get; }
         public Palette Light { get; }
-        public Palette Current => EditorGUIUtility.isProSkin ? Dark : Light;
+        public Palette Current => Mode switch
+        {
+            ThemeMode.Dark => Dark,
+            ThemeMode.Light => Light,
+            _ => EditorGUIUtility.isProSkin ? Dark : Light
+        };
 
         HighlightTheme(string name, Palette dark, Palette light)
         {

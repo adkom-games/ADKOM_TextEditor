@@ -17,8 +17,9 @@ All notable changes to this package are documented here. Format follows
 - Color themes with two built-in palettes — VS Code (Dark+/Light+) and
   JetBrains Rider (Rider Dark/IntelliJ Light) — selectable from the new
   Theme toolbar menu, applied to token colors, editor background, text,
-  gutter, and caret. Follows the Editor's dark/light skin; persists via
-  EditorPrefs.
+  gutter, and caret. A light/dark mode selector in the same menu chooses
+  Auto (follow the Editor skin, default), Dark, or Light; both choices
+  persist via EditorPrefs.
 - Line numbers in the gutter, toggled by the new "Lines" toolbar button;
   scroll-synced with the text. (Numbers are per logical line, so they can
   drift beside wrapped lines when Wrap is on.)
