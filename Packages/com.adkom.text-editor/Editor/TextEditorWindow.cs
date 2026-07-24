@@ -30,6 +30,7 @@ namespace ADKOM.TextEditor
         Label _statusLeft;
         Label _statusRight;
 
+        Label _highlight;
         ITextFormatter _formatter = new PlainTextFormatter();
 
         TextDocument Active => _docs[_active];
@@ -127,11 +128,25 @@ namespace ADKOM.TextEditor
             _textField = new TextField { multiline = true, name = "text-area" };
             _textField.style.flexGrow = 1;
             _textField.verticalScrollerVisibility = ScrollerVisibility.Auto;
-            _textField.SetValueWithoutNotify(_formatter.Format(Active.Content));
+            _textField.SetValueWithoutNotify(Active.Content);
             _textField.RegisterValueChangedCallback(OnTextChanged);
             _textField.RegisterCallback<KeyDownEvent>(OnKeyDown, TrickleDown.TrickleDown);
             editorRow.Add(_textField);
             root.Add(editorRow);
+
+            // Syntax-highlight overlay: an editable TextField cannot render rich
+            // text, so the colored markup is drawn by a Label pinned over the
+            // text element; when active, the editable glyphs go transparent and
+            // only the caret/selection of the field remain visible.
+            var textElement = _textField.Q<TextElement>();
+            _highlight = new Label { name = "highlight-overlay", enableRichText = true };
+            _highlight.pickingMode = PickingMode.Ignore;
+            _highlight.style.position = Position.Absolute;
+            _highlight.style.left = 0;
+            _highlight.style.top = 0;
+            _highlight.style.right = 0;
+            _highlight.style.bottom = 0;
+            textElement.Add(_highlight);
 
             // --- Status bar ---
             var status = new VisualElement { name = "status-bar" };
@@ -145,6 +160,7 @@ namespace ADKOM.TextEditor
 
             ApplyWrap();
             ApplyLineNumbers();
+            RefreshHighlight();
             RebuildTabs();
             UpdateTitle();
             UpdateStatus();
@@ -166,6 +182,7 @@ namespace ADKOM.TextEditor
         {
             Active.Content = e.newValue;
             UpdateGutter();
+            RefreshHighlight();
             if (!Active.IsDirty)
             {
                 Active.IsDirty = true;
@@ -188,6 +205,33 @@ namespace ADKOM.TextEditor
             if (_textField == null) return;
             var input = _textField.Q(className: "unity-text-field__input") ?? _textField;
             input.style.whiteSpace = _wordWrap ? WhiteSpace.Normal : WhiteSpace.NoWrap;
+            if (_highlight != null)
+                _highlight.style.whiteSpace = _wordWrap ? WhiteSpace.Normal : WhiteSpace.NoWrap;
+        }
+
+        // --- Syntax highlighting ---
+
+        void RefreshHighlight()
+        {
+            _formatter = TextFormatters.ForPath(Active.HasFile ? Active.FilePath : null);
+            var textElement = _textField?.Q<TextElement>();
+            if (textElement == null || _highlight == null) return;
+
+            bool rich = !(_formatter is PlainTextFormatter);
+            _highlight.style.display = rich ? DisplayStyle.Flex : DisplayStyle.None;
+            if (rich)
+            {
+                textElement.style.color = Color.clear;
+                _highlight.text = _formatter.Format(Active.Content);
+                // Transparent glyphs must not take the caret with them.
+                _textField.textSelection.cursorColor =
+                    EditorGUIUtility.isProSkin ? new Color(0.82f, 0.82f, 0.82f) : Color.black;
+            }
+            else
+            {
+                textElement.style.color = StyleKeyword.Null;
+                _highlight.text = string.Empty;
+            }
         }
 
         // --- Line numbers ---
@@ -269,9 +313,10 @@ namespace ADKOM.TextEditor
             EnsureDocs();
             _active = Mathf.Clamp(index, 0, _docs.Count - 1);
             CheckExternalChange(Active);
-            _textField?.SetValueWithoutNotify(_formatter.Format(Active.Content));
+            _textField?.SetValueWithoutNotify(Active.Content);
             _gutterLineCount = -1;
             UpdateGutter();
+            RefreshHighlight();
             RebuildTabs();
             UpdateTitle();
             UpdateStatus();
@@ -327,6 +372,7 @@ namespace ADKOM.TextEditor
             bool saved = saveAs ? FileService.SaveAs(Active) : FileService.Save(Active);
             if (saved)
             {
+                RefreshHighlight(); // Save As can change the extension/language
                 RebuildTabs();
                 UpdateTitle();
                 UpdateStatus();
@@ -374,9 +420,10 @@ namespace ADKOM.TextEditor
             if (_docs == null || _docs.Count == 0) return;
             if (CheckExternalChange(Active))
             {
-                _textField?.SetValueWithoutNotify(_formatter.Format(Active.Content));
+                _textField?.SetValueWithoutNotify(Active.Content);
                 _gutterLineCount = -1;
                 UpdateGutter();
+                RefreshHighlight();
                 RebuildTabs();
                 UpdateTitle();
             }
