@@ -401,7 +401,7 @@ namespace ADKOM.TextEditor
         void UpdateTitle()
         {
             EnsureDocs();
-            titleContent = new GUIContent((Active.IsDirty ? "*" : "") + Active.DisplayName,
+            titleContent = new GUIContent("ATE - " + (Active.IsDirty ? "*" : "") + Active.DisplayName,
                 Active.HasFile ? Active.FilePath : "New unsaved document");
         }
 
