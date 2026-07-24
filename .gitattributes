@@ -7,7 +7,10 @@
 # and distributed under MIT License.
 
 # Define macros (only works in top-level gitattributes files)
-[attr]lfs               filter=lfs diff=lfs merge=lfs -text
+# NOTE: this repo does NOT use Git LFS — binaries are stored as plain blobs.
+# The 'lfs' macro is kept as a plain binary marker so the template's file
+# lists still apply; do not re-add the LFS filter without migrating blobs.
+[attr]lfs               -text
 [attr]unity-json        eol=lf linguist-language=json
 [attr]unity-yaml        merge=unityyamlmerge eol=lf linguist-language=yaml
 
