@@ -31,6 +31,7 @@ namespace ADKOM.TextEditor
         Label _statusRight;
 
         Label _highlight;
+        string _highlightSource;
         ITextFormatter _formatter = new PlainTextFormatter();
 
         TextDocument Active => _docs[_active];
@@ -138,15 +139,15 @@ namespace ADKOM.TextEditor
             // text, so the colored markup is drawn by a Label pinned over the
             // text element; when active, the editable glyphs go transparent and
             // only the caret/selection of the field remain visible.
+            // MUST be a SIBLING of the text element, never a child: nested
+            // TextElements join the parent's text generation and hang the editor.
             var textElement = _textField.Q<TextElement>();
             _highlight = new Label { name = "highlight-overlay", enableRichText = true };
             _highlight.pickingMode = PickingMode.Ignore;
             _highlight.style.position = Position.Absolute;
-            _highlight.style.left = 0;
-            _highlight.style.top = 0;
-            _highlight.style.right = 0;
-            _highlight.style.bottom = 0;
-            textElement.Add(_highlight);
+            textElement.parent.Add(_highlight);
+            textElement.RegisterCallback<GeometryChangedEvent>(_ => SyncHighlightRect(textElement));
+            SyncHighlightRect(textElement);
 
             // --- Status bar ---
             var status = new VisualElement { name = "status-bar" };
@@ -211,6 +212,16 @@ namespace ADKOM.TextEditor
 
         // --- Syntax highlighting ---
 
+        void SyncHighlightRect(TextElement textElement)
+        {
+            if (_highlight == null) return;
+            var r = textElement.layout;
+            _highlight.style.left = r.x;
+            _highlight.style.top = r.y;
+            _highlight.style.width = r.width;
+            _highlight.style.height = r.height;
+        }
+
         void RefreshHighlight()
         {
             _formatter = TextFormatters.ForPath(Active.HasFile ? Active.FilePath : null);
@@ -222,7 +233,11 @@ namespace ADKOM.TextEditor
             if (rich)
             {
                 textElement.style.color = Color.clear;
-                _highlight.text = _formatter.Format(Active.Content);
+                if (!ReferenceEquals(_highlightSource, Active.Content))
+                {
+                    _highlightSource = Active.Content;
+                    _highlight.text = _formatter.Format(Active.Content);
+                }
                 // Transparent glyphs must not take the caret with them.
                 _textField.textSelection.cursorColor =
                     EditorGUIUtility.isProSkin ? new Color(0.82f, 0.82f, 0.82f) : Color.black;
@@ -231,6 +246,7 @@ namespace ADKOM.TextEditor
             {
                 textElement.style.color = StyleKeyword.Null;
                 _highlight.text = string.Empty;
+                _highlightSource = null;
             }
         }
 
