@@ -32,7 +32,9 @@ namespace ADKOM.TextEditor
         TextField _textField;
         VisualElement _gutter;
         Label _gutterLabel;
-        int _gutterLineCount = -1;
+        string _gutterSource;
+        float _gutterWidth;
+        bool _gutterWrap;
         VisualElement _tabBar;
         Label _statusLeft;
         Label _statusRight;
@@ -172,7 +174,11 @@ namespace ADKOM.TextEditor
             _highlight.style.position = Position.Absolute;
             _highlightClip.Add(_highlight);
             editorRow.Add(_highlightClip); // added after the field: draws on top
-            _textField.RegisterCallback<GeometryChangedEvent>(_ => SyncHighlightRect());
+            _textField.RegisterCallback<GeometryChangedEvent>(_ =>
+            {
+                SyncHighlightRect();
+                UpdateGutter(); // wrap width changed: recompute wrapped-row padding
+            });
 
             // --- Status bar ---
             var status = new VisualElement { name = "status-bar" };
@@ -236,6 +242,7 @@ namespace ADKOM.TextEditor
             input.style.whiteSpace = _wordWrap ? WhiteSpace.Normal : WhiteSpace.NoWrap;
             if (_highlight != null)
                 _highlight.style.whiteSpace = _wordWrap ? WhiteSpace.Normal : WhiteSpace.NoWrap;
+            UpdateGutter(); // wrap mode changes the gutter's row padding
         }
 
         // --- Theme ---
@@ -320,7 +327,7 @@ namespace ADKOM.TextEditor
         {
             if (_gutter == null) return;
             _gutter.style.display = _showLineNumbers ? DisplayStyle.Flex : DisplayStyle.None;
-            _gutterLineCount = -1; // force rebuild
+            _gutterSource = null; // force rebuild
             UpdateGutter();
             SyncGutterScroll();
         }
@@ -329,16 +336,46 @@ namespace ADKOM.TextEditor
         {
             if (!_showLineNumbers || _gutterLabel == null) return;
 
-            int lines = 1;
+            var textElement = _textField?.Q<TextElement>();
             string content = Active.Content;
-            for (int i = 0; i < content.Length; i++)
-                if (content[i] == '\n') lines++;
-            if (lines == _gutterLineCount) return;
-            _gutterLineCount = lines;
+            float wrapWidth = textElement?.resolvedStyle.width ?? -1f;
 
-            var sb = new System.Text.StringBuilder(lines * 3);
-            for (int n = 1; n <= lines; n++) sb.Append(n).Append('\n');
-            _gutterLabel.text = sb.ToString(0, sb.Length - 1);
+            if (ReferenceEquals(_gutterSource, content) && _gutterWrap == _wordWrap &&
+                (!_wordWrap || Mathf.Approximately(_gutterWidth, wrapWidth)))
+                return;
+            _gutterSource = content;
+            _gutterWrap = _wordWrap;
+            _gutterWidth = wrapWidth;
+
+            string[] lines = content.Split('\n');
+            var sb = new System.Text.StringBuilder(lines.Length * 4);
+
+            // With wrap on, a logical line can occupy several visual rows; pad
+            // with blank gutter rows so the next number sits beside the next
+            // logical line. Measured per line, so cap it for huge files.
+            bool perLine = _wordWrap && textElement != null && wrapWidth > 0 &&
+                lines.Length <= 5000;
+            float rowHeight = 0;
+            if (perLine)
+            {
+                rowHeight = textElement.MeasureTextSize("0", 0, VisualElement.MeasureMode.Undefined,
+                    0, VisualElement.MeasureMode.Undefined).y;
+                if (rowHeight <= 0) perLine = false;
+            }
+
+            for (int n = 0; n < lines.Length; n++)
+            {
+                sb.Append(n + 1);
+                int rows = 1;
+                if (perLine && lines[n].Length > 0)
+                {
+                    float h = textElement.MeasureTextSize(lines[n], wrapWidth,
+                        VisualElement.MeasureMode.Exactly, 0, VisualElement.MeasureMode.Undefined).y;
+                    rows = Mathf.Max(1, Mathf.RoundToInt(h / rowHeight));
+                }
+                for (int r = 0; r < rows && n < lines.Length - 1; r++) sb.Append('\n');
+            }
+            _gutterLabel.text = sb.ToString();
 
             // Match the text input's top padding so row 1 lines up with line 1.
             var input = _textField?.Q(className: "unity-text-field__input");
@@ -394,7 +431,7 @@ namespace ADKOM.TextEditor
             _active = Mathf.Clamp(index, 0, _docs.Count - 1);
             CheckExternalChange(Active);
             _textField?.SetValueWithoutNotify(Active.Content);
-            _gutterLineCount = -1;
+            _gutterSource = null;
             UpdateGutter();
             RefreshHighlight();
             RebuildTabs();
@@ -501,7 +538,7 @@ namespace ADKOM.TextEditor
             if (CheckExternalChange(Active))
             {
                 _textField?.SetValueWithoutNotify(Active.Content);
-                _gutterLineCount = -1;
+                _gutterSource = null;
                 UpdateGutter();
                 RefreshHighlight();
                 RebuildTabs();
