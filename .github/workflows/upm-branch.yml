@@ -1,0 +1,26 @@
+name: Sync upm branch
+
+# Regenerates the package-only 'upm' branch (root = Packages/com.adkom.text-editor)
+# whenever the package changes on main. UPM installs point at #upm so consumers
+# don't clone the whole Unity project. Release tags are created manually from
+# the upm branch head.
+on:
+  push:
+    branches: [main]
+    paths: ['Packages/com.adkom.text-editor/**']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  split:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Split package subtree and push
+        run: |
+          git subtree split --prefix=Packages/com.adkom.text-editor -b upm
+          git push -f origin upm
