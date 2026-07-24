@@ -16,6 +16,13 @@ namespace ADKOM.TextEditor
     public class TextEditorWindow : EditorWindow
     {
         const string UssPath = "Packages/com.adkom.text-editor/Editor/UI/TextEditor.uss";
+        const string ThemePrefKey = "ADKOM.TextEditor.Theme";
+
+        static HighlightTheme CurrentTheme
+        {
+            get => HighlightTheme.ByName(EditorPrefs.GetString(ThemePrefKey, HighlightTheme.VSCode.Name));
+            set => EditorPrefs.SetString(ThemePrefKey, value.Name);
+        }
 
         [SerializeField] List<TextDocument> _docs = new List<TextDocument>();
         [SerializeField] int _active;
@@ -105,6 +112,17 @@ namespace ADKOM.TextEditor
             toolbar.Add(ToolbarBtn("Save", () => SaveFile(false)));
             toolbar.Add(ToolbarBtn("Save As", () => SaveFile(true)));
             toolbar.Add(new ToolbarSpacer { flex = true });
+            var themeMenu = new ToolbarMenu { text = "Theme" };
+            foreach (var theme in HighlightTheme.All)
+            {
+                var t = theme;
+                themeMenu.menu.AppendAction(t.Name,
+                    _ => { CurrentTheme = t; ApplyTheme(); },
+                    _ => CurrentTheme == t
+                        ? DropdownMenuAction.Status.Checked
+                        : DropdownMenuAction.Status.Normal);
+            }
+            toolbar.Add(themeMenu);
             var linesToggle = new ToolbarToggle { text = "Lines", value = _showLineNumbers };
             linesToggle.RegisterValueChangedCallback(e => { _showLineNumbers = e.newValue; ApplyLineNumbers(); });
             toolbar.Add(linesToggle);
@@ -168,7 +186,7 @@ namespace ADKOM.TextEditor
 
             ApplyWrap();
             ApplyLineNumbers();
-            RefreshHighlight();
+            ApplyTheme(); // includes RefreshHighlight
             RebuildTabs();
             UpdateTitle();
             UpdateStatus();
@@ -220,6 +238,24 @@ namespace ADKOM.TextEditor
                 _highlight.style.whiteSpace = _wordWrap ? WhiteSpace.Normal : WhiteSpace.NoWrap;
         }
 
+        // --- Theme ---
+
+        void ApplyTheme()
+        {
+            var palette = CurrentTheme.Current;
+            TextFormatters.Theme = CurrentTheme;
+
+            var input = _textField?.Q(className: "unity-text-field__input");
+            if (input != null) input.style.backgroundColor = palette.BackgroundColor;
+            if (_gutter != null) _gutter.style.backgroundColor = palette.BackgroundColor;
+            if (_gutterLabel != null) _gutterLabel.style.color = palette.TextColor;
+            if (_highlight != null) _highlight.style.color = palette.TextColor;
+            if (_textField != null) _textField.textSelection.cursorColor = palette.TextColor;
+
+            _highlightSource = null; // token colors changed; re-tokenize
+            RefreshHighlight();
+        }
+
         // --- Syntax highlighting ---
 
         void SyncHighlightRect()
@@ -268,12 +304,11 @@ namespace ADKOM.TextEditor
                 }
                 SyncHighlightRect();
                 // Transparent glyphs must not take the caret with them.
-                _textField.textSelection.cursorColor =
-                    EditorGUIUtility.isProSkin ? new Color(0.82f, 0.82f, 0.82f) : Color.black;
+                _textField.textSelection.cursorColor = CurrentTheme.Current.TextColor;
             }
             else
             {
-                textElement.style.color = StyleKeyword.Null;
+                textElement.style.color = CurrentTheme.Current.TextColor;
                 _highlight.text = string.Empty;
                 _highlightSource = null;
             }

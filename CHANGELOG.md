@@ -10,6 +10,15 @@ All notable changes to this package are documented here. Format follows
   loaded document is taller than the visible editor area.
 
 ### Added
+- C# syntax highlighting (keywords, strings, chars, comments, numbers,
+  preprocessor) via the `ITextFormatter` pipeline, chosen per tab by file
+  extension; rendered by a rich-text overlay. Files over 200k chars fall
+  back to plain rendering. Language coverage is extensible.
+- Color themes with two built-in palettes — VS Code (Dark+/Light+) and
+  JetBrains Rider (Rider Dark/IntelliJ Light) — selectable from the new
+  Theme toolbar menu, applied to token colors, editor background, text,
+  gutter, and caret. Follows the Editor's dark/light skin; persists via
+  EditorPrefs.
 - Line numbers in the gutter, toggled by the new "Lines" toolbar button;
   scroll-synced with the text. (Numbers are per logical line, so they can
   drift beside wrapped lines when Wrap is on.)
