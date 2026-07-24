@@ -10,6 +10,9 @@ All notable changes to this package are documented here. Format follows
   loaded document is taller than the visible editor area.
 
 ### Added
+- Multiple open files as tabs: New/Open create tabs, opening an
+  already-open file switches to its tab, per-tab dirty guard on close
+  (middle-click or × to close). Open tabs survive domain reloads.
 - Project window context menu item **Assets → Open in ADKOM Text Editor**
   for `.cs` files; reuses the existing editor window when one is open.
 
