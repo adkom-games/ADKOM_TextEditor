@@ -17,11 +17,18 @@ namespace ADKOM.TextEditor
     {
         const string UssPath = "Packages/com.adkom.text-editor/Editor/UI/TextEditor.uss";
         const string ThemePrefKey = "ADKOM.TextEditor.Theme";
+        const string ThemeModePrefKey = "ADKOM.TextEditor.ThemeMode";
 
         static HighlightTheme CurrentTheme
         {
             get => HighlightTheme.ByName(EditorPrefs.GetString(ThemePrefKey, HighlightTheme.VSCode.Name));
             set => EditorPrefs.SetString(ThemePrefKey, value.Name);
+        }
+
+        static ThemeMode CurrentThemeMode
+        {
+            get => (ThemeMode)EditorPrefs.GetInt(ThemeModePrefKey, (int)ThemeMode.Auto);
+            set => EditorPrefs.SetInt(ThemeModePrefKey, (int)value);
         }
 
         [SerializeField] List<TextDocument> _docs = new List<TextDocument>();
@@ -121,6 +128,16 @@ namespace ADKOM.TextEditor
                 themeMenu.menu.AppendAction(t.Name,
                     _ => { CurrentTheme = t; ApplyTheme(); },
                     _ => CurrentTheme == t
+                        ? DropdownMenuAction.Status.Checked
+                        : DropdownMenuAction.Status.Normal);
+            }
+            themeMenu.menu.AppendSeparator();
+            foreach (ThemeMode mode in System.Enum.GetValues(typeof(ThemeMode)))
+            {
+                var m = mode;
+                themeMenu.menu.AppendAction(m.ToString(),
+                    _ => { CurrentThemeMode = m; ApplyTheme(); },
+                    _ => CurrentThemeMode == m
                         ? DropdownMenuAction.Status.Checked
                         : DropdownMenuAction.Status.Normal);
             }
@@ -249,6 +266,7 @@ namespace ADKOM.TextEditor
 
         void ApplyTheme()
         {
+            HighlightTheme.Mode = CurrentThemeMode;
             var palette = CurrentTheme.Current;
             TextFormatters.Theme = CurrentTheme;
 
