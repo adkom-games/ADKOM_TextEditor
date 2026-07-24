@@ -31,6 +31,7 @@ namespace ADKOM.TextEditor
         Label _statusRight;
 
         Label _highlight;
+        VisualElement _highlightClip;
         string _highlightSource;
         ITextFormatter _formatter = new PlainTextFormatter();
 
@@ -136,18 +137,24 @@ namespace ADKOM.TextEditor
             root.Add(editorRow);
 
             // Syntax-highlight overlay: an editable TextField cannot render rich
-            // text, so the colored markup is drawn by a Label pinned over the
-            // text element; when active, the editable glyphs go transparent and
-            // only the caret/selection of the field remain visible.
-            // MUST be a SIBLING of the text element, never a child: nested
-            // TextElements join the parent's text generation and hang the editor.
-            var textElement = _textField.Q<TextElement>();
+            // text, so the colored markup is drawn by a Label floated over the
+            // field; when active, the editable glyphs go transparent and only
+            // the caret/selection of the field remain visible.
+            // The overlay lives entirely OUTSIDE the TextField hierarchy: both
+            // TextInput and the inner editable element are TextElements in
+            // Unity 6, and any TextElement nested in one joins its text
+            // generation and hangs the editor. A clipping container tracks the
+            // field's rect; the label tracks the inner element (scroll included).
+            _highlightClip = new VisualElement { name = "highlight-clip" };
+            _highlightClip.pickingMode = PickingMode.Ignore;
+            _highlightClip.style.position = Position.Absolute;
+            _highlightClip.style.overflow = Overflow.Hidden;
             _highlight = new Label { name = "highlight-overlay", enableRichText = true };
             _highlight.pickingMode = PickingMode.Ignore;
             _highlight.style.position = Position.Absolute;
-            textElement.parent.Add(_highlight);
-            textElement.RegisterCallback<GeometryChangedEvent>(_ => SyncHighlightRect(textElement));
-            SyncHighlightRect(textElement);
+            _highlightClip.Add(_highlight);
+            editorRow.Add(_highlightClip); // added after the field: draws on top
+            _textField.RegisterCallback<GeometryChangedEvent>(_ => SyncHighlightRect());
 
             // --- Status bar ---
             var status = new VisualElement { name = "status-bar" };
@@ -170,7 +177,10 @@ namespace ADKOM.TextEditor
             // vertical offset onto the gutter so numbers track the text.
             var scrollView = _textField.Q<ScrollView>();
             if (scrollView != null)
-                scrollView.verticalScroller.valueChanged += _ => SyncGutterScroll();
+            {
+                scrollView.verticalScroller.valueChanged += _ => { SyncGutterScroll(); SyncHighlightRect(); };
+                scrollView.horizontalScroller.valueChanged += _ => SyncHighlightRect();
+            }
 
             // Caret moves don't fire value changes; poll cheaply for line:col.
             root.schedule.Execute(UpdateStatus).Every(200);
@@ -212,14 +222,27 @@ namespace ADKOM.TextEditor
 
         // --- Syntax highlighting ---
 
-        void SyncHighlightRect(TextElement textElement)
+        void SyncHighlightRect()
         {
-            if (_highlight == null) return;
-            var r = textElement.layout;
-            _highlight.style.left = r.x;
-            _highlight.style.top = r.y;
-            _highlight.style.width = r.width;
-            _highlight.style.height = r.height;
+            if (_highlight == null || _highlightClip == null || _textField == null) return;
+            var textElement = _textField.Q<TextElement>();
+            if (textElement == null) return;
+
+            // Clip container covers the field (in editor-row space).
+            var fieldRect = _textField.layout;
+            if (float.IsNaN(fieldRect.width)) return; // first frame, no layout yet
+            _highlightClip.style.left = fieldRect.x;
+            _highlightClip.style.top = fieldRect.y;
+            _highlightClip.style.width = fieldRect.width;
+            _highlightClip.style.height = fieldRect.height;
+
+            // Label tracks the editable element, scroll offset included, via
+            // world positions (also absorbs the input's internal padding).
+            var teWorld = textElement.worldBound;
+            var fieldWorld = _textField.worldBound;
+            _highlight.style.left = teWorld.x - fieldWorld.x;
+            _highlight.style.top = teWorld.y - fieldWorld.y;
+            _highlight.style.width = teWorld.width;
         }
 
         void RefreshHighlight()
@@ -228,8 +251,13 @@ namespace ADKOM.TextEditor
             var textElement = _textField?.Q<TextElement>();
             if (textElement == null || _highlight == null) return;
 
-            bool rich = !(_formatter is PlainTextFormatter);
-            _highlight.style.display = rich ? DisplayStyle.Flex : DisplayStyle.None;
+            // Very large files fall back to plain rendering: a single rich-text
+            // label with hundreds of KB of markup is asking too much of the
+            // text engine, and editing responsiveness matters more there.
+            const int MaxHighlightChars = 200_000;
+            bool rich = !(_formatter is PlainTextFormatter) &&
+                Active.Content.Length <= MaxHighlightChars;
+            _highlightClip.style.display = rich ? DisplayStyle.Flex : DisplayStyle.None;
             if (rich)
             {
                 textElement.style.color = Color.clear;
@@ -238,6 +266,7 @@ namespace ADKOM.TextEditor
                     _highlightSource = Active.Content;
                     _highlight.text = _formatter.Format(Active.Content);
                 }
+                SyncHighlightRect();
                 // Transparent glyphs must not take the caret with them.
                 _textField.textSelection.cursorColor =
                     EditorGUIUtility.isProSkin ? new Color(0.82f, 0.82f, 0.82f) : Color.black;
