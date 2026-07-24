@@ -17,7 +17,15 @@ All notable changes to this package are documented here. Format follows
   already-open file switches to its tab, per-tab dirty guard on close
   (middle-click or × to close). Open tabs survive domain reloads.
 - Project window context menu item **Assets → Open in ADKOM Text Editor**
-  for `.cs` files; reuses the existing editor window when one is open.
+  for any text asset (scripts, TextAssets, shaders, USS/UXML, markdown,
+  configs, …); reuses the existing editor window when one is open.
+
+### Changed
+- Context-menu/API opens always create a new tab (unless the file is
+  already open, which switches to its tab) instead of replacing the
+  current document.
+- External file-change detection now also runs when a tab is activated,
+  not just when the window regains focus.
 
 ## [0.1.0] - 2026-07-24
 
