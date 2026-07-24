@@ -1,0 +1,32 @@
+#editor-row {
+    flex-grow: 1;
+}
+
+#text-area {
+    margin: 0;
+}
+
+#text-area .unity-text-field__input {
+    -unity-font-style: normal;
+    font-size: 13px;
+}
+
+#gutter {
+    min-width: 40px;
+    border-right-width: 1px;
+    border-right-color: rgba(128, 128, 128, 0.35);
+    -unity-text-align: upper-right;
+    padding-right: 4px;
+}
+
+#status-bar {
+    height: 20px;
+    padding: 2px 8px;
+    border-top-width: 1px;
+    border-top-color: rgba(128, 128, 128, 0.35);
+}
+
+#status-bar Label {
+    font-size: 11px;
+    opacity: 0.8;
+}
