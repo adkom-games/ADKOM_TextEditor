@@ -33,6 +33,39 @@ namespace ADKOM.TextEditor
             window.Show();
         }
 
+        const string AssetsMenuPath = "Assets/Open in ADKOM Text Editor";
+
+        [MenuItem(AssetsMenuPath, true)]
+        static bool ValidateOpenSelectedAsset()
+        {
+            string assetPath = AssetDatabase.GetAssetPath(Selection.activeObject);
+            return assetPath != null &&
+                assetPath.EndsWith(".cs", System.StringComparison.OrdinalIgnoreCase);
+        }
+
+        [MenuItem(AssetsMenuPath)]
+        static void OpenSelectedAsset()
+        {
+            string assetPath = AssetDatabase.GetAssetPath(Selection.activeObject);
+            var windows = Resources.FindObjectsOfTypeAll<TextEditorWindow>();
+            var window = windows.Length > 0 ? windows[0] : CreateWindow<TextEditorWindow>();
+            window.Show();
+            window.Focus();
+            window.OpenPath(Path.GetFullPath(assetPath));
+        }
+
+        /// <summary>Loads the file at <paramref name="path"/> into this window,
+        /// prompting first if the current document has unsaved changes.</summary>
+        public void OpenPath(string path)
+        {
+            if (!ConfirmDiscardIfDirty()) return;
+            _doc.LoadFrom(path);
+            // Null before CreateGUI has run; it picks up _doc.Content itself.
+            _textField?.SetValueWithoutNotify(_formatter.Format(_doc.Content));
+            UpdateTitle();
+            UpdateStatus();
+        }
+
         void CreateGUI()
         {
             var root = rootVisualElement;
@@ -133,7 +166,7 @@ namespace ADKOM.TextEditor
             string path = FileService.PromptOpen();
             if (path == null) return;
             _doc.LoadFrom(path);
-            _textField.SetValueWithoutNotify(_formatter.Format(_doc.Content));
+            _textField?.SetValueWithoutNotify(_formatter.Format(_doc.Content));
             UpdateTitle();
             UpdateStatus();
         }
