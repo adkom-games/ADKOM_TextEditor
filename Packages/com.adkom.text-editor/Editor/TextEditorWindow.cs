@@ -16,6 +16,13 @@ namespace ADKOM.TextEditor
     public class TextEditorWindow : EditorWindow
     {
         const string UssPath = "Packages/com.adkom.text-editor/Editor/UI/TextEditor.uss";
+        const string ThemePrefKey = "ADKOM.TextEditor.Theme";
+
+        static HighlightTheme CurrentTheme
+        {
+            get => HighlightTheme.ByName(EditorPrefs.GetString(ThemePrefKey, HighlightTheme.VSCode.Name));
+            set => EditorPrefs.SetString(ThemePrefKey, value.Name);
+        }
 
         [SerializeField] List<TextDocument> _docs = new List<TextDocument>();
         [SerializeField] int _active;
@@ -30,6 +37,9 @@ namespace ADKOM.TextEditor
         Label _statusLeft;
         Label _statusRight;
 
+        Label _highlight;
+        VisualElement _highlightClip;
+        string _highlightSource;
         ITextFormatter _formatter = new PlainTextFormatter();
 
         TextDocument Active => _docs[_active];
@@ -102,6 +112,17 @@ namespace ADKOM.TextEditor
             toolbar.Add(ToolbarBtn("Save", () => SaveFile(false)));
             toolbar.Add(ToolbarBtn("Save As", () => SaveFile(true)));
             toolbar.Add(new ToolbarSpacer { flex = true });
+            var themeMenu = new ToolbarMenu { text = "Theme" };
+            foreach (var theme in HighlightTheme.All)
+            {
+                var t = theme;
+                themeMenu.menu.AppendAction(t.Name,
+                    _ => { CurrentTheme = t; ApplyTheme(); },
+                    _ => CurrentTheme == t
+                        ? DropdownMenuAction.Status.Checked
+                        : DropdownMenuAction.Status.Normal);
+            }
+            toolbar.Add(themeMenu);
             var linesToggle = new ToolbarToggle { text = "Lines", value = _showLineNumbers };
             linesToggle.RegisterValueChangedCallback(e => { _showLineNumbers = e.newValue; ApplyLineNumbers(); });
             toolbar.Add(linesToggle);
@@ -127,11 +148,31 @@ namespace ADKOM.TextEditor
             _textField = new TextField { multiline = true, name = "text-area" };
             _textField.style.flexGrow = 1;
             _textField.verticalScrollerVisibility = ScrollerVisibility.Auto;
-            _textField.SetValueWithoutNotify(_formatter.Format(Active.Content));
+            _textField.SetValueWithoutNotify(Active.Content);
             _textField.RegisterValueChangedCallback(OnTextChanged);
             _textField.RegisterCallback<KeyDownEvent>(OnKeyDown, TrickleDown.TrickleDown);
             editorRow.Add(_textField);
             root.Add(editorRow);
+
+            // Syntax-highlight overlay: an editable TextField cannot render rich
+            // text, so the colored markup is drawn by a Label floated over the
+            // field; when active, the editable glyphs go transparent and only
+            // the caret/selection of the field remain visible.
+            // The overlay lives entirely OUTSIDE the TextField hierarchy: both
+            // TextInput and the inner editable element are TextElements in
+            // Unity 6, and any TextElement nested in one joins its text
+            // generation and hangs the editor. A clipping container tracks the
+            // field's rect; the label tracks the inner element (scroll included).
+            _highlightClip = new VisualElement { name = "highlight-clip" };
+            _highlightClip.pickingMode = PickingMode.Ignore;
+            _highlightClip.style.position = Position.Absolute;
+            _highlightClip.style.overflow = Overflow.Hidden;
+            _highlight = new Label { name = "highlight-overlay", enableRichText = true };
+            _highlight.pickingMode = PickingMode.Ignore;
+            _highlight.style.position = Position.Absolute;
+            _highlightClip.Add(_highlight);
+            editorRow.Add(_highlightClip); // added after the field: draws on top
+            _textField.RegisterCallback<GeometryChangedEvent>(_ => SyncHighlightRect());
 
             // --- Status bar ---
             var status = new VisualElement { name = "status-bar" };
@@ -145,6 +186,7 @@ namespace ADKOM.TextEditor
 
             ApplyWrap();
             ApplyLineNumbers();
+            ApplyTheme(); // includes RefreshHighlight
             RebuildTabs();
             UpdateTitle();
             UpdateStatus();
@@ -153,7 +195,10 @@ namespace ADKOM.TextEditor
             // vertical offset onto the gutter so numbers track the text.
             var scrollView = _textField.Q<ScrollView>();
             if (scrollView != null)
-                scrollView.verticalScroller.valueChanged += _ => SyncGutterScroll();
+            {
+                scrollView.verticalScroller.valueChanged += _ => { SyncGutterScroll(); SyncHighlightRect(); };
+                scrollView.horizontalScroller.valueChanged += _ => SyncHighlightRect();
+            }
 
             // Caret moves don't fire value changes; poll cheaply for line:col.
             root.schedule.Execute(UpdateStatus).Every(200);
@@ -166,6 +211,7 @@ namespace ADKOM.TextEditor
         {
             Active.Content = e.newValue;
             UpdateGutter();
+            RefreshHighlight();
             if (!Active.IsDirty)
             {
                 Active.IsDirty = true;
@@ -188,6 +234,84 @@ namespace ADKOM.TextEditor
             if (_textField == null) return;
             var input = _textField.Q(className: "unity-text-field__input") ?? _textField;
             input.style.whiteSpace = _wordWrap ? WhiteSpace.Normal : WhiteSpace.NoWrap;
+            if (_highlight != null)
+                _highlight.style.whiteSpace = _wordWrap ? WhiteSpace.Normal : WhiteSpace.NoWrap;
+        }
+
+        // --- Theme ---
+
+        void ApplyTheme()
+        {
+            var palette = CurrentTheme.Current;
+            TextFormatters.Theme = CurrentTheme;
+
+            var input = _textField?.Q(className: "unity-text-field__input");
+            if (input != null) input.style.backgroundColor = palette.BackgroundColor;
+            if (_gutter != null) _gutter.style.backgroundColor = palette.BackgroundColor;
+            if (_gutterLabel != null) _gutterLabel.style.color = palette.TextColor;
+            if (_highlight != null) _highlight.style.color = palette.TextColor;
+            if (_textField != null) _textField.textSelection.cursorColor = palette.TextColor;
+
+            _highlightSource = null; // token colors changed; re-tokenize
+            RefreshHighlight();
+        }
+
+        // --- Syntax highlighting ---
+
+        void SyncHighlightRect()
+        {
+            if (_highlight == null || _highlightClip == null || _textField == null) return;
+            var textElement = _textField.Q<TextElement>();
+            if (textElement == null) return;
+
+            // Clip container covers the field (in editor-row space).
+            var fieldRect = _textField.layout;
+            if (float.IsNaN(fieldRect.width)) return; // first frame, no layout yet
+            _highlightClip.style.left = fieldRect.x;
+            _highlightClip.style.top = fieldRect.y;
+            _highlightClip.style.width = fieldRect.width;
+            _highlightClip.style.height = fieldRect.height;
+
+            // Label tracks the editable element, scroll offset included, via
+            // world positions (also absorbs the input's internal padding).
+            var teWorld = textElement.worldBound;
+            var fieldWorld = _textField.worldBound;
+            _highlight.style.left = teWorld.x - fieldWorld.x;
+            _highlight.style.top = teWorld.y - fieldWorld.y;
+            _highlight.style.width = teWorld.width;
+        }
+
+        void RefreshHighlight()
+        {
+            _formatter = TextFormatters.ForPath(Active.HasFile ? Active.FilePath : null);
+            var textElement = _textField?.Q<TextElement>();
+            if (textElement == null || _highlight == null) return;
+
+            // Very large files fall back to plain rendering: a single rich-text
+            // label with hundreds of KB of markup is asking too much of the
+            // text engine, and editing responsiveness matters more there.
+            const int MaxHighlightChars = 200_000;
+            bool rich = !(_formatter is PlainTextFormatter) &&
+                Active.Content.Length <= MaxHighlightChars;
+            _highlightClip.style.display = rich ? DisplayStyle.Flex : DisplayStyle.None;
+            if (rich)
+            {
+                textElement.style.color = Color.clear;
+                if (!ReferenceEquals(_highlightSource, Active.Content))
+                {
+                    _highlightSource = Active.Content;
+                    _highlight.text = _formatter.Format(Active.Content);
+                }
+                SyncHighlightRect();
+                // Transparent glyphs must not take the caret with them.
+                _textField.textSelection.cursorColor = CurrentTheme.Current.TextColor;
+            }
+            else
+            {
+                textElement.style.color = CurrentTheme.Current.TextColor;
+                _highlight.text = string.Empty;
+                _highlightSource = null;
+            }
         }
 
         // --- Line numbers ---
@@ -269,9 +393,10 @@ namespace ADKOM.TextEditor
             EnsureDocs();
             _active = Mathf.Clamp(index, 0, _docs.Count - 1);
             CheckExternalChange(Active);
-            _textField?.SetValueWithoutNotify(_formatter.Format(Active.Content));
+            _textField?.SetValueWithoutNotify(Active.Content);
             _gutterLineCount = -1;
             UpdateGutter();
+            RefreshHighlight();
             RebuildTabs();
             UpdateTitle();
             UpdateStatus();
@@ -327,6 +452,7 @@ namespace ADKOM.TextEditor
             bool saved = saveAs ? FileService.SaveAs(Active) : FileService.Save(Active);
             if (saved)
             {
+                RefreshHighlight(); // Save As can change the extension/language
                 RebuildTabs();
                 UpdateTitle();
                 UpdateStatus();
@@ -374,9 +500,10 @@ namespace ADKOM.TextEditor
             if (_docs == null || _docs.Count == 0) return;
             if (CheckExternalChange(Active))
             {
-                _textField?.SetValueWithoutNotify(_formatter.Format(Active.Content));
+                _textField?.SetValueWithoutNotify(Active.Content);
                 _gutterLineCount = -1;
                 UpdateGutter();
+                RefreshHighlight();
                 RebuildTabs();
                 UpdateTitle();
             }
