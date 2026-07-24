@@ -3,6 +3,12 @@
 All notable changes to this package are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com); versions follow semver.
 
+## [Unreleased]
+
+### Added
+- Project window context menu item **Assets → Open in ADKOM Text Editor**
+  for `.cs` files; reuses the existing editor window when one is open.
+
 ## [0.1.0] - 2026-07-24
 
 ### Added
