@@ -31,12 +31,14 @@ namespace ADKOM.TextEditor
             "partial","record","init","nameof"
         };
 
-        // Dark (Pro) / light theme palettes.
-        static string KeywordColor => EditorGUIUtility.isProSkin ? "#569CD6" : "#0000E0";
-        static string StringColor  => EditorGUIUtility.isProSkin ? "#D69D85" : "#A31515";
-        static string CommentColor => EditorGUIUtility.isProSkin ? "#57A64A" : "#008000";
-        static string NumberColor  => EditorGUIUtility.isProSkin ? "#B5CEA8" : "#09885A";
-        static string PreprocColor => EditorGUIUtility.isProSkin ? "#9B9B9B" : "#808080";
+        /// <summary>Theme supplying the token colors. Never null.</summary>
+        public HighlightTheme Theme { get; set; } = HighlightTheme.VSCode;
+
+        string KeywordColor => Theme.Current.Keyword;
+        string StringColor  => Theme.Current.String;
+        string CommentColor => Theme.Current.Comment;
+        string NumberColor  => Theme.Current.Number;
+        string PreprocColor => Theme.Current.Preprocessor;
 
         public string Format(string text)
         {
@@ -191,6 +193,13 @@ namespace ADKOM.TextEditor
     {
         static readonly PlainTextFormatter Plain = new PlainTextFormatter();
         static readonly CSharpFormatter CSharp = new CSharpFormatter();
+
+        /// <summary>Theme applied to all highlighting formatters.</summary>
+        public static HighlightTheme Theme
+        {
+            get => CSharp.Theme;
+            set => CSharp.Theme = value ?? HighlightTheme.VSCode;
+        }
 
         public static ITextFormatter ForPath(string path)
         {
