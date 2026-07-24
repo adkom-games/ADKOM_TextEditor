@@ -44,12 +44,30 @@ namespace ADKOM.TextEditor
 
         const string AssetsMenuPath = "Assets/Open in ADKOM Text Editor";
 
+        // Extensions Unity does not import as a text-like asset type but that
+        // are still plain text. Anything imported as MonoScript/TextAsset/
+        // ShaderInclude etc. is accepted by type instead.
+        static readonly string[] TextExtensions =
+        {
+            ".md", ".yaml", ".yml", ".ini", ".cfg", ".log", ".uss", ".tss",
+            ".uxml", ".asmdef", ".asmref", ".shader", ".cginc", ".hlsl",
+            ".compute", ".gitignore", ".gitattributes"
+        };
+
         [MenuItem(AssetsMenuPath, true)]
         static bool ValidateOpenSelectedAsset()
         {
             string assetPath = AssetDatabase.GetAssetPath(Selection.activeObject);
-            return assetPath != null &&
-                assetPath.EndsWith(".cs", System.StringComparison.OrdinalIgnoreCase);
+            if (string.IsNullOrEmpty(assetPath) || AssetDatabase.IsValidFolder(assetPath))
+                return false;
+
+            var type = AssetDatabase.GetMainAssetTypeAtPath(assetPath);
+            if (type == typeof(TextAsset) || type == typeof(MonoScript) ||
+                typeof(TextAsset).IsAssignableFrom(type))
+                return true;
+
+            string ext = Path.GetExtension(assetPath).ToLowerInvariant();
+            return System.Array.IndexOf(TextExtensions, ext) >= 0;
         }
 
         [MenuItem(AssetsMenuPath)]
@@ -250,6 +268,7 @@ namespace ADKOM.TextEditor
         {
             EnsureDocs();
             _active = Mathf.Clamp(index, 0, _docs.Count - 1);
+            CheckExternalChange(Active);
             _textField?.SetValueWithoutNotify(_formatter.Format(Active.Content));
             _gutterLineCount = -1;
             UpdateGutter();
@@ -299,11 +318,8 @@ namespace ADKOM.TextEditor
 
             var doc = new TextDocument();
             doc.LoadFrom(full);
-
-            bool activeIsBlank = !Active.HasFile && !Active.IsDirty && Active.Content.Length == 0;
-            if (activeIsBlank) _docs[_active] = doc;
-            else { _docs.Add(doc); _active = _docs.Count - 1; }
-            SwitchTo(_active);
+            _docs.Add(doc);
+            SwitchTo(_docs.Count - 1);
         }
 
         void SaveFile(bool saveAs)
@@ -330,32 +346,37 @@ namespace ADKOM.TextEditor
             return true;                                   // Discard
         }
 
+        /// <summary>Prompts to reload <paramref name="doc"/> if its backing file
+        /// changed on disk. Returns true if the document was reloaded or marked.</summary>
+        bool CheckExternalChange(TextDocument doc)
+        {
+            if (doc == null || !doc.FileChangedOnDisk()) return false;
+            bool reload = EditorUtility.DisplayDialog(
+                "File Changed on Disk",
+                $"'{doc.DisplayName}' was modified outside the editor.\n\nReload it? Unsaved changes here will be lost.",
+                "Reload", "Keep Mine");
+            if (reload)
+            {
+                doc.LoadFrom(doc.FilePath);
+            }
+            else
+            {
+                // Stop re-prompting until it changes again.
+                doc.LastKnownWriteTimeUtcTicks = File.GetLastWriteTimeUtc(doc.FilePath).Ticks;
+                doc.IsDirty = true;
+            }
+            return true;
+        }
+
         void OnFocus()
         {
-            if (_docs == null) return;
-            bool any = false;
-            foreach (var doc in _docs)
-            {
-                if (!doc.FileChangedOnDisk()) continue;
-                bool reload = EditorUtility.DisplayDialog(
-                    "File Changed on Disk",
-                    $"'{doc.DisplayName}' was modified outside the editor.\n\nReload it? Unsaved changes here will be lost.",
-                    "Reload", "Keep Mine");
-                if (reload)
-                {
-                    doc.LoadFrom(doc.FilePath);
-                }
-                else
-                {
-                    // Stop re-prompting until it changes again.
-                    doc.LastKnownWriteTimeUtcTicks = File.GetLastWriteTimeUtc(doc.FilePath).Ticks;
-                    doc.IsDirty = true;
-                }
-                any = true;
-            }
-            if (any)
+            // Inactive tabs are checked when they are activated (SwitchTo).
+            if (_docs == null || _docs.Count == 0) return;
+            if (CheckExternalChange(Active))
             {
                 _textField?.SetValueWithoutNotify(_formatter.Format(Active.Content));
+                _gutterLineCount = -1;
+                UpdateGutter();
                 RebuildTabs();
                 UpdateTitle();
             }
