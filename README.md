@@ -18,14 +18,17 @@ host project.
 In Unity: **Window → Package Manager → + → Add package from git URL…**
 
 ```
-https://github.com/adkom-games/ADKOM_TextEditor.git?path=Packages/com.adkom.text-editor
+https://github.com/adkom-games/ADKOM_TextEditor.git#upm
 ```
 
-To pin a version, append a release tag:
+To pin a version, use a release tag instead of `upm`:
 
 ```
-https://github.com/adkom-games/ADKOM_TextEditor.git?path=Packages/com.adkom.text-editor#0.1.0
+https://github.com/adkom-games/ADKOM_TextEditor.git#0.1.0
 ```
+
+The `upm` branch contains only the package (kept in sync automatically);
+the default branch holds the full development project.
 
 Requires Unity 6000.0 or newer.
 
