@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
 using UnityEngine;
@@ -10,20 +11,25 @@ namespace ADKOM.TextEditor
     /// Dockable Unity Editor text editor window. UIToolkit-based; the layout
     /// reserves a gutter pane for future line numbers, and display rendering
     /// routes through ITextFormatter for future syntax highlighting.
+    /// Holds any number of open documents, presented as tabs.
     /// </summary>
     public class TextEditorWindow : EditorWindow
     {
         const string UssPath = "Packages/com.adkom.text-editor/Editor/UI/TextEditor.uss";
 
-        [SerializeField] TextDocument _doc = new TextDocument();
+        [SerializeField] List<TextDocument> _docs = new List<TextDocument>();
+        [SerializeField] int _active;
         [SerializeField] bool _wordWrap = true;
 
         TextField _textField;
         VisualElement _gutter;
+        VisualElement _tabBar;
         Label _statusLeft;
         Label _statusRight;
 
         ITextFormatter _formatter = new PlainTextFormatter();
+
+        TextDocument Active => _docs[_active];
 
         [MenuItem("Tools/ADKOM/Text Editor")]
         public static void Open()
@@ -54,20 +60,16 @@ namespace ADKOM.TextEditor
             window.OpenPath(Path.GetFullPath(assetPath));
         }
 
-        /// <summary>Loads the file at <paramref name="path"/> into this window,
-        /// prompting first if the current document has unsaved changes.</summary>
-        public void OpenPath(string path)
+        void EnsureDocs()
         {
-            if (!ConfirmDiscardIfDirty()) return;
-            _doc.LoadFrom(path);
-            // Null before CreateGUI has run; it picks up _doc.Content itself.
-            _textField?.SetValueWithoutNotify(_formatter.Format(_doc.Content));
-            UpdateTitle();
-            UpdateStatus();
+            if (_docs.Count == 0) _docs.Add(new TextDocument());
+            _active = Mathf.Clamp(_active, 0, _docs.Count - 1);
         }
 
         void CreateGUI()
         {
+            EnsureDocs();
+
             var root = rootVisualElement;
             var uss = AssetDatabase.LoadAssetAtPath<StyleSheet>(UssPath);
             if (uss != null) root.styleSheets.Add(uss);
@@ -84,6 +86,10 @@ namespace ADKOM.TextEditor
             toolbar.Add(wrapToggle);
             root.Add(toolbar);
 
+            // --- Tab bar ---
+            _tabBar = new VisualElement { name = "tab-bar" };
+            root.Add(_tabBar);
+
             // --- Editor area: gutter (future line numbers) + text ---
             var editorRow = new VisualElement { name = "editor-row" };
             editorRow.style.flexGrow = 1;
@@ -96,7 +102,7 @@ namespace ADKOM.TextEditor
             _textField = new TextField { multiline = true, name = "text-area" };
             _textField.style.flexGrow = 1;
             _textField.verticalScrollerVisibility = ScrollerVisibility.Auto;
-            _textField.SetValueWithoutNotify(_doc.Content);
+            _textField.SetValueWithoutNotify(_formatter.Format(Active.Content));
             _textField.RegisterValueChangedCallback(OnTextChanged);
             _textField.RegisterCallback<KeyDownEvent>(OnKeyDown, TrickleDown.TrickleDown);
             editorRow.Add(_textField);
@@ -113,6 +119,7 @@ namespace ADKOM.TextEditor
             root.Add(status);
 
             ApplyWrap();
+            RebuildTabs();
             UpdateTitle();
             UpdateStatus();
 
@@ -125,11 +132,12 @@ namespace ADKOM.TextEditor
 
         void OnTextChanged(ChangeEvent<string> e)
         {
-            _doc.Content = e.newValue;
-            if (!_doc.IsDirty)
+            Active.Content = e.newValue;
+            if (!Active.IsDirty)
             {
-                _doc.IsDirty = true;
+                Active.IsDirty = true;
                 UpdateTitle();
+                RebuildTabs();
             }
         }
 
@@ -149,82 +157,164 @@ namespace ADKOM.TextEditor
             input.style.whiteSpace = _wordWrap ? WhiteSpace.Normal : WhiteSpace.NoWrap;
         }
 
+        // --- Tabs ---
+
+        void RebuildTabs()
+        {
+            if (_tabBar == null) return;
+            _tabBar.Clear();
+            for (int i = 0; i < _docs.Count; i++)
+            {
+                int index = i;
+                var doc = _docs[i];
+
+                var tab = new VisualElement();
+                tab.AddToClassList("tab");
+                if (i == _active) tab.AddToClassList("tab--active");
+                tab.RegisterCallback<MouseDownEvent>(e =>
+                {
+                    if (e.button == 0) SwitchTo(index);
+                    else if (e.button == 2) CloseTab(index); // middle-click close
+                });
+
+                var label = new Label((doc.IsDirty ? "*" : "") + doc.DisplayName)
+                {
+                    tooltip = doc.HasFile ? doc.FilePath : "New unsaved document"
+                };
+                tab.Add(label);
+
+                var close = new Button(() => CloseTab(index)) { text = "×" };
+                close.AddToClassList("tab__close");
+                tab.Add(close);
+
+                _tabBar.Add(tab);
+            }
+        }
+
+        void SwitchTo(int index)
+        {
+            EnsureDocs();
+            _active = Mathf.Clamp(index, 0, _docs.Count - 1);
+            _textField?.SetValueWithoutNotify(_formatter.Format(Active.Content));
+            RebuildTabs();
+            UpdateTitle();
+            UpdateStatus();
+        }
+
+        void CloseTab(int index)
+        {
+            if (index < 0 || index >= _docs.Count) return;
+            if (!ConfirmDiscardIfDirty(_docs[index])) return;
+            _docs.RemoveAt(index);
+            if (index < _active || _active >= _docs.Count)
+                _active = Mathf.Max(0, _active - 1);
+            EnsureDocs();
+            SwitchTo(_active);
+        }
+
         // --- Commands ---
 
         void NewFile()
         {
-            if (!ConfirmDiscardIfDirty()) return;
-            _doc = new TextDocument();
-            _textField.SetValueWithoutNotify(_doc.Content);
-            UpdateTitle();
-            UpdateStatus();
+            _docs.Add(new TextDocument());
+            SwitchTo(_docs.Count - 1);
         }
 
         void OpenFile()
         {
-            if (!ConfirmDiscardIfDirty()) return;
             string path = FileService.PromptOpen();
-            if (path == null) return;
-            _doc.LoadFrom(path);
-            _textField?.SetValueWithoutNotify(_formatter.Format(_doc.Content));
-            UpdateTitle();
-            UpdateStatus();
+            if (path != null) OpenPath(path);
+        }
+
+        /// <summary>Opens the file at <paramref name="path"/> in a tab: switches to
+        /// its tab if already open, reuses an untouched empty tab, or adds a new one.</summary>
+        public void OpenPath(string path)
+        {
+            EnsureDocs();
+            string full = Path.GetFullPath(path);
+            int existing = _docs.FindIndex(d => d.HasFile &&
+                string.Equals(Path.GetFullPath(d.FilePath), full, System.StringComparison.OrdinalIgnoreCase));
+            if (existing >= 0)
+            {
+                SwitchTo(existing);
+                return;
+            }
+
+            var doc = new TextDocument();
+            doc.LoadFrom(full);
+
+            bool activeIsBlank = !Active.HasFile && !Active.IsDirty && Active.Content.Length == 0;
+            if (activeIsBlank) _docs[_active] = doc;
+            else { _docs.Add(doc); _active = _docs.Count - 1; }
+            SwitchTo(_active);
         }
 
         void SaveFile(bool saveAs)
         {
-            bool saved = saveAs ? FileService.SaveAs(_doc) : FileService.Save(_doc);
+            bool saved = saveAs ? FileService.SaveAs(Active) : FileService.Save(Active);
             if (saved)
             {
+                RebuildTabs();
                 UpdateTitle();
                 UpdateStatus();
             }
         }
 
         /// <summary>Returns true to proceed (saved or discarded), false to cancel.</summary>
-        bool ConfirmDiscardIfDirty()
+        bool ConfirmDiscardIfDirty(TextDocument doc)
         {
-            if (!_doc.IsDirty) return true;
+            if (!doc.IsDirty) return true;
             int choice = EditorUtility.DisplayDialogComplex(
                 "Unsaved Changes",
-                $"'{_doc.DisplayName}' has unsaved changes.",
+                $"'{doc.DisplayName}' has unsaved changes.",
                 "Save", "Cancel", "Discard");
-            if (choice == 1) return false;               // Cancel
-            if (choice == 0) return FileService.Save(_doc); // Save (false if dialog cancelled)
-            return true;                                  // Discard
+            if (choice == 1) return false;                // Cancel
+            if (choice == 0) return FileService.Save(doc); // Save (false if dialog cancelled)
+            return true;                                   // Discard
         }
 
         void OnFocus()
         {
-            if (_doc == null || !_doc.FileChangedOnDisk()) return;
-            bool reload = EditorUtility.DisplayDialog(
-                "File Changed on Disk",
-                $"'{_doc.DisplayName}' was modified outside the editor.\n\nReload it? Unsaved changes here will be lost.",
-                "Reload", "Keep Mine");
-            if (reload)
+            if (_docs == null) return;
+            bool any = false;
+            foreach (var doc in _docs)
             {
-                _doc.LoadFrom(_doc.FilePath);
-                _textField?.SetValueWithoutNotify(_doc.Content);
-                UpdateTitle();
+                if (!doc.FileChangedOnDisk()) continue;
+                bool reload = EditorUtility.DisplayDialog(
+                    "File Changed on Disk",
+                    $"'{doc.DisplayName}' was modified outside the editor.\n\nReload it? Unsaved changes here will be lost.",
+                    "Reload", "Keep Mine");
+                if (reload)
+                {
+                    doc.LoadFrom(doc.FilePath);
+                }
+                else
+                {
+                    // Stop re-prompting until it changes again.
+                    doc.LastKnownWriteTimeUtcTicks = File.GetLastWriteTimeUtc(doc.FilePath).Ticks;
+                    doc.IsDirty = true;
+                }
+                any = true;
             }
-            else
+            if (any)
             {
-                // Stop re-prompting until it changes again.
-                _doc.LastKnownWriteTimeUtcTicks = File.GetLastWriteTimeUtc(_doc.FilePath).Ticks;
-                _doc.IsDirty = true;
+                _textField?.SetValueWithoutNotify(_formatter.Format(Active.Content));
+                RebuildTabs();
                 UpdateTitle();
             }
         }
 
         void OnDestroy()
         {
-            if (_doc != null && _doc.IsDirty)
+            if (_docs == null) return;
+            foreach (var doc in _docs)
             {
+                if (!doc.IsDirty) continue;
                 bool save = EditorUtility.DisplayDialog(
                     "Unsaved Changes",
-                    $"'{_doc.DisplayName}' has unsaved changes.",
+                    $"'{doc.DisplayName}' has unsaved changes.",
                     "Save", "Discard");
-                if (save) FileService.Save(_doc);
+                if (save) FileService.Save(doc);
             }
         }
 
@@ -232,23 +322,24 @@ namespace ADKOM.TextEditor
 
         void UpdateTitle()
         {
-            titleContent = new GUIContent((_doc.IsDirty ? "*" : "") + _doc.DisplayName,
-                _doc.HasFile ? _doc.FilePath : "New unsaved document");
+            EnsureDocs();
+            titleContent = new GUIContent((Active.IsDirty ? "*" : "") + Active.DisplayName,
+                Active.HasFile ? Active.FilePath : "New unsaved document");
         }
 
         void UpdateStatus()
         {
             if (_statusLeft == null || _textField == null) return;
 
-            int caret = Mathf.Clamp(_textField.cursorIndex, 0, _doc.Content.Length);
+            int caret = Mathf.Clamp(_textField.cursorIndex, 0, Active.Content.Length);
             int line = 1, col = 1;
             for (int i = 0; i < caret; i++)
             {
-                if (_doc.Content[i] == '\n') { line++; col = 1; }
+                if (Active.Content[i] == '\n') { line++; col = 1; }
                 else col++;
             }
             _statusLeft.text = $"Ln {line}, Col {col}";
-            _statusRight.text = $"{_formatter.Name}  |  UTF-8{(_doc.HasBom ? " BOM" : "")}  |  {_doc.EolLabel}";
+            _statusRight.text = $"{_formatter.Name}  |  UTF-8{(Active.HasBom ? " BOM" : "")}  |  {Active.EolLabel}";
         }
     }
 }
