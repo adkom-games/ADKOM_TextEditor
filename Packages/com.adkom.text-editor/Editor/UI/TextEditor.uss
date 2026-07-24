@@ -56,6 +56,14 @@
     font-size: 13px;
 }
 
+#highlight-overlay {
+    /* Must match #text-area input metrics exactly so glyphs line up. */
+    font-size: 13px;
+    -unity-font-style: normal;
+    margin: 0;
+    padding: 0;
+}
+
 #gutter {
     min-width: 40px;
     flex-shrink: 0;
