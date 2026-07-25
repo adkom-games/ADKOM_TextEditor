@@ -52,6 +52,15 @@ namespace ADKOM.TextEditor
             set => EditorPrefs.SetString(FallbackEditorKey, value ?? string.Empty);
         }
 
+        const string SmoothScrollKey = "ADKOM.TextEditor.SmoothScrolling";
+
+        /// <summary>Animate wheel scrolling instead of stepping (default on).</summary>
+        public static bool SmoothScrolling
+        {
+            get => EditorPrefs.GetBool(SmoothScrollKey, true);
+            set => EditorPrefs.SetBool(SmoothScrollKey, value);
+        }
+
         const string AutoUpdateKey = "ADKOM.TextEditor.AutoUpdate";
         const string UpdateFreqKey = "ADKOM.TextEditor.UpdateFrequencyDays";
 
