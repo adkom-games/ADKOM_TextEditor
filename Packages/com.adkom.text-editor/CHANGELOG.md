@@ -6,6 +6,9 @@ All notable changes to this package are documented here. Format follows
 ## [Unreleased]
 
 ### Fixed
+- Status bar hardening: the empty window state shows "No file open"
+  instead of a blank bar, and the Settings tab scrolls on short windows
+  instead of its controls spilling over the status bar.
 - Line numbers drifted out of alignment with code lines, worsening
   toward the bottom of the file: the gutter was one multi-line label
   whose natural line spacing differed subtly from the row height. Gutter
