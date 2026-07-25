@@ -106,6 +106,41 @@ namespace ADKOM.TextEditor
             return null;
         }
 
+        static readonly Dictionary<string, Font> _fontCache = new Dictionary<string, Font>();
+
+        /// <summary>Raised when the font size changes via zoom gestures so the
+        /// Settings pane can stay in sync.</summary>
+        public event Action onFontSizeChanged;
+
+        /// <summary>(Re)applies the configured font family and size, then
+        /// invalidates every metric derived from them.</summary>
+        public void ApplyFontConfig()
+        {
+            style.fontSize = EditorConfig.FontSize;
+            Font f = null;
+            string name = EditorConfig.FontName;
+            if (!string.IsNullOrEmpty(name) && !_fontCache.TryGetValue(name, out f))
+            {
+                try { f = Font.CreateDynamicFontFromOSFont(name, EditorConfig.FontSize); }
+                catch { f = null; }
+                _fontCache[name] = f;
+            }
+            if (f == null) f = MonoFont();
+            if (f != null) style.unityFontDefinition = FontDefinition.FromFont(f);
+
+            _charW.Clear();
+            schedule.Execute(OnViewportChanged).ExecuteLater(0); // metrics after style resolve
+        }
+
+        void ZoomBy(int delta)
+        {
+            int size = Mathf.Clamp(delta == 0 ? EditorConfig.DefaultFontSize : EditorConfig.FontSize + delta, 8, 40);
+            if (size == EditorConfig.FontSize && delta != 0) return;
+            EditorConfig.FontSize = size;
+            ApplyFontConfig();
+            onFontSizeChanged?.Invoke();
+        }
+
         public CodeView()
         {
             focusable = true;
@@ -114,10 +149,9 @@ namespace ADKOM.TextEditor
             style.flexDirection = FlexDirection.Row;
             style.overflow = Overflow.Hidden;
 
-            // Code belongs in a monospace font; it inherits to every line
-            // label, the gutter, and the measuring label.
-            var mono = MonoFont();
-            if (mono != null) style.unityFontDefinition = FontDefinition.FromFont(mono);
+            // Font family/size inherit to every line label, the gutter, and
+            // the measuring label.
+            ApplyFontConfig();
 
             _gutterCol = new VisualElement { name = "code-gutter" };
             _gutterCol.style.minWidth = 44;
@@ -146,6 +180,15 @@ namespace ADKOM.TextEditor
             _content.Add(_measure);
 
             RegisterCallback<KeyDownEvent>(OnKeyDown);
+            // Ctrl+wheel zoom (Cmd on macOS); must trickle so the ScrollView
+            // doesn't consume the wheel first.
+            RegisterCallback<WheelEvent>(e =>
+            {
+                if (!e.ctrlKey && !e.commandKey) return;
+                ZoomBy(e.delta.y < 0 ? 1 : -1);
+                e.PreventDefault();
+                e.StopImmediatePropagation();
+            }, TrickleDown.TrickleDown);
             RegisterCallback<PointerDownEvent>(OnPointerDown);
             RegisterCallback<PointerMoveEvent>(OnPointerMove);
             RegisterCallback<PointerUpEvent>(OnPointerUp);
@@ -796,6 +839,30 @@ namespace ADKOM.TextEditor
                     e.StopPropagation();
                 }
                 return;
+            }
+
+            // Zoom: Ctrl+'+'/'=', Ctrl+'-', Ctrl+0 — the browser/terminal set.
+            if (ctrl && !e.altKey)
+            {
+                switch (e.keyCode)
+                {
+                    case KeyCode.Equals:
+                    case KeyCode.Plus:
+                    case KeyCode.KeypadPlus:
+                        ZoomBy(1);
+                        e.PreventDefault(); e.StopImmediatePropagation();
+                        return;
+                    case KeyCode.Minus:
+                    case KeyCode.KeypadMinus:
+                        ZoomBy(-1);
+                        e.PreventDefault(); e.StopImmediatePropagation();
+                        return;
+                    case KeyCode.Alpha0:
+                    case KeyCode.Keypad0:
+                        ZoomBy(0); // reset to default size
+                        e.PreventDefault(); e.StopImmediatePropagation();
+                        return;
+                }
             }
 
             bool handled = true;

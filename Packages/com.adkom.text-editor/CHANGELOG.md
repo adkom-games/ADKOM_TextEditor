@@ -15,6 +15,11 @@ All notable changes to this package are documented here. Format follows
   with OS monospace fallbacks) instead of inheriting Unity's UI font.
 
 ### Added
+- Configurable editor font and font size (Settings): any installed OS
+  font or the bundled monospace default; size 8–40. Zoom with
+  Ctrl+MouseWheel or Ctrl+'+' / Ctrl+'-' (Cmd on macOS), Ctrl+0 resets —
+  the same gestures as browsers and terminals. All layout metrics
+  (wrap points, caret, gutter) recompute on change.
 - ATE can be selected as Unity's External Script Editor (Preferences →
   External Tools): double-clicked scripts and console log entries open
   in the ATE window at the exact line and column. A configurable
