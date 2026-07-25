@@ -295,6 +295,18 @@ namespace ADKOM.TextEditor
         /// <summary>Text-editing commands on the text field.</summary>
         void OnKeyDown(KeyDownEvent e)
         {
+            // Unity 6 delivers keys as TWO events: keyCode-only, then
+            // character-only. Our Tab handling acts on the keyCode event;
+            // the character event would still insert a literal '\t' into the
+            // text (which also skews click-to-caret mapping afterwards), so
+            // swallow it here.
+            if (e.keyCode == KeyCode.None && e.character == '\t')
+            {
+                e.PreventDefault();
+                e.StopImmediatePropagation();
+                return;
+            }
+
             bool ctrl = e.ctrlKey || e.commandKey;
             var layout = EditorConfig.Keymap;
             bool vs = layout == KeymapLayout.VisualStudio;
