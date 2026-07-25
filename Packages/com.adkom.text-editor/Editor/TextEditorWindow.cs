@@ -34,6 +34,7 @@ namespace ADKOM.TextEditor
         [SerializeField] List<TextDocument> _docs = new List<TextDocument>();
         [SerializeField] int _active;
         [SerializeField] bool _showLineNumbers;
+        [SerializeField] bool _wordWrap;
 
         CodeView _code;
         VisualElement _tabBar;
@@ -45,6 +46,7 @@ namespace ADKOM.TextEditor
         PopupField<string> _settingsTheme;
         EnumField _settingsMode;
         Toggle _settingsLines;
+        Toggle _settingsWrap;
         IntegerField _settingsTabSize;
         EnumField _settingsKeymap;
 
@@ -147,6 +149,7 @@ namespace ADKOM.TextEditor
             _code.SetValueWithoutNotify(Active.Content);
             _code.onValueChanged += OnTextChanged;
             _code.showLineNumbers = _showLineNumbers;
+            _code.wordWrap = _wordWrap;
             _code.RegisterCallback<KeyDownEvent>(OnKeyDown, TrickleDown.TrickleDown);
             _editorArea.Add(_code);
             root.Add(_editorArea);
@@ -239,6 +242,14 @@ namespace ADKOM.TextEditor
             });
             _settingsPane.Add(_settingsLines);
 
+            _settingsWrap = new Toggle("Word Wrap") { value = _wordWrap };
+            _settingsWrap.RegisterValueChangedCallback(e =>
+            {
+                _wordWrap = e.newValue;
+                if (_code != null) _code.wordWrap = e.newValue;
+            });
+            _settingsPane.Add(_settingsWrap);
+
             _settingsTabSize = new IntegerField("Tab Size") { value = EditorConfig.TabSize };
             _settingsTabSize.RegisterValueChangedCallback(e =>
             {
@@ -279,6 +290,7 @@ namespace ADKOM.TextEditor
             _settingsTheme?.SetValueWithoutNotify(CurrentTheme.Name);
             _settingsMode?.SetValueWithoutNotify(CurrentThemeMode);
             _settingsLines?.SetValueWithoutNotify(_showLineNumbers);
+            _settingsWrap?.SetValueWithoutNotify(_wordWrap);
             _settingsTabSize?.SetValueWithoutNotify(EditorConfig.TabSize);
             _settingsKeymap?.SetValueWithoutNotify(EditorConfig.Keymap);
         }

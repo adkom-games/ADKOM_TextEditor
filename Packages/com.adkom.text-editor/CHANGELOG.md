@@ -3,6 +3,17 @@
 All notable changes to this package are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com); versions follow semver.
 
+## [Unreleased]
+
+### Added
+- Word wrap is back, now native to the virtualized view: the editor
+  computes its own wrap points (greedy word wrap, per-character width
+  table) and renders each visual row independently — rendering, caret,
+  clicks, and selection always agree. Syntax coloring splits correctly
+  across wrapped rows; the gutter blanks continuation rows; Up/Down and
+  PageUp/Down move by visual row; the horizontal scrollbar hides while
+  wrap is on. The Word Wrap setting has returned to the Settings tab.
+
 ## [0.2.1] - 2026-07-24
 
 ### Changed
