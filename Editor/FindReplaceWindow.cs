@@ -148,6 +148,7 @@ namespace ADKOM.TextEditor
             if (_owner == null)
                 _owner = Resources.FindObjectsOfTypeAll<TextEditorWindow>() is var w && w.Length > 0 ? w[0] : null;
             if (_owner == null) { SetStatus("No editor window."); return false; }
+            if (_owner.DocCount == 0) { SetStatus("No open tabs."); return false; }
             return true;
         }
 
