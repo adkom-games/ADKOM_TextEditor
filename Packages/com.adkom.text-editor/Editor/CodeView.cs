@@ -859,6 +859,19 @@ namespace ADKOM.TextEditor
                 InsertText(clip.Replace("\r\n", "\n").Replace("\r", "\n"), false);
         }
 
+        /// <summary>Places the caret at a 1-based line/column (as Unity's
+        /// external-editor API supplies) and scrolls it into view.</summary>
+        public void GoToLine(int line1Based, int column1Based)
+        {
+            int line = Mathf.Clamp(line1Based - 1, 0, _lines.Count - 1);
+            int col = Mathf.Clamp(column1Based - 1, 0, _lines[line].Length);
+            _caretLine = line;
+            _caretCol = Mathf.Max(0, col);
+            _preferredCol = -1;
+            CollapseAnchor();
+            AfterCaretMove();
+        }
+
         public void SelectAll()
         {
             _anchorLine = 0; _anchorCol = 0;

@@ -23,6 +23,17 @@ namespace ADKOM.TextEditor
             set => EditorPrefs.SetInt(KeymapKey, (int)value);
         }
 
+        const string FallbackEditorKey = "ADKOM.TextEditor.FallbackEditorPath";
+
+        /// <summary>External editor to forward unhandled open/sync requests to
+        /// when ATE is Unity's selected external script editor. Empty = none
+        /// (fall back to the OS default application).</summary>
+        public static string FallbackEditorPath
+        {
+            get => EditorPrefs.GetString(FallbackEditorKey, string.Empty);
+            set => EditorPrefs.SetString(FallbackEditorKey, value ?? string.Empty);
+        }
+
         const string AutoUpdateKey = "ADKOM.TextEditor.AutoUpdate";
         const string UpdateFreqKey = "ADKOM.TextEditor.UpdateFrequencyDays";
 
