@@ -58,8 +58,8 @@
 
 .code-line {
     /* Shared metrics for code lines, the gutter, and the measuring label —
-       whitespace must be preserved so glyph x-positions match the model. */
-    font-size: 13px;
+       whitespace must be preserved so glyph x-positions match the model.
+       Font family/size are inherited from the CodeView root (configurable). */
     -unity-font-style: normal;
     white-space: pre;
     margin: 0;
