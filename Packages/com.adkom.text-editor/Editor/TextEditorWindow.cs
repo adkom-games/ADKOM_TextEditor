@@ -42,6 +42,7 @@ namespace ADKOM.TextEditor
         string _gutterSource;
         float _gutterWidth;
         bool _gutterWrap;
+        IVisualElementScheduledItem _gutterMeasurePending;
         VisualElement _tabBar;
         Label _statusLeft;
         Label _statusRight;
@@ -194,7 +195,7 @@ namespace ADKOM.TextEditor
             _textField.RegisterCallback<GeometryChangedEvent>(_ =>
             {
                 SyncHighlightRect();
-                UpdateGutter(); // wrap width changed: recompute wrapped-row padding
+                ScheduleGutterUpdate(); // wrap width changed: recompute row padding
             });
 
             // --- Status bar ---
@@ -231,7 +232,7 @@ namespace ADKOM.TextEditor
         void OnTextChanged(ChangeEvent<string> e)
         {
             Active.Content = e.newValue;
-            UpdateGutter();
+            ScheduleGutterUpdate();
             RefreshHighlight();
             if (!Active.IsDirty)
             {
@@ -698,6 +699,24 @@ namespace ADKOM.TextEditor
             _gutterSource = null; // force rebuild
             UpdateGutter();
             SyncGutterScroll();
+        }
+
+        /// <summary>Keystroke-path gutter refresh. The wrap-aware rebuild
+        /// measures every logical line (~0.06ms each), which at file scale
+        /// costs whole seconds per keystroke if run synchronously — so with
+        /// wrap on it is debounced until typing pauses. Without wrap the
+        /// rebuild is a cheap string build and runs immediately.</summary>
+        void ScheduleGutterUpdate()
+        {
+            if (!_showLineNumbers || _gutterLabel == null) return;
+            if (!_wordWrap)
+            {
+                UpdateGutter();
+                return;
+            }
+            if (_gutterMeasurePending == null)
+                _gutterMeasurePending = _gutterLabel.schedule.Execute(UpdateGutter);
+            _gutterMeasurePending.ExecuteLater(200); // re-arms the same item
         }
 
         void UpdateGutter()
