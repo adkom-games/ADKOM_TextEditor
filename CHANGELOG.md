@@ -10,6 +10,10 @@ All notable changes to this package are documented here. Format follows
   loaded document is taller than the visible editor area.
 
 ### Added
+- Settings tab: a gear button in the toolbar opens Settings as a document
+  tab (single instance; switches to it if already open). Color Theme,
+  Light/Dark Mode, Line Numbers, and Word Wrap moved there from the
+  toolbar.
 - C# syntax highlighting (keywords, strings, chars, comments, numbers,
   preprocessor) via the `ITextFormatter` pipeline, chosen per tab by file
   extension; rendered by a rich-text overlay. Files over 200k chars fall
