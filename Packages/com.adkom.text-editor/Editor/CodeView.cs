@@ -109,6 +109,14 @@ namespace ADKOM.TextEditor
             RegisterCallback<GeometryChangedEvent>(_ => { RemeasureLineHeight(); RefreshVisible(); });
             RegisterCallback<ValidateCommandEvent>(OnValidateCommand);
             RegisterCallback<ExecuteCommandEvent>(OnExecuteCommand);
+            // Tab must edit text, never move focus: the focus controller acts
+            // on synthesized navigation events that KeyDownEvent.PreventDefault
+            // does not stop, so consume them here.
+            RegisterCallback<NavigationMoveEvent>(e =>
+            {
+                e.PreventDefault();
+                e.StopPropagation();
+            });
             _scroll.verticalScroller.valueChanged += _ => RefreshVisible();
             _scroll.horizontalScroller.valueChanged += _ => RefreshVisible();
         }
