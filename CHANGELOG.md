@@ -18,6 +18,8 @@ All notable changes to this package are documented here. Format follows
   with OS monospace fallbacks) instead of inheriting Unity's UI font.
 
 ### Added
+- File tabs have a right-click context menu: Save, Save As…, Close, and
+  Close Other Tabs (per-document dirty prompts; Cancel aborts the rest).
 - Configurable editor font and font size (Settings): any installed OS
   font or the bundled monospace default; size 8–40. Zoom with
   Ctrl+MouseWheel or Ctrl+'+' / Ctrl+'-' (Cmd on macOS), Ctrl+0 resets —

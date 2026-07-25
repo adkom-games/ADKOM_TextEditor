@@ -595,6 +595,7 @@ namespace ADKOM.TextEditor
                 tab.RegisterCallback<MouseDownEvent>(e =>
                 {
                     if (e.button == 0) SwitchTo(index);
+                    else if (e.button == 1) ShowTabContextMenu(index); // right-click
                     else if (e.button == 2) CloseTab(index); // middle-click close
                 });
 
@@ -610,6 +611,59 @@ namespace ADKOM.TextEditor
 
                 _tabBar.Add(tab);
             }
+        }
+
+        void ShowTabContextMenu(int index)
+        {
+            if (index < 0 || index >= _docs.Count) return;
+            var doc = _docs[index];
+            var m = new GenericMenu();
+            if (!doc.IsSettings)
+            {
+                m.AddItem(new GUIContent("Save"), false, () => SaveTabAt(index, saveAs: false));
+                m.AddItem(new GUIContent("Save As..."), false, () => SaveTabAt(index, saveAs: true));
+            }
+            else
+            {
+                m.AddDisabledItem(new GUIContent("Save"));
+                m.AddDisabledItem(new GUIContent("Save As..."));
+            }
+            m.AddSeparator("");
+            m.AddItem(new GUIContent("Close"), false, () => CloseTab(index));
+            if (_docs.Count > 1)
+                m.AddItem(new GUIContent("Close Other Tabs"), false, () => CloseOtherTabs(index));
+            else
+                m.AddDisabledItem(new GUIContent("Close Other Tabs"));
+            m.ShowAsContext();
+        }
+
+        void SaveTabAt(int index, bool saveAs)
+        {
+            if (index < 0 || index >= _docs.Count || _docs[index].IsSettings) return;
+            var doc = _docs[index]; // background docs' Content is kept in sync
+            bool saved = saveAs ? FileService.SaveAs(doc) : FileService.Save(doc);
+            if (saved)
+            {
+                if (index == _active) RefreshFormatter(); // Save As can change language
+                RebuildTabs();
+                UpdateTitle();
+                UpdateStatus();
+            }
+        }
+
+        /// <summary>Closes every tab except <paramref name="keep"/>, prompting
+        /// per dirty document; Cancel aborts the remaining closes.</summary>
+        void CloseOtherTabs(int keep)
+        {
+            for (int i = _docs.Count - 1; i >= 0; i--)
+            {
+                if (i == keep) continue;
+                if (!ConfirmDiscardIfDirty(_docs[i])) break; // Cancel stops here
+                _docs.RemoveAt(i);
+                if (i < keep) keep--;
+            }
+            _active = Mathf.Clamp(keep, 0, _docs.Count - 1);
+            SwitchTo(_active);
         }
 
         void SwitchTo(int index)
