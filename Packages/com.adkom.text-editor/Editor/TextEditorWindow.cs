@@ -46,6 +46,13 @@ namespace ADKOM.TextEditor
         Label _statusLeft;
         Label _statusRight;
 
+        VisualElement _editorRow;
+        VisualElement _settingsPane;
+        PopupField<string> _settingsTheme;
+        EnumField _settingsMode;
+        Toggle _settingsLines;
+        Toggle _settingsWrap;
+
         Label _highlight;
         VisualElement _highlightClip;
         string _highlightSource;
@@ -121,33 +128,17 @@ namespace ADKOM.TextEditor
             toolbar.Add(ToolbarBtn("Save", () => SaveFile(false)));
             toolbar.Add(ToolbarBtn("Save As", () => SaveFile(true)));
             toolbar.Add(new ToolbarSpacer { flex = true });
-            var themeMenu = new ToolbarMenu { text = "Theme" };
-            foreach (var theme in HighlightTheme.All)
+            var gear = new ToolbarButton(OpenSettings) { tooltip = "Settings" };
+            var gearTex = EditorGUIUtility.IconContent("SettingsIcon").image;
+            if (gearTex != null)
             {
-                var t = theme;
-                themeMenu.menu.AppendAction(t.Name,
-                    _ => { CurrentTheme = t; ApplyTheme(); },
-                    _ => CurrentTheme == t
-                        ? DropdownMenuAction.Status.Checked
-                        : DropdownMenuAction.Status.Normal);
+                var icon = new Image { image = gearTex, scaleMode = ScaleMode.ScaleToFit };
+                icon.style.width = 16;
+                icon.style.height = 16;
+                gear.Add(icon);
             }
-            themeMenu.menu.AppendSeparator();
-            foreach (ThemeMode mode in System.Enum.GetValues(typeof(ThemeMode)))
-            {
-                var m = mode;
-                themeMenu.menu.AppendAction(m.ToString(),
-                    _ => { CurrentThemeMode = m; ApplyTheme(); },
-                    _ => CurrentThemeMode == m
-                        ? DropdownMenuAction.Status.Checked
-                        : DropdownMenuAction.Status.Normal);
-            }
-            toolbar.Add(themeMenu);
-            var linesToggle = new ToolbarToggle { text = "Lines", value = _showLineNumbers };
-            linesToggle.RegisterValueChangedCallback(e => { _showLineNumbers = e.newValue; ApplyLineNumbers(); });
-            toolbar.Add(linesToggle);
-            var wrapToggle = new ToolbarToggle { text = "Wrap", value = _wordWrap };
-            wrapToggle.RegisterValueChangedCallback(e => { _wordWrap = e.newValue; ApplyWrap(); });
-            toolbar.Add(wrapToggle);
+            else gear.text = "⚙";
+            toolbar.Add(gear);
             root.Add(toolbar);
 
             // --- Tab bar ---
@@ -155,7 +146,7 @@ namespace ADKOM.TextEditor
             root.Add(_tabBar);
 
             // --- Editor area: gutter (future line numbers) + text ---
-            var editorRow = new VisualElement { name = "editor-row" };
+            var editorRow = _editorRow = new VisualElement { name = "editor-row" };
             editorRow.style.flexGrow = 1;
             editorRow.style.flexDirection = FlexDirection.Row;
 
@@ -191,6 +182,8 @@ namespace ADKOM.TextEditor
             _highlight.style.position = Position.Absolute;
             _highlightClip.Add(_highlight);
             editorRow.Add(_highlightClip); // added after the field: draws on top
+
+            BuildSettingsPane(root);
             _textField.RegisterCallback<GeometryChangedEvent>(_ =>
             {
                 SyncHighlightRect();
@@ -210,9 +203,7 @@ namespace ADKOM.TextEditor
             ApplyWrap();
             ApplyLineNumbers();
             ApplyTheme(); // includes RefreshHighlight
-            RebuildTabs();
-            UpdateTitle();
-            UpdateStatus();
+            SwitchTo(_active); // also restores settings-tab visibility state
 
             // The internal ScrollView exists once the field is built; mirror its
             // vertical offset onto the gutter so numbers track the text.
@@ -409,6 +400,76 @@ namespace ADKOM.TextEditor
                 _gutterLabel.style.translate = new Translate(0, -scrollView.scrollOffset.y);
         }
 
+        // --- Settings tab ---
+
+        void BuildSettingsPane(VisualElement root)
+        {
+            _settingsPane = new VisualElement { name = "settings-pane" };
+            _settingsPane.style.flexGrow = 1;
+            _settingsPane.style.display = DisplayStyle.None;
+
+            var title = new Label("Editor Settings");
+            title.AddToClassList("settings-title");
+            _settingsPane.Add(title);
+
+            var themeNames = new List<string>();
+            foreach (var t in HighlightTheme.All) themeNames.Add(t.Name);
+            _settingsTheme = new PopupField<string>("Color Theme", themeNames, CurrentTheme.Name);
+            _settingsTheme.RegisterValueChangedCallback(e =>
+            {
+                CurrentTheme = HighlightTheme.ByName(e.newValue);
+                ApplyTheme();
+            });
+            _settingsPane.Add(_settingsTheme);
+
+            _settingsMode = new EnumField("Light/Dark Mode", CurrentThemeMode);
+            _settingsMode.RegisterValueChangedCallback(e =>
+            {
+                CurrentThemeMode = (ThemeMode)e.newValue;
+                ApplyTheme();
+            });
+            _settingsPane.Add(_settingsMode);
+
+            _settingsLines = new Toggle("Line Numbers") { value = _showLineNumbers };
+            _settingsLines.RegisterValueChangedCallback(e =>
+            {
+                _showLineNumbers = e.newValue;
+                ApplyLineNumbers();
+            });
+            _settingsPane.Add(_settingsLines);
+
+            _settingsWrap = new Toggle("Word Wrap") { value = _wordWrap };
+            _settingsWrap.RegisterValueChangedCallback(e =>
+            {
+                _wordWrap = e.newValue;
+                ApplyWrap();
+            });
+            _settingsPane.Add(_settingsWrap);
+
+            root.Add(_settingsPane);
+        }
+
+        void OpenSettings()
+        {
+            EnsureDocs();
+            int existing = _docs.FindIndex(d => d.IsSettings);
+            if (existing >= 0)
+            {
+                SwitchTo(existing);
+                return;
+            }
+            _docs.Add(new TextDocument { IsSettings = true });
+            SwitchTo(_docs.Count - 1);
+        }
+
+        void SyncSettingsControls()
+        {
+            _settingsTheme?.SetValueWithoutNotify(CurrentTheme.Name);
+            _settingsMode?.SetValueWithoutNotify(CurrentThemeMode);
+            _settingsLines?.SetValueWithoutNotify(_showLineNumbers);
+            _settingsWrap?.SetValueWithoutNotify(_wordWrap);
+        }
+
         // --- Tabs ---
 
         void RebuildTabs()
@@ -447,6 +508,21 @@ namespace ADKOM.TextEditor
         {
             EnsureDocs();
             _active = Mathf.Clamp(index, 0, _docs.Count - 1);
+
+            bool settings = Active.IsSettings;
+            if (_editorRow != null)
+                _editorRow.style.display = settings ? DisplayStyle.None : DisplayStyle.Flex;
+            if (_settingsPane != null)
+                _settingsPane.style.display = settings ? DisplayStyle.Flex : DisplayStyle.None;
+            if (settings)
+            {
+                SyncSettingsControls();
+                RebuildTabs();
+                UpdateTitle();
+                UpdateStatus();
+                return;
+            }
+
             CheckExternalChange(Active);
             _textField?.SetValueWithoutNotify(Active.Content);
             _gutterSource = null;
@@ -504,6 +580,7 @@ namespace ADKOM.TextEditor
 
         void SaveFile(bool saveAs)
         {
+            if (Active.IsSettings) return;
             bool saved = saveAs ? FileService.SaveAs(Active) : FileService.Save(Active);
             if (saved)
             {
@@ -590,6 +667,13 @@ namespace ADKOM.TextEditor
         void UpdateStatus()
         {
             if (_statusLeft == null || _textField == null) return;
+
+            if (Active.IsSettings)
+            {
+                _statusLeft.text = "Settings";
+                _statusRight.text = string.Empty;
+                return;
+            }
 
             int caret = Mathf.Clamp(_textField.cursorIndex, 0, Active.Content.Length);
             int line = 1, col = 1;
