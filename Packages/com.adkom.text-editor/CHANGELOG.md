@@ -16,6 +16,12 @@ All notable changes to this package are documented here. Format follows
 - Word wrap is no longer available: the virtualized view scrolls long
   lines horizontally instead. The Wrap setting has been removed.
 
+### Changed (virtualized view)
+- Tab-stop behavior now applies to ANY whitespace run, not just leading
+  indentation: Left/Right arrows jump to tab-stop-aligned columns
+  (bounded by the run), and Backspace/Delete remove whitespace back/
+  forward to the nearest tab stop.
+
 ### Fixed
 - Colorization is now asynchronous: while typing, the field's own glyphs
   show in plain theme color and the syntax-colored overlay re-renders
