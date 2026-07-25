@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -1256,3 +1257,4 @@ namespace ADKOM.TextEditor
         }
     }
 }
+#endif
