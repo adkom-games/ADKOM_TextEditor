@@ -5,6 +5,16 @@ All notable changes to this package are documented here. Format follows
 
 ## [Unreleased]
 
+### Added
+- Automatic update checks: polls the GitHub latest release (via UPM git
+  URL install) on a configurable schedule — daily at most, or every N
+  days — announcing new versions in the console and, when the editor is
+  idle, offering an install dialog showing current and new version
+  numbers with an "automatic updates" checkbox synced to Settings.
+  Settings additions: Automatic Updates toggle, Check Every (days), a
+  Check for Updates Now button, and the installed version. Embedded
+  (development) copies log availability but never auto-install.
+
 ### Changed
 - The toolbar buttons were replaced by a standard menu bar — File, Edit,
   View, Tools, Window, Help — rendered with the platform's native menus
