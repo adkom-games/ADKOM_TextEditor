@@ -57,6 +57,7 @@ namespace ADKOM.TextEditor
         PopupField<string> _settingsFallback;
         PopupField<string> _settingsFont;
         IntegerField _settingsFontSize;
+        Toggle _settingsSmooth;
 
         ITextFormatter _formatter = new PlainTextFormatter();
 
@@ -511,6 +512,11 @@ namespace ADKOM.TextEditor
             _settingsFallback.tooltip = "When ATE is the External Script Editor, non-text requests (solutions, binaries, project sync) are forwarded here.";
             _settingsPane.Add(_settingsFallback);
 
+            _settingsSmooth = new Toggle("Smooth Scrolling") { value = EditorConfig.SmoothScrolling };
+            _settingsSmooth.RegisterValueChangedCallback(e => EditorConfig.SmoothScrolling = e.newValue);
+            _settingsSmooth.tooltip = "Animate wheel scrolling instead of stepping line by line.";
+            _settingsPane.Add(_settingsSmooth);
+
             _settingsAutoUpdate = new Toggle("Automatic Updates") { value = EditorConfig.AutoUpdate };
             _settingsAutoUpdate.RegisterValueChangedCallback(e => EditorConfig.AutoUpdate = e.newValue);
             _settingsAutoUpdate.tooltip = "Check GitHub for new releases and offer to install them.";
@@ -576,6 +582,7 @@ namespace ADKOM.TextEditor
             _settingsAutoUpdate?.SetValueWithoutNotify(EditorConfig.AutoUpdate);
             _settingsUpdateFreq?.SetValueWithoutNotify(EditorConfig.UpdateFrequencyDays);
             _settingsFontSize?.SetValueWithoutNotify(EditorConfig.FontSize);
+            _settingsSmooth?.SetValueWithoutNotify(EditorConfig.SmoothScrolling);
         }
 
         // --- Tabs ---
