@@ -50,6 +50,8 @@ namespace ADKOM.TextEditor
         Toggle _settingsWrap;
         IntegerField _settingsTabSize;
         EnumField _settingsKeymap;
+        Toggle _settingsAutoUpdate;
+        IntegerField _settingsUpdateFreq;
 
         ITextFormatter _formatter = new PlainTextFormatter();
 
@@ -447,6 +449,40 @@ namespace ADKOM.TextEditor
             _settingsKeymap.tooltip = "Which IDE's default shortcuts to use for the commands this editor supports.";
             _settingsPane.Add(_settingsKeymap);
 
+            _settingsAutoUpdate = new Toggle("Automatic Updates") { value = EditorConfig.AutoUpdate };
+            _settingsAutoUpdate.RegisterValueChangedCallback(e => EditorConfig.AutoUpdate = e.newValue);
+            _settingsAutoUpdate.tooltip = "Check GitHub for new releases and offer to install them.";
+            _settingsPane.Add(_settingsAutoUpdate);
+
+            _settingsUpdateFreq = new IntegerField("Check Every (days)") { value = EditorConfig.UpdateFrequencyDays };
+            _settingsUpdateFreq.RegisterValueChangedCallback(e =>
+            {
+                EditorConfig.UpdateFrequencyDays = e.newValue;
+                _settingsUpdateFreq.SetValueWithoutNotify(EditorConfig.UpdateFrequencyDays); // clamp echo (min 1)
+            });
+            _settingsUpdateFreq.tooltip = "Days between automatic update checks. 1 = daily; never more often than once per day.";
+            _settingsPane.Add(_settingsUpdateFreq);
+
+            var checkNowRow = new VisualElement();
+            checkNowRow.style.flexDirection = FlexDirection.Row;
+            var updateStatus = new Label();
+            updateStatus.style.opacity = 0.75f;
+            updateStatus.style.marginLeft = 8;
+            updateStatus.style.alignSelf = Align.Center;
+            var checkNow = new Button(() =>
+            {
+                updateStatus.text = "Checking…";
+                UpdateChecker.CheckNow(manual: true, r => updateStatus.text = r);
+            }) { text = "Check for Updates Now" };
+            checkNowRow.Add(checkNow);
+            checkNowRow.Add(updateStatus);
+            _settingsPane.Add(checkNowRow);
+
+            var versionLabel = new Label("Installed version: " + UpdateChecker.CurrentVersion());
+            versionLabel.style.opacity = 0.6f;
+            versionLabel.style.marginTop = 4;
+            _settingsPane.Add(versionLabel);
+
             root.Add(_settingsPane);
         }
 
@@ -473,6 +509,8 @@ namespace ADKOM.TextEditor
             _settingsWrap?.SetValueWithoutNotify(_wordWrap);
             _settingsTabSize?.SetValueWithoutNotify(EditorConfig.TabSize);
             _settingsKeymap?.SetValueWithoutNotify(EditorConfig.Keymap);
+            _settingsAutoUpdate?.SetValueWithoutNotify(EditorConfig.AutoUpdate);
+            _settingsUpdateFreq?.SetValueWithoutNotify(EditorConfig.UpdateFrequencyDays);
         }
 
         // --- Tabs ---
