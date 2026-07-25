@@ -6,6 +6,15 @@ All notable changes to this package are documented here. Format follows
 ## [Unreleased]
 
 ### Added
+- ATE can be selected as Unity's External Script Editor (Preferences →
+  External Tools): double-clicked scripts and console log entries open
+  in the ATE window at the exact line and column. A configurable
+  Fallback Editor (Settings and the External Tools pane) receives
+  everything ATE doesn't handle — solutions, Open C# Project requests,
+  binaries, and project-file sync — defaulting to the OS default
+  application. Note: deep IDE integrations (debugger attach, solution
+  sync extras) belong to the editor actually selected in Unity; the
+  fallback receives plain open/sync calls.
 - Automatic update checks: polls the GitHub latest release (via UPM git
   URL install) on a configurable schedule — daily at most, or every N
   days — announcing new versions in the console and, when the editor is

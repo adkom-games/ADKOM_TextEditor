@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -52,6 +53,7 @@ namespace ADKOM.TextEditor
         EnumField _settingsKeymap;
         Toggle _settingsAutoUpdate;
         IntegerField _settingsUpdateFreq;
+        PopupField<string> _settingsFallback;
 
         ITextFormatter _formatter = new PlainTextFormatter();
 
@@ -93,6 +95,18 @@ namespace ADKOM.TextEditor
 
             string ext = Path.GetExtension(assetPath).ToLowerInvariant();
             return System.Array.IndexOf(TextExtensions, ext) >= 0;
+        }
+
+        /// <summary>External-editor entry point: opens (or focuses) the window,
+        /// opens the file, and jumps to the 1-based line/column when given.</summary>
+        public static void OpenExternal(string path, int line, int column)
+        {
+            var windows = Resources.FindObjectsOfTypeAll<TextEditorWindow>();
+            var window = windows.Length > 0 ? windows[0] : CreateWindow<TextEditorWindow>();
+            window.Show();
+            window.Focus();
+            window.OpenPath(Path.GetFullPath(path));
+            if (line > 0) window._code?.GoToLine(line, Mathf.Max(1, column));
         }
 
         [MenuItem(AssetsMenuPath)]
@@ -448,6 +462,24 @@ namespace ADKOM.TextEditor
                 EditorConfig.Keymap = (KeymapLayout)e.newValue);
             _settingsKeymap.tooltip = "Which IDE's default shortcuts to use for the commands this editor supports.";
             _settingsPane.Add(_settingsKeymap);
+
+            // External-editor fallback (used when ATE is Unity's selected
+            // external script editor and a request isn't a text file).
+            var editors = Unity.CodeEditor.CodeEditor.Editor.GetFoundScriptEditorPaths()
+                .Where(kv => kv.Key != EditorApplication.applicationPath).ToList();
+            var fallbackLabels = new List<string> { "(OS default application)" };
+            fallbackLabels.AddRange(editors.Select(kv => kv.Value));
+            string currentLabel = fallbackLabels[0];
+            foreach (var kv in editors)
+                if (kv.Key == EditorConfig.FallbackEditorPath) currentLabel = kv.Value;
+            _settingsFallback = new PopupField<string>("External Fallback", fallbackLabels, currentLabel);
+            _settingsFallback.RegisterValueChangedCallback(e =>
+            {
+                int idx = fallbackLabels.IndexOf(e.newValue);
+                EditorConfig.FallbackEditorPath = idx <= 0 ? string.Empty : editors[idx - 1].Key;
+            });
+            _settingsFallback.tooltip = "When ATE is the External Script Editor, non-text requests (solutions, binaries, project sync) are forwarded here.";
+            _settingsPane.Add(_settingsFallback);
 
             _settingsAutoUpdate = new Toggle("Automatic Updates") { value = EditorConfig.AutoUpdate };
             _settingsAutoUpdate.RegisterValueChangedCallback(e => EditorConfig.AutoUpdate = e.newValue);
