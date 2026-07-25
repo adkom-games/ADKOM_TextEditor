@@ -6,6 +6,11 @@ All notable changes to this package are documented here. Format follows
 ## [Unreleased]
 
 ### Fixed
+- Indentation was invisible in highlighted files and clicks placed the
+  caret slightly off: the highlight overlay used white-space: normal,
+  which collapses space runs in Unity 6, shifting every rendered glyph
+  off the real text layout. The overlay now preserves whitespace
+  (pre / pre-wrap).
 - Tab key inserted a literal tab character instead of spaces (and skewed
   click-to-caret mapping afterwards): Unity delivers a second,
   character-only key event for Tab which bypassed the handler; it is now
