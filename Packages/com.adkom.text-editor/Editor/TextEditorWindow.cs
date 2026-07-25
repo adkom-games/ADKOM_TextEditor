@@ -123,6 +123,8 @@ namespace ADKOM.TextEditor
             toolbar.Add(ToolbarBtn("Open", OpenFile));
             toolbar.Add(ToolbarBtn("Save", () => SaveFile(false)));
             toolbar.Add(ToolbarBtn("Save As", () => SaveFile(true)));
+            toolbar.Add(ToolbarBtn("Find", () => FindReplaceWindow.Open(this, replaceFocus: false, allTabs: false)));
+            toolbar.Add(ToolbarBtn("Replace", () => FindReplaceWindow.Open(this, replaceFocus: true, allTabs: false)));
             toolbar.Add(new ToolbarSpacer { flex = true });
             var gear = new ToolbarButton(OpenSettings) { tooltip = "Settings" };
             var gearTex = EditorGUIUtility.IconContent("SettingsIcon").image;
