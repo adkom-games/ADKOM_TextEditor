@@ -849,6 +849,27 @@ namespace ADKOM.TextEditor
             }
         }
 
+        public void Copy() => CopySelection(false);
+        public void Cut() => CopySelection(true);
+
+        public void Paste()
+        {
+            string clip = EditorGUIUtility.systemCopyBuffer;
+            if (!string.IsNullOrEmpty(clip))
+                InsertText(clip.Replace("\r\n", "\n").Replace("\r", "\n"), false);
+        }
+
+        public void SelectAll()
+        {
+            _anchorLine = 0; _anchorCol = 0;
+            _caretLine = _lines.Count - 1; _caretCol = _lines[_caretLine].Length;
+            RefreshVisible();
+        }
+
+        public bool HasSelectionPublic => HasSelection;
+        public bool CanUndo => _undo.Count > 0;
+        public bool CanRedo => _redo.Count > 0;
+
         void CopySelection(bool cut)
         {
             if (!HasSelection) return;
