@@ -132,6 +132,42 @@ namespace ADKOM.TextEditor
             schedule.Execute(OnViewportChanged).ExecuteLater(0); // metrics after style resolve
         }
 
+        // --- Smooth scrolling: exponential ease toward a wheel-accumulated
+        // target; per-notch distance matches the ScrollView's own stepping. ---
+
+        float _smoothTarget;
+        bool _smoothActive;
+        double _smoothLastTime;
+        IVisualElementScheduledItem _smoothAnim;
+
+        void SmoothScrollBy(float pixels)
+        {
+            var sc = _scroll.verticalScroller;
+            if (!_smoothActive) _smoothTarget = sc.value; // re-anchor after drags
+            _smoothTarget = Mathf.Clamp(_smoothTarget + pixels, sc.lowValue, sc.highValue);
+            _smoothLastTime = EditorApplication.timeSinceStartup;
+            _smoothActive = true;
+            if (_smoothAnim == null) _smoothAnim = schedule.Execute(SmoothStep).Every(15);
+            else _smoothAnim.Resume();
+        }
+
+        void SmoothStep()
+        {
+            var sc = _scroll.verticalScroller;
+            double now = EditorApplication.timeSinceStartup;
+            float dt = Mathf.Min(0.05f, (float)(now - _smoothLastTime));
+            _smoothLastTime = now;
+            float diff = _smoothTarget - sc.value;
+            if (Mathf.Abs(diff) < 0.5f)
+            {
+                sc.value = _smoothTarget;
+                _smoothActive = false;
+                _smoothAnim.Pause();
+                return;
+            }
+            sc.value += diff * (1f - Mathf.Exp(-dt * 14f));
+        }
+
         void ZoomBy(int delta)
         {
             int size = Mathf.Clamp(delta == 0 ? EditorConfig.DefaultFontSize : EditorConfig.FontSize + delta, 8, 40);
@@ -180,12 +216,20 @@ namespace ADKOM.TextEditor
             _content.Add(_measure);
 
             RegisterCallback<KeyDownEvent>(OnKeyDown);
-            // Ctrl+wheel zoom (Cmd on macOS); must trickle so the ScrollView
-            // doesn't consume the wheel first.
+            // Trickle-down wheel handling: Ctrl = zoom (Cmd on macOS); with
+            // smooth scrolling on, plain wheel input animates toward the same
+            // per-notch distance the ScrollView would jump.
             RegisterCallback<WheelEvent>(e =>
             {
-                if (!e.ctrlKey && !e.commandKey) return;
-                ZoomBy(e.delta.y < 0 ? 1 : -1);
+                if (e.ctrlKey || e.commandKey)
+                {
+                    ZoomBy(e.delta.y < 0 ? 1 : -1);
+                    e.PreventDefault();
+                    e.StopImmediatePropagation();
+                    return;
+                }
+                if (!EditorConfig.SmoothScrolling) return; // ScrollView steps as usual
+                SmoothScrollBy(e.delta.y * _scroll.mouseWheelScrollSize);
                 e.PreventDefault();
                 e.StopImmediatePropagation();
             }, TrickleDown.TrickleDown);

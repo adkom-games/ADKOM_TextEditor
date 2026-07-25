@@ -18,6 +18,9 @@ All notable changes to this package are documented here. Format follows
   with OS monospace fallbacks) instead of inheriting Unity's UI font.
 
 ### Added
+- Optional smooth scrolling (Settings, default on): wheel input animates
+  the text view with an exponential ease toward the same per-notch
+  distance as stepped scrolling, instead of jumping line by line.
 - File tabs have a right-click context menu: Save, Save As…, Close, and
   Close Other Tabs (per-document dirty prompts; Cancel aborts the rest).
 - Configurable editor font and font size (Settings): any installed OS
