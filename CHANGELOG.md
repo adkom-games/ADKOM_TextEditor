@@ -3,7 +3,7 @@
 All notable changes to this package are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com); versions follow semver.
 
-## [Unreleased]
+## [0.2.0] - 2026-07-24
 
 ### Changed
 - The editor is now fully virtualized: the document renders as pooled
