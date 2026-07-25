@@ -9,17 +9,19 @@ namespace ADKOM.TextEditor
 {
     /// <summary>
     /// Virtualized code editor view. The document is stored as lines and only
-    /// the visible lines are rendered (one pooled Label each, colored per line
+    /// the visible rows are rendered (one pooled Label each, colored per line
     /// by the formatter), so keystroke cost is independent of file size.
     /// Caret, selection, mouse, keyboard, clipboard, and undo are implemented
     /// here. Exposes a TextField-like surface (value / cursorIndex /
     /// selectIndex) so command code can treat it like a text field.
-    /// Word wrap is not supported; long lines scroll horizontally.
+    /// Word wrap splits lines into visual rows at self-computed break points
+    /// (per-character width table), so rendering and caret math always agree.
     /// </summary>
     public class CodeView : VisualElement
     {
         const float CaretWidth = 1.5f;
         const int UndoCap = 100;
+        const float WrapPad = 6f;
 
         readonly List<string> _lines = new List<string> { string.Empty };
         string _cachedValue = string.Empty;
@@ -27,6 +29,15 @@ namespace ADKOM.TextEditor
 
         ITextFormatter _formatter;
         string[] _richLines; // null => render plain
+
+        // Word wrap layout: per line, the columns where new visual rows start
+        // (null = single row); _rowStarts[i] = first visual row of line i.
+        bool _wordWrap;
+        List<int>[] _breaks;
+        int[] _rowStarts;
+        int _totalRows;
+        float _wrapWidth = -1;
+        readonly Dictionary<char, float> _charW = new Dictionary<char, float>();
 
         // Caret/selection in (line, col). Anchor is the selection's fixed end.
         int _caretLine, _caretCol, _anchorLine, _anchorCol;
@@ -58,6 +69,21 @@ namespace ADKOM.TextEditor
 
         public event Action<string> onValueChanged;
         public int TabSize = 4;
+
+        public bool wordWrap
+        {
+            get => _wordWrap;
+            set
+            {
+                if (_wordWrap == value) return;
+                _wordWrap = value;
+                _scroll.horizontalScrollerVisibility =
+                    value ? ScrollerVisibility.Hidden : ScrollerVisibility.Auto;
+                if (value) _scroll.horizontalScroller.value = 0;
+                RecomputeWrap();
+                RefreshVisible();
+            }
+        }
 
         public CodeView()
         {
@@ -106,16 +132,7 @@ namespace ADKOM.TextEditor
             RegisterCallback<PointerUpEvent>(OnPointerUp);
             RegisterCallback<FocusInEvent>(_ => StartBlink());
             RegisterCallback<FocusOutEvent>(_ => StopBlink());
-            RegisterCallback<GeometryChangedEvent>(_ => { RemeasureLineHeight(); RefreshVisible(); });
-            // The viewport gets its size after this element's own geometry
-            // event (scrollbars appear/disappear during layout), and the
-            // initial fill must react to it or only the first pool of lines
-            // renders until the user scrolls.
-            _scroll.contentViewport.RegisterCallback<GeometryChangedEvent>(_ =>
-            {
-                RemeasureLineHeight();
-                RefreshVisible();
-            });
+            RegisterCallback<GeometryChangedEvent>(_ => OnViewportChanged());
             RegisterCallback<ValidateCommandEvent>(OnValidateCommand);
             RegisterCallback<ExecuteCommandEvent>(OnExecuteCommand);
             // Tab must edit text, never move focus: the focus controller acts
@@ -126,8 +143,20 @@ namespace ADKOM.TextEditor
                 e.PreventDefault();
                 e.StopPropagation();
             });
+            // The viewport gets its size after this element's own geometry
+            // event (scrollbars appear/disappear during layout), and the
+            // initial fill must react to it or only the first pool of lines
+            // renders until the user scrolls.
+            _scroll.contentViewport.RegisterCallback<GeometryChangedEvent>(_ => OnViewportChanged());
             _scroll.verticalScroller.valueChanged += _ => RefreshVisible();
             _scroll.horizontalScroller.valueChanged += _ => RefreshVisible();
+        }
+
+        void OnViewportChanged()
+        {
+            RemeasureLineHeight();
+            RecomputeWrap();
+            RefreshVisible();
         }
 
         // ---------- Value / caret surface ----------
@@ -155,10 +184,11 @@ namespace ADKOM.TextEditor
             _cacheValid = true;
             ClampCaret();
             Reformat();
+            RecomputeWrap();
             RefreshVisible();
             // Re-fill once post-layout state (viewport size, line height from
             // applied styles) is settled.
-            schedule.Execute(() => { RemeasureLineHeight(); RefreshVisible(); }).ExecuteLater(0);
+            schedule.Execute(OnViewportChanged).ExecuteLater(0);
         }
 
         string GetValueInternal()
@@ -242,6 +272,109 @@ namespace ADKOM.TextEditor
             _richLines = _formatter.Format(v).Split('\n');
         }
 
+        // ---------- Word wrap layout ----------
+
+        float CharWidth(char c)
+        {
+            if (_charW.TryGetValue(c, out float w)) return w;
+            // Measure pairwise so space widths register correctly.
+            float two = _measure.MeasureTextSize("|" + c, 0, MeasureMode.Undefined, 0, MeasureMode.Undefined).x;
+            float one = _measure.MeasureTextSize("|", 0, MeasureMode.Undefined, 0, MeasureMode.Undefined).x;
+            w = Mathf.Max(1f, two - one);
+            _charW[c] = w;
+            return w;
+        }
+
+        float AvailableWrapWidth() =>
+            _scroll.contentViewport.layout.width - WrapPad;
+
+        void RecomputeWrap()
+        {
+            int n = _lines.Count;
+            _rowStarts = new int[n + 1];
+            if (!_wordWrap)
+            {
+                _breaks = null;
+                for (int i = 0; i <= n; i++) _rowStarts[i] = i;
+                _totalRows = n;
+                return;
+            }
+
+            float width = AvailableWrapWidth();
+            if (float.IsNaN(width) || width < 40) width = 40;
+            if (!Mathf.Approximately(width, _wrapWidth)) _wrapWidth = width;
+
+            _breaks = new List<int>[n];
+            int row = 0;
+            for (int i = 0; i < n; i++)
+            {
+                _rowStarts[i] = row;
+                _breaks[i] = ComputeBreaks(_lines[i], width);
+                row += 1 + (_breaks[i]?.Count ?? 0);
+            }
+            _rowStarts[n] = row;
+            _totalRows = row;
+        }
+
+        /// <summary>Greedy word wrap: returns the columns where new visual rows
+        /// start, or null for a single-row line. Breaks prefer the last space
+        /// in the row; a word longer than the width hard-breaks mid-word.</summary>
+        List<int> ComputeBreaks(string line, float width)
+        {
+            if (line.Length == 0) return null;
+            List<int> breaks = null;
+            float x = 0;
+            int rowStart = 0, lastSpace = -1;
+            for (int i = 0; i < line.Length; i++)
+            {
+                x += CharWidth(line[i]);
+                if (line[i] == ' ') lastSpace = i;
+                if (x > width && i > rowStart)
+                {
+                    int br = lastSpace > rowStart ? lastSpace + 1 : i;
+                    (breaks = breaks ?? new List<int>()).Add(br);
+                    rowStart = br;
+                    lastSpace = -1;
+                    x = 0;
+                    for (int j = br; j <= i; j++) x += CharWidth(line[j]);
+                }
+            }
+            return breaks;
+        }
+
+        int RowOfLine(int line) => _rowStarts[Mathf.Clamp(line, 0, _lines.Count - 1)];
+
+        int SubRowOfCol(int line, int col)
+        {
+            var br = _breaks?[line];
+            if (br == null) return 0;
+            int sub = 0;
+            for (int i = 0; i < br.Count && col >= br[i]; i++) sub++;
+            return sub;
+        }
+
+        void RowBounds(int line, int sub, out int startCol, out int endCol)
+        {
+            var br = _breaks?[line];
+            startCol = sub == 0 || br == null ? 0 : br[sub - 1];
+            endCol = br != null && sub < br.Count ? br[sub] : _lines[line].Length;
+        }
+
+        void RowToLineSub(int row, out int line, out int sub)
+        {
+            row = Mathf.Clamp(row, 0, Mathf.Max(0, _totalRows - 1));
+            int lo = 0, hi = _lines.Count - 1;
+            while (lo < hi)
+            {
+                int mid = (lo + hi + 1) / 2;
+                if (_rowStarts[mid] <= row) lo = mid; else hi = mid - 1;
+            }
+            line = lo;
+            sub = row - _rowStarts[lo];
+        }
+
+        int CaretRow() => RowOfLine(_caretLine) + SubRowOfCol(_caretLine, _caretCol);
+
         // ---------- Rendering ----------
 
         void RemeasureLineHeight()
@@ -250,28 +383,29 @@ namespace ADKOM.TextEditor
             if (s.y > 1) _lineHeight = s.y;
         }
 
-        float MeasureCols(int line, int col)
+        float MeasureRange(int line, int fromCol, int toCol)
         {
-            if (col <= 0) return 0;
+            if (toCol <= fromCol) return 0;
             string text = _lines[line];
-            return _measure.MeasureTextSize(text.Substring(0, Mathf.Min(col, text.Length)),
+            toCol = Mathf.Min(toCol, text.Length);
+            fromCol = Mathf.Min(fromCol, toCol);
+            return _measure.MeasureTextSize(text.Substring(fromCol, toCol - fromCol),
                 0, MeasureMode.Undefined, 0, MeasureMode.Undefined).x;
         }
 
-        int ColForX(int line, float x)
+        int ColForXInRow(int line, int sub, float x)
         {
-            string text = _lines[line];
-            if (x <= 0 || text.Length == 0) return 0;
-            int lo = 0, hi = text.Length;
+            RowBounds(line, sub, out int startCol, out int endCol);
+            if (x <= 0 || endCol == startCol) return startCol;
+            int lo = startCol, hi = endCol;
             while (lo < hi)
             {
                 int mid = (lo + hi + 1) / 2;
-                if (MeasureCols(line, mid) <= x) lo = mid; else hi = mid - 1;
+                if (MeasureRange(line, startCol, mid) <= x) lo = mid; else hi = mid - 1;
             }
-            // snap to nearer boundary
-            if (lo < text.Length)
+            if (lo < endCol)
             {
-                float wLo = MeasureCols(line, lo), wHi = MeasureCols(line, lo + 1);
+                float wLo = MeasureRange(line, startCol, lo), wHi = MeasureRange(line, startCol, lo + 1);
                 if (x - wLo > (wHi - wLo) * 0.5f) lo++;
             }
             return lo;
@@ -280,14 +414,18 @@ namespace ADKOM.TextEditor
         public void RefreshVisible()
         {
             if (float.IsNaN(_scroll.contentViewport.layout.height)) return;
+            if (_rowStarts == null || _rowStarts.Length != _lines.Count + 1) RecomputeWrap();
 
             float viewH = _scroll.contentViewport.layout.height;
             float scrollY = _scroll.verticalScroller.value;
-            int first = Mathf.Max(0, (int)(scrollY / _lineHeight));
-            int visible = Mathf.Min(_lines.Count - first, (int)(viewH / _lineHeight) + 2);
+            int firstRow = Mathf.Max(0, (int)(scrollY / _lineHeight));
+            int visible = Mathf.Min(_totalRows - firstRow, (int)(viewH / _lineHeight) + 2);
+            if (visible < 0) visible = 0;
 
-            _content.style.height = _lines.Count * _lineHeight;
-            _content.style.minWidth = _contentWidth;
+            _content.style.height = _totalRows * _lineHeight;
+            _content.style.minWidth = _wordWrap ? 0 : _contentWidth;
+            if (_wordWrap) _content.style.width = AvailableWrapWidth();
+            else _content.style.width = StyleKeyword.Auto;
 
             while (_linePool.Count < visible)
             {
@@ -303,53 +441,139 @@ namespace ADKOM.TextEditor
             for (int k = 0; k < _linePool.Count; k++)
             {
                 var label = _linePool[k];
-                int line = first + k;
-                if (k >= visible || line >= _lines.Count)
+                int row = firstRow + k;
+                if (k >= visible || row >= _totalRows)
                 {
                     label.style.display = DisplayStyle.None;
                     continue;
                 }
+                RowToLineSub(row, out int line, out int sub);
+                RowBounds(line, sub, out int sc, out int ec);
                 label.style.display = DisplayStyle.Flex;
-                label.style.top = line * _lineHeight;
+                label.style.top = row * _lineHeight;
                 label.style.left = 0;
                 label.style.color = _textColor;
                 bool rich = _richLines != null && line < _richLines.Length;
                 label.enableRichText = rich;
-                label.text = rich ? _richLines[line] : _lines[line];
-                float w = _measure.MeasureTextSize(_lines[line], 0, MeasureMode.Undefined, 0, MeasureMode.Undefined).x + 60;
-                if (w > widest) widest = w;
-            }
-            if (widest > _contentWidth) { _contentWidth = widest; _content.style.minWidth = _contentWidth; }
+                if (rich)
+                {
+                    var br = _breaks?[line];
+                    label.text = br == null ? _richLines[line]
+                        : MarkupSlice(_richLines[line], sc, ec);
+                }
+                else label.text = _lines[line].Substring(sc, ec - sc);
 
-            RefreshGutter(first, visible, scrollY);
-            RefreshSelection(first, visible);
+                if (!_wordWrap)
+                {
+                    float w = MeasureRange(line, 0, _lines[line].Length) + 60;
+                    if (w > widest) widest = w;
+                }
+            }
+            if (!_wordWrap && widest > _contentWidth)
+            {
+                _contentWidth = widest;
+                _content.style.minWidth = _contentWidth;
+            }
+
+            RefreshGutter(firstRow, visible, scrollY);
+            RefreshSelection(firstRow, visible);
             RefreshCaret();
         }
 
-        void RefreshGutter(int first, int visible, float scrollY)
+        /// <summary>Slices a rich-text line's markup to the plain-char range
+        /// [fromCol, toCol), reopening color/noparse state at the slice start.
+        /// Only tags this package's formatters emit are understood.</summary>
+        static string MarkupSlice(string markup, int fromCol, int toCol)
+        {
+            var sb = new StringBuilder();
+            string openColor = null;
+            bool inNoparse = false;
+            int plain = 0;
+            bool started = false;
+
+            for (int i = 0; i < markup.Length;)
+            {
+                if (inNoparse && string.CompareOrdinal(markup, i, "</noparse>", 0, 10) == 0)
+                {
+                    if (started && plain < toCol) sb.Append("</noparse>");
+                    inNoparse = false;
+                    i += 10;
+                    continue;
+                }
+                if (!inNoparse && markup[i] == '<')
+                {
+                    int close = markup.IndexOf('>', i);
+                    if (close < 0) close = markup.Length - 1;
+                    string tag = markup.Substring(i, close - i + 1);
+                    if (tag.StartsWith("<color", StringComparison.Ordinal)) openColor = tag;
+                    else if (tag == "</color>") openColor = null;
+                    else if (tag == "<noparse>") inNoparse = true;
+                    if (started && plain < toCol)
+                    {
+                        sb.Append(tag);
+                    }
+                    i = close + 1;
+                    continue;
+                }
+
+                if (plain >= toCol) break;
+                if (plain >= fromCol)
+                {
+                    if (!started)
+                    {
+                        started = true;
+                        if (openColor != null) sb.Append(openColor);
+                        if (inNoparse) sb.Append("<noparse>");
+                    }
+                    sb.Append(markup[i]);
+                }
+                plain++;
+                i++;
+            }
+            if (started)
+            {
+                if (inNoparse) sb.Append("</noparse>");
+                if (openColor != null) sb.Append("</color>");
+            }
+            return sb.ToString();
+        }
+
+        void RefreshGutter(int firstRow, int visible, float scrollY)
         {
             if (_gutterCol.resolvedStyle.display == DisplayStyle.None) return;
             var sb = new StringBuilder(visible * 5);
-            for (int i = 0; i < visible; i++) sb.Append(first + i + 1).Append('\n');
+            for (int i = 0; i < visible; i++)
+            {
+                RowToLineSub(firstRow + i, out int line, out int sub);
+                if (sub == 0) sb.Append(line + 1);
+                sb.Append('\n');
+            }
             if (sb.Length > 0) sb.Length--;
             _gutterLabel.text = sb.ToString();
-            _gutterLabel.style.top = first * _lineHeight - scrollY;
+            _gutterLabel.style.top = firstRow * _lineHeight - scrollY;
             int digits = Mathf.Max(3, (_lines.Count + 1).ToString().Length);
             _gutterCol.style.minWidth = 14 + digits * 8;
         }
 
-        void RefreshSelection(int first, int visible)
+        void RefreshSelection(int firstRow, int visible)
         {
             NormalizedSelection(out int sl, out int sc, out int el, out int ec);
             int quad = 0;
             bool has = !(sl == el && sc == ec);
             if (has)
             {
-                for (int line = Mathf.Max(sl, first); line <= Mathf.Min(el, first + visible - 1); line++)
+                int rowFrom = Mathf.Max(RowOfLine(sl) + SubRowOfCol(sl, sc), firstRow);
+                int rowTo = Mathf.Min(RowOfLine(el) + SubRowOfCol(el, ec), firstRow + visible - 1);
+                for (int row = rowFrom; row <= rowTo; row++)
                 {
-                    float x0 = line == sl ? MeasureCols(line, sc) : 0;
-                    float x1 = line == el ? MeasureCols(line, ec)
-                        : MeasureCols(line, _lines[line].Length) + 6;
+                    RowToLineSub(row, out int line, out int sub);
+                    RowBounds(line, sub, out int rs, out int re);
+                    int selStart = line == sl ? Mathf.Max(sc, rs) : rs;
+                    int selEnd = line == el ? Mathf.Min(ec, re) : re;
+                    if (selEnd < selStart) continue;
+                    float x0 = MeasureRange(line, rs, selStart);
+                    float x1 = MeasureRange(line, rs, selEnd);
+                    if (selEnd == re && (line < el || (line == el && re < ec))) x1 += 6; // show newline/continuation
                     if (quad >= _selPool.Count)
                     {
                         var q = new VisualElement();
@@ -362,7 +586,7 @@ namespace ADKOM.TextEditor
                     v.style.display = DisplayStyle.Flex;
                     v.style.backgroundColor = _selectionColor;
                     v.style.left = x0;
-                    v.style.top = line * _lineHeight;
+                    v.style.top = row * _lineHeight;
                     v.style.width = Mathf.Max(2, x1 - x0);
                     v.style.height = _lineHeight;
                 }
@@ -372,9 +596,11 @@ namespace ADKOM.TextEditor
 
         void RefreshCaret()
         {
+            int sub = SubRowOfCol(_caretLine, _caretCol);
+            RowBounds(_caretLine, sub, out int rs, out _);
             _caret.style.height = _lineHeight;
-            _caret.style.top = _caretLine * _lineHeight;
-            _caret.style.left = MeasureCols(_caretLine, _caretCol);
+            _caret.style.top = (RowOfLine(_caretLine) + sub) * _lineHeight;
+            _caret.style.left = MeasureRange(_caretLine, rs, _caretCol);
             _caret.style.display = _blinkOn ? DisplayStyle.Flex : DisplayStyle.None;
         }
 
@@ -396,13 +622,16 @@ namespace ADKOM.TextEditor
 
         public void EnsureCaretVisible()
         {
-            float y = _caretLine * _lineHeight;
+            float y = CaretRow() * _lineHeight;
             float viewH = _scroll.contentViewport.layout.height;
             float sy = _scroll.verticalScroller.value;
             if (y < sy) _scroll.verticalScroller.value = y;
             else if (y + _lineHeight > sy + viewH) _scroll.verticalScroller.value = y + _lineHeight - viewH;
 
-            float x = MeasureCols(_caretLine, _caretCol);
+            if (_wordWrap) return;
+            int subN = SubRowOfCol(_caretLine, _caretCol);
+            RowBounds(_caretLine, subN, out int rsN, out _);
+            float x = MeasureRange(_caretLine, rsN, _caretCol);
             float viewW = _scroll.contentViewport.layout.width;
             float sx = _scroll.horizontalScroller.value;
             if (x < sx + 10) _scroll.horizontalScroller.value = Mathf.Max(0, x - 40);
@@ -627,6 +856,46 @@ namespace ADKOM.TextEditor
             if (cut) InsertText(string.Empty, false);
         }
 
+        /// <summary>Previous tab-stop-aligned column within the whitespace run
+        /// behind <paramref name="col"/> (bounded by the run start), or -1 when
+        /// the char behind the caret is not a space.</summary>
+        int PrevTabStopInSpaces(string line, int col)
+        {
+            if (col <= 0 || line[col - 1] != ' ') return -1;
+            int runStart = col;
+            while (runStart > 0 && line[runStart - 1] == ' ') runStart--;
+            int stop = ((col - 1) / TabSize) * TabSize;
+            return Mathf.Max(stop, runStart);
+        }
+
+        /// <summary>Next tab-stop-aligned column within the whitespace run at
+        /// <paramref name="col"/> (bounded by the run end), or -1 when the char
+        /// at the caret is not a space.</summary>
+        int NextTabStopInSpaces(string line, int col)
+        {
+            if (col >= line.Length || line[col] != ' ') return -1;
+            int runEnd = col;
+            while (runEnd < line.Length && line[runEnd] == ' ') runEnd++;
+            int stop = (col / TabSize + 1) * TabSize;
+            return Mathf.Min(stop, runEnd);
+        }
+
+        static int PrevWord(string line, int col)
+        {
+            int i = col;
+            while (i > 0 && !char.IsLetterOrDigit(line[i - 1])) i--;
+            while (i > 0 && char.IsLetterOrDigit(line[i - 1])) i--;
+            return i;
+        }
+
+        static int NextWord(string line, int col)
+        {
+            int i = col;
+            while (i < line.Length && !char.IsLetterOrDigit(line[i])) i++;
+            while (i < line.Length && char.IsLetterOrDigit(line[i])) i++;
+            return i;
+        }
+
         void MoveCaretH(int dir, bool extend, bool wordwise)
         {
             _preferredCol = -1;
@@ -673,52 +942,18 @@ namespace ADKOM.TextEditor
             AfterCaretMove();
         }
 
-        /// <summary>Previous tab-stop-aligned column within the whitespace run
-        /// behind <paramref name="col"/> (bounded by the run start), or -1 when
-        /// the char behind the caret is not a space.</summary>
-        int PrevTabStopInSpaces(string line, int col)
-        {
-            if (col <= 0 || line[col - 1] != ' ') return -1;
-            int runStart = col;
-            while (runStart > 0 && line[runStart - 1] == ' ') runStart--;
-            int stop = ((col - 1) / TabSize) * TabSize;
-            return Mathf.Max(stop, runStart);
-        }
-
-        /// <summary>Next tab-stop-aligned column within the whitespace run at
-        /// <paramref name="col"/> (bounded by the run end), or -1 when the char
-        /// at the caret is not a space.</summary>
-        int NextTabStopInSpaces(string line, int col)
-        {
-            if (col >= line.Length || line[col] != ' ') return -1;
-            int runEnd = col;
-            while (runEnd < line.Length && line[runEnd] == ' ') runEnd++;
-            int stop = (col / TabSize + 1) * TabSize;
-            return Mathf.Min(stop, runEnd);
-        }
-
-        static int PrevWord(string line, int col)
-        {
-            int i = col;
-            while (i > 0 && !char.IsLetterOrDigit(line[i - 1])) i--;
-            while (i > 0 && char.IsLetterOrDigit(line[i - 1])) i--;
-            return i;
-        }
-
-        static int NextWord(string line, int col)
-        {
-            int i = col;
-            while (i < line.Length && !char.IsLetterOrDigit(line[i])) i++;
-            while (i < line.Length && char.IsLetterOrDigit(line[i])) i++;
-            return i;
-        }
-
+        /// <summary>Vertical movement is by VISUAL row so wrapped lines feel
+        /// natural; the preferred column is row-relative while wrapping.</summary>
         void MoveCaretV(int dir, bool extend)
         {
-            if (_preferredCol < 0) _preferredCol = _caretCol;
-            int line = Mathf.Clamp(_caretLine + dir, 0, _lines.Count - 1);
+            int row = CaretRow();
+            RowBounds(_caretLine, SubRowOfCol(_caretLine, _caretCol), out int rs, out _);
+            if (_preferredCol < 0) _preferredCol = _caretCol - rs;
+            int target = Mathf.Clamp(row + dir, 0, _totalRows - 1);
+            RowToLineSub(target, out int line, out int sub);
+            RowBounds(line, sub, out int trs, out int tre);
             _caretLine = line;
-            _caretCol = Mathf.Min(_preferredCol, _lines[line].Length);
+            _caretCol = Mathf.Min(trs + _preferredCol, tre);
             if (!extend) CollapseAnchor();
             AfterCaretMove();
         }
@@ -726,9 +961,14 @@ namespace ADKOM.TextEditor
         void PageMove(int dir, bool extend)
         {
             int page = Mathf.Max(1, (int)(_scroll.contentViewport.layout.height / _lineHeight) - 1);
-            if (_preferredCol < 0) _preferredCol = _caretCol;
-            _caretLine = Mathf.Clamp(_caretLine + dir * page, 0, _lines.Count - 1);
-            _caretCol = Mathf.Min(_preferredCol, _lines[_caretLine].Length);
+            int row = CaretRow();
+            RowBounds(_caretLine, SubRowOfCol(_caretLine, _caretCol), out int rs, out _);
+            if (_preferredCol < 0) _preferredCol = _caretCol - rs;
+            int target = Mathf.Clamp(row + dir * page, 0, _totalRows - 1);
+            RowToLineSub(target, out int line, out int sub);
+            RowBounds(line, sub, out int trs, out int tre);
+            _caretLine = line;
+            _caretCol = Mathf.Min(trs + _preferredCol, tre);
             if (!extend) CollapseAnchor();
             AfterCaretMove();
         }
@@ -759,10 +999,10 @@ namespace ADKOM.TextEditor
         void PlaceCaretAt(Vector2 worldPos, bool extend)
         {
             Vector2 local = _content.WorldToLocal(worldPos);
-            int line = Mathf.Clamp((int)(local.y / _lineHeight), 0, _lines.Count - 1);
-            int col = ColForX(line, local.x);
+            int row = Mathf.Clamp((int)(local.y / _lineHeight), 0, Mathf.Max(0, _totalRows - 1));
+            RowToLineSub(row, out int line, out int sub);
             _caretLine = line;
-            _caretCol = col;
+            _caretCol = ColForXInRow(line, sub, local.x);
             _preferredCol = -1;
             if (!extend) CollapseAnchor();
             AfterCaretMove();
