@@ -3,6 +3,22 @@
 All notable changes to this package are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com); versions follow semver.
 
+## [Unreleased]
+
+### Changed
+- The toolbar buttons were replaced by a standard menu bar — File, Edit,
+  View, Tools, Window, Help — rendered with the platform's native menus
+  on Windows, macOS, and Linux. Menus connect to existing features
+  (file ops, undo/redo, clipboard, line ops, find/replace, view
+  toggles, theme, tab list); Tools → Options… opens the Settings tab;
+  Recent Files is a stub for a future release.
+
+### Fixed
+- Opening the ATE window no longer creates an Untitled document (and no
+  longer creates a duplicate window): an empty window shows a hint and
+  documents are created only by the user. Closing the last tab leaves
+  the window empty instead of spawning a new Untitled.
+
 ## [0.3.0] - 2026-07-24
 
 ### Added

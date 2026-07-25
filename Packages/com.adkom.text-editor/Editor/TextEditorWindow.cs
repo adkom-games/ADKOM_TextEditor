@@ -42,6 +42,7 @@ namespace ADKOM.TextEditor
         Label _statusRight;
 
         VisualElement _editorArea;
+        Label _emptyHint;
         VisualElement _settingsPane;
         PopupField<string> _settingsTheme;
         EnumField _settingsMode;
@@ -57,9 +58,11 @@ namespace ADKOM.TextEditor
         [MenuItem("Tools/ADKOM/Text Editor")]
         public static void Open()
         {
-            var window = CreateWindow<TextEditorWindow>();
+            var existing = Resources.FindObjectsOfTypeAll<TextEditorWindow>();
+            var window = existing.Length > 0 ? existing[0] : CreateWindow<TextEditorWindow>();
             window.UpdateTitle();
             window.Show();
+            window.Focus();
         }
 
         const string AssetsMenuPath = "Assets/Open in ADKOM Text Editor";
@@ -101,10 +104,13 @@ namespace ADKOM.TextEditor
             window.OpenPath(Path.GetFullPath(assetPath));
         }
 
+        // An empty window is a valid state: no Untitled doc is auto-created.
+        bool HasDocs => _docs.Count > 0;
+        bool CanEditDoc => HasDocs && !Active.IsSettings;
+
         void EnsureDocs()
         {
-            if (_docs.Count == 0) _docs.Add(new TextDocument());
-            _active = Mathf.Clamp(_active, 0, _docs.Count - 1);
+            _active = HasDocs ? Mathf.Clamp(_active, 0, _docs.Count - 1) : 0;
         }
 
         void CreateGUI()
@@ -117,14 +123,16 @@ namespace ADKOM.TextEditor
 
             root.RegisterCallback<KeyDownEvent>(OnGlobalKeyDown, TrickleDown.TrickleDown);
 
-            // --- Toolbar ---
+            // --- Menu bar. GenericMenu.DropDown is Unity's native menu on
+            // every platform (Windows/macOS/Linux), and building the menu on
+            // click keeps item state (checks, enables, tab list) live. ---
             var toolbar = new Toolbar();
-            toolbar.Add(ToolbarBtn("New", NewFile));
-            toolbar.Add(ToolbarBtn("Open", OpenFile));
-            toolbar.Add(ToolbarBtn("Save", () => SaveFile(false)));
-            toolbar.Add(ToolbarBtn("Save As", () => SaveFile(true)));
-            toolbar.Add(ToolbarBtn("Find", () => FindReplaceWindow.Open(this, replaceFocus: false, allTabs: false)));
-            toolbar.Add(ToolbarBtn("Replace", () => FindReplaceWindow.Open(this, replaceFocus: true, allTabs: false)));
+            toolbar.Add(MenuButton("File", FillFileMenu));
+            toolbar.Add(MenuButton("Edit", FillEditMenu));
+            toolbar.Add(MenuButton("View", FillViewMenu));
+            toolbar.Add(MenuButton("Tools", FillToolsMenu));
+            toolbar.Add(MenuButton("Window", FillWindowMenu));
+            toolbar.Add(MenuButton("Help", FillHelpMenu));
             toolbar.Add(new ToolbarSpacer { flex = true });
             var gear = new ToolbarButton(OpenSettings) { tooltip = "Settings" };
             var gearTex = EditorGUIUtility.IconContent("SettingsIcon").image;
@@ -148,12 +156,20 @@ namespace ADKOM.TextEditor
             _editorArea.style.flexGrow = 1;
 
             _code = new CodeView { TabSize = EditorConfig.TabSize };
-            _code.SetValueWithoutNotify(Active.Content);
+            _code.SetValueWithoutNotify(HasDocs ? Active.Content : string.Empty);
             _code.onValueChanged += OnTextChanged;
             _code.showLineNumbers = _showLineNumbers;
             _code.wordWrap = _wordWrap;
             _code.RegisterCallback<KeyDownEvent>(OnKeyDown, TrickleDown.TrickleDown);
             _editorArea.Add(_code);
+
+            _emptyHint = new Label("No file open.\nFile → New, File → Open…, or right-click a text asset in the Project window.");
+            _emptyHint.name = "empty-hint";
+            _emptyHint.style.flexGrow = 1;
+            _emptyHint.style.unityTextAlign = TextAnchor.MiddleCenter;
+            _emptyHint.style.opacity = 0.5f;
+            _emptyHint.style.display = DisplayStyle.None;
+            _editorArea.Add(_emptyHint);
             root.Add(_editorArea);
 
             BuildSettingsPane(root);
@@ -178,8 +194,171 @@ namespace ADKOM.TextEditor
         static ToolbarButton ToolbarBtn(string text, System.Action onClick) =>
             new ToolbarButton(onClick) { text = text };
 
+        // --- Menu bar ---
+
+        static ToolbarButton MenuButton(string title, System.Action<GenericMenu> fill)
+        {
+            ToolbarButton btn = null;
+            btn = new ToolbarButton(() =>
+            {
+                var m = new GenericMenu();
+                fill(m);
+                m.DropDown(btn.worldBound);
+            }) { text = title };
+            return btn;
+        }
+
+        void FillFileMenu(GenericMenu m)
+        {
+            m.AddItem(new GUIContent("New"), false, NewFile);
+            m.AddItem(new GUIContent("Open..."), false, OpenFile);
+            m.AddSeparator("");
+            if (CanEditDoc)
+            {
+                m.AddItem(new GUIContent("Save"), false, () => SaveFile(false));
+                m.AddItem(new GUIContent("Save As..."), false, () => SaveFile(true));
+            }
+            else
+            {
+                m.AddDisabledItem(new GUIContent("Save"));
+                m.AddDisabledItem(new GUIContent("Save As..."));
+            }
+            m.AddItem(new GUIContent("Save All"), false, SaveAll);
+            m.AddSeparator("");
+            if (HasDocs) m.AddItem(new GUIContent("Close Tab"), false, () => CloseTab(_active));
+            else m.AddDisabledItem(new GUIContent("Close Tab"));
+            m.AddSeparator("");
+            m.AddDisabledItem(new GUIContent("Recent Files")); // stub
+            m.AddSeparator("");
+            m.AddItem(new GUIContent("Close Window"), false, Close);
+        }
+
+        void FillEditMenu(GenericMenu m)
+        {
+            bool edit = CanEditDoc;
+            void Item(string label, bool enabled, System.Action a)
+            {
+                if (enabled) m.AddItem(new GUIContent(label), false, () => a());
+                else m.AddDisabledItem(new GUIContent(label));
+            }
+            Item("Undo", edit && _code.CanUndo, _code.Undo);
+            Item("Redo", edit && _code.CanRedo, _code.Redo);
+            m.AddSeparator("");
+            Item("Cut", edit && _code.HasSelectionPublic, _code.Cut);
+            Item("Copy", edit && _code.HasSelectionPublic, _code.Copy);
+            Item("Paste", edit && !string.IsNullOrEmpty(EditorGUIUtility.systemCopyBuffer), _code.Paste);
+            Item("Select All", edit, _code.SelectAll);
+            m.AddSeparator("");
+            Item("Duplicate Line", edit, DuplicateLine);
+            Item("Delete Line", edit, DeleteLine);
+            Item("Move Line Up", edit, () => MoveLine(-1));
+            Item("Move Line Down", edit, () => MoveLine(1));
+            Item("Toggle Comment", edit, ToggleComment);
+            Item("Indent", edit, InsertTab);
+            Item("Unindent", edit, UnindentSelection);
+            m.AddSeparator("");
+            m.AddItem(new GUIContent("Find..."), false, () => FindReplaceWindow.Open(this, false, false));
+            m.AddItem(new GUIContent("Find in Tabs..."), false, () => FindReplaceWindow.Open(this, false, true));
+            m.AddItem(new GUIContent("Replace..."), false, () => FindReplaceWindow.Open(this, true, false));
+            m.AddItem(new GUIContent("Replace in Tabs..."), false, () => FindReplaceWindow.Open(this, true, true));
+            m.AddItem(new GUIContent("Find Next"), false, () => FindReplaceWindow.FindAgain(this, false));
+            m.AddItem(new GUIContent("Find Previous"), false, () => FindReplaceWindow.FindAgain(this, true));
+        }
+
+        void FillViewMenu(GenericMenu m)
+        {
+            m.AddItem(new GUIContent("Line Numbers"), _showLineNumbers, () =>
+            {
+                _showLineNumbers = !_showLineNumbers;
+                _code.showLineNumbers = _showLineNumbers;
+                SyncSettingsControls();
+            });
+            m.AddItem(new GUIContent("Word Wrap"), _wordWrap, () =>
+            {
+                _wordWrap = !_wordWrap;
+                _code.wordWrap = _wordWrap;
+                SyncSettingsControls();
+            });
+            m.AddSeparator("");
+            foreach (var theme in HighlightTheme.All)
+            {
+                var t = theme;
+                m.AddItem(new GUIContent("Theme/" + t.Name), CurrentTheme == t,
+                    () => { CurrentTheme = t; ApplyTheme(); SyncSettingsControls(); });
+            }
+            foreach (ThemeMode mode in System.Enum.GetValues(typeof(ThemeMode)))
+            {
+                var md = mode;
+                m.AddItem(new GUIContent("Light-Dark Mode/" + md), CurrentThemeMode == md,
+                    () => { CurrentThemeMode = md; ApplyTheme(); SyncSettingsControls(); });
+            }
+        }
+
+        void FillToolsMenu(GenericMenu m)
+        {
+            m.AddItem(new GUIContent("Options..."), false, OpenSettingsPage);
+        }
+
+        void FillWindowMenu(GenericMenu m)
+        {
+            bool multi = _docs.Count > 1;
+            if (multi)
+            {
+                m.AddItem(new GUIContent("Next Tab"), false, () => StepTab(1));
+                m.AddItem(new GUIContent("Previous Tab"), false, () => StepTab(-1));
+            }
+            else
+            {
+                m.AddDisabledItem(new GUIContent("Next Tab"));
+                m.AddDisabledItem(new GUIContent("Previous Tab"));
+            }
+            m.AddSeparator("");
+            if (!HasDocs)
+            {
+                m.AddDisabledItem(new GUIContent("(no open tabs)"));
+                return;
+            }
+            for (int i = 0; i < _docs.Count; i++)
+            {
+                int idx = i;
+                m.AddItem(new GUIContent((_docs[i].IsDirty ? "*" : "") + _docs[i].DisplayName),
+                    i == _active, () => SwitchTo(idx));
+            }
+        }
+
+        void FillHelpMenu(GenericMenu m)
+        {
+            m.AddItem(new GUIContent("About ADKOM Text Editor..."), false, () =>
+            {
+                var info = UnityEditor.PackageManager.PackageInfo.FindForAssembly(GetType().Assembly);
+                EditorUtility.DisplayDialog("ADKOM Text Editor",
+                    "ADKOM Text Editor " + (info != null ? info.version : "(unknown version)") +
+                    "\n\nA real code editor, living right inside the Unity Editor." +
+                    "\n100% Editor-only — nothing ships in player builds." +
+                    "\n\n(c) 2026 A Different Kind Of Mind Games (MIT License)", "OK");
+            });
+            m.AddSeparator("");
+            m.AddItem(new GUIContent("Repository"), false,
+                () => Application.OpenURL("https://github.com/adkom-games/ADKOM_TextEditor"));
+            m.AddItem(new GUIContent("Release Notes"), false,
+                () => Application.OpenURL("https://github.com/adkom-games/ADKOM_TextEditor/blob/main/Packages/com.adkom.text-editor/RELEASE-NOTES.md"));
+            m.AddItem(new GUIContent("Report an Issue"), false,
+                () => Application.OpenURL("https://github.com/adkom-games/ADKOM_TextEditor/issues"));
+        }
+
+        /// <summary>Tools → Options…: opens (or switches to) the Settings tab —
+        /// unlike the gear, it never closes it.</summary>
+        void OpenSettingsPage()
+        {
+            int existing = _docs.FindIndex(d => d.IsSettings);
+            if (existing >= 0) { SwitchTo(existing); return; }
+            _docs.Add(new TextDocument { IsSettings = true });
+            SwitchTo(_docs.Count - 1);
+        }
+
         void OnTextChanged(string newValue)
         {
+            if (!CanEditDoc) return;
             Active.Content = newValue;
             if (!Active.IsDirty)
             {
@@ -202,7 +381,7 @@ namespace ADKOM.TextEditor
 
         void RefreshFormatter()
         {
-            _formatter = TextFormatters.ForPath(Active.HasFile ? Active.FilePath : null);
+            _formatter = TextFormatters.ForPath(HasDocs && Active.HasFile ? Active.FilePath : null);
             _code?.SetFormatter(_formatter);
         }
 
@@ -275,7 +454,6 @@ namespace ADKOM.TextEditor
         /// if it exists in the background, or close it when already frontmost.</summary>
         void OpenSettings()
         {
-            EnsureDocs();
             int existing = _docs.FindIndex(d => d.IsSettings);
             if (existing >= 0)
             {
@@ -333,6 +511,21 @@ namespace ADKOM.TextEditor
 
         void SwitchTo(int index)
         {
+            if (!HasDocs)
+            {
+                _active = 0;
+                if (_editorArea != null) _editorArea.style.display = DisplayStyle.Flex;
+                if (_settingsPane != null) _settingsPane.style.display = DisplayStyle.None;
+                if (_code != null) { _code.SetValueWithoutNotify(string.Empty); _code.style.display = DisplayStyle.None; }
+                if (_emptyHint != null) _emptyHint.style.display = DisplayStyle.Flex;
+                RebuildTabs();
+                UpdateTitle();
+                UpdateStatus();
+                return;
+            }
+            if (_code != null) _code.style.display = DisplayStyle.Flex;
+            if (_emptyHint != null) _emptyHint.style.display = DisplayStyle.None;
+
             EnsureDocs();
             _active = Mathf.Clamp(index, 0, _docs.Count - 1);
 
@@ -365,8 +558,7 @@ namespace ADKOM.TextEditor
             _docs.RemoveAt(index);
             if (index < _active || _active >= _docs.Count)
                 _active = Mathf.Max(0, _active - 1);
-            EnsureDocs();
-            SwitchTo(_active);
+            SwitchTo(_active); // handles the now-empty case without auto-Untitled
         }
 
         // --- Commands ---
@@ -405,7 +597,7 @@ namespace ADKOM.TextEditor
 
         void SaveFile(bool saveAs)
         {
-            if (Active.IsSettings) return;
+            if (!CanEditDoc) return;
             bool saved = saveAs ? FileService.SaveAs(Active) : FileService.Save(Active);
             if (saved)
             {
@@ -454,7 +646,7 @@ namespace ADKOM.TextEditor
         void OnFocus()
         {
             // Inactive tabs are checked when they are activated (SwitchTo).
-            if (_docs == null || _docs.Count == 0) return;
+            if (_docs == null || _docs.Count == 0 || _active >= _docs.Count) return;
             if (CheckExternalChange(Active))
             {
                 _code?.SetValueWithoutNotify(Active.Content);
@@ -571,6 +763,8 @@ namespace ADKOM.TextEditor
                 return;
             }
 
+            if (!CanEditDoc) return;
+
             bool ctrl = e.ctrlKey || e.commandKey;
             var layout = EditorConfig.Keymap;
             bool vs = layout == KeymapLayout.VisualStudio;
@@ -612,13 +806,12 @@ namespace ADKOM.TextEditor
 
         void StepTab(int dir)
         {
-            EnsureDocs();
+            if (!HasDocs) return;
             SwitchTo((_active + dir + _docs.Count) % _docs.Count);
         }
 
         void SaveAll()
         {
-            EnsureDocs();
             for (int i = 0; i < _docs.Count; i++)
             {
                 var doc = _docs[i];
@@ -855,6 +1048,11 @@ namespace ADKOM.TextEditor
 
         void UpdateTitle()
         {
+            if (!HasDocs)
+            {
+                titleContent = new GUIContent("ATE", "ADKOM Text Editor");
+                return;
+            }
             EnsureDocs();
             titleContent = new GUIContent("ATE - " + (Active.IsDirty ? "*" : "") + Active.DisplayName,
                 Active.HasFile ? Active.FilePath : "New unsaved document");
@@ -863,6 +1061,13 @@ namespace ADKOM.TextEditor
         void UpdateStatus()
         {
             if (_statusLeft == null || _code == null) return;
+
+            if (!HasDocs)
+            {
+                _statusLeft.text = string.Empty;
+                _statusRight.text = string.Empty;
+                return;
+            }
 
             if (Active.IsSettings)
             {
