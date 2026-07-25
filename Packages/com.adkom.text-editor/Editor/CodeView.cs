@@ -52,7 +52,7 @@ namespace ADKOM.TextEditor
         readonly List<VisualElement> _selPool = new List<VisualElement>();
         readonly VisualElement _caret;
         readonly Label _measure;
-        readonly Label _gutterLabel;
+        readonly List<Label> _gutterPool = new List<Label>();
         readonly VisualElement _gutterCol;
         IVisualElementScheduledItem _blink;
         bool _blinkOn = true;
@@ -85,6 +85,27 @@ namespace ADKOM.TextEditor
             }
         }
 
+        static Font _monoFont;
+
+        /// <summary>The editor's bundled RobotoMono (Console font), falling
+        /// back to common OS monospace fonts per platform.</summary>
+        static Font MonoFont()
+        {
+            if (_monoFont != null) return _monoFont;
+            _monoFont = EditorGUIUtility.Load("Fonts/RobotoMono/RobotoMono-Regular.ttf") as Font;
+            if (_monoFont != null) return _monoFont;
+            foreach (var name in new[] { "Consolas", "Menlo", "DejaVu Sans Mono", "Courier New" })
+            {
+                try
+                {
+                    _monoFont = Font.CreateDynamicFontFromOSFont(name, 13);
+                    if (_monoFont != null) return _monoFont;
+                }
+                catch { }
+            }
+            return null;
+        }
+
         public CodeView()
         {
             focusable = true;
@@ -93,18 +114,16 @@ namespace ADKOM.TextEditor
             style.flexDirection = FlexDirection.Row;
             style.overflow = Overflow.Hidden;
 
+            // Code belongs in a monospace font; it inherits to every line
+            // label, the gutter, and the measuring label.
+            var mono = MonoFont();
+            if (mono != null) style.unityFontDefinition = FontDefinition.FromFont(mono);
+
             _gutterCol = new VisualElement { name = "code-gutter" };
             _gutterCol.style.minWidth = 44;
             _gutterCol.style.flexShrink = 0;
             _gutterCol.style.overflow = Overflow.Hidden;
             _gutterCol.style.display = DisplayStyle.None;
-            _gutterLabel = new Label();
-            _gutterLabel.AddToClassList("code-line");
-            _gutterLabel.style.position = Position.Absolute;
-            _gutterLabel.style.right = 6;
-            _gutterLabel.style.unityTextAlign = TextAnchor.UpperRight;
-            _gutterLabel.style.opacity = 0.55f;
-            _gutterCol.Add(_gutterLabel);
             Add(_gutterCol);
 
             _scroll = new ScrollView(ScrollViewMode.VerticalAndHorizontal);
@@ -245,7 +264,6 @@ namespace ADKOM.TextEditor
             _selectionColor = new Color(selection.r, selection.g, selection.b, 0.55f);
             style.backgroundColor = background;
             _gutterCol.style.backgroundColor = background;
-            _gutterLabel.style.color = text;
             _caret.style.backgroundColor = text;
             Reformat();
             RefreshVisible();
@@ -538,19 +556,41 @@ namespace ADKOM.TextEditor
             return sb.ToString();
         }
 
+        // One pooled label per visible row, positioned with the SAME row math
+        // as the code lines. (A single multi-line label drifts: its natural
+        // leading differs subtly from _lineHeight, compounding down the file.)
         void RefreshGutter(int firstRow, int visible, float scrollY)
         {
             if (_gutterCol.resolvedStyle.display == DisplayStyle.None) return;
-            var sb = new StringBuilder(visible * 5);
-            for (int i = 0; i < visible; i++)
+            while (_gutterPool.Count < visible)
             {
-                RowToLineSub(firstRow + i, out int line, out int sub);
-                if (sub == 0) sb.Append(line + 1);
-                sb.Append('\n');
+                var g = new Label();
+                g.AddToClassList("code-line");
+                g.style.position = Position.Absolute;
+                g.style.left = 0;
+                g.style.right = 6;
+                g.style.unityTextAlign = TextAnchor.UpperRight;
+                g.style.opacity = 0.55f;
+                g.pickingMode = PickingMode.Ignore;
+                _gutterCol.Add(g);
+                _gutterPool.Add(g);
             }
-            if (sb.Length > 0) sb.Length--;
-            _gutterLabel.text = sb.ToString();
-            _gutterLabel.style.top = firstRow * _lineHeight - scrollY;
+            for (int i = 0; i < _gutterPool.Count; i++)
+            {
+                var g = _gutterPool[i];
+                int row = firstRow + i;
+                if (i >= visible || row >= _totalRows)
+                {
+                    g.style.display = DisplayStyle.None;
+                    continue;
+                }
+                RowToLineSub(row, out int line, out int sub);
+                g.style.display = DisplayStyle.Flex;
+                g.style.top = row * _lineHeight - scrollY;
+                g.style.height = _lineHeight;
+                g.style.color = _textColor;
+                g.text = sub == 0 ? (line + 1).ToString() : string.Empty;
+            }
             int digits = Mathf.Max(3, (_lines.Count + 1).ToString().Length);
             _gutterCol.style.minWidth = 14 + digits * 8;
         }
