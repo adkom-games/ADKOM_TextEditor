@@ -6,6 +6,10 @@ All notable changes to this package are documented here. Format follows
 ## [Unreleased]
 
 ### Fixed
+- Colorization is now asynchronous: while typing, the field's own glyphs
+  show in plain theme color and the syntax-colored overlay re-renders
+  ~150ms after typing pauses, removing the whole-document rich-text
+  re-shape from the keystroke path.
 - Typing was extremely slow (seconds per keystroke) in large files with
   line numbers and wrap enabled: the gutter re-measured every logical
   line on every keystroke (twice). The wrap-aware measure is now
