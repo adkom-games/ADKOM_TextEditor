@@ -5,6 +5,15 @@ All notable changes to this package are documented here. Format follows
 
 ## [Unreleased]
 
+### Fixed
+- Line numbers drifted out of alignment with code lines, worsening
+  toward the bottom of the file: the gutter was one multi-line label
+  whose natural line spacing differed subtly from the row height. Gutter
+  numbers are now pooled per-row labels positioned with the same row
+  math as the code lines.
+- The editor now uses a monospace font (the editor's bundled RobotoMono,
+  with OS monospace fallbacks) instead of inheriting Unity's UI font.
+
 ### Added
 - ATE can be selected as Unity's External Script Editor (Preferences →
   External Tools): double-clicked scripts and console log entries open
