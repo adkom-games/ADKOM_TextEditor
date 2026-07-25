@@ -1,5 +1,31 @@
 # Release Notes — ADKOM Text Editor
 
+## 0.4.0 — 2026-07-25
+
+### Features
+- Native menu bar (File, Edit, View, Tools, Window, Help) replacing the
+  toolbar buttons; right-click context menu on file tabs (Save, Save
+  As, Close, Close Other Tabs).
+- Selectable as Unity's External Script Editor: scripts and console
+  entries open in ATE at the exact line/column; configurable fallback
+  editor for solutions, binaries, and project sync.
+- Automatic update checks (daily at most, configurable in days,
+  disable-able): console announcement plus an idle-time install dialog
+  showing current/new versions with a settings-synced checkbox.
+- Configurable font (any OS font or bundled monospace) and size, with
+  Ctrl+MouseWheel / Ctrl+'+' / Ctrl+'-' zoom and Ctrl+0 reset.
+- Optional smooth scrolling (same per-notch velocity, animated).
+- Find and Replace toolbar buttons became Edit-menu entries.
+
+### Fixes
+- Monospace font by default (was inheriting Unity's UI font).
+- Line-number gutter drifted out of alignment deeper into files.
+- Opening the ATE window no longer creates an Untitled document or a
+  duplicate window; an empty window shows a hint instead.
+- Status bar hardening: "No file open" placeholder; Settings tab
+  scrolls on short windows instead of spilling over the bar.
+- New/switched documents receive keyboard focus immediately.
+
 ## 0.3.0 — 2026-07-24
 
 ### Features

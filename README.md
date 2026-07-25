@@ -23,7 +23,10 @@ feature pitch.
 - C# syntax highlighting with an extensible formatter API
 - Themes and keyboard layouts matching Visual Studio, VS Code, and JetBrains Rider
 - Respects your files: tab/space indentation, line endings, and UTF-8 BOMs round-trip untouched
+- Native menu bar (File/Edit/View/Tools/Window/Help) and tab context menus
+- Selectable as Unity's External Script Editor, with a configurable fallback for solutions and binaries
 - Find/replace (regex, whole-word, case, backwards, wrap-around) across the current file or all open tabs
+- Configurable font and size with browser-style zoom; smooth scrolling; automatic update checks
 - Word wrap, line numbers, and configurable tab handling
 - Unsaved-change guards and external file-change detection
 - **100% Editor-only** — nothing ships in player builds
@@ -43,7 +46,7 @@ https://github.com/adkom-games/ADKOM_TextEditor.git#upm
 Pinned release:
 
 ```
-https://github.com/adkom-games/ADKOM_TextEditor.git#0.3.0
+https://github.com/adkom-games/ADKOM_TextEditor.git#0.4.0
 ```
 
 The `upm` branch contains only the package, so consumer downloads stay

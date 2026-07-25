@@ -55,6 +55,7 @@ Choose your keyboard layout — **Visual Studio**, **VS Code**, or
 | Find / Find in tabs | Ctrl+F / Ctrl+Shift+F | Ctrl+F / Ctrl+Shift+F | Ctrl+F / Ctrl+Shift+F |
 | Replace / Replace in tabs | Ctrl+H / Ctrl+Shift+H | Ctrl+H / Ctrl+Shift+H | Ctrl+R / Ctrl+Shift+R |
 | Find next / previous | F3 / Shift+F3 | F3 / Shift+F3 | F3 / Shift+F3 |
+| Zoom in / out / reset | Ctrl+'+' / Ctrl+'-' / Ctrl+0 | Ctrl+'+' / Ctrl+'-' / Ctrl+0 | Ctrl+'+' / Ctrl+'-' / Ctrl+0 |
 | Toggle line comment | Ctrl+/ | Ctrl+/ | Ctrl+/ |
 | Indent / unindent | Tab / Shift+Tab | Tab / Shift+Tab | Tab / Shift+Tab |
 | Settings | — | Ctrl+, | Ctrl+Alt+S |
@@ -76,12 +77,32 @@ word, plain text or full regular expressions (with $1 group
 replacements), wrap-around, and backwards search, all from a compact
 modeless dialog. F3 repeats your last search without reopening it.
 
+### 🖱 Feels like an application
+A real **menu bar** — File, Edit, View, Tools, Window, Help — rendered
+with your platform's native menus, plus right-click context menus on
+file tabs (Save, Save As, Close, Close Other Tabs). Pick any installed
+**font** and size, zoom with Ctrl+MouseWheel or Ctrl+'+'/'-' (Ctrl+0
+resets), and enjoy **smooth scrolling** (toggleable).
+
+### 🔌 Unity's External Script Editor
+Select ATE in **Preferences → External Tools** and double-clicked
+scripts and console log entries open in ATE at the exact line and
+column. A configurable fallback editor receives anything ATE doesn't
+handle — solutions, C# project requests, binaries — so your IDE is
+still one click away.
+
+### 🔄 Stays current
+Automatic update checks (daily to every-N-days, or off) announce new
+releases in the console and offer a one-click UPM install when the
+editor is idle — showing you exactly which version you'd get.
+
 ### 🛡 Safe by design
 Unsaved-changes prompts on close, external-change detection with a
 reload offer when a file changes on disk, and line numbers when you want
-them. A Settings tab (the gear button) keeps every preference —
-theme, mode, line numbers, tab size, keyboard layout — one click away,
-persisted across sessions.
+them. A Settings tab (the gear button, or Tools → Options…) keeps every
+preference — theme, mode, line numbers, word wrap, font and size,
+smooth scrolling, tab size, keyboard layout, external fallback editor,
+automatic updates — one click away, persisted across sessions.
 
 ## Get it
 
@@ -94,7 +115,7 @@ https://github.com/adkom-games/ADKOM_TextEditor.git#upm
 Prefer a pinned version?
 
 ```
-https://github.com/adkom-games/ADKOM_TextEditor.git#0.3.0
+https://github.com/adkom-games/ADKOM_TextEditor.git#0.4.0
 ```
 
 Requires Unity 6000.0+. The `upm` branch delivers only the package —

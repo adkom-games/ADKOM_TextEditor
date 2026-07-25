@@ -36,6 +36,8 @@ with the host project.
 | Word wrap native to the virtualized view | Done |
 | Find/Replace incl. all-tabs scope, modeless dialog, toolbar buttons | Done |
 | Release 0.3.0 (published 2026-07-24: tag on upm split, GitHub Release) | Done |
+| Menu bar; auto-update; External Script Editor; fonts/zoom; smooth scroll | Done |
+| Release 0.4.0 docs prepared | **Done locally — NOT pushed/tagged (awaiting go)** |
 | More languages; custom themes | Future (roadmap) |
 
 ## Current work area
@@ -68,7 +70,8 @@ is verified live in the editor.
 
 ## Immediate next steps
 
-1. 0.3.0 published 2026-07-24. Plan next milestone.
+1. PUBLISH 0.4.0 when Cary says go (steps 5-7 of the release
+   procedure; steps 1-4 are committed locally, unpushed).
 2. Roadmap candidates: JSON/Markdown formatters, custom themes,
    Ctrl+Tab MRU order, drag-to-reorder tabs.
 
