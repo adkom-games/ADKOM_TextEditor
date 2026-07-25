@@ -96,6 +96,23 @@ the bottom. See [[Project State]] for the current snapshot.
   made transparent); and programmatic caret placement was clamped by the text
   engine's pre-edit state (fixed by re-asserting the caret a frame later).
 
+## 2026-07-24 — Performance saga and virtualization
+
+- **Defect: seconds-per-keystroke typing.** Profiled in stages: first the
+  wrap-aware gutter (measuring every logical line per keystroke, twice) —
+  debounced; then the overlay's whole-document rich-text re-shape — made
+  asynchronous (plain text while typing, colors on idle); finally the
+  editable TextField's own whole-document re-shape proved to be the floor
+  (~176ms @ 1k lines, ~930ms @ 5k). A gap buffer was considered and
+  rejected: string splices are microseconds; TEXT SHAPING was the cost.
+- **Decision: full virtualization (CodeView).** The document renders as
+  pooled per-line Labels (only visible lines laid out); caret, selection,
+  mouse, keyboard, clipboard, and undo/redo implemented in-house; the
+  formatter emits per-line tags so lines colorize independently. Result:
+  14.7ms keystroke-to-frame on 5,000 lines (63x). Trade-off: word wrap
+  removed (long lines scroll horizontally); the TextField-era overlay,
+  gutter, and wrap machinery were deleted.
+
 ## Conventions
 
 - Branch per feature/fix from main; merge with `--no-ff`; branches are kept.
