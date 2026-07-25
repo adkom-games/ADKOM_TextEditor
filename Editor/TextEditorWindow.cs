@@ -45,6 +45,7 @@ namespace ADKOM.TextEditor
         VisualElement _editorArea;
         Label _emptyHint;
         VisualElement _settingsPane;
+        ScrollView _settingsScroll;
         PopupField<string> _settingsTheme;
         EnumField _settingsMode;
         Toggle _settingsLines;
@@ -408,9 +409,13 @@ namespace ADKOM.TextEditor
 
         void BuildSettingsPane(VisualElement root)
         {
+            // ScrollView so short windows scroll the settings instead of the
+            // pane's children spilling over the status bar.
+            var scroller = new ScrollView(ScrollViewMode.Vertical) { name = "settings-scroll" };
+            scroller.style.flexGrow = 1;
+            scroller.style.display = DisplayStyle.None;
+
             _settingsPane = new VisualElement { name = "settings-pane" };
-            _settingsPane.style.flexGrow = 1;
-            _settingsPane.style.display = DisplayStyle.None;
 
             var title = new Label("Editor Settings");
             title.AddToClassList("settings-title");
@@ -540,7 +545,9 @@ namespace ADKOM.TextEditor
             versionLabel.style.marginTop = 4;
             _settingsPane.Add(versionLabel);
 
-            root.Add(_settingsPane);
+            scroller.Add(_settingsPane);
+            _settingsScroll = scroller;
+            root.Add(scroller);
         }
 
         /// <summary>Gear behavior: open the settings tab, bring it to the front
@@ -611,7 +618,7 @@ namespace ADKOM.TextEditor
             {
                 _active = 0;
                 if (_editorArea != null) _editorArea.style.display = DisplayStyle.Flex;
-                if (_settingsPane != null) _settingsPane.style.display = DisplayStyle.None;
+                if (_settingsScroll != null) _settingsScroll.style.display = DisplayStyle.None;
                 if (_code != null) { _code.SetValueWithoutNotify(string.Empty); _code.style.display = DisplayStyle.None; }
                 if (_emptyHint != null) _emptyHint.style.display = DisplayStyle.Flex;
                 RebuildTabs();
@@ -629,7 +636,7 @@ namespace ADKOM.TextEditor
             if (_editorArea != null)
                 _editorArea.style.display = settings ? DisplayStyle.None : DisplayStyle.Flex;
             if (_settingsPane != null)
-                _settingsPane.style.display = settings ? DisplayStyle.Flex : DisplayStyle.None;
+                _settingsScroll.style.display = settings ? DisplayStyle.Flex : DisplayStyle.None;
             if (settings)
             {
                 SyncSettingsControls();
@@ -1160,7 +1167,8 @@ namespace ADKOM.TextEditor
 
             if (!HasDocs)
             {
-                _statusLeft.text = string.Empty;
+                // A blank bar reads as "the status bar disappeared".
+                _statusLeft.text = "No file open";
                 _statusRight.text = string.Empty;
                 return;
             }
