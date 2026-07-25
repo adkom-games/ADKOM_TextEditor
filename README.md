@@ -1,45 +1,45 @@
 # ADKOM Text Editor
 
-An advanced text editor that lives inside the Unity Editor — a dockable
-window with tabs, syntax highlighting, and IDE-style keyboard commands.
-Open it from **Tools → ADKOM → Text Editor**, or right-click any text
-asset in the Project window and choose **Open in ADKOM Text Editor**.
+**A real code editor, living right inside the Unity Editor.**
 
-## Features
+Stop alt-tabbing. Whether it's a quick tweak to a config file, a README
+edit, or browsing a script while your game runs, the ADKOM Text Editor
+gives you a fast, IDE-grade editing experience without ever leaving
+Unity — dockable, themeable, and tuned to feel like the editors you
+already know.
 
-### Documents & tabs
-- Multiple open files as **tabs** — close with the × button or middle-click,
-  with unsaved-changes protection. Open tabs survive domain reloads and
-  editor restarts.
-- Open **any text asset** from the Project window context menu: scripts,
-  TextAssets, shaders, USS/UXML, markdown, JSON, YAML, configs, and more.
-  Already-open files switch to their tab instead of duplicating.
-- **External change detection**: if a file changes on disk, you're offered a
-  reload when its tab is activated or the window regains focus.
-- Preserves each file's original **line endings** (CRLF/LF/CR) and **UTF-8
-  BOM** on save.
+## 100% Editor-only. Zero shipping impact.
 
-### Code editing
-- **C# syntax highlighting** (keywords, strings, comments, numbers,
-  preprocessor) with an extensible formatter pipeline for future languages.
-- **Color themes** with three built-in palettes — **Visual Studio** (VS
-  Dark/Light), **VS Code** (Dark+/Light+), and **JetBrains Rider** (Rider
-  Dark/IntelliJ Light) — plus a light/dark mode selector (Auto follows the
-  Unity Editor skin).
-- **Fully virtualized rendering**: only visible lines are laid out, so
-  editing stays fast (sub-frame keystrokes) regardless of file size. Long
-  lines scroll horizontally.
-- **Line numbers** (toggleable) in a virtualized gutter.
-- **Undo/redo** with typing coalescing (Ctrl+Z, Ctrl+Y / Ctrl+Shift+Z).
-- **Tabs rendered as spaces** at a configurable tab size. Files keep their
-  original indentation style: tab-indented files are saved back with tabs,
-  space-indented files stay spaces — your formatting is never destroyed.
-- The **Tab key inserts spaces** to the next tab stop; arrow keys jump
-  through space indentation in tab-size steps, as if they were real tabs.
+This is a **Unity Editor asset** — a tool for you, not your players.
+Every line of code lives in an Editor-only assembly: nothing is compiled
+into your builds, nothing ships with your game, and nothing touches your
+runtime. Install it, use it every day, and your shipping product stays
+byte-for-byte identical.
 
-### Keyboard commands
-Choose your layout in Settings — **Visual Studio**, **VS Code**, or
-**Rider** defaults for everything the editor supports:
+## Why you'll love it
+
+### ⚡ Fast at any size
+The editor is **fully virtualized** — only the lines on screen are ever
+rendered. Open a 5,000-line file and typing still lands in under 15ms.
+No lag, no stutter, no matter how big the file.
+
+### 🗂 Tabs, like a real editor
+Open as many files as you want. Tabs remember themselves across domain
+reloads and editor restarts, warn you about unsaved changes, close with
+a middle-click, and switch instead of duplicating when you re-open a
+file. Right-click any text asset in the Project window — scripts,
+shaders, JSON, YAML, markdown, USS/UXML, configs — and it opens in ATE.
+
+### 🎨 Syntax highlighting & themes
+C# highlighting out of the box, with an extensible formatter API ready
+for more languages. Pick your palette: **Visual Studio**, **VS Code**,
+or **JetBrains Rider** — each with authentic dark and light variants,
+following your Unity Editor skin automatically (or forced Dark/Light,
+your call).
+
+### ⌨️ Your muscle memory works here
+Choose your keyboard layout — **Visual Studio**, **VS Code**, or
+**Rider** — and the shortcuts you already know just work:
 
 | Command | Visual Studio | VS Code | Rider |
 |---|---|---|---|
@@ -56,48 +56,55 @@ Choose your layout in Settings — **Visual Studio**, **VS Code**, or
 | Indent / unindent | Tab / Shift+Tab | Tab / Shift+Tab | Tab / Shift+Tab |
 | Settings | — | Ctrl+, | Ctrl+Alt+S |
 
-The settings gear also toggles: it opens Settings, brings the tab to the
-front if it's in the background, and closes it if it's already frontmost.
+Plus undo/redo with typing coalescing, word-wise navigation, smart Home,
+auto-indent on Enter, and full clipboard support.
 
-### Settings
-The gear button opens **Settings as a document tab**: Color Theme,
-Light/Dark Mode, Line Numbers, Word Wrap, Tab Size, and Keyboard Layout.
-All settings persist across sessions.
+### 🔧 Respects your files
+Tabs render as spaces at your configured tab size — but on save, files
+that indent with tabs get their tabs back, and space-indented files stay
+spaces. Line endings (CRLF/LF/CR) and UTF-8 BOMs round-trip untouched.
+Your teammates will never know you edited it in Unity (unless you tell
+them). Navigation, Backspace, and Delete all honor tab stops across
+whitespace, so space-indented files *feel* tab-indented.
 
-### Quality of life
-- Status bar with line/column, language, encoding, and line-ending info.
-- Window title reads "ATE - filename" so the dock tab is always
-  identifiable.
-- **Editor-only by construction**: all code is in an Editor-platform
-  assembly. The package contributes nothing to player builds and never
-  interferes with the host project.
+### 🛡 Safe by design
+Unsaved-changes prompts on close, external-change detection with a
+reload offer when a file changes on disk, and line numbers when you want
+them. A Settings tab (the gear button) keeps every preference —
+theme, mode, line numbers, tab size, keyboard layout — one click away,
+persisted across sessions.
 
-## Installation
+## Get it
 
-In Unity: **Window → Package Manager → + → Add package from git URL…**
+**Window → Package Manager → + → Add package from git URL…**
 
 ```
 https://github.com/adkom-games/ADKOM_TextEditor.git#upm
 ```
 
-To pin a version, use a release tag instead of `upm`:
+Prefer a pinned version?
 
 ```
-https://github.com/adkom-games/ADKOM_TextEditor.git#0.1.0
+https://github.com/adkom-games/ADKOM_TextEditor.git#0.2.0
 ```
 
-The `upm` branch contains only the package (kept in sync automatically);
-the default branch holds the full development project.
+Requires Unity 6000.0+. The `upm` branch delivers only the package —
+your download is lean. Then open **Tools → ADKOM → Text Editor**, or
+just right-click a file.
 
-Requires Unity 6000.0 or newer.
+## What's next
 
-## Roadmap
-
-- Syntax highlighting for more languages (JSON, Markdown, shaders) via the
-  `ITextFormatter` extension point
+- More languages (JSON, Markdown, shaders) via the formatter API
 - Find / replace
 - Custom user themes
+
+See [RELEASE-NOTES.md](RELEASE-NOTES.md) for version history and
+[CHANGELOG.md](CHANGELOG.md) for the details.
 
 ## License
 
 See [LICENSE.md](LICENSE.md).
+
+---
+
+*Made by A Different Kind Of Mind Games (ADKOM).*
