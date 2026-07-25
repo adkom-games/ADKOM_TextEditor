@@ -10,6 +10,16 @@ All notable changes to this package are documented here. Format follows
   loaded document is taller than the visible editor area.
 
 ### Added
+- Tabs are rendered as spaces at a configurable Tab Size (Settings); on
+  save, files that originally indented with tabs are converted back so
+  their formatting is preserved. The Tab key inserts spaces to the next
+  tab stop (multi-line selections indent/unindent), and Left/Right arrows
+  jump through space indentation in tab-size steps.
+- Keyboard command layouts (Settings → Keyboard Layout): Visual Studio
+  and Rider defaults for the commands the editor supports — save/save
+  all, new/open, close tab, next/previous tab, duplicate line, delete
+  line, move line up/down, toggle line comment, indent/unindent, and
+  settings (Rider).
 - Settings tab: a gear button in the toolbar opens Settings as a document
   tab (single instance; switches to it if already open). Color Theme,
   Light/Dark Mode, Line Numbers, and Word Wrap moved there from the

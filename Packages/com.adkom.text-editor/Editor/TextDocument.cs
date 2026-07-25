@@ -20,6 +20,9 @@ namespace ADKOM.TextEditor
         public bool IsSettings;
         public LineEnding Eol = LineEnding.Windows;
         public bool HasBom;
+        // True when the file on disk indents with tabs. In memory tabs are
+        // always rendered as spaces; saving converts leading indentation back.
+        public bool UsesTabs;
 
         // Ticks of File.GetLastWriteTimeUtc at load/save time, for external-change detection.
         public long LastKnownWriteTimeUtcTicks;
@@ -36,7 +39,9 @@ namespace ADKOM.TextEditor
 
             Eol = DetectEol(text);
             // Normalize to \n internally; restored on save.
-            Content = text.Replace("\r\n", "\n").Replace("\r", "\n");
+            text = text.Replace("\r\n", "\n").Replace("\r", "\n");
+            UsesTabs = DetectTabs(text);
+            Content = ExpandTabs(text, EditorConfig.TabSize);
             FilePath = path;
             IsDirty = false;
             LastKnownWriteTimeUtcTicks = File.GetLastWriteTimeUtc(path).Ticks;
@@ -45,6 +50,7 @@ namespace ADKOM.TextEditor
         public void SaveTo(string path)
         {
             string text = Content;
+            if (UsesTabs) text = LeadingSpacesToTabs(text, EditorConfig.TabSize);
             if (Eol == LineEnding.Windows) text = text.Replace("\n", "\r\n");
             else if (Eol == LineEnding.Mac) text = text.Replace("\n", "\r");
 
@@ -69,6 +75,67 @@ namespace ADKOM.TextEditor
             Buffer.BlockCopy(a, 0, r, 0, a.Length);
             Buffer.BlockCopy(b, 0, r, a.Length, b.Length);
             return r;
+        }
+
+        /// <summary>A file "uses tabs" when more lines indent with a tab than with spaces.</summary>
+        static bool DetectTabs(string text)
+        {
+            int tabLines = 0, spaceLines = 0;
+            bool atLineStart = true;
+            for (int i = 0; i < text.Length; i++)
+            {
+                if (atLineStart)
+                {
+                    if (text[i] == '\t') tabLines++;
+                    else if (text[i] == ' ') spaceLines++;
+                    atLineStart = false;
+                }
+                if (text[i] == '\n') atLineStart = true;
+            }
+            return tabLines > spaceLines;
+        }
+
+        /// <summary>Expands each tab to spaces up to the next tab stop (column aware).</summary>
+        public static string ExpandTabs(string text, int tabSize)
+        {
+            if (text.IndexOf('\t') < 0) return text;
+            var sb = new StringBuilder(text.Length + 64);
+            int col = 0;
+            for (int i = 0; i < text.Length; i++)
+            {
+                char c = text[i];
+                if (c == '\t')
+                {
+                    int add = tabSize - (col % tabSize);
+                    sb.Append(' ', add);
+                    col += add;
+                }
+                else
+                {
+                    sb.Append(c);
+                    col = c == '\n' ? 0 : col + 1;
+                }
+            }
+            return sb.ToString();
+        }
+
+        /// <summary>Converts each full tab-stop of leading spaces back to a tab;
+        /// interior alignment spaces are left untouched.</summary>
+        public static string LeadingSpacesToTabs(string text, int tabSize)
+        {
+            var sb = new StringBuilder(text.Length);
+            int i = 0, n = text.Length;
+            while (i < n)
+            {
+                int lineStart = i;
+                int spaces = 0;
+                while (i < n && text[i] == ' ') { spaces++; i++; }
+                sb.Append('\t', spaces / tabSize);
+                sb.Append(' ', spaces % tabSize);
+                while (i < n && text[i] != '\n') { sb.Append(text[i]); i++; }
+                if (i < n) { sb.Append('\n'); i++; }
+            }
+            return sb.ToString();
         }
 
         static LineEnding DetectEol(string text)
