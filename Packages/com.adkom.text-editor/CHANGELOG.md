@@ -6,6 +6,10 @@ All notable changes to this package are documented here. Format follows
 ## [Unreleased]
 
 ### Fixed
+- Typing was extremely slow (seconds per keystroke) in large files with
+  line numbers and wrap enabled: the gutter re-measured every logical
+  line on every keystroke (twice). The wrap-aware measure is now
+  debounced until typing pauses (~200ms); keystrokes cost <1ms.
 - Indentation was invisible in highlighted files and clicks placed the
   caret slightly off: the highlight overlay used white-space: normal,
   which collapses space runs in Unity 6, shifting every rendered glyph
