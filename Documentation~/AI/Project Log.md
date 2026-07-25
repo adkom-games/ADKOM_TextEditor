@@ -113,6 +113,30 @@ the bottom. See [[Project State]] for the current snapshot.
   removed (long lines scroll horizontally); the TextField-era overlay,
   gutter, and wrap machinery were deleted.
 
+## 2026-07-25 — Application polish wave (0.4.0)
+
+- **Native menu bar** (File/Edit/View/Tools/Window/Help via GenericMenu,
+  built per click for live state) replaced the toolbar buttons; tab
+  right-click context menu (Save/Save As/Close/Close Other Tabs).
+- **No auto-Untitled:** empty window is a valid state (hint + "No file
+  open" status); Tools menu focuses the existing window instead of
+  creating duplicates.
+- **Automatic updates:** GitHub latest-release polling (min once/day,
+  configurable days, disable-able), console announcement, idle-time
+  install dialog with a settings-synced checkbox; embedded dev copies
+  never auto-install. GitHub Releases are now the update channel.
+- **External Script Editor:** ATE registers via IExternalCodeEditor
+  (installation path = Unity itself); text files open at line/column;
+  configurable fallback editor receives solutions/binaries/sync.
+- **Fonts:** monospace by default (bundled RobotoMono; fixed the
+  non-mono inheritance), any OS font + size in Settings, browser-style
+  zoom (Ctrl+wheel, Ctrl+±, Ctrl+0).
+- **Fixes:** cumulative gutter drift (per-row gutter labels — one
+  spacing authority); status bar hardening (empty-state text,
+  scrollable settings pane); focus on new/switched documents.
+- **Smooth scrolling** (optional, same per-notch velocity, exponential
+  ease).
+
 ## Conventions
 
 - Branch per feature/fix from main; merge with `--no-ff`; branches are kept.

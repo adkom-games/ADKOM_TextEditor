@@ -3,7 +3,7 @@
 All notable changes to this package are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com); versions follow semver.
 
-## [Unreleased]
+## [0.4.0] - 2026-07-25
 
 ### Fixed
 - Status bar hardening: the empty window state shows "No file open"
