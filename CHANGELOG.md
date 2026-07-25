@@ -6,6 +6,11 @@ All notable changes to this package are documented here. Format follows
 ## [Unreleased]
 
 ### Fixed
+- Tab key inserted a literal tab character instead of spaces (and skewed
+  click-to-caret mapping afterwards): Unity delivers a second,
+  character-only key event for Tab which bypassed the handler; it is now
+  swallowed. Tab correctly advances to the next tab stop (1..TabSize
+  spaces depending on column).
 - Indentation (Tab key / typed spaces) appeared to do nothing in highlighted
   files: the highlight overlay covered the caret, and programmatic caret
   placement was clamped by the text engine. The overlay now draws under the
