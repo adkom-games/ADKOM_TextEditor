@@ -706,6 +706,9 @@ namespace ADKOM.TextEditor
             RebuildTabs();
             UpdateTitle();
             UpdateStatus();
+            // Ready for typing immediately (New, Open, tab click). Deferred a
+            // frame so the view is laid out/visible before taking focus.
+            _code?.schedule.Execute(() => _code.Focus()).ExecuteLater(0);
         }
 
         void CloseTab(int index)
