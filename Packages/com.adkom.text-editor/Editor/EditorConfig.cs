@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace ADKOM.TextEditor
 {
-    public enum KeymapLayout { VisualStudio, Rider }
+    public enum KeymapLayout { VisualStudio, Rider, VSCode }
 
     /// <summary>Editor-wide settings persisted in EditorPrefs.</summary>
     public static class EditorConfig

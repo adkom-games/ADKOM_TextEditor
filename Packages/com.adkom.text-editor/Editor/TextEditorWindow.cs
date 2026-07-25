@@ -185,7 +185,10 @@ namespace ADKOM.TextEditor
             _highlight.pickingMode = PickingMode.Ignore;
             _highlight.style.position = Position.Absolute;
             _highlightClip.Add(_highlight);
-            editorRow.Add(_highlightClip); // added after the field: draws on top
+            // Insert BEFORE the field so it draws underneath: the field's glyphs
+            // are transparent when highlighting, and its caret and selection
+            // must render above the colored overlay to stay visible.
+            editorRow.Insert(editorRow.IndexOf(_textField), _highlightClip);
 
             BuildSettingsPane(root);
             _textField.RegisterCallback<GeometryChangedEvent>(_ =>
@@ -263,13 +266,24 @@ namespace ADKOM.TextEditor
                     handled = true;
                 }
             }
-            else // Rider
+            else if (EditorConfig.Keymap == KeymapLayout.Rider)
             {
                 if (ctrl && !e.altKey && !e.shiftKey && e.keyCode == KeyCode.S) { SaveAll(); handled = true; }
                 else if (ctrl && e.altKey && e.keyCode == KeyCode.S) { OpenSettings(); handled = true; }
                 else if (ctrl && e.keyCode == KeyCode.F4) { CloseTab(_active); handled = true; }
                 else if (e.altKey && !ctrl && e.keyCode == KeyCode.RightArrow) { StepTab(1); handled = true; }
                 else if (e.altKey && !ctrl && e.keyCode == KeyCode.LeftArrow) { StepTab(-1); handled = true; }
+            }
+            else // VS Code
+            {
+                if (ctrl && !e.altKey && !e.shiftKey && e.keyCode == KeyCode.S) { SaveFile(false); handled = true; }
+                else if (ctrl && e.keyCode == KeyCode.N && !e.shiftKey) { NewFile(); handled = true; }
+                else if (ctrl && e.keyCode == KeyCode.O && !e.shiftKey) { OpenFile(); handled = true; }
+                else if (ctrl && (e.keyCode == KeyCode.W || e.keyCode == KeyCode.F4)) { CloseTab(_active); handled = true; }
+                else if (ctrl && e.keyCode == KeyCode.PageDown) { StepTab(1); handled = true; }
+                else if (ctrl && e.keyCode == KeyCode.PageUp) { StepTab(-1); handled = true; }
+                else if (ctrl && e.keyCode == KeyCode.Tab) { StepTab(e.shiftKey ? -1 : 1); handled = true; }
+                else if (ctrl && e.keyCode == KeyCode.Comma) { OpenSettings(); handled = true; }
             }
             if (handled)
             {
@@ -282,7 +296,10 @@ namespace ADKOM.TextEditor
         void OnKeyDown(KeyDownEvent e)
         {
             bool ctrl = e.ctrlKey || e.commandKey;
-            bool vs = EditorConfig.Keymap == KeymapLayout.VisualStudio;
+            var layout = EditorConfig.Keymap;
+            bool vs = layout == KeymapLayout.VisualStudio;
+            bool rider = layout == KeymapLayout.Rider;
+            bool vscode = layout == KeymapLayout.VSCode;
             bool handled = false;
 
             if (e.keyCode == KeyCode.Tab && !ctrl && !e.altKey)
@@ -295,17 +312,24 @@ namespace ADKOM.TextEditor
             {
                 handled = TryTabStopNavigate(e.keyCode == KeyCode.RightArrow ? 1 : -1);
             }
-            else if (ctrl && !e.altKey && !e.shiftKey && e.keyCode == KeyCode.D)
+            else if ((vs || rider) && ctrl && !e.altKey && !e.shiftKey && e.keyCode == KeyCode.D)
             {
                 DuplicateLine();
                 handled = true;
             }
+            else if (vscode && e.altKey && e.shiftKey && !ctrl &&
+                     (e.keyCode == KeyCode.DownArrow || e.keyCode == KeyCode.UpArrow))
+            {
+                DuplicateLine(); // VS Code: Copy Line Down/Up
+                handled = true;
+            }
             else if (vs && ctrl && !e.shiftKey && e.keyCode == KeyCode.L) { DeleteLine(); handled = true; }
-            else if (!vs && ctrl && !e.shiftKey && e.keyCode == KeyCode.Y) { DeleteLine(); handled = true; }
-            else if (vs && e.altKey && !ctrl && !e.shiftKey && e.keyCode == KeyCode.UpArrow) { MoveLine(-1); handled = true; }
-            else if (vs && e.altKey && !ctrl && !e.shiftKey && e.keyCode == KeyCode.DownArrow) { MoveLine(1); handled = true; }
-            else if (!vs && e.altKey && e.shiftKey && !ctrl && e.keyCode == KeyCode.UpArrow) { MoveLine(-1); handled = true; }
-            else if (!vs && e.altKey && e.shiftKey && !ctrl && e.keyCode == KeyCode.DownArrow) { MoveLine(1); handled = true; }
+            else if (rider && ctrl && !e.shiftKey && e.keyCode == KeyCode.Y) { DeleteLine(); handled = true; }
+            else if (vscode && ctrl && e.shiftKey && e.keyCode == KeyCode.K) { DeleteLine(); handled = true; }
+            else if ((vs || vscode) && e.altKey && !ctrl && !e.shiftKey && e.keyCode == KeyCode.UpArrow) { MoveLine(-1); handled = true; }
+            else if ((vs || vscode) && e.altKey && !ctrl && !e.shiftKey && e.keyCode == KeyCode.DownArrow) { MoveLine(1); handled = true; }
+            else if (rider && e.altKey && e.shiftKey && !ctrl && e.keyCode == KeyCode.UpArrow) { MoveLine(-1); handled = true; }
+            else if (rider && e.altKey && e.shiftKey && !ctrl && e.keyCode == KeyCode.DownArrow) { MoveLine(1); handled = true; }
             else if (ctrl && !e.shiftKey && !e.altKey && e.keyCode == KeyCode.Slash) { ToggleComment(); handled = true; }
 
             if (handled)
@@ -351,9 +375,16 @@ namespace ADKOM.TextEditor
         {
             string v = _textField.value;
             _textField.value = v.Substring(0, start) + replacement + v.Substring(end);
-            caret = Mathf.Clamp(caret, 0, _textField.value.Length);
-            _textField.cursorIndex = caret;
-            _textField.selectIndex = caret;
+            int c = Mathf.Clamp(caret, 0, _textField.value.Length);
+            _textField.cursorIndex = c;
+            _textField.selectIndex = c;
+            // The text engine may clamp the caret against its pre-edit state
+            // this frame; re-assert once it has processed the new value.
+            _textField.schedule.Execute(() =>
+            {
+                _textField.cursorIndex = c;
+                _textField.selectIndex = c;
+            }).ExecuteLater(0);
         }
 
         int LineStartOf(string text, int index)
@@ -569,8 +600,13 @@ namespace ADKOM.TextEditor
             var palette = CurrentTheme.Current;
             TextFormatters.Theme = CurrentTheme;
 
+            // Background lives on the row (behind the overlay); the input is
+            // transparent so the overlay underneath shows through it.
             var input = _textField?.Q(className: "unity-text-field__input");
-            if (input != null) input.style.backgroundColor = palette.BackgroundColor;
+            if (input != null) input.style.backgroundColor = Color.clear;
+            if (_editorRow != null) _editorRow.style.backgroundColor = palette.BackgroundColor;
+            if (_textField != null)
+                _textField.textSelection.selectionColor = palette.SelectionColor;
             if (_gutter != null) _gutter.style.backgroundColor = palette.BackgroundColor;
             if (_gutterLabel != null) _gutterLabel.style.color = palette.TextColor;
             if (_highlight != null) _highlight.style.color = palette.TextColor;
@@ -772,13 +808,16 @@ namespace ADKOM.TextEditor
             root.Add(_settingsPane);
         }
 
+        /// <summary>Gear behavior: open the settings tab, bring it to the front
+        /// if it exists in the background, or close it when already frontmost.</summary>
         void OpenSettings()
         {
             EnsureDocs();
             int existing = _docs.FindIndex(d => d.IsSettings);
             if (existing >= 0)
             {
-                SwitchTo(existing);
+                if (existing == _active) CloseTab(existing);
+                else SwitchTo(existing);
                 return;
             }
             _docs.Add(new TextDocument { IsSettings = true });
