@@ -56,6 +56,20 @@
     font-size: 13px;
 }
 
+.code-line {
+    /* Shared metrics for code lines, the gutter, and the measuring label —
+       whitespace must be preserved so glyph x-positions match the model. */
+    font-size: 13px;
+    -unity-font-style: normal;
+    white-space: pre;
+    margin: 0;
+    padding: 0;
+}
+
+#code-content {
+    min-height: 100%;
+}
+
 #highlight-overlay {
     /* Must match #text-area input metrics exactly so glyphs line up. */
     font-size: 13px;
