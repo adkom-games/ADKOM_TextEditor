@@ -72,6 +72,34 @@ is verified live in the editor.
 2. Roadmap candidates: JSON/Markdown formatters, custom themes,
    Ctrl+Tab MRU order, drag-to-reorder tabs.
 
+## Release procedure (FORMAL — follow every step when Cary says "publish X.Y.Z")
+
+1. **Docs consistency sweep** (do this FIRST, before any version bumps):
+   - Package README: every shipped feature represented; keymap table
+     current; "What's next" roadmap pruned of anything now shipped.
+   - Root README: feature summary and install URLs consistent with the
+     package README.
+   - Project Log: entries exist for this release's features/defects.
+2. **Version bumps:** `package.json` version (single source of truth —
+   About dialog and update checker read it at runtime; never embed the
+   version anywhere else).
+3. **Histories:** CHANGELOG — roll `[Unreleased]` to `[X.Y.Z] - date`;
+   RELEASE-NOTES — add the X.Y.Z section (concise features/fixes).
+4. **Pinned URLs:** update the `#X.Y.Z` install URL in BOTH READMEs.
+5. **Publish:** commit; push main; `git subtree split
+   --prefix=Packages/com.adkom.text-editor` and tag the split commit
+   `X.Y.Z`; push the tag; VERIFY the tag hash equals the CI-rebuilt
+   `upm` branch head; create the GitHub Release (highlights + install
+   URL + link to RELEASE-NOTES).
+6. **Verify install:** fresh shallow fetch of the tag in scratch;
+   confirm package.json version and expected new files.
+7. **Record:** update Project State (milestone row, next steps) and
+   push. Note: the auto-update system will surface the new release to
+   users — the GitHub Release tag IS the update channel.
+
+If Cary says "prepare but do not publish": steps 1–4 plus a local
+commit only — no push, no tag, no release.
+
 ## Standing constraints
 
 - Never nest a TextElement inside another TextElement (hard editor hang).
