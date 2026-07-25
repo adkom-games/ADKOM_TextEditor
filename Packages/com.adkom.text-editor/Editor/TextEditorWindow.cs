@@ -8,10 +8,10 @@ using UnityEditor.UIElements;
 namespace ADKOM.TextEditor
 {
     /// <summary>
-    /// Dockable Unity Editor text editor window. UIToolkit-based; the layout
-    /// reserves a gutter pane for future line numbers, and display rendering
-    /// routes through ITextFormatter for future syntax highlighting.
-    /// Holds any number of open documents, presented as tabs.
+    /// Dockable Unity Editor text editor window. UIToolkit-based, built on the
+    /// virtualized CodeView (only visible lines are rendered, so keystroke
+    /// cost is independent of file size). Holds any number of open documents,
+    /// presented as tabs; Settings opens as a special tab.
     /// </summary>
     public class TextEditorWindow : EditorWindow
     {
@@ -33,33 +33,21 @@ namespace ADKOM.TextEditor
 
         [SerializeField] List<TextDocument> _docs = new List<TextDocument>();
         [SerializeField] int _active;
-        [SerializeField] bool _wordWrap = true;
         [SerializeField] bool _showLineNumbers;
 
-        TextField _textField;
-        VisualElement _gutter;
-        Label _gutterLabel;
-        string _gutterSource;
-        float _gutterWidth;
-        bool _gutterWrap;
-        IVisualElementScheduledItem _gutterMeasurePending;
+        CodeView _code;
         VisualElement _tabBar;
         Label _statusLeft;
         Label _statusRight;
 
-        VisualElement _editorRow;
+        VisualElement _editorArea;
         VisualElement _settingsPane;
         PopupField<string> _settingsTheme;
         EnumField _settingsMode;
         Toggle _settingsLines;
-        Toggle _settingsWrap;
         IntegerField _settingsTabSize;
         EnumField _settingsKeymap;
 
-        Label _highlight;
-        VisualElement _highlightClip;
-        string _highlightSource;
-        IVisualElementScheduledItem _highlightPending;
         ITextFormatter _formatter = new PlainTextFormatter();
 
         TextDocument Active => _docs[_active];
@@ -151,53 +139,19 @@ namespace ADKOM.TextEditor
             _tabBar = new VisualElement { name = "tab-bar" };
             root.Add(_tabBar);
 
-            // --- Editor area: gutter (future line numbers) + text ---
-            var editorRow = _editorRow = new VisualElement { name = "editor-row" };
-            editorRow.style.flexGrow = 1;
-            editorRow.style.flexDirection = FlexDirection.Row;
+            // --- Editor area: virtualized code view ---
+            _editorArea = new VisualElement { name = "editor-row" };
+            _editorArea.style.flexGrow = 1;
 
-            _gutter = new VisualElement { name = "gutter" };
-            _gutterLabel = new Label();
-            _gutter.Add(_gutterLabel);
-            editorRow.Add(_gutter);
-
-            _textField = new TextField { multiline = true, name = "text-area" };
-            _textField.style.flexGrow = 1;
-            _textField.verticalScrollerVisibility = ScrollerVisibility.Auto;
-            _textField.SetValueWithoutNotify(Active.Content);
-            _textField.RegisterValueChangedCallback(OnTextChanged);
-            _textField.RegisterCallback<KeyDownEvent>(OnKeyDown, TrickleDown.TrickleDown);
-            editorRow.Add(_textField);
-            root.Add(editorRow);
-
-            // Syntax-highlight overlay: an editable TextField cannot render rich
-            // text, so the colored markup is drawn by a Label floated over the
-            // field; when active, the editable glyphs go transparent and only
-            // the caret/selection of the field remain visible.
-            // The overlay lives entirely OUTSIDE the TextField hierarchy: both
-            // TextInput and the inner editable element are TextElements in
-            // Unity 6, and any TextElement nested in one joins its text
-            // generation and hangs the editor. A clipping container tracks the
-            // field's rect; the label tracks the inner element (scroll included).
-            _highlightClip = new VisualElement { name = "highlight-clip" };
-            _highlightClip.pickingMode = PickingMode.Ignore;
-            _highlightClip.style.position = Position.Absolute;
-            _highlightClip.style.overflow = Overflow.Hidden;
-            _highlight = new Label { name = "highlight-overlay", enableRichText = true };
-            _highlight.pickingMode = PickingMode.Ignore;
-            _highlight.style.position = Position.Absolute;
-            _highlightClip.Add(_highlight);
-            // Insert BEFORE the field so it draws underneath: the field's glyphs
-            // are transparent when highlighting, and its caret and selection
-            // must render above the colored overlay to stay visible.
-            editorRow.Insert(editorRow.IndexOf(_textField), _highlightClip);
+            _code = new CodeView { TabSize = EditorConfig.TabSize };
+            _code.SetValueWithoutNotify(Active.Content);
+            _code.onValueChanged += OnTextChanged;
+            _code.showLineNumbers = _showLineNumbers;
+            _code.RegisterCallback<KeyDownEvent>(OnKeyDown, TrickleDown.TrickleDown);
+            _editorArea.Add(_code);
+            root.Add(_editorArea);
 
             BuildSettingsPane(root);
-            _textField.RegisterCallback<GeometryChangedEvent>(_ =>
-            {
-                SyncHighlightRect();
-                ScheduleGutterUpdate(); // wrap width changed: recompute row padding
-            });
 
             // --- Status bar ---
             var status = new VisualElement { name = "status-bar" };
@@ -209,19 +163,8 @@ namespace ADKOM.TextEditor
             status.Add(_statusRight);
             root.Add(status);
 
-            ApplyWrap();
-            ApplyLineNumbers();
-            ApplyTheme(); // includes RefreshHighlight
+            ApplyTheme();
             SwitchTo(_active); // also restores settings-tab visibility state
-
-            // The internal ScrollView exists once the field is built; mirror its
-            // vertical offset onto the gutter so numbers track the text.
-            var scrollView = _textField.Q<ScrollView>();
-            if (scrollView != null)
-            {
-                scrollView.verticalScroller.valueChanged += _ => { SyncGutterScroll(); SyncHighlightRect(); };
-                scrollView.horizontalScroller.valueChanged += _ => SyncHighlightRect();
-            }
 
             // Caret moves don't fire value changes; poll cheaply for line:col.
             root.schedule.Execute(UpdateStatus).Every(200);
@@ -230,11 +173,9 @@ namespace ADKOM.TextEditor
         static ToolbarButton ToolbarBtn(string text, System.Action onClick) =>
             new ToolbarButton(onClick) { text = text };
 
-        void OnTextChanged(ChangeEvent<string> e)
+        void OnTextChanged(string newValue)
         {
-            Active.Content = e.newValue;
-            ScheduleGutterUpdate();
-            ScheduleHighlightUpdate();
+            Active.Content = newValue;
             if (!Active.IsDirty)
             {
                 Active.IsDirty = true;
@@ -243,9 +184,289 @@ namespace ADKOM.TextEditor
             }
         }
 
+        // --- Theme ---
+
+        void ApplyTheme()
+        {
+            HighlightTheme.Mode = CurrentThemeMode;
+            var palette = CurrentTheme.Current;
+            TextFormatters.Theme = CurrentTheme;
+            _code?.SetTheme(palette.TextColor, palette.BackgroundColor, palette.SelectionColor);
+            RefreshFormatter();
+        }
+
+        void RefreshFormatter()
+        {
+            _formatter = TextFormatters.ForPath(Active.HasFile ? Active.FilePath : null);
+            _code?.SetFormatter(_formatter);
+        }
+
+        // --- Settings tab ---
+
+        void BuildSettingsPane(VisualElement root)
+        {
+            _settingsPane = new VisualElement { name = "settings-pane" };
+            _settingsPane.style.flexGrow = 1;
+            _settingsPane.style.display = DisplayStyle.None;
+
+            var title = new Label("Editor Settings");
+            title.AddToClassList("settings-title");
+            _settingsPane.Add(title);
+
+            var themeNames = new List<string>();
+            foreach (var t in HighlightTheme.All) themeNames.Add(t.Name);
+            _settingsTheme = new PopupField<string>("Color Theme", themeNames, CurrentTheme.Name);
+            _settingsTheme.RegisterValueChangedCallback(e =>
+            {
+                CurrentTheme = HighlightTheme.ByName(e.newValue);
+                ApplyTheme();
+            });
+            _settingsPane.Add(_settingsTheme);
+
+            _settingsMode = new EnumField("Light/Dark Mode", CurrentThemeMode);
+            _settingsMode.RegisterValueChangedCallback(e =>
+            {
+                CurrentThemeMode = (ThemeMode)e.newValue;
+                ApplyTheme();
+            });
+            _settingsPane.Add(_settingsMode);
+
+            _settingsLines = new Toggle("Line Numbers") { value = _showLineNumbers };
+            _settingsLines.RegisterValueChangedCallback(e =>
+            {
+                _showLineNumbers = e.newValue;
+                if (_code != null) _code.showLineNumbers = e.newValue;
+            });
+            _settingsPane.Add(_settingsLines);
+
+            _settingsTabSize = new IntegerField("Tab Size") { value = EditorConfig.TabSize };
+            _settingsTabSize.RegisterValueChangedCallback(e =>
+            {
+                EditorConfig.TabSize = e.newValue;
+                _settingsTabSize.SetValueWithoutNotify(EditorConfig.TabSize); // clamp echo
+                if (_code != null) _code.TabSize = EditorConfig.TabSize;
+            });
+            _settingsTabSize.tooltip = "Spaces a tab renders as. Applies to files opened after the change.";
+            _settingsPane.Add(_settingsTabSize);
+
+            _settingsKeymap = new EnumField("Keyboard Layout", EditorConfig.Keymap);
+            _settingsKeymap.RegisterValueChangedCallback(e =>
+                EditorConfig.Keymap = (KeymapLayout)e.newValue);
+            _settingsKeymap.tooltip = "Which IDE's default shortcuts to use for the commands this editor supports.";
+            _settingsPane.Add(_settingsKeymap);
+
+            root.Add(_settingsPane);
+        }
+
+        /// <summary>Gear behavior: open the settings tab, bring it to the front
+        /// if it exists in the background, or close it when already frontmost.</summary>
+        void OpenSettings()
+        {
+            EnsureDocs();
+            int existing = _docs.FindIndex(d => d.IsSettings);
+            if (existing >= 0)
+            {
+                if (existing == _active) CloseTab(existing);
+                else SwitchTo(existing);
+                return;
+            }
+            _docs.Add(new TextDocument { IsSettings = true });
+            SwitchTo(_docs.Count - 1);
+        }
+
+        void SyncSettingsControls()
+        {
+            _settingsTheme?.SetValueWithoutNotify(CurrentTheme.Name);
+            _settingsMode?.SetValueWithoutNotify(CurrentThemeMode);
+            _settingsLines?.SetValueWithoutNotify(_showLineNumbers);
+            _settingsTabSize?.SetValueWithoutNotify(EditorConfig.TabSize);
+            _settingsKeymap?.SetValueWithoutNotify(EditorConfig.Keymap);
+        }
+
+        // --- Tabs ---
+
+        void RebuildTabs()
+        {
+            if (_tabBar == null) return;
+            _tabBar.Clear();
+            for (int i = 0; i < _docs.Count; i++)
+            {
+                int index = i;
+                var doc = _docs[i];
+
+                var tab = new VisualElement();
+                tab.AddToClassList("tab");
+                if (i == _active) tab.AddToClassList("tab--active");
+                tab.RegisterCallback<MouseDownEvent>(e =>
+                {
+                    if (e.button == 0) SwitchTo(index);
+                    else if (e.button == 2) CloseTab(index); // middle-click close
+                });
+
+                var label = new Label((doc.IsDirty ? "*" : "") + doc.DisplayName)
+                {
+                    tooltip = doc.HasFile ? doc.FilePath : "New unsaved document"
+                };
+                tab.Add(label);
+
+                var close = new Button(() => CloseTab(index)) { text = "×" };
+                close.AddToClassList("tab__close");
+                tab.Add(close);
+
+                _tabBar.Add(tab);
+            }
+        }
+
+        void SwitchTo(int index)
+        {
+            EnsureDocs();
+            _active = Mathf.Clamp(index, 0, _docs.Count - 1);
+
+            bool settings = Active.IsSettings;
+            if (_editorArea != null)
+                _editorArea.style.display = settings ? DisplayStyle.None : DisplayStyle.Flex;
+            if (_settingsPane != null)
+                _settingsPane.style.display = settings ? DisplayStyle.Flex : DisplayStyle.None;
+            if (settings)
+            {
+                SyncSettingsControls();
+                RebuildTabs();
+                UpdateTitle();
+                UpdateStatus();
+                return;
+            }
+
+            CheckExternalChange(Active);
+            _code?.SetValueWithoutNotify(Active.Content);
+            RefreshFormatter();
+            RebuildTabs();
+            UpdateTitle();
+            UpdateStatus();
+        }
+
+        void CloseTab(int index)
+        {
+            if (index < 0 || index >= _docs.Count) return;
+            if (!ConfirmDiscardIfDirty(_docs[index])) return;
+            _docs.RemoveAt(index);
+            if (index < _active || _active >= _docs.Count)
+                _active = Mathf.Max(0, _active - 1);
+            EnsureDocs();
+            SwitchTo(_active);
+        }
+
+        // --- Commands ---
+
+        void NewFile()
+        {
+            _docs.Add(new TextDocument());
+            SwitchTo(_docs.Count - 1);
+        }
+
+        void OpenFile()
+        {
+            string path = FileService.PromptOpen();
+            if (path != null) OpenPath(path);
+        }
+
+        /// <summary>Opens the file at <paramref name="path"/> in a tab: switches to
+        /// its tab if already open, otherwise adds a new one.</summary>
+        public void OpenPath(string path)
+        {
+            EnsureDocs();
+            string full = Path.GetFullPath(path);
+            int existing = _docs.FindIndex(d => d.HasFile &&
+                string.Equals(Path.GetFullPath(d.FilePath), full, System.StringComparison.OrdinalIgnoreCase));
+            if (existing >= 0)
+            {
+                SwitchTo(existing);
+                return;
+            }
+
+            var doc = new TextDocument();
+            doc.LoadFrom(full);
+            _docs.Add(doc);
+            SwitchTo(_docs.Count - 1);
+        }
+
+        void SaveFile(bool saveAs)
+        {
+            if (Active.IsSettings) return;
+            bool saved = saveAs ? FileService.SaveAs(Active) : FileService.Save(Active);
+            if (saved)
+            {
+                RefreshFormatter(); // Save As can change the extension/language
+                RebuildTabs();
+                UpdateTitle();
+                UpdateStatus();
+            }
+        }
+
+        /// <summary>Returns true to proceed (saved or discarded), false to cancel.</summary>
+        bool ConfirmDiscardIfDirty(TextDocument doc)
+        {
+            if (!doc.IsDirty) return true;
+            int choice = EditorUtility.DisplayDialogComplex(
+                "Unsaved Changes",
+                $"'{doc.DisplayName}' has unsaved changes.",
+                "Save", "Cancel", "Discard");
+            if (choice == 1) return false;                // Cancel
+            if (choice == 0) return FileService.Save(doc); // Save (false if dialog cancelled)
+            return true;                                   // Discard
+        }
+
+        /// <summary>Prompts to reload <paramref name="doc"/> if its backing file
+        /// changed on disk. Returns true if the document was reloaded or marked.</summary>
+        bool CheckExternalChange(TextDocument doc)
+        {
+            if (doc == null || !doc.FileChangedOnDisk()) return false;
+            bool reload = EditorUtility.DisplayDialog(
+                "File Changed on Disk",
+                $"'{doc.DisplayName}' was modified outside the editor.\n\nReload it? Unsaved changes here will be lost.",
+                "Reload", "Keep Mine");
+            if (reload)
+            {
+                doc.LoadFrom(doc.FilePath);
+            }
+            else
+            {
+                // Stop re-prompting until it changes again.
+                doc.LastKnownWriteTimeUtcTicks = File.GetLastWriteTimeUtc(doc.FilePath).Ticks;
+                doc.IsDirty = true;
+            }
+            return true;
+        }
+
+        void OnFocus()
+        {
+            // Inactive tabs are checked when they are activated (SwitchTo).
+            if (_docs == null || _docs.Count == 0) return;
+            if (CheckExternalChange(Active))
+            {
+                _code?.SetValueWithoutNotify(Active.Content);
+                RefreshFormatter();
+                RebuildTabs();
+                UpdateTitle();
+            }
+        }
+
+        void OnDestroy()
+        {
+            if (_docs == null) return;
+            foreach (var doc in _docs)
+            {
+                if (!doc.IsDirty) continue;
+                bool save = EditorUtility.DisplayDialog(
+                    "Unsaved Changes",
+                    $"'{doc.DisplayName}' has unsaved changes.",
+                    "Save", "Discard");
+                if (save) FileService.Save(doc);
+            }
+        }
+
         // --- Keyboard commands ---
-        // Two layouts (Settings → Keyboard Layout), covering the Visual Studio
-        // and Rider defaults that apply to this editor's feature set.
+        // Three layouts (Settings → Keyboard Layout): Visual Studio, VS Code,
+        // Rider — covering the defaults that apply to this editor's features.
 
         /// <summary>Window-level commands; works from any tab including Settings.</summary>
         void OnGlobalKeyDown(KeyDownEvent e)
@@ -294,14 +515,11 @@ namespace ADKOM.TextEditor
             }
         }
 
-        /// <summary>Text-editing commands on the text field.</summary>
+        /// <summary>Text-editing commands on the code view (trickle-down, so
+        /// they win over CodeView's own typing/navigation handling).</summary>
         void OnKeyDown(KeyDownEvent e)
         {
-            // Unity 6 delivers keys as TWO events: keyCode-only, then
-            // character-only. Our Tab handling acts on the keyCode event;
-            // the character event would still insert a literal '\t' into the
-            // text (which also skews click-to-caret mapping afterwards), so
-            // swallow it here.
+            // Swallow the character-only Tab event; the keyCode event acts.
             if (e.keyCode == KeyCode.None && e.character == '\t')
             {
                 e.PreventDefault();
@@ -320,11 +538,6 @@ namespace ADKOM.TextEditor
             {
                 if (e.shiftKey) UnindentSelection(); else InsertTab();
                 handled = true;
-            }
-            else if (!ctrl && !e.altKey && !e.shiftKey &&
-                     (e.keyCode == KeyCode.LeftArrow || e.keyCode == KeyCode.RightArrow))
-            {
-                handled = TryTabStopNavigate(e.keyCode == KeyCode.RightArrow ? 1 : -1);
             }
             else if ((vs || rider) && ctrl && !e.altKey && !e.shiftKey && e.keyCode == KeyCode.D)
             {
@@ -362,43 +575,30 @@ namespace ADKOM.TextEditor
         void SaveAll()
         {
             EnsureDocs();
-            int saved = _active;
             for (int i = 0; i < _docs.Count; i++)
             {
                 var doc = _docs[i];
                 if (doc.IsSettings || !doc.IsDirty) continue;
                 FileService.Save(doc); // prompts Save As for untitled docs
             }
-            _active = saved;
             RebuildTabs();
             UpdateTitle();
             UpdateStatus();
         }
 
-        // --- Text editing helpers (operate on the field; value-change events
-        // keep the document, gutter, and highlight in sync) ---
+        // --- Text editing helpers (operate on the code view; value-change
+        // events keep the document and tabs in sync) ---
 
         void GetSelection(out int start, out int end)
         {
-            int a = _textField.cursorIndex, b = _textField.selectIndex;
+            int a = _code.cursorIndex, b = _code.selectIndex;
             start = Mathf.Min(a, b);
             end = Mathf.Max(a, b);
         }
 
         void ReplaceRange(int start, int end, string replacement, int caret)
         {
-            string v = _textField.value;
-            _textField.value = v.Substring(0, start) + replacement + v.Substring(end);
-            int c = Mathf.Clamp(caret, 0, _textField.value.Length);
-            _textField.cursorIndex = c;
-            _textField.selectIndex = c;
-            // The text engine may clamp the caret against its pre-edit state
-            // this frame; re-assert once it has processed the new value.
-            _textField.schedule.Execute(() =>
-            {
-                _textField.cursorIndex = c;
-                _textField.selectIndex = c;
-            }).ExecuteLater(0);
+            _code.ReplaceRangeInternal(start, end, replacement, caret, typing: false);
         }
 
         int LineStartOf(string text, int index)
@@ -418,7 +618,7 @@ namespace ADKOM.TextEditor
         void InsertTab()
         {
             GetSelection(out int start, out int end);
-            string v = _textField.value;
+            string v = _code.value;
             int tabSize = EditorConfig.TabSize;
             if (start != end && v.IndexOf('\n', start, end - start) >= 0)
             {
@@ -432,7 +632,7 @@ namespace ADKOM.TextEditor
 
         void IndentLines(int start, int end, int tabSize)
         {
-            string v = _textField.value;
+            string v = _code.value;
             int first = LineStartOf(v, start);
             var sb = new System.Text.StringBuilder();
             string indent = new string(' ', tabSize);
@@ -446,15 +646,14 @@ namespace ADKOM.TextEditor
                 i = le + 1;
             }
             ReplaceRange(first, LineEndOf(v, end == first ? first : end - 1), sb.ToString(), first);
-            _textField.cursorIndex = first;
-            _textField.selectIndex = Mathf.Min(_textField.value.Length,
-                end + lineCount * tabSize);
+            _code.cursorIndex = first;
+            _code.selectIndex = Mathf.Min(_code.value.Length, end + lineCount * tabSize);
         }
 
         void UnindentSelection()
         {
             GetSelection(out int start, out int end);
-            string v = _textField.value;
+            string v = _code.value;
             int tabSize = EditorConfig.TabSize;
             int first = LineStartOf(v, start);
             int last = LineEndOf(v, end == start ? start : end - 1);
@@ -473,41 +672,9 @@ namespace ADKOM.TextEditor
             ReplaceRange(first, last, sb.ToString(), Mathf.Max(first, start - Mathf.Min(removedTotal, tabSize)));
         }
 
-        /// <summary>Caret left/right jumps whole tab stops while inside leading
-        /// indentation, so space indents feel like tabs. Returns handled.</summary>
-        bool TryTabStopNavigate(int dir)
-        {
-            GetSelection(out int start, out int end);
-            if (start != end) return false;
-            string v = _textField.value;
-            int tabSize = EditorConfig.TabSize;
-            int lineStart = LineStartOf(v, start);
-            int col = start - lineStart;
-
-            // Only act inside a pure-space leading run.
-            for (int i = lineStart; i < start; i++)
-                if (v[i] != ' ') return false;
-
-            if (dir < 0)
-            {
-                if (col == 0) return false;
-                int target = ((col - 1) / tabSize) * tabSize;
-                _textField.cursorIndex = lineStart + target;
-                _textField.selectIndex = lineStart + target;
-                return true;
-            }
-
-            int need = tabSize - (col % tabSize);
-            for (int i = 0; i < need; i++)
-                if (start + i >= v.Length || v[start + i] != ' ') return false;
-            _textField.cursorIndex = start + need;
-            _textField.selectIndex = start + need;
-            return true;
-        }
-
         void DuplicateLine()
         {
-            string v = _textField.value;
+            string v = _code.value;
             GetSelection(out int start, out _);
             int ls = LineStartOf(v, start), le = LineEndOf(v, start);
             string line = v.Substring(ls, le - ls);
@@ -516,7 +683,7 @@ namespace ADKOM.TextEditor
 
         void DeleteLine()
         {
-            string v = _textField.value;
+            string v = _code.value;
             GetSelection(out int start, out _);
             int ls = LineStartOf(v, start), le = LineEndOf(v, start);
             int removeEnd = le < v.Length ? le + 1 : le;
@@ -527,7 +694,7 @@ namespace ADKOM.TextEditor
 
         void MoveLine(int dir)
         {
-            string v = _textField.value;
+            string v = _code.value;
             GetSelection(out int start, out _);
             int ls = LineStartOf(v, start), le = LineEndOf(v, start);
             int col = start - ls;
@@ -552,7 +719,7 @@ namespace ADKOM.TextEditor
         void ToggleComment()
         {
             GetSelection(out int start, out int end);
-            string v = _textField.value;
+            string v = _code.value;
             int first = LineStartOf(v, start);
             int last = LineEndOf(v, end == start ? start : end - 1);
 
@@ -596,490 +763,6 @@ namespace ADKOM.TextEditor
             ReplaceRange(first, last, sb.ToString(), first);
         }
 
-        void ApplyWrap()
-        {
-            if (_textField == null) return;
-            var input = _textField.Q(className: "unity-text-field__input") ?? _textField;
-            input.style.whiteSpace = _wordWrap ? WhiteSpace.Normal : WhiteSpace.NoWrap;
-            // The overlay must PRESERVE whitespace: Normal collapses space
-            // runs on Labels (CSS semantics), which shifts every glyph off the
-            // real text's layout and breaks click-to-caret correspondence.
-            if (_highlight != null)
-                _highlight.style.whiteSpace = _wordWrap ? WhiteSpace.PreWrap : WhiteSpace.Pre;
-            UpdateGutter(); // wrap mode changes the gutter's row padding
-        }
-
-        // --- Theme ---
-
-        void ApplyTheme()
-        {
-            HighlightTheme.Mode = CurrentThemeMode;
-            var palette = CurrentTheme.Current;
-            TextFormatters.Theme = CurrentTheme;
-
-            // Background lives on the row (behind the overlay); the input is
-            // transparent so the overlay underneath shows through it.
-            var input = _textField?.Q(className: "unity-text-field__input");
-            if (input != null) input.style.backgroundColor = Color.clear;
-            if (_editorRow != null) _editorRow.style.backgroundColor = palette.BackgroundColor;
-            if (_textField != null)
-                _textField.textSelection.selectionColor = palette.SelectionColor;
-            if (_gutter != null) _gutter.style.backgroundColor = palette.BackgroundColor;
-            if (_gutterLabel != null) _gutterLabel.style.color = palette.TextColor;
-            if (_highlight != null) _highlight.style.color = palette.TextColor;
-            if (_textField != null) _textField.textSelection.cursorColor = palette.TextColor;
-
-            _highlightSource = null; // token colors changed; re-tokenize
-            RefreshHighlight();
-        }
-
-        // --- Syntax highlighting ---
-
-        void SyncHighlightRect()
-        {
-            if (_highlight == null || _highlightClip == null || _textField == null) return;
-            var textElement = _textField.Q<TextElement>();
-            if (textElement == null) return;
-
-            // Clip container covers the field (in editor-row space).
-            var fieldRect = _textField.layout;
-            if (float.IsNaN(fieldRect.width)) return; // first frame, no layout yet
-            _highlightClip.style.left = fieldRect.x;
-            _highlightClip.style.top = fieldRect.y;
-            _highlightClip.style.width = fieldRect.width;
-            _highlightClip.style.height = fieldRect.height;
-
-            // Label tracks the editable element, scroll offset included, via
-            // world positions (also absorbs the input's internal padding).
-            var teWorld = textElement.worldBound;
-            var fieldWorld = _textField.worldBound;
-            _highlight.style.left = teWorld.x - fieldWorld.x;
-            _highlight.style.top = teWorld.y - fieldWorld.y;
-            _highlight.style.width = teWorld.width;
-        }
-
-        /// <summary>Keystroke-path colorization. Re-shaping the overlay's
-        /// rich-text markup for the whole document on every keystroke costs
-        /// seconds at file scale, so during typing the overlay is hidden and
-        /// the field's own glyphs show in plain theme color; the overlay
-        /// re-colorizes ~150ms after typing pauses (standard IDE pattern).</summary>
-        void ScheduleHighlightUpdate()
-        {
-            var textElement = _textField?.Q<TextElement>();
-            if (textElement == null || _highlightClip == null)
-            {
-                RefreshHighlight();
-                return;
-            }
-            bool rich = !(_formatter is PlainTextFormatter);
-            if (!rich)
-            {
-                RefreshHighlight(); // plain files: nothing expensive on this path
-                return;
-            }
-            _highlightClip.style.display = DisplayStyle.None;
-            textElement.style.color = CurrentTheme.Current.TextColor;
-            if (_highlightPending == null)
-                _highlightPending = _textField.schedule.Execute(RefreshHighlight);
-            _highlightPending.ExecuteLater(150); // re-arms the same item
-        }
-
-        void RefreshHighlight()
-        {
-            _formatter = TextFormatters.ForPath(Active.HasFile ? Active.FilePath : null);
-            var textElement = _textField?.Q<TextElement>();
-            if (textElement == null || _highlight == null) return;
-
-            // Very large files fall back to plain rendering: a single rich-text
-            // label with hundreds of KB of markup is asking too much of the
-            // text engine, and editing responsiveness matters more there.
-            const int MaxHighlightChars = 200_000;
-            bool rich = !(_formatter is PlainTextFormatter) &&
-                Active.Content.Length <= MaxHighlightChars;
-            _highlightClip.style.display = rich ? DisplayStyle.Flex : DisplayStyle.None;
-            if (rich)
-            {
-                textElement.style.color = Color.clear;
-                if (!ReferenceEquals(_highlightSource, Active.Content))
-                {
-                    _highlightSource = Active.Content;
-                    _highlight.text = _formatter.Format(Active.Content);
-                }
-                SyncHighlightRect();
-                // Transparent glyphs must not take the caret with them.
-                _textField.textSelection.cursorColor = CurrentTheme.Current.TextColor;
-            }
-            else
-            {
-                textElement.style.color = CurrentTheme.Current.TextColor;
-                _highlight.text = string.Empty;
-                _highlightSource = null;
-            }
-        }
-
-        // --- Line numbers ---
-
-        void ApplyLineNumbers()
-        {
-            if (_gutter == null) return;
-            _gutter.style.display = _showLineNumbers ? DisplayStyle.Flex : DisplayStyle.None;
-            _gutterSource = null; // force rebuild
-            UpdateGutter();
-            SyncGutterScroll();
-        }
-
-        /// <summary>Keystroke-path gutter refresh. The wrap-aware rebuild
-        /// measures every logical line (~0.06ms each), which at file scale
-        /// costs whole seconds per keystroke if run synchronously — so with
-        /// wrap on it is debounced until typing pauses. Without wrap the
-        /// rebuild is a cheap string build and runs immediately.</summary>
-        void ScheduleGutterUpdate()
-        {
-            if (!_showLineNumbers || _gutterLabel == null) return;
-            if (!_wordWrap)
-            {
-                UpdateGutter();
-                return;
-            }
-            if (_gutterMeasurePending == null)
-                _gutterMeasurePending = _gutterLabel.schedule.Execute(UpdateGutter);
-            _gutterMeasurePending.ExecuteLater(200); // re-arms the same item
-        }
-
-        void UpdateGutter()
-        {
-            if (!_showLineNumbers || _gutterLabel == null) return;
-
-            var textElement = _textField?.Q<TextElement>();
-            string content = Active.Content;
-            float wrapWidth = textElement?.resolvedStyle.width ?? -1f;
-
-            if (ReferenceEquals(_gutterSource, content) && _gutterWrap == _wordWrap &&
-                (!_wordWrap || Mathf.Approximately(_gutterWidth, wrapWidth)))
-                return;
-            _gutterSource = content;
-            _gutterWrap = _wordWrap;
-            _gutterWidth = wrapWidth;
-
-            string[] lines = content.Split('\n');
-            var sb = new System.Text.StringBuilder(lines.Length * 4);
-
-            // With wrap on, a logical line can occupy several visual rows; pad
-            // with blank gutter rows so the next number sits beside the next
-            // logical line. Measured per line, so cap it for huge files.
-            bool perLine = _wordWrap && textElement != null && wrapWidth > 0 &&
-                lines.Length <= 5000;
-            float rowHeight = 0;
-            if (perLine)
-            {
-                rowHeight = textElement.MeasureTextSize("0", 0, VisualElement.MeasureMode.Undefined,
-                    0, VisualElement.MeasureMode.Undefined).y;
-                if (rowHeight <= 0) perLine = false;
-            }
-
-            for (int n = 0; n < lines.Length; n++)
-            {
-                sb.Append(n + 1);
-                int rows = 1;
-                if (perLine && lines[n].Length > 0)
-                {
-                    float h = textElement.MeasureTextSize(lines[n], wrapWidth,
-                        VisualElement.MeasureMode.Exactly, 0, VisualElement.MeasureMode.Undefined).y;
-                    rows = Mathf.Max(1, Mathf.RoundToInt(h / rowHeight));
-                }
-                for (int r = 0; r < rows && n < lines.Length - 1; r++) sb.Append('\n');
-            }
-            _gutterLabel.text = sb.ToString();
-
-            // Match the text input's top padding so row 1 lines up with line 1.
-            var input = _textField?.Q(className: "unity-text-field__input");
-            if (input != null)
-                _gutterLabel.style.marginTop = input.resolvedStyle.paddingTop;
-        }
-
-        void SyncGutterScroll()
-        {
-            if (!_showLineNumbers || _gutterLabel == null || _textField == null) return;
-            var scrollView = _textField.Q<ScrollView>();
-            if (scrollView != null)
-                _gutterLabel.style.translate = new Translate(0, -scrollView.scrollOffset.y);
-        }
-
-        // --- Settings tab ---
-
-        void BuildSettingsPane(VisualElement root)
-        {
-            _settingsPane = new VisualElement { name = "settings-pane" };
-            _settingsPane.style.flexGrow = 1;
-            _settingsPane.style.display = DisplayStyle.None;
-
-            var title = new Label("Editor Settings");
-            title.AddToClassList("settings-title");
-            _settingsPane.Add(title);
-
-            var themeNames = new List<string>();
-            foreach (var t in HighlightTheme.All) themeNames.Add(t.Name);
-            _settingsTheme = new PopupField<string>("Color Theme", themeNames, CurrentTheme.Name);
-            _settingsTheme.RegisterValueChangedCallback(e =>
-            {
-                CurrentTheme = HighlightTheme.ByName(e.newValue);
-                ApplyTheme();
-            });
-            _settingsPane.Add(_settingsTheme);
-
-            _settingsMode = new EnumField("Light/Dark Mode", CurrentThemeMode);
-            _settingsMode.RegisterValueChangedCallback(e =>
-            {
-                CurrentThemeMode = (ThemeMode)e.newValue;
-                ApplyTheme();
-            });
-            _settingsPane.Add(_settingsMode);
-
-            _settingsLines = new Toggle("Line Numbers") { value = _showLineNumbers };
-            _settingsLines.RegisterValueChangedCallback(e =>
-            {
-                _showLineNumbers = e.newValue;
-                ApplyLineNumbers();
-            });
-            _settingsPane.Add(_settingsLines);
-
-            _settingsWrap = new Toggle("Word Wrap") { value = _wordWrap };
-            _settingsWrap.RegisterValueChangedCallback(e =>
-            {
-                _wordWrap = e.newValue;
-                ApplyWrap();
-            });
-            _settingsPane.Add(_settingsWrap);
-
-            _settingsTabSize = new IntegerField("Tab Size") { value = EditorConfig.TabSize };
-            _settingsTabSize.RegisterValueChangedCallback(e =>
-            {
-                EditorConfig.TabSize = e.newValue;
-                _settingsTabSize.SetValueWithoutNotify(EditorConfig.TabSize); // clamp echo
-            });
-            _settingsTabSize.tooltip = "Spaces a tab renders as. Applies to files opened after the change.";
-            _settingsPane.Add(_settingsTabSize);
-
-            _settingsKeymap = new EnumField("Keyboard Layout", EditorConfig.Keymap);
-            _settingsKeymap.RegisterValueChangedCallback(e =>
-                EditorConfig.Keymap = (KeymapLayout)e.newValue);
-            _settingsKeymap.tooltip = "Which IDE's default shortcuts to use for the commands this editor supports.";
-            _settingsPane.Add(_settingsKeymap);
-
-            root.Add(_settingsPane);
-        }
-
-        /// <summary>Gear behavior: open the settings tab, bring it to the front
-        /// if it exists in the background, or close it when already frontmost.</summary>
-        void OpenSettings()
-        {
-            EnsureDocs();
-            int existing = _docs.FindIndex(d => d.IsSettings);
-            if (existing >= 0)
-            {
-                if (existing == _active) CloseTab(existing);
-                else SwitchTo(existing);
-                return;
-            }
-            _docs.Add(new TextDocument { IsSettings = true });
-            SwitchTo(_docs.Count - 1);
-        }
-
-        void SyncSettingsControls()
-        {
-            _settingsTheme?.SetValueWithoutNotify(CurrentTheme.Name);
-            _settingsMode?.SetValueWithoutNotify(CurrentThemeMode);
-            _settingsLines?.SetValueWithoutNotify(_showLineNumbers);
-            _settingsWrap?.SetValueWithoutNotify(_wordWrap);
-            _settingsTabSize?.SetValueWithoutNotify(EditorConfig.TabSize);
-            _settingsKeymap?.SetValueWithoutNotify(EditorConfig.Keymap);
-        }
-
-        // --- Tabs ---
-
-        void RebuildTabs()
-        {
-            if (_tabBar == null) return;
-            _tabBar.Clear();
-            for (int i = 0; i < _docs.Count; i++)
-            {
-                int index = i;
-                var doc = _docs[i];
-
-                var tab = new VisualElement();
-                tab.AddToClassList("tab");
-                if (i == _active) tab.AddToClassList("tab--active");
-                tab.RegisterCallback<MouseDownEvent>(e =>
-                {
-                    if (e.button == 0) SwitchTo(index);
-                    else if (e.button == 2) CloseTab(index); // middle-click close
-                });
-
-                var label = new Label((doc.IsDirty ? "*" : "") + doc.DisplayName)
-                {
-                    tooltip = doc.HasFile ? doc.FilePath : "New unsaved document"
-                };
-                tab.Add(label);
-
-                var close = new Button(() => CloseTab(index)) { text = "×" };
-                close.AddToClassList("tab__close");
-                tab.Add(close);
-
-                _tabBar.Add(tab);
-            }
-        }
-
-        void SwitchTo(int index)
-        {
-            EnsureDocs();
-            _active = Mathf.Clamp(index, 0, _docs.Count - 1);
-
-            bool settings = Active.IsSettings;
-            if (_editorRow != null)
-                _editorRow.style.display = settings ? DisplayStyle.None : DisplayStyle.Flex;
-            if (_settingsPane != null)
-                _settingsPane.style.display = settings ? DisplayStyle.Flex : DisplayStyle.None;
-            if (settings)
-            {
-                SyncSettingsControls();
-                RebuildTabs();
-                UpdateTitle();
-                UpdateStatus();
-                return;
-            }
-
-            CheckExternalChange(Active);
-            _textField?.SetValueWithoutNotify(Active.Content);
-            _gutterSource = null;
-            UpdateGutter();
-            RefreshHighlight();
-            RebuildTabs();
-            UpdateTitle();
-            UpdateStatus();
-        }
-
-        void CloseTab(int index)
-        {
-            if (index < 0 || index >= _docs.Count) return;
-            if (!ConfirmDiscardIfDirty(_docs[index])) return;
-            _docs.RemoveAt(index);
-            if (index < _active || _active >= _docs.Count)
-                _active = Mathf.Max(0, _active - 1);
-            EnsureDocs();
-            SwitchTo(_active);
-        }
-
-        // --- Commands ---
-
-        void NewFile()
-        {
-            _docs.Add(new TextDocument());
-            SwitchTo(_docs.Count - 1);
-        }
-
-        void OpenFile()
-        {
-            string path = FileService.PromptOpen();
-            if (path != null) OpenPath(path);
-        }
-
-        /// <summary>Opens the file at <paramref name="path"/> in a tab: switches to
-        /// its tab if already open, reuses an untouched empty tab, or adds a new one.</summary>
-        public void OpenPath(string path)
-        {
-            EnsureDocs();
-            string full = Path.GetFullPath(path);
-            int existing = _docs.FindIndex(d => d.HasFile &&
-                string.Equals(Path.GetFullPath(d.FilePath), full, System.StringComparison.OrdinalIgnoreCase));
-            if (existing >= 0)
-            {
-                SwitchTo(existing);
-                return;
-            }
-
-            var doc = new TextDocument();
-            doc.LoadFrom(full);
-            _docs.Add(doc);
-            SwitchTo(_docs.Count - 1);
-        }
-
-        void SaveFile(bool saveAs)
-        {
-            if (Active.IsSettings) return;
-            bool saved = saveAs ? FileService.SaveAs(Active) : FileService.Save(Active);
-            if (saved)
-            {
-                RefreshHighlight(); // Save As can change the extension/language
-                RebuildTabs();
-                UpdateTitle();
-                UpdateStatus();
-            }
-        }
-
-        /// <summary>Returns true to proceed (saved or discarded), false to cancel.</summary>
-        bool ConfirmDiscardIfDirty(TextDocument doc)
-        {
-            if (!doc.IsDirty) return true;
-            int choice = EditorUtility.DisplayDialogComplex(
-                "Unsaved Changes",
-                $"'{doc.DisplayName}' has unsaved changes.",
-                "Save", "Cancel", "Discard");
-            if (choice == 1) return false;                // Cancel
-            if (choice == 0) return FileService.Save(doc); // Save (false if dialog cancelled)
-            return true;                                   // Discard
-        }
-
-        /// <summary>Prompts to reload <paramref name="doc"/> if its backing file
-        /// changed on disk. Returns true if the document was reloaded or marked.</summary>
-        bool CheckExternalChange(TextDocument doc)
-        {
-            if (doc == null || !doc.FileChangedOnDisk()) return false;
-            bool reload = EditorUtility.DisplayDialog(
-                "File Changed on Disk",
-                $"'{doc.DisplayName}' was modified outside the editor.\n\nReload it? Unsaved changes here will be lost.",
-                "Reload", "Keep Mine");
-            if (reload)
-            {
-                doc.LoadFrom(doc.FilePath);
-            }
-            else
-            {
-                // Stop re-prompting until it changes again.
-                doc.LastKnownWriteTimeUtcTicks = File.GetLastWriteTimeUtc(doc.FilePath).Ticks;
-                doc.IsDirty = true;
-            }
-            return true;
-        }
-
-        void OnFocus()
-        {
-            // Inactive tabs are checked when they are activated (SwitchTo).
-            if (_docs == null || _docs.Count == 0) return;
-            if (CheckExternalChange(Active))
-            {
-                _textField?.SetValueWithoutNotify(Active.Content);
-                _gutterSource = null;
-                UpdateGutter();
-                RefreshHighlight();
-                RebuildTabs();
-                UpdateTitle();
-            }
-        }
-
-        void OnDestroy()
-        {
-            if (_docs == null) return;
-            foreach (var doc in _docs)
-            {
-                if (!doc.IsDirty) continue;
-                bool save = EditorUtility.DisplayDialog(
-                    "Unsaved Changes",
-                    $"'{doc.DisplayName}' has unsaved changes.",
-                    "Save", "Discard");
-                if (save) FileService.Save(doc);
-            }
-        }
-
         // --- Display ---
 
         void UpdateTitle()
@@ -1091,7 +774,7 @@ namespace ADKOM.TextEditor
 
         void UpdateStatus()
         {
-            if (_statusLeft == null || _textField == null) return;
+            if (_statusLeft == null || _code == null) return;
 
             if (Active.IsSettings)
             {
@@ -1100,7 +783,7 @@ namespace ADKOM.TextEditor
                 return;
             }
 
-            int caret = Mathf.Clamp(_textField.cursorIndex, 0, Active.Content.Length);
+            int caret = Mathf.Clamp(_code.cursorIndex, 0, Active.Content.Length);
             int line = 1, col = 1;
             for (int i = 0; i < caret; i++)
             {

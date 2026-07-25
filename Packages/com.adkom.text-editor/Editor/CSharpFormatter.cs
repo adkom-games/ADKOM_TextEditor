@@ -177,14 +177,28 @@ namespace ADKOM.TextEditor
             return true;
         }
 
+        // Tags are emitted per line (never spanning '\n') so output can be
+        // split into independently renderable lines by the virtualized view.
         static void Emit(StringBuilder sb, string text, int start, int end, string color)
         {
             if (end <= start) return;
-            string seg = text.Substring(start, end - start);
-            if (seg.IndexOf('<') >= 0)
-                seg = "<noparse>" + seg.Replace("</noparse>", "</ noparse>") + "</noparse>";
-            if (color == null) sb.Append(seg);
-            else sb.Append("<color=").Append(color).Append('>').Append(seg).Append("</color>");
+            int segStart = start;
+            for (int i = start; i <= end; i++)
+            {
+                if (i == end || text[i] == '\n')
+                {
+                    if (i > segStart)
+                    {
+                        string seg = text.Substring(segStart, i - segStart);
+                        if (seg.IndexOf('<') >= 0)
+                            seg = "<noparse>" + seg.Replace("</noparse>", "</ noparse>") + "</noparse>";
+                        if (color == null) sb.Append(seg);
+                        else sb.Append("<color=").Append(color).Append('>').Append(seg).Append("</color>");
+                    }
+                    if (i < end) sb.Append('\n');
+                    segStart = i + 1;
+                }
+            }
         }
     }
 

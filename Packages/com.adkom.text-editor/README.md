@@ -26,9 +26,11 @@ asset in the Project window and choose **Open in ADKOM Text Editor**.
   Dark/Light), **VS Code** (Dark+/Light+), and **JetBrains Rider** (Rider
   Dark/IntelliJ Light) — plus a light/dark mode selector (Auto follows the
   Unity Editor skin).
-- **Line numbers** (toggleable) that stay aligned even with word wrap on:
-  wrapped continuation rows leave a gap in the gutter.
-- **Word wrap** toggle.
+- **Fully virtualized rendering**: only visible lines are laid out, so
+  editing stays fast (sub-frame keystrokes) regardless of file size. Long
+  lines scroll horizontally.
+- **Line numbers** (toggleable) in a virtualized gutter.
+- **Undo/redo** with typing coalescing (Ctrl+Z, Ctrl+Y / Ctrl+Shift+Z).
 - **Tabs rendered as spaces** at a configurable tab size. Files keep their
   original indentation style: tab-indented files are saved back with tabs,
   space-indented files stay spaces — your formatting is never destroyed.

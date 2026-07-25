@@ -5,6 +5,17 @@ All notable changes to this package are documented here. Format follows
 
 ## [Unreleased]
 
+### Changed
+- The editor is now fully virtualized: the document renders as pooled
+  per-line elements and only visible lines are laid out, so keystroke
+  cost no longer depends on file size. Measured: 14.7ms keystroke-to-
+  frame on a 5,000-line file (was ~930ms). Caret, selection, mouse,
+  keyboard, clipboard, and undo/redo (Ctrl+Z / Ctrl+Y or Ctrl+Shift+Z,
+  with typing coalescing) are implemented by the new CodeView; syntax
+  colors update live per line (no more plain-text flash while typing).
+- Word wrap is no longer available: the virtualized view scrolls long
+  lines horizontally instead. The Wrap setting has been removed.
+
 ### Fixed
 - Colorization is now asynchronous: while typing, the field's own glyphs
   show in plain theme color and the syntax-colored overlay re-renders
