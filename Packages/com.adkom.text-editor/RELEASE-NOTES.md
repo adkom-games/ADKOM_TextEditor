@@ -1,5 +1,11 @@
 # Release Notes — ADKOM Text Editor
 
+## 0.2.1 — 2026-07-24
+
+### Changes
+- License changed to MIT.
+- Public-facing README rewrite (Editor-only guarantee front and center).
+
 ## 0.2.0 — 2026-07-24
 
 ### Features

@@ -3,6 +3,13 @@
 All notable changes to this package are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com); versions follow semver.
 
+## [0.2.1] - 2026-07-24
+
+### Changed
+- License changed to MIT (was all-rights-reserved).
+- README rewritten as public-facing copy, leading with the Editor-only /
+  zero-shipping-impact guarantee.
+
 ## [0.2.0] - 2026-07-24
 
 ### Changed
