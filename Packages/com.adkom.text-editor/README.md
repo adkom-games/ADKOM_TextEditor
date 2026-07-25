@@ -52,6 +52,9 @@ Choose your keyboard layout — **Visual Studio**, **VS Code**, or
 | Duplicate line | Ctrl+D | Shift+Alt+Up/Down | Ctrl+D |
 | Delete line | Ctrl+L | Ctrl+Shift+K | Ctrl+Y |
 | Move line up / down | Alt+Up / Alt+Down | Alt+Up / Alt+Down | Alt+Shift+Up / Alt+Shift+Down |
+| Find / Find in tabs | Ctrl+F / Ctrl+Shift+F | Ctrl+F / Ctrl+Shift+F | Ctrl+F / Ctrl+Shift+F |
+| Replace / Replace in tabs | Ctrl+H / Ctrl+Shift+H | Ctrl+H / Ctrl+Shift+H | Ctrl+R / Ctrl+Shift+R |
+| Find next / previous | F3 / Shift+F3 | F3 / Shift+F3 | F3 / Shift+F3 |
 | Toggle line comment | Ctrl+/ | Ctrl+/ | Ctrl+/ |
 | Indent / unindent | Tab / Shift+Tab | Tab / Shift+Tab | Tab / Shift+Tab |
 | Settings | — | Ctrl+, | Ctrl+Alt+S |
@@ -66,6 +69,12 @@ spaces. Line endings (CRLF/LF/CR) and UTF-8 BOMs round-trip untouched.
 Your teammates will never know you edited it in Unity (unless you tell
 them). Navigation, Backspace, and Delete all honor tab stops across
 whitespace, so space-indented files *feel* tab-indented.
+
+### 🔍 Find & replace, everywhere
+Search the current file or every open tab at once — match case, whole
+word, plain text or full regular expressions (with $1 group
+replacements), wrap-around, and backwards search, all from a compact
+modeless dialog. F3 repeats your last search without reopening it.
 
 ### 🛡 Safe by design
 Unsaved-changes prompts on close, external-change detection with a

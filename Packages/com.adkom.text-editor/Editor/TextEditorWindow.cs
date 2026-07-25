@@ -485,6 +485,36 @@ namespace ADKOM.TextEditor
         {
             bool ctrl = e.ctrlKey || e.commandKey;
             bool handled = false;
+
+            // Find/Replace — common across layouts (Rider uses Ctrl+R for replace).
+            bool rider = EditorConfig.Keymap == KeymapLayout.Rider;
+            if (ctrl && !e.altKey && e.keyCode == KeyCode.F)
+            {
+                FindReplaceWindow.Open(this, replaceFocus: false, allTabs: e.shiftKey);
+                handled = true;
+            }
+            else if (!rider && ctrl && !e.altKey && e.keyCode == KeyCode.H)
+            {
+                FindReplaceWindow.Open(this, replaceFocus: true, allTabs: e.shiftKey);
+                handled = true;
+            }
+            else if (rider && ctrl && !e.altKey && e.keyCode == KeyCode.R)
+            {
+                FindReplaceWindow.Open(this, replaceFocus: true, allTabs: e.shiftKey);
+                handled = true;
+            }
+            else if (e.keyCode == KeyCode.F3 && !ctrl && !e.altKey)
+            {
+                handled = FindReplaceWindow.FindAgain(this, reverse: e.shiftKey);
+            }
+
+            if (handled)
+            {
+                e.PreventDefault();
+                e.StopImmediatePropagation();
+                return;
+            }
+
             if (EditorConfig.Keymap == KeymapLayout.VisualStudio)
             {
                 if (ctrl && !e.altKey && e.keyCode == KeyCode.S)
@@ -773,6 +803,50 @@ namespace ADKOM.TextEditor
                 i = le + 1;
             }
             ReplaceRange(first, last, sb.ToString(), first);
+        }
+
+        // --- Find/Replace surface (used by FindReplaceWindow) ---
+
+        public int DocCount => _docs.Count;
+        public int ActiveIndex => _active;
+        public bool IsSettingsTab(int i) => _docs[i].IsSettings;
+        public string GetDocName(int i) => _docs[i].DisplayName;
+
+        public string GetDocContent(int i) =>
+            i == _active && !Active.IsSettings ? _code.value : _docs[i].Content;
+
+        public void SwitchTab(int i) => SwitchTo(i);
+
+        public void GetSelectionSpan(out int start, out int end) => GetSelection(out start, out end);
+
+        /// <summary>Selects [start, end) in the active document, caret at end.</summary>
+        public void SelectSpan(int start, int end)
+        {
+            _code.selectIndex = start;
+            _code.cursorIndex = end;
+            Focus();
+            _code.Focus();
+        }
+
+        /// <summary>Replaces [start, end) in the active document (undoable).</summary>
+        public void ReplaceSpanInActive(int start, int end, string text) =>
+            _code.ReplaceRangeInternal(start, end, text, start + text.Length, typing: false);
+
+        /// <summary>Replaces a document's entire content. The active document
+        /// goes through the code view (undoable); background documents are
+        /// updated directly and marked dirty.</summary>
+        public void SetDocContent(int i, string content)
+        {
+            if (i == _active && !Active.IsSettings)
+            {
+                _code.ReplaceRangeInternal(0, _code.value.Length, content, 0, typing: false);
+            }
+            else
+            {
+                _docs[i].Content = content;
+                _docs[i].IsDirty = true;
+                RebuildTabs();
+            }
         }
 
         // --- Display ---
