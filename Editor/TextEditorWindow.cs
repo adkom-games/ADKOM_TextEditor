@@ -52,6 +52,8 @@ namespace ADKOM.TextEditor
         EnumField _settingsMode;
         Toggle _settingsLines;
         Toggle _settingsWrap;
+        IntegerField _settingsTabSize;
+        EnumField _settingsKeymap;
 
         Label _highlight;
         VisualElement _highlightClip;
@@ -120,6 +122,8 @@ namespace ADKOM.TextEditor
             var root = rootVisualElement;
             var uss = AssetDatabase.LoadAssetAtPath<StyleSheet>(UssPath);
             if (uss != null) root.styleSheets.Add(uss);
+
+            root.RegisterCallback<KeyDownEvent>(OnGlobalKeyDown, TrickleDown.TrickleDown);
 
             // --- Toolbar ---
             var toolbar = new Toolbar();
@@ -234,13 +238,317 @@ namespace ADKOM.TextEditor
             }
         }
 
+        // --- Keyboard commands ---
+        // Two layouts (Settings → Keyboard Layout), covering the Visual Studio
+        // and Rider defaults that apply to this editor's feature set.
+
+        /// <summary>Window-level commands; works from any tab including Settings.</summary>
+        void OnGlobalKeyDown(KeyDownEvent e)
+        {
+            bool ctrl = e.ctrlKey || e.commandKey;
+            bool handled = false;
+            if (EditorConfig.Keymap == KeymapLayout.VisualStudio)
+            {
+                if (ctrl && !e.altKey && e.keyCode == KeyCode.S)
+                {
+                    if (e.shiftKey) SaveAll(); else SaveFile(false);
+                    handled = true;
+                }
+                else if (ctrl && e.keyCode == KeyCode.N && !e.shiftKey) { NewFile(); handled = true; }
+                else if (ctrl && e.keyCode == KeyCode.O && !e.shiftKey) { OpenFile(); handled = true; }
+                else if (ctrl && e.keyCode == KeyCode.F4) { CloseTab(_active); handled = true; }
+                else if (ctrl && e.keyCode == KeyCode.Tab)
+                {
+                    StepTab(e.shiftKey ? -1 : 1);
+                    handled = true;
+                }
+            }
+            else // Rider
+            {
+                if (ctrl && !e.altKey && !e.shiftKey && e.keyCode == KeyCode.S) { SaveAll(); handled = true; }
+                else if (ctrl && e.altKey && e.keyCode == KeyCode.S) { OpenSettings(); handled = true; }
+                else if (ctrl && e.keyCode == KeyCode.F4) { CloseTab(_active); handled = true; }
+                else if (e.altKey && !ctrl && e.keyCode == KeyCode.RightArrow) { StepTab(1); handled = true; }
+                else if (e.altKey && !ctrl && e.keyCode == KeyCode.LeftArrow) { StepTab(-1); handled = true; }
+            }
+            if (handled)
+            {
+                e.PreventDefault();
+                e.StopImmediatePropagation();
+            }
+        }
+
+        /// <summary>Text-editing commands on the text field.</summary>
         void OnKeyDown(KeyDownEvent e)
         {
-            if (e.keyCode == KeyCode.S && (e.ctrlKey || e.commandKey))
+            bool ctrl = e.ctrlKey || e.commandKey;
+            bool vs = EditorConfig.Keymap == KeymapLayout.VisualStudio;
+            bool handled = false;
+
+            if (e.keyCode == KeyCode.Tab && !ctrl && !e.altKey)
             {
-                SaveFile(e.shiftKey);
-                e.StopPropagation();
+                if (e.shiftKey) UnindentSelection(); else InsertTab();
+                handled = true;
             }
+            else if (!ctrl && !e.altKey && !e.shiftKey &&
+                     (e.keyCode == KeyCode.LeftArrow || e.keyCode == KeyCode.RightArrow))
+            {
+                handled = TryTabStopNavigate(e.keyCode == KeyCode.RightArrow ? 1 : -1);
+            }
+            else if (ctrl && !e.altKey && !e.shiftKey && e.keyCode == KeyCode.D)
+            {
+                DuplicateLine();
+                handled = true;
+            }
+            else if (vs && ctrl && !e.shiftKey && e.keyCode == KeyCode.L) { DeleteLine(); handled = true; }
+            else if (!vs && ctrl && !e.shiftKey && e.keyCode == KeyCode.Y) { DeleteLine(); handled = true; }
+            else if (vs && e.altKey && !ctrl && !e.shiftKey && e.keyCode == KeyCode.UpArrow) { MoveLine(-1); handled = true; }
+            else if (vs && e.altKey && !ctrl && !e.shiftKey && e.keyCode == KeyCode.DownArrow) { MoveLine(1); handled = true; }
+            else if (!vs && e.altKey && e.shiftKey && !ctrl && e.keyCode == KeyCode.UpArrow) { MoveLine(-1); handled = true; }
+            else if (!vs && e.altKey && e.shiftKey && !ctrl && e.keyCode == KeyCode.DownArrow) { MoveLine(1); handled = true; }
+            else if (ctrl && !e.shiftKey && !e.altKey && e.keyCode == KeyCode.Slash) { ToggleComment(); handled = true; }
+
+            if (handled)
+            {
+                e.PreventDefault();
+                e.StopImmediatePropagation();
+            }
+        }
+
+        void StepTab(int dir)
+        {
+            EnsureDocs();
+            SwitchTo((_active + dir + _docs.Count) % _docs.Count);
+        }
+
+        void SaveAll()
+        {
+            EnsureDocs();
+            int saved = _active;
+            for (int i = 0; i < _docs.Count; i++)
+            {
+                var doc = _docs[i];
+                if (doc.IsSettings || !doc.IsDirty) continue;
+                FileService.Save(doc); // prompts Save As for untitled docs
+            }
+            _active = saved;
+            RebuildTabs();
+            UpdateTitle();
+            UpdateStatus();
+        }
+
+        // --- Text editing helpers (operate on the field; value-change events
+        // keep the document, gutter, and highlight in sync) ---
+
+        void GetSelection(out int start, out int end)
+        {
+            int a = _textField.cursorIndex, b = _textField.selectIndex;
+            start = Mathf.Min(a, b);
+            end = Mathf.Max(a, b);
+        }
+
+        void ReplaceRange(int start, int end, string replacement, int caret)
+        {
+            string v = _textField.value;
+            _textField.value = v.Substring(0, start) + replacement + v.Substring(end);
+            caret = Mathf.Clamp(caret, 0, _textField.value.Length);
+            _textField.cursorIndex = caret;
+            _textField.selectIndex = caret;
+        }
+
+        int LineStartOf(string text, int index)
+        {
+            int i = Mathf.Clamp(index, 0, text.Length);
+            while (i > 0 && text[i - 1] != '\n') i--;
+            return i;
+        }
+
+        int LineEndOf(string text, int index)
+        {
+            int i = Mathf.Clamp(index, 0, text.Length);
+            while (i < text.Length && text[i] != '\n') i++;
+            return i;
+        }
+
+        void InsertTab()
+        {
+            GetSelection(out int start, out int end);
+            string v = _textField.value;
+            int tabSize = EditorConfig.TabSize;
+            if (start != end && v.IndexOf('\n', start, end - start) >= 0)
+            {
+                IndentLines(start, end, tabSize);
+                return;
+            }
+            int col = start - LineStartOf(v, start);
+            int add = tabSize - (col % tabSize);
+            ReplaceRange(start, end, new string(' ', add), start + add);
+        }
+
+        void IndentLines(int start, int end, int tabSize)
+        {
+            string v = _textField.value;
+            int first = LineStartOf(v, start);
+            var sb = new System.Text.StringBuilder();
+            string indent = new string(' ', tabSize);
+            int lineCount = 0;
+            for (int i = first; i < end;)
+            {
+                int le = LineEndOf(v, i);
+                sb.Append(indent).Append(v, i, le - i);
+                if (le < v.Length && le < end) sb.Append('\n');
+                lineCount++;
+                i = le + 1;
+            }
+            ReplaceRange(first, LineEndOf(v, end == first ? first : end - 1), sb.ToString(), first);
+            _textField.cursorIndex = first;
+            _textField.selectIndex = Mathf.Min(_textField.value.Length,
+                end + lineCount * tabSize);
+        }
+
+        void UnindentSelection()
+        {
+            GetSelection(out int start, out int end);
+            string v = _textField.value;
+            int tabSize = EditorConfig.TabSize;
+            int first = LineStartOf(v, start);
+            int last = LineEndOf(v, end == start ? start : end - 1);
+            var sb = new System.Text.StringBuilder();
+            int removedTotal = 0;
+            for (int i = first; i <= last && i <= v.Length;)
+            {
+                int le = LineEndOf(v, i);
+                int remove = 0;
+                while (remove < tabSize && i + remove < le && v[i + remove] == ' ') remove++;
+                removedTotal += remove;
+                sb.Append(v, i + remove, le - i - remove);
+                if (le < v.Length && le < last) sb.Append('\n');
+                i = le + 1;
+            }
+            ReplaceRange(first, last, sb.ToString(), Mathf.Max(first, start - Mathf.Min(removedTotal, tabSize)));
+        }
+
+        /// <summary>Caret left/right jumps whole tab stops while inside leading
+        /// indentation, so space indents feel like tabs. Returns handled.</summary>
+        bool TryTabStopNavigate(int dir)
+        {
+            GetSelection(out int start, out int end);
+            if (start != end) return false;
+            string v = _textField.value;
+            int tabSize = EditorConfig.TabSize;
+            int lineStart = LineStartOf(v, start);
+            int col = start - lineStart;
+
+            // Only act inside a pure-space leading run.
+            for (int i = lineStart; i < start; i++)
+                if (v[i] != ' ') return false;
+
+            if (dir < 0)
+            {
+                if (col == 0) return false;
+                int target = ((col - 1) / tabSize) * tabSize;
+                _textField.cursorIndex = lineStart + target;
+                _textField.selectIndex = lineStart + target;
+                return true;
+            }
+
+            int need = tabSize - (col % tabSize);
+            for (int i = 0; i < need; i++)
+                if (start + i >= v.Length || v[start + i] != ' ') return false;
+            _textField.cursorIndex = start + need;
+            _textField.selectIndex = start + need;
+            return true;
+        }
+
+        void DuplicateLine()
+        {
+            string v = _textField.value;
+            GetSelection(out int start, out _);
+            int ls = LineStartOf(v, start), le = LineEndOf(v, start);
+            string line = v.Substring(ls, le - ls);
+            ReplaceRange(le, le, "\n" + line, start + line.Length + 1);
+        }
+
+        void DeleteLine()
+        {
+            string v = _textField.value;
+            GetSelection(out int start, out _);
+            int ls = LineStartOf(v, start), le = LineEndOf(v, start);
+            int removeEnd = le < v.Length ? le + 1 : le;
+            int removeStart = le >= v.Length && ls > 0 ? ls - 1 : ls;
+            int col = start - ls;
+            ReplaceRange(removeStart, removeEnd, string.Empty, removeStart + col);
+        }
+
+        void MoveLine(int dir)
+        {
+            string v = _textField.value;
+            GetSelection(out int start, out _);
+            int ls = LineStartOf(v, start), le = LineEndOf(v, start);
+            int col = start - ls;
+            if (dir < 0)
+            {
+                if (ls == 0) return;
+                int pls = LineStartOf(v, ls - 1);
+                string cur = v.Substring(ls, le - ls);
+                string prev = v.Substring(pls, ls - 1 - pls);
+                ReplaceRange(pls, le, cur + "\n" + prev, pls + col);
+            }
+            else
+            {
+                if (le >= v.Length) return;
+                int nle = LineEndOf(v, le + 1);
+                string cur = v.Substring(ls, le - ls);
+                string next = v.Substring(le + 1, nle - le - 1);
+                ReplaceRange(ls, nle, next + "\n" + cur, ls + next.Length + 1 + col);
+            }
+        }
+
+        void ToggleComment()
+        {
+            GetSelection(out int start, out int end);
+            string v = _textField.value;
+            int first = LineStartOf(v, start);
+            int last = LineEndOf(v, end == start ? start : end - 1);
+
+            // Uncomment only when every non-blank selected line is commented.
+            bool allCommented = true;
+            for (int i = first; i <= last && i < v.Length;)
+            {
+                int le = LineEndOf(v, i);
+                int ns = i;
+                while (ns < le && v[ns] == ' ') ns++;
+                if (ns < le && (ns + 1 >= le || v[ns] != '/' || v[ns + 1] != '/'))
+                    allCommented = false;
+                i = le + 1;
+            }
+
+            var sb = new System.Text.StringBuilder();
+            for (int i = first; i <= last && i <= v.Length;)
+            {
+                int le = LineEndOf(v, i);
+                int ns = i;
+                while (ns < le && v[ns] == ' ') ns++;
+                sb.Append(v, i, ns - i);
+                if (allCommented)
+                {
+                    int skip = ns;
+                    if (skip + 1 < le && v[skip] == '/' && v[skip + 1] == '/')
+                    {
+                        skip += 2;
+                        if (skip < le && v[skip] == ' ') skip++;
+                    }
+                    sb.Append(v, skip, le - skip);
+                }
+                else
+                {
+                    if (ns < le) sb.Append("// ");
+                    sb.Append(v, ns, le - ns);
+                }
+                if (le < v.Length && le < last) sb.Append('\n');
+                i = le + 1;
+            }
+            ReplaceRange(first, last, sb.ToString(), first);
         }
 
         void ApplyWrap()
@@ -446,6 +754,21 @@ namespace ADKOM.TextEditor
             });
             _settingsPane.Add(_settingsWrap);
 
+            _settingsTabSize = new IntegerField("Tab Size") { value = EditorConfig.TabSize };
+            _settingsTabSize.RegisterValueChangedCallback(e =>
+            {
+                EditorConfig.TabSize = e.newValue;
+                _settingsTabSize.SetValueWithoutNotify(EditorConfig.TabSize); // clamp echo
+            });
+            _settingsTabSize.tooltip = "Spaces a tab renders as. Applies to files opened after the change.";
+            _settingsPane.Add(_settingsTabSize);
+
+            _settingsKeymap = new EnumField("Keyboard Layout", EditorConfig.Keymap);
+            _settingsKeymap.RegisterValueChangedCallback(e =>
+                EditorConfig.Keymap = (KeymapLayout)e.newValue);
+            _settingsKeymap.tooltip = "Which IDE's default shortcuts to use for the commands this editor supports.";
+            _settingsPane.Add(_settingsKeymap);
+
             root.Add(_settingsPane);
         }
 
@@ -468,6 +791,8 @@ namespace ADKOM.TextEditor
             _settingsMode?.SetValueWithoutNotify(CurrentThemeMode);
             _settingsLines?.SetValueWithoutNotify(_showLineNumbers);
             _settingsWrap?.SetValueWithoutNotify(_wordWrap);
+            _settingsTabSize?.SetValueWithoutNotify(EditorConfig.TabSize);
+            _settingsKeymap?.SetValueWithoutNotify(EditorConfig.Keymap);
         }
 
         // --- Tabs ---
