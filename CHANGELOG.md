@@ -6,10 +6,23 @@ All notable changes to this package are documented here. Format follows
 ## [Unreleased]
 
 ### Fixed
+- Indentation (Tab key / typed spaces) appeared to do nothing in highlighted
+  files: the highlight overlay covered the caret, and programmatic caret
+  placement was clamped by the text engine. The overlay now draws under the
+  transparent-glyph field (caret and selection render above the colors) and
+  caret placement is re-asserted a frame later.
 - Status bar no longer gets pushed off the bottom of the window when the
   loaded document is taller than the visible editor area.
 
 ### Added
+- Visual Studio color theme (VS Dark/Light) and VS Code keyboard layout
+  (Ctrl+W close, Ctrl+PageUp/Down tabs, Shift+Alt+Up/Down copy line,
+  Ctrl+Shift+K delete line, Ctrl+, settings). Themes now define selection
+  colors.
+- The settings gear now toggles: opens the Settings tab, brings it to the
+  front if backgrounded, closes it if already frontmost.
+- Project Log added to Documentation~ (chronological history of features,
+  defects, and decisions); Project State refreshed.
 - Tabs are rendered as spaces at a configurable Tab Size (Settings); on
   save, files that originally indented with tabs are converted back so
   their formatting is preserved. The Tab key inserts spaces to the next
