@@ -107,6 +107,15 @@ namespace ADKOM.TextEditor
             RegisterCallback<FocusInEvent>(_ => StartBlink());
             RegisterCallback<FocusOutEvent>(_ => StopBlink());
             RegisterCallback<GeometryChangedEvent>(_ => { RemeasureLineHeight(); RefreshVisible(); });
+            // The viewport gets its size after this element's own geometry
+            // event (scrollbars appear/disappear during layout), and the
+            // initial fill must react to it or only the first pool of lines
+            // renders until the user scrolls.
+            _scroll.contentViewport.RegisterCallback<GeometryChangedEvent>(_ =>
+            {
+                RemeasureLineHeight();
+                RefreshVisible();
+            });
             RegisterCallback<ValidateCommandEvent>(OnValidateCommand);
             RegisterCallback<ExecuteCommandEvent>(OnExecuteCommand);
             // Tab must edit text, never move focus: the focus controller acts
@@ -147,6 +156,9 @@ namespace ADKOM.TextEditor
             ClampCaret();
             Reformat();
             RefreshVisible();
+            // Re-fill once post-layout state (viewport size, line height from
+            // applied styles) is settled.
+            schedule.Execute(() => { RemeasureLineHeight(); RefreshVisible(); }).ExecuteLater(0);
         }
 
         string GetValueInternal()
