@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 namespace ADKOM.TextEditor
 {
     /// <summary>
@@ -19,3 +20,4 @@ namespace ADKOM.TextEditor
         public string Format(string text) => text;
     }
 }
+#endif

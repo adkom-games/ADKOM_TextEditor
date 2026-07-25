@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEngine;
@@ -270,3 +271,4 @@ namespace ADKOM.TextEditor
         }
     }
 }
+#endif

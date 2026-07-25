@@ -5,6 +5,12 @@ All notable changes to this package are documented here. Format follows
 
 ## [0.4.0] - 2026-07-25
 
+### Changed
+- All source files are additionally wrapped in #if UNITY_EDITOR guards
+  (belt-and-braces on top of the Editor-only assembly), so copies of
+  package files pasted into a project's Assets folder can never break
+  player builds.
+
 ### Fixed
 - Status bar hardening: the empty window state shows "No file open"
   instead of a blank bar, and the Settings tab scrolls on short windows
