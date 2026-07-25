@@ -6,6 +6,13 @@ All notable changes to this package are documented here. Format follows
 ## [Unreleased]
 
 ### Added
+- Find and Replace, including across all open tabs, in a modeless
+  dialog: match case, whole word, normal or regular-expression search,
+  wrap around, and backwards direction. Ctrl+F find / Ctrl+Shift+F find
+  in tabs (all layouts); Ctrl+H / Ctrl+Shift+H replace (Visual Studio,
+  VS Code) or Ctrl+R / Ctrl+Shift+R (Rider); F3 / Shift+F3 repeat the
+  last search. Replace All reports counts; regex replacements support
+  $1-style groups; replacements in the active tab are undoable.
 - Word wrap is back, now native to the virtualized view: the editor
   computes its own wrap points (greedy word wrap, per-character width
   table) and renders each visual row independently — rendering, caret,
