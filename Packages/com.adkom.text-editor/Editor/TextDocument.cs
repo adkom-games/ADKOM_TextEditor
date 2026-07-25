@@ -16,6 +16,8 @@ namespace ADKOM.TextEditor
         public string FilePath;
         public string Content = string.Empty;
         public bool IsDirty;
+        // Special tab that shows the editor's settings pane instead of text.
+        public bool IsSettings;
         public LineEnding Eol = LineEnding.Windows;
         public bool HasBom;
 
@@ -23,7 +25,8 @@ namespace ADKOM.TextEditor
         public long LastKnownWriteTimeUtcTicks;
 
         public bool HasFile => !string.IsNullOrEmpty(FilePath);
-        public string DisplayName => HasFile ? Path.GetFileName(FilePath) : "Untitled";
+        public string DisplayName =>
+            IsSettings ? "Settings" : HasFile ? Path.GetFileName(FilePath) : "Untitled";
 
         public void LoadFrom(string path)
         {
