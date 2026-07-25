@@ -23,6 +23,24 @@ namespace ADKOM.TextEditor
             set => EditorPrefs.SetInt(KeymapKey, (int)value);
         }
 
+        const string FontNameKey = "ADKOM.TextEditor.FontName";
+        const string FontSizeKey = "ADKOM.TextEditor.FontSize";
+        public const int DefaultFontSize = 13;
+
+        /// <summary>OS font name for the code view; empty = bundled monospace
+        /// default (RobotoMono).</summary>
+        public static string FontName
+        {
+            get => EditorPrefs.GetString(FontNameKey, string.Empty);
+            set => EditorPrefs.SetString(FontNameKey, value ?? string.Empty);
+        }
+
+        public static int FontSize
+        {
+            get => Mathf.Clamp(EditorPrefs.GetInt(FontSizeKey, DefaultFontSize), 8, 40);
+            set => EditorPrefs.SetInt(FontSizeKey, Mathf.Clamp(value, 8, 40));
+        }
+
         const string FallbackEditorKey = "ADKOM.TextEditor.FallbackEditorPath";
 
         /// <summary>External editor to forward unhandled open/sync requests to

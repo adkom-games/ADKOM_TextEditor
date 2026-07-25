@@ -54,6 +54,8 @@ namespace ADKOM.TextEditor
         Toggle _settingsAutoUpdate;
         IntegerField _settingsUpdateFreq;
         PopupField<string> _settingsFallback;
+        PopupField<string> _settingsFont;
+        IntegerField _settingsFontSize;
 
         ITextFormatter _formatter = new PlainTextFormatter();
 
@@ -177,6 +179,7 @@ namespace ADKOM.TextEditor
             _code.showLineNumbers = _showLineNumbers;
             _code.wordWrap = _wordWrap;
             _code.RegisterCallback<KeyDownEvent>(OnKeyDown, TrickleDown.TrickleDown);
+            _code.onFontSizeChanged += SyncSettingsControls; // zoom gestures
             _editorArea.Add(_code);
 
             _emptyHint = new Label("No file open.\nFile → New, File → Open…, or right-click a text asset in the Project window.");
@@ -463,6 +466,28 @@ namespace ADKOM.TextEditor
             _settingsKeymap.tooltip = "Which IDE's default shortcuts to use for the commands this editor supports.";
             _settingsPane.Add(_settingsKeymap);
 
+            var fontNames = new List<string> { "(Default Monospace)" };
+            fontNames.AddRange(Font.GetOSInstalledFontNames().OrderBy(n => n));
+            string currentFont = string.IsNullOrEmpty(EditorConfig.FontName) ? fontNames[0]
+                : (fontNames.Contains(EditorConfig.FontName) ? EditorConfig.FontName : fontNames[0]);
+            _settingsFont = new PopupField<string>("Font", fontNames, currentFont);
+            _settingsFont.RegisterValueChangedCallback(e =>
+            {
+                EditorConfig.FontName = e.newValue == fontNames[0] ? string.Empty : e.newValue;
+                _code?.ApplyFontConfig();
+            });
+            _settingsPane.Add(_settingsFont);
+
+            _settingsFontSize = new IntegerField("Font Size") { value = EditorConfig.FontSize };
+            _settingsFontSize.RegisterValueChangedCallback(e =>
+            {
+                EditorConfig.FontSize = e.newValue;
+                _settingsFontSize.SetValueWithoutNotify(EditorConfig.FontSize); // clamp echo (8..40)
+                _code?.ApplyFontConfig();
+            });
+            _settingsFontSize.tooltip = "Also: Ctrl+MouseWheel, Ctrl+'+'/'-', Ctrl+0 resets.";
+            _settingsPane.Add(_settingsFontSize);
+
             // External-editor fallback (used when ATE is Unity's selected
             // external script editor and a request isn't a text file).
             var editors = Unity.CodeEditor.CodeEditor.Editor.GetFoundScriptEditorPaths()
@@ -543,6 +568,7 @@ namespace ADKOM.TextEditor
             _settingsKeymap?.SetValueWithoutNotify(EditorConfig.Keymap);
             _settingsAutoUpdate?.SetValueWithoutNotify(EditorConfig.AutoUpdate);
             _settingsUpdateFreq?.SetValueWithoutNotify(EditorConfig.UpdateFrequencyDays);
+            _settingsFontSize?.SetValueWithoutNotify(EditorConfig.FontSize);
         }
 
         // --- Tabs ---
