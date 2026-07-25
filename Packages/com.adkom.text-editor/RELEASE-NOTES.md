@@ -19,8 +19,8 @@
 ### Fixes
 - Tab-stop-aligned navigation and Backspace/Delete extended to any
   whitespace run (was leading indentation only).
-- Package files deleted from the working tree by an unknown external
-  actor caused a black window; recovered from git (tracked as issue #3).
+- Package files deleted from the working tree caused a black window;
+  recovered from git (issue #3, closed — user error, no tooling defect).
 
 ## 0.2.1 — 2026-07-24
 
