@@ -547,15 +547,9 @@ namespace ADKOM.TextEditor
                     if (HasSelection) { InsertText(string.Empty, true); break; }
                     int idx = cursorIndex;
                     if (idx == 0) { handled = true; break; }
-                    int remove = 1;
-                    // Un-indent whole tab stops of spaces.
-                    string line = _lines[_caretLine];
-                    if (_caretCol > 0 && line.Length >= _caretCol)
-                    {
-                        bool allSpaces = true;
-                        for (int i = 0; i < _caretCol; i++) if (line[i] != ' ') { allSpaces = false; break; }
-                        if (allSpaces) remove = _caretCol - ((_caretCol - 1) / TabSize) * TabSize;
-                    }
+                    // Whitespace deletes back to the previous tab stop.
+                    int p = _caretCol > 0 ? PrevTabStopInSpaces(_lines[_caretLine], _caretCol) : -1;
+                    int remove = p >= 0 ? _caretCol - p : 1;
                     ReplaceRangeInternal(idx - remove, idx, string.Empty, idx - remove, true);
                     break;
                 }
@@ -563,8 +557,11 @@ namespace ADKOM.TextEditor
                 {
                     if (HasSelection) { InsertText(string.Empty, true); break; }
                     int idx = cursorIndex;
-                    if (idx < GetValueInternal().Length)
-                        ReplaceRangeInternal(idx, idx + 1, string.Empty, idx, true);
+                    if (idx >= GetValueInternal().Length) break;
+                    // Whitespace deletes forward to the next tab stop.
+                    int nx = NextTabStopInSpaces(_lines[_caretLine], _caretCol);
+                    int count = nx >= 0 ? nx - _caretCol : 1;
+                    ReplaceRangeInternal(idx, idx + count, string.Empty, idx, true);
                     break;
                 }
                 case KeyCode.LeftArrow: MoveCaretH(-1, e.shiftKey, ctrl); break;
@@ -650,11 +647,9 @@ namespace ADKOM.TextEditor
                     if (wordwise) _caretCol = PrevWord(_lines[_caretLine], _caretCol);
                     else
                     {
-                        // Tab-stop jump inside pure-space leading indentation.
-                        string line = _lines[_caretLine];
-                        bool leading = true;
-                        for (int i = 0; i < _caretCol; i++) if (line[i] != ' ') { leading = false; break; }
-                        _caretCol = leading ? ((_caretCol - 1) / TabSize) * TabSize : _caretCol - 1;
+                        // Tab-stop jump inside any whitespace run.
+                        int p = PrevTabStopInSpaces(_lines[_caretLine], _caretCol);
+                        _caretCol = p >= 0 ? p : _caretCol - 1;
                     }
                 }
                 else if (_caretLine > 0) { _caretLine--; _caretCol = _lines[_caretLine].Length; }
@@ -667,19 +662,39 @@ namespace ADKOM.TextEditor
                     if (wordwise) _caretCol = NextWord(line, _caretCol);
                     else
                     {
-                        bool leading = true;
-                        for (int i = 0; i < _caretCol; i++) if (line[i] != ' ') { leading = false; break; }
-                        int jump = TabSize - (_caretCol % TabSize);
-                        bool spacesAhead = leading && _caretCol + jump <= line.Length;
-                        if (spacesAhead)
-                            for (int i = 0; i < jump; i++) if (line[_caretCol + i] != ' ') { spacesAhead = false; break; }
-                        _caretCol = spacesAhead ? _caretCol + jump : _caretCol + 1;
+                        // Tab-stop jump inside any whitespace run.
+                        int nx = NextTabStopInSpaces(line, _caretCol);
+                        _caretCol = nx >= 0 ? nx : _caretCol + 1;
                     }
                 }
                 else if (_caretLine < _lines.Count - 1) { _caretLine++; _caretCol = 0; }
             }
             if (!extend) CollapseAnchor();
             AfterCaretMove();
+        }
+
+        /// <summary>Previous tab-stop-aligned column within the whitespace run
+        /// behind <paramref name="col"/> (bounded by the run start), or -1 when
+        /// the char behind the caret is not a space.</summary>
+        int PrevTabStopInSpaces(string line, int col)
+        {
+            if (col <= 0 || line[col - 1] != ' ') return -1;
+            int runStart = col;
+            while (runStart > 0 && line[runStart - 1] == ' ') runStart--;
+            int stop = ((col - 1) / TabSize) * TabSize;
+            return Mathf.Max(stop, runStart);
+        }
+
+        /// <summary>Next tab-stop-aligned column within the whitespace run at
+        /// <paramref name="col"/> (bounded by the run end), or -1 when the char
+        /// at the caret is not a space.</summary>
+        int NextTabStopInSpaces(string line, int col)
+        {
+            if (col >= line.Length || line[col] != ' ') return -1;
+            int runEnd = col;
+            while (runEnd < line.Length && line[runEnd] == ' ') runEnd++;
+            int stop = (col / TabSize + 1) * TabSize;
+            return Mathf.Min(stop, runEnd);
         }
 
         static int PrevWord(string line, int col)
