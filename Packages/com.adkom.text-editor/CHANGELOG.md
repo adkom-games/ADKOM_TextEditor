@@ -3,9 +3,10 @@
 All notable changes to this package are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com); versions follow semver.
 
-## [Unreleased]
+## [0.3.0] - 2026-07-24
 
 ### Added
+- Find and Replace toolbar buttons (after Save As).
 - Find and Replace, including across all open tabs, in a modeless
   dialog: match case, whole word, normal or regular-expression search,
   wrap around, and backwards direction. Ctrl+F find / Ctrl+Shift+F find
