@@ -599,8 +599,11 @@ namespace ADKOM.TextEditor
             if (_textField == null) return;
             var input = _textField.Q(className: "unity-text-field__input") ?? _textField;
             input.style.whiteSpace = _wordWrap ? WhiteSpace.Normal : WhiteSpace.NoWrap;
+            // The overlay must PRESERVE whitespace: Normal collapses space
+            // runs on Labels (CSS semantics), which shifts every glyph off the
+            // real text's layout and breaks click-to-caret correspondence.
             if (_highlight != null)
-                _highlight.style.whiteSpace = _wordWrap ? WhiteSpace.Normal : WhiteSpace.NoWrap;
+                _highlight.style.whiteSpace = _wordWrap ? WhiteSpace.PreWrap : WhiteSpace.Pre;
             UpdateGutter(); // wrap mode changes the gutter's row padding
         }
 
