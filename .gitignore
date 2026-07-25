@@ -31,5 +31,5 @@ Thumbs.db
 sysinfo.txt
 crashlytics-build.properties
 
-# Local tooling
-.claude/settings.local.json
+# Local tooling (AI session config and MCP-generated skills)
+.claude/
