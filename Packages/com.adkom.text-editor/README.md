@@ -22,9 +22,10 @@ asset in the Project window and choose **Open in ADKOM Text Editor**.
 ### Code editing
 - **C# syntax highlighting** (keywords, strings, comments, numbers,
   preprocessor) with an extensible formatter pipeline for future languages.
-- **Color themes** with two built-in palettes — **VS Code** (Dark+/Light+)
-  and **JetBrains Rider** (Rider Dark/IntelliJ Light) — plus a light/dark
-  mode selector (Auto follows the Unity Editor skin).
+- **Color themes** with three built-in palettes — **Visual Studio** (VS
+  Dark/Light), **VS Code** (Dark+/Light+), and **JetBrains Rider** (Rider
+  Dark/IntelliJ Light) — plus a light/dark mode selector (Auto follows the
+  Unity Editor skin).
 - **Line numbers** (toggleable) that stay aligned even with word wrap on:
   wrapped continuation rows leave a gap in the gutter.
 - **Word wrap** toggle.
@@ -35,23 +36,26 @@ asset in the Project window and choose **Open in ADKOM Text Editor**.
   through space indentation in tab-size steps, as if they were real tabs.
 
 ### Keyboard commands
-Choose your layout in Settings — **Visual Studio** or **Rider** defaults
-for everything the editor supports:
+Choose your layout in Settings — **Visual Studio**, **VS Code**, or
+**Rider** defaults for everything the editor supports:
 
-| Command | Visual Studio | Rider |
-|---|---|---|
-| Save | Ctrl+S | — |
-| Save All | Ctrl+Shift+S | Ctrl+S |
-| New file | Ctrl+N | — |
-| Open file | Ctrl+O | — |
-| Close tab | Ctrl+F4 | Ctrl+F4 |
-| Next / previous tab | Ctrl+Tab / Ctrl+Shift+Tab | Alt+Right / Alt+Left |
-| Duplicate line | Ctrl+D | Ctrl+D |
-| Delete line | Ctrl+L | Ctrl+Y |
-| Move line up / down | Alt+Up / Alt+Down | Alt+Shift+Up / Alt+Shift+Down |
-| Toggle line comment | Ctrl+/ | Ctrl+/ |
-| Indent / unindent | Tab / Shift+Tab | Tab / Shift+Tab |
-| Settings | — | Ctrl+Alt+S |
+| Command | Visual Studio | VS Code | Rider |
+|---|---|---|---|
+| Save | Ctrl+S | Ctrl+S | — |
+| Save All | Ctrl+Shift+S | — | Ctrl+S |
+| New file | Ctrl+N | Ctrl+N | — |
+| Open file | Ctrl+O | Ctrl+O | — |
+| Close tab | Ctrl+F4 | Ctrl+W / Ctrl+F4 | Ctrl+F4 |
+| Next / previous tab | Ctrl+Tab / Ctrl+Shift+Tab | Ctrl+PgDn / Ctrl+PgUp (or Ctrl+Tab) | Alt+Right / Alt+Left |
+| Duplicate line | Ctrl+D | Shift+Alt+Up/Down | Ctrl+D |
+| Delete line | Ctrl+L | Ctrl+Shift+K | Ctrl+Y |
+| Move line up / down | Alt+Up / Alt+Down | Alt+Up / Alt+Down | Alt+Shift+Up / Alt+Shift+Down |
+| Toggle line comment | Ctrl+/ | Ctrl+/ | Ctrl+/ |
+| Indent / unindent | Tab / Shift+Tab | Tab / Shift+Tab | Tab / Shift+Tab |
+| Settings | — | Ctrl+, | Ctrl+Alt+S |
+
+The settings gear also toggles: it opens Settings, brings the tab to the
+front if it's in the background, and closes it if it's already frontmost.
 
 ### Settings
 The gear button opens **Settings as a document tab**: Color Theme,
