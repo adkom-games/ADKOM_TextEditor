@@ -59,6 +59,7 @@ namespace ADKOM.TextEditor
         Label _highlight;
         VisualElement _highlightClip;
         string _highlightSource;
+        IVisualElementScheduledItem _highlightPending;
         ITextFormatter _formatter = new PlainTextFormatter();
 
         TextDocument Active => _docs[_active];
@@ -233,7 +234,7 @@ namespace ADKOM.TextEditor
         {
             Active.Content = e.newValue;
             ScheduleGutterUpdate();
-            RefreshHighlight();
+            ScheduleHighlightUpdate();
             if (!Active.IsDirty)
             {
                 Active.IsDirty = true;
@@ -655,6 +656,32 @@ namespace ADKOM.TextEditor
             _highlight.style.left = teWorld.x - fieldWorld.x;
             _highlight.style.top = teWorld.y - fieldWorld.y;
             _highlight.style.width = teWorld.width;
+        }
+
+        /// <summary>Keystroke-path colorization. Re-shaping the overlay's
+        /// rich-text markup for the whole document on every keystroke costs
+        /// seconds at file scale, so during typing the overlay is hidden and
+        /// the field's own glyphs show in plain theme color; the overlay
+        /// re-colorizes ~150ms after typing pauses (standard IDE pattern).</summary>
+        void ScheduleHighlightUpdate()
+        {
+            var textElement = _textField?.Q<TextElement>();
+            if (textElement == null || _highlightClip == null)
+            {
+                RefreshHighlight();
+                return;
+            }
+            bool rich = !(_formatter is PlainTextFormatter);
+            if (!rich)
+            {
+                RefreshHighlight(); // plain files: nothing expensive on this path
+                return;
+            }
+            _highlightClip.style.display = DisplayStyle.None;
+            textElement.style.color = CurrentTheme.Current.TextColor;
+            if (_highlightPending == null)
+                _highlightPending = _textField.schedule.Execute(RefreshHighlight);
+            _highlightPending.ExecuteLater(150); // re-arms the same item
         }
 
         void RefreshHighlight()
