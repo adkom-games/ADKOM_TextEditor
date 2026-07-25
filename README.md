@@ -85,7 +85,7 @@ https://github.com/adkom-games/ADKOM_TextEditor.git#upm
 Prefer a pinned version?
 
 ```
-https://github.com/adkom-games/ADKOM_TextEditor.git#0.2.0
+https://github.com/adkom-games/ADKOM_TextEditor.git#0.2.1
 ```
 
 Requires Unity 6000.0+. The `upm` branch delivers only the package —
