@@ -1,5 +1,27 @@
 # Release Notes — ADKOM Text Editor
 
+## 0.3.0 — 2026-07-24
+
+### Features
+- Find and Replace in a modeless dialog, with all-tabs scope ("find in
+  tabs" / "replace in tabs"): match case, whole word, normal or regex
+  search (with $1 group replacements), wrap around, backwards direction.
+  Keyboard: Ctrl+F / Ctrl+Shift+F; Ctrl+H / Ctrl+Shift+H (VS, VS Code)
+  or Ctrl+R / Ctrl+Shift+R (Rider); F3 / Shift+F3 repeat. Toolbar Find
+  and Replace buttons.
+- Word wrap returned, native to the virtualized view: self-computed wrap
+  points render each visual row independently, syntax colors split
+  correctly across rows, the gutter blanks continuation rows, and
+  Up/Down move by visual row. Word Wrap setting restored.
+- Repository root README distinguishing the dev project from the
+  package.
+
+### Fixes
+- Tab-stop-aligned navigation and Backspace/Delete extended to any
+  whitespace run (was leading indentation only).
+- Package files deleted from the working tree by an unknown external
+  actor caused a black window; recovered from git (tracked as issue #3).
+
 ## 0.2.1 — 2026-07-24
 
 ### Changes

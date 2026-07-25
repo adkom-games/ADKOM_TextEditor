@@ -32,8 +32,11 @@ with the host project.
 | Settings as a document tab (gear toggle) | Done |
 | Tabs-as-spaces with format-preserving saves; tab-stop navigation | Done |
 | Keyboard layouts (Visual Studio, VS Code, Rider) | Done |
-| Release 0.2.0 (version bump, changelog roll, tag from upm split) | **Offered, awaiting go-ahead** |
-| Find / replace; more languages; custom themes | Future (roadmap) |
+| Releases 0.2.0, 0.2.1 (MIT, marketing README) | Done |
+| Word wrap native to the virtualized view | Done |
+| Find/Replace incl. all-tabs scope, modeless dialog, toolbar buttons | Done |
+| Release 0.3.0 docs prepared | **Done locally — NOT pushed/tagged (awaiting go)** |
+| More languages; custom themes | Future (roadmap) |
 
 ## Current work area
 
@@ -65,9 +68,10 @@ is verified live in the editor.
 
 ## Immediate next steps
 
-1. Cut 0.2.0 when Cary says go: bump package.json, roll CHANGELOG, tag the
-   new upm split commit.
-2. Roadmap candidates: find/replace, JSON/Markdown formatters, custom themes,
+1. PUBLISH 0.3.0 when Cary says go: push main, tag the upm split commit
+   as 0.3.0, create the GitHub Release. (All docs/version bumps are
+   committed locally already; nothing pushed.)
+2. Roadmap candidates: JSON/Markdown formatters, custom themes,
    Ctrl+Tab MRU order, drag-to-reorder tabs.
 
 ## Standing constraints

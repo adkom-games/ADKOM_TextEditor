@@ -94,7 +94,7 @@ https://github.com/adkom-games/ADKOM_TextEditor.git#upm
 Prefer a pinned version?
 
 ```
-https://github.com/adkom-games/ADKOM_TextEditor.git#0.2.1
+https://github.com/adkom-games/ADKOM_TextEditor.git#0.3.0
 ```
 
 Requires Unity 6000.0+. The `upm` branch delivers only the package —
@@ -104,7 +104,6 @@ just right-click a file.
 ## What's next
 
 - More languages (JSON, Markdown, shaders) via the formatter API
-- Find / replace
 - Custom user themes
 
 See [RELEASE-NOTES.md](RELEASE-NOTES.md) for version history and
