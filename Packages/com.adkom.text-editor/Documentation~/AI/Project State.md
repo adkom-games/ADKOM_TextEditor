@@ -35,7 +35,7 @@ with the host project.
 | Releases 0.2.0, 0.2.1 (MIT, marketing README) | Done |
 | Word wrap native to the virtualized view | Done |
 | Find/Replace incl. all-tabs scope, modeless dialog, toolbar buttons | Done |
-| Release 0.3.0 docs prepared | **Done locally — NOT pushed/tagged (awaiting go)** |
+| Release 0.3.0 (published 2026-07-24: tag on upm split, GitHub Release) | Done |
 | More languages; custom themes | Future (roadmap) |
 
 ## Current work area
@@ -68,9 +68,7 @@ is verified live in the editor.
 
 ## Immediate next steps
 
-1. PUBLISH 0.3.0 when Cary says go: push main, tag the upm split commit
-   as 0.3.0, create the GitHub Release. (All docs/version bumps are
-   committed locally already; nothing pushed.)
+1. 0.3.0 published 2026-07-24. Plan next milestone.
 2. Roadmap candidates: JSON/Markdown formatters, custom themes,
    Ctrl+Tab MRU order, drag-to-reorder tabs.
 
