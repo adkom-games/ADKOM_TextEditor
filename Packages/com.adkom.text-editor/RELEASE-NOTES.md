@@ -1,5 +1,17 @@
 # Release Notes — ADKOM Text Editor
 
+## 0.6.0 — 2026-07-26
+
+### Changes
+- Semantic Features now ship inside the main package: no separate
+  semantics module, no extra install URL. First use (or the Settings
+  toggle) offers one-click setup; the bundled MIT-licensed Roslyn
+  assemblies are copied only when the project has no Roslyn of its own
+  (THIRD-PARTY-NOTICES included; binaries inert until consented).
+- The com.adkom.text-editor.semantics package and its upm-semantics
+  branch are retired — remove old installs of the module if present.
+- Package download grows ~14MB (bundled Roslyn).
+
 ## 0.5.1 — 2026-07-26
 
 ### Features

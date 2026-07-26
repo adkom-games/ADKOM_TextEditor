@@ -186,6 +186,17 @@ the bottom. See [[Project State]] for the current snapshot.
 - **Selection occurrence highlighting** on visible rows in a weaker
   color than the active selection.
 
+## 2026-07-26 — Semantics in the box (0.6.0)
+
+- **Merged the semantics module into the main package**: provider under
+  Editor/Semantics (nested asmdef, same ADKOM_TE_ROSLYN gate),
+  RoslynBinaries~ + THIRD-PARTY-NOTICES at package root. Consent flow
+  (first-use dialog / Settings) now only copies bundled Roslyn when the
+  project has none — the never-field-tested module Client.Add path was
+  eliminated rather than tested. upm-semantics branch retired
+  (semantics-0.2.0 tag kept for history). Download +~14MB, binaries
+  inert until consented.
+
 ## Conventions
 
 - Branch per feature/fix from main; merge with `--no-ff`; branches are kept.
