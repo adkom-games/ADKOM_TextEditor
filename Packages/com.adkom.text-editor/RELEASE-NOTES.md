@@ -1,5 +1,24 @@
 # Release Notes — ADKOM Text Editor
 
+## 0.8.0 — 2026-07-26
+
+### Features
+- **Markdown support** for `.md` files: full syntax coloring in source
+  mode, and a rendered mode with block-level WYSIWYG editing — click
+  any block to edit its source inline; undo works across both modes.
+  A transient MD/source button by the settings gear shows the current
+  mode and switches per tab.
+- **Formatting toolbar** for any `.md` tab: headings, bold, italic,
+  strikethrough, inline code, links, images, bullet/numbered/task
+  lists, blockquotes, code blocks, tables, and horizontal rules — one
+  click formats your selection or the block you're editing, or inserts
+  a ready-made template, in either mode.
+- Strikethrough, images, task lists (☐/☑), and tables render and
+  color everywhere Markdown does.
+- New setting **"Open Markdown Rendered"** chooses the default view
+  for `.md` files (source by default). Release notes after an update
+  always open rendered — like this document.
+
 ## 0.7.1 — 2026-07-26
 
 ### Features
