@@ -47,8 +47,19 @@ namespace ADKOM.TextEditor
                 }
                 if (trimmed.StartsWith(">"))
                     spans.Add(new SyntaxSpan(li, indent, 1, TokenClass.Preprocessor));
+                else if (trimmed.StartsWith("|"))
+                {
+                    for (int ci = 0; ci < line.Length; ci++)
+                        if (line[ci] == '|')
+                            spans.Add(new SyntaxSpan(li, ci, 1, TokenClass.Preprocessor));
+                }
                 else if (IsListMarker(trimmed, out int markerLen))
+                {
                     spans.Add(new SyntaxSpan(li, indent, markerLen, TokenClass.Number));
+                    string rest = trimmed.Substring(markerLen).TrimStart();
+                    if (rest.StartsWith("[ ] ") || rest.StartsWith("[x] ") || rest.StartsWith("[X] "))
+                        spans.Add(new SyntaxSpan(li, line.IndexOf('[', indent + markerLen), 3, TokenClass.Number));
+                }
 
                 ClassifyInline(li, line, spans);
             }
@@ -91,6 +102,31 @@ namespace ADKOM.TextEditor
                         spans.Add(new SyntaxSpan(li, i, end - i + 1, TokenClass.String));
                         i = end + 1;
                         continue;
+                    }
+                }
+                else if (c == '~' && i + 1 < n && line[i + 1] == '~')
+                {
+                    int end = line.IndexOf("~~", i + 2, System.StringComparison.Ordinal);
+                    if (end > i)
+                    {
+                        spans.Add(new SyntaxSpan(li, i, end - i + 2, TokenClass.Type)); // strikethrough
+                        i = end + 2;
+                        continue;
+                    }
+                }
+                else if (c == '!' && i + 1 < n && line[i + 1] == '[')
+                {
+                    int close = line.IndexOf(']', i + 2);
+                    if (close > i && close + 1 < n && line[close + 1] == '(')
+                    {
+                        int urlEnd = line.IndexOf(')', close + 2);
+                        if (urlEnd > close)
+                        {
+                            spans.Add(new SyntaxSpan(li, i, close - i + 1, TokenClass.Method));   // ![alt]
+                            spans.Add(new SyntaxSpan(li, close + 1, urlEnd - close, TokenClass.Comment)); // (url)
+                            i = urlEnd + 1;
+                            continue;
+                        }
                     }
                 }
                 else if (c == '*' && i + 1 < n && line[i + 1] == '*')

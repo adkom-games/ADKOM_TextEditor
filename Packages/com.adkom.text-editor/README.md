@@ -99,7 +99,12 @@ Open a `.md` file and a toggle appears next to the settings gear:
 **source mode** with full markdown syntax coloring, or **rendered
 mode** — headers, lists, quotes, and code blocks styled properly, with
 block-level WYSIWYG editing: click any block, edit its source inline,
-and it re-renders on commit. Undo works across both modes.
+and it re-renders on commit. Undo works across both modes. In rendered
+mode a **formatting toolbar** appears — one button per element (headings,
+bold, italic, strikethrough, code, links, images, lists, task lists,
+quotes, code blocks, tables, rules) that formats the block you're
+editing or drops in a new one. Tables, task lists (☐/☑), images, and
+strikethrough render and color in both modes.
 
 ### 🗺 See the whole file
 A **syntax-colorized minimap** runs along the right edge — the shape of

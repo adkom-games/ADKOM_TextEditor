@@ -33,6 +33,13 @@ namespace ADKOM.TextEditor
         /// <summary>(startOffset, endOffset, replacementSource)</summary>
         public event Action<int, int, string> onEditBlock;
 
+        /// <summary>Raised by formatting actions when no block is being
+        /// edited: the window appends the given source as a new block.</summary>
+        public event Action<string> onInsertBlock;
+
+        TextField _activeEditor;
+        public bool HasActiveEditor => _activeEditor != null;
+
         public MarkdownView()
         {
             style.flexGrow = 1;
@@ -102,6 +109,11 @@ namespace ADKOM.TextEditor
                     kind = "quote";
                     while (li < lines.Length && lines[li].TrimStart().StartsWith(">")) li++;
                 }
+                else if (t.StartsWith("|"))
+                {
+                    kind = "table";
+                    while (li < lines.Length && lines[li].TrimStart().StartsWith("|")) li++;
+                }
                 else if (MarkdownClassifier.IsListMarker(t, out _))
                 {
                     kind = "list";
@@ -115,6 +127,7 @@ namespace ADKOM.TextEditor
                     while (li < lines.Length && lines[li].Trim().Length > 0 &&
                            !lines[li].TrimStart().StartsWith("#") && !lines[li].TrimStart().StartsWith("```") &&
                            !lines[li].TrimStart().StartsWith(">") &&
+                           !lines[li].TrimStart().StartsWith("|") &&
                            !MarkdownClassifier.IsListMarker(lines[li].TrimStart(), out _) &&
                            !MarkdownClassifier.IsHorizontalRule(lines[li].TrimStart()))
                         li++;
@@ -163,6 +176,10 @@ namespace ADKOM.TextEditor
                 box.Add(label);
                 el = box;
             }
+            else if (block.Kind == "table")
+            {
+                el = BuildTable(block, text);
+            }
             else
             {
                 var label = new Label { enableRichText = true };
@@ -197,6 +214,154 @@ namespace ADKOM.TextEditor
             return el;
         }
 
+        VisualElement BuildTable(Block block, Color text)
+        {
+            var table = new VisualElement();
+            table.style.marginBottom = 8;
+            var borderColor = new Color(text.r, text.g, text.b, 0.3f);
+            bool headerDone = false;
+            foreach (var raw in block.Source.Split('\n'))
+            {
+                string line = raw.Trim();
+                if (!line.StartsWith("|")) continue;
+                string inner = line.Trim('|');
+                // separator row (|---|:--:|) ends the header
+                if (!headerDone && inner.Contains("-") &&
+                    inner.Replace("-", "").Replace(":", "").Replace("|", "").Trim().Length == 0)
+                {
+                    headerDone = true;
+                    continue;
+                }
+                var row = new VisualElement();
+                row.style.flexDirection = FlexDirection.Row;
+                foreach (var cell in inner.Split('|'))
+                {
+                    var cl = new Label(InlineToRich(cell.Trim())) { enableRichText = true };
+                    cl.style.flexGrow = 1;
+                    cl.style.flexBasis = 0;
+                    cl.style.color = text;
+                    cl.style.paddingLeft = 6;
+                    cl.style.paddingRight = 6;
+                    cl.style.paddingTop = 2;
+                    cl.style.paddingBottom = 2;
+                    cl.style.borderBottomWidth = 1;
+                    cl.style.borderBottomColor = borderColor;
+                    if (!headerDone) cl.style.unityFontStyleAndWeight = FontStyle.Bold;
+                    row.Add(cl);
+                }
+                table.Add(row);
+            }
+            return table;
+        }
+
+        // ---------- Formatting actions ----------
+
+        /// <summary>Applies a formatting action: into the open block editor
+        /// when one exists (wrapping the selection or transforming lines),
+        /// otherwise raises onInsertBlock with a template for a new block.</summary>
+        public void ApplyFormat(string id)
+        {
+            if (_activeEditor == null)
+            {
+                string template = id switch
+                {
+                    "h1" => "# Heading",
+                    "h2" => "## Heading",
+                    "h3" => "### Heading",
+                    "bold" => "**bold text**",
+                    "italic" => "*italic text*",
+                    "strike" => "~~struck text~~",
+                    "code" => "`code`",
+                    "link" => "[link text](https://)",
+                    "image" => "![alt text](https://)",
+                    "ul" => "- item",
+                    "ol" => "1. item",
+                    "task" => "- [ ] task",
+                    "quote" => "> quote",
+                    "codeblock" => "```\ncode\n```",
+                    "table" => "| Column A | Column B |\n|---|---|\n| a | b |",
+                    "hr" => "---",
+                    _ => null
+                };
+                if (template != null) onInsertBlock?.Invoke(template);
+                return;
+            }
+
+            switch (id)
+            {
+                case "bold": WrapSelection("**", "**", "bold text"); break;
+                case "italic": WrapSelection("*", "*", "italic text"); break;
+                case "strike": WrapSelection("~~", "~~", "struck text"); break;
+                case "code": WrapSelection("`", "`", "code"); break;
+                case "link": WrapSelection("[", "](https://)", "link text"); break;
+                case "image": WrapSelection("![", "](https://)", "alt text"); break;
+                case "h1": SetHeading(1); break;
+                case "h2": SetHeading(2); break;
+                case "h3": SetHeading(3); break;
+                case "ul": PrefixLines("- "); break;
+                case "ol": PrefixLinesNumbered(); break;
+                case "task": PrefixLines("- [ ] "); break;
+                case "quote": PrefixLines("> "); break;
+                case "codeblock":
+                    _activeEditor.value = "```\n" + _activeEditor.value + "\n```";
+                    break;
+                case "hr": InsertAtCaret("\n---\n"); break;
+                case "table": InsertAtCaret("\n| Column A | Column B |\n|---|---|\n| a | b |\n"); break;
+            }
+            var ed = _activeEditor;
+            ed.schedule.Execute(() => ed.Focus()).ExecuteLater(0);
+        }
+
+        void WrapSelection(string pre, string post, string placeholder)
+        {
+            var ed = _activeEditor;
+            string v = ed.value;
+            int a = Mathf.Clamp(Mathf.Min(ed.cursorIndex, ed.selectIndex), 0, v.Length);
+            int b = Mathf.Clamp(Mathf.Max(ed.cursorIndex, ed.selectIndex), a, v.Length);
+            string innerText = b > a ? v.Substring(a, b - a) : placeholder;
+            ed.value = v.Substring(0, a) + pre + innerText + post + v.Substring(b);
+            ed.selectIndex = a + pre.Length;
+            ed.cursorIndex = a + pre.Length + innerText.Length;
+        }
+
+        void InsertAtCaret(string textToInsert)
+        {
+            var ed = _activeEditor;
+            string v = ed.value;
+            int a = Mathf.Clamp(Mathf.Min(ed.cursorIndex, ed.selectIndex), 0, v.Length);
+            ed.value = v.Substring(0, a) + textToInsert + v.Substring(a);
+            ed.cursorIndex = ed.selectIndex = a + textToInsert.Length;
+        }
+
+        void SetHeading(int level)
+        {
+            var ed = _activeEditor;
+            var lines = ed.value.Split('\n');
+            lines[0] = new string('#', level) + " " + lines[0].TrimStart('#').TrimStart();
+            ed.value = string.Join("\n", lines);
+        }
+
+        void PrefixLines(string prefix)
+        {
+            var ed = _activeEditor;
+            var lines = ed.value.Split('\n');
+            for (int i = 0; i < lines.Length; i++)
+                if (lines[i].Trim().Length > 0 && !lines[i].TrimStart().StartsWith(prefix.TrimEnd()))
+                    lines[i] = prefix + lines[i].TrimStart();
+            ed.value = string.Join("\n", lines);
+        }
+
+        void PrefixLinesNumbered()
+        {
+            var ed = _activeEditor;
+            var lines = ed.value.Split('\n');
+            int num = 1;
+            for (int i = 0; i < lines.Length; i++)
+                if (lines[i].Trim().Length > 0)
+                    lines[i] = (num++) + ". " + lines[i].TrimStart();
+            ed.value = string.Join("\n", lines);
+        }
+
         string RenderBlockText(Block block)
         {
             string src = block.Source;
@@ -221,9 +386,11 @@ namespace ADKOM.TextEditor
                     int indent = l.Length - t.Length;
                     if (MarkdownClassifier.IsListMarker(t, out int ml))
                     {
+                        string rest = t.Substring(ml).TrimStart();
                         string marker = char.IsDigit(t[0]) ? t.Substring(0, ml) : "•";
-                        sb.Append(new string(' ', indent)).Append(marker).Append(' ')
-                          .Append(t.Substring(ml).TrimStart());
+                        if (rest.StartsWith("[ ] ")) { marker = "☐"; rest = rest.Substring(4); }
+                        else if (rest.StartsWith("[x] ") || rest.StartsWith("[X] ")) { marker = "☑"; rest = rest.Substring(4); }
+                        sb.Append(new string(' ', indent)).Append(marker).Append(' ').Append(rest);
                     }
                     else sb.Append(l);
                     sb.Append('\n');
@@ -241,9 +408,38 @@ namespace ADKOM.TextEditor
             int i = 0, n = src.Length;
             string codeColor = _palette?.String ?? "#CE9178";
             string linkColor = _palette?.Method ?? "#DCDCAA";
+            string imgColor = _palette?.Type ?? "#4EC9B0";
             while (i < n)
             {
                 char c = src[i];
+                if (c == '~' && i + 1 < n && src[i + 1] == '~')
+                {
+                    int send = src.IndexOf("~~", i + 2, StringComparison.Ordinal);
+                    if (send > i)
+                    {
+                        sb.Append("<s>");
+                        AppendEscaped(sb, src.Substring(i + 2, send - i - 2));
+                        sb.Append("</s>");
+                        i = send + 2;
+                        continue;
+                    }
+                }
+                else if (c == '!' && i + 1 < n && src[i + 1] == '[')
+                {
+                    int close = src.IndexOf(']', i + 2);
+                    if (close > i && close + 1 < n && src[close + 1] == '(')
+                    {
+                        int urlEnd = src.IndexOf(')', close + 2);
+                        if (urlEnd > close)
+                        {
+                            sb.Append("<color=").Append(imgColor).Append(">[img] <u>");
+                            AppendEscaped(sb, src.Substring(i + 2, close - i - 2));
+                            sb.Append("</u></color>");
+                            i = urlEnd + 1;
+                            continue;
+                        }
+                    }
+                }
                 if (c == '`')
                 {
                     int end = src.IndexOf('`', i + 1);
@@ -335,12 +531,14 @@ namespace ADKOM.TextEditor
             int index = _scroll.contentContainer.IndexOf(rendered);
             _scroll.contentContainer.Insert(index, editor);
             rendered.style.display = DisplayStyle.None;
+            _activeEditor = editor;
 
             bool done = false;
             void Commit()
             {
                 if (done) return;
                 done = true;
+                _activeEditor = null;
                 string newSource = editor.value.Replace("\r\n", "\n").Replace("\r", "\n");
                 if (newSource != block.Source)
                     onEditBlock?.Invoke(block.StartOffset, block.EndOffset, newSource);
@@ -354,6 +552,7 @@ namespace ADKOM.TextEditor
             {
                 if (done) return;
                 done = true;
+                _activeEditor = null;
                 editor.RemoveFromHierarchy();
                 rendered.style.display = DisplayStyle.Flex;
             }
