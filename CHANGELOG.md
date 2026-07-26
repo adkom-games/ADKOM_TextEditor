@@ -5,6 +5,17 @@ All notable changes to this package are documented here. Format follows
 
 ## [Unreleased]
 
+### Changed
+- Settings scoping audit: settings that describe the project are now
+  stored per project instead of machine-wide — Tab Size (indentation
+  convention), Semantic Features (consent to install Roslyn into that
+  project), Automatic Updates and Check Every (days) (the package
+  install is per project), and the file dialog's remembered directory.
+  Existing values migrate automatically. User-preference settings
+  (keymap, font, theme, smooth scrolling, Markdown default view,
+  recent-files count, fallback editor) remain machine-wide, as does
+  the update-check timestamp (a per-machine GitHub rate limiter).
+
 ### Fixed
 - The release-notes tab (and first-run update check) could be silently
   skipped after an update: the "last seen version" was stored
