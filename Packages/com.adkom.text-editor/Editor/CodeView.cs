@@ -69,6 +69,8 @@ namespace ADKOM.TextEditor
 
         Color _textColor = Color.white;
         Color _selectionColor = new Color(0.2f, 0.4f, 0.8f, 0.5f);
+        Color _matchColor = new Color(0.7f, 0.7f, 0.7f, 0.18f);
+        readonly List<VisualElement> _matchPool = new List<VisualElement>();
 
         struct Snapshot { public string text; public int cursor, select; }
         readonly List<Snapshot> _undo = new List<Snapshot>();
@@ -359,6 +361,9 @@ namespace ADKOM.TextEditor
             _textColor = palette.TextColor;
             var selection = palette.SelectionColor;
             _selectionColor = new Color(selection.r, selection.g, selection.b, 0.55f);
+            // Occurrence highlight: related to the selection color but clearly
+            // weaker, so the active selection stays dominant.
+            _matchColor = new Color(_textColor.r, _textColor.g, _textColor.b, 0.16f);
             style.backgroundColor = palette.BackgroundColor;
             _gutterCol.style.backgroundColor = palette.BackgroundColor;
             _caret.style.backgroundColor = _textColor;
@@ -661,6 +666,7 @@ namespace ADKOM.TextEditor
 
             RefreshGutter(firstRow, visible, scrollY);
             RefreshSelection(firstRow, visible);
+            RefreshSelectionMatches(firstRow, visible);
             RefreshCaret();
         }
 
@@ -701,6 +707,63 @@ namespace ADKOM.TextEditor
             }
             int digits = Mathf.Max(3, (_lines.Count + 1).ToString().Length);
             _gutterCol.style.minWidth = 14 + digits * 8;
+        }
+
+        /// <summary>The selected text when it is a sensible search needle:
+        /// single-line, 1..200 chars, not only whitespace.</summary>
+        string SelectionNeedle(out int selLine, out int selStart)
+        {
+            NormalizedSelection(out int sl, out int sc, out int el, out int ec);
+            selLine = sl; selStart = sc;
+            if (sl != el || ec <= sc || ec - sc > 200) return null;
+            string s = _lines[sl].Substring(sc, ec - sc);
+            return s.Trim().Length == 0 ? null : s;
+        }
+
+        /// <summary>Highlights every other occurrence of the selected text on
+        /// the visible rows, in a weaker color than the selection itself.</summary>
+        void RefreshSelectionMatches(int firstRow, int visible)
+        {
+            int quad = 0;
+            string needle = SelectionNeedle(out int selLine, out int selStart);
+            if (needle != null)
+            {
+                for (int i = 0; i < visible; i++)
+                {
+                    int row = firstRow + i;
+                    if (row >= _totalRows) break;
+                    RowToLineSub(row, out int line, out int sub);
+                    RowBounds(line, sub, out int rs, out int re);
+                    string text = _lines[line];
+                    int idx = text.IndexOf(needle, StringComparison.Ordinal);
+                    while (idx >= 0)
+                    {
+                        int cs = Mathf.Max(idx, rs), ce = Mathf.Min(idx + needle.Length, re);
+                        if (ce > cs && !(line == selLine && idx == selStart))
+                        {
+                            if (quad >= _matchPool.Count)
+                            {
+                                var q = new VisualElement();
+                                q.style.position = Position.Absolute;
+                                q.pickingMode = PickingMode.Ignore;
+                                _content.Insert(0, q); // beneath selection and text
+                                _matchPool.Add(q);
+                            }
+                            var v = _matchPool[quad++];
+                            v.style.display = DisplayStyle.Flex;
+                            v.style.backgroundColor = _matchColor;
+                            float x0 = MeasureRange(line, rs, cs);
+                            v.style.left = x0;
+                            v.style.top = row * _lineHeight;
+                            v.style.width = Mathf.Max(2, MeasureRange(line, rs, ce) - x0);
+                            v.style.height = _lineHeight;
+                        }
+                        idx = text.IndexOf(needle, idx + 1, StringComparison.Ordinal);
+                    }
+                }
+            }
+            for (int i = quad; i < _matchPool.Count; i++)
+                _matchPool[i].style.display = DisplayStyle.None;
         }
 
         void RefreshSelection(int firstRow, int visible)
