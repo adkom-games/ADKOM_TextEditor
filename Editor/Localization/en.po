@@ -1,0 +1,417 @@
+msgid ""
+msgstr ""
+"Language: en
+"
+"Content-Type: text/plain; charset=utf-8
+"
+
+msgid "File"
+msgstr "File"
+
+msgid "Edit"
+msgstr "Edit"
+
+msgid "View"
+msgstr "View"
+
+msgid "Tools"
+msgstr "Tools"
+
+msgid "Window"
+msgstr "Window"
+
+msgid "Help"
+msgstr "Help"
+
+msgid "New"
+msgstr "New"
+
+msgid "Open..."
+msgstr "Open..."
+
+msgid "Save"
+msgstr "Save"
+
+msgid "Save As..."
+msgstr "Save As..."
+
+msgid "Save All"
+msgstr "Save All"
+
+msgid "Close Tab"
+msgstr "Close Tab"
+
+msgid "Close"
+msgstr "Close"
+
+msgid "Close Other Tabs"
+msgstr "Close Other Tabs"
+
+msgid "Close Window"
+msgstr "Close Window"
+
+msgid "Recent Files"
+msgstr "Recent Files"
+
+msgid "Clear Recent Files"
+msgstr "Clear Recent Files"
+
+msgid "Undo"
+msgstr "Undo"
+
+msgid "Redo"
+msgstr "Redo"
+
+msgid "Cut"
+msgstr "Cut"
+
+msgid "Copy"
+msgstr "Copy"
+
+msgid "Paste"
+msgstr "Paste"
+
+msgid "Select All"
+msgstr "Select All"
+
+msgid "Goto Line..."
+msgstr "Goto Line..."
+
+msgid "Goto Line:"
+msgstr "Goto Line:"
+
+msgid "Duplicate Line"
+msgstr "Duplicate Line"
+
+msgid "Delete Line"
+msgstr "Delete Line"
+
+msgid "Move Line Up"
+msgstr "Move Line Up"
+
+msgid "Move Line Down"
+msgstr "Move Line Down"
+
+msgid "Toggle Comment"
+msgstr "Toggle Comment"
+
+msgid "Indent"
+msgstr "Indent"
+
+msgid "Unindent"
+msgstr "Unindent"
+
+msgid "Find..."
+msgstr "Find..."
+
+msgid "Find in Tabs..."
+msgstr "Find in Tabs..."
+
+msgid "Replace..."
+msgstr "Replace..."
+
+msgid "Replace in Tabs..."
+msgstr "Replace in Tabs..."
+
+msgid "Find Next"
+msgstr "Find Next"
+
+msgid "Find Previous"
+msgstr "Find Previous"
+
+msgid "Console"
+msgstr "Console"
+
+msgid "Line Numbers"
+msgstr "Line Numbers"
+
+msgid "Minimap"
+msgstr "Minimap"
+
+msgid "Word Wrap"
+msgstr "Word Wrap"
+
+msgid "Theme"
+msgstr "Theme"
+
+msgid "Light-Dark Mode"
+msgstr "Light-Dark Mode"
+
+msgid "Options..."
+msgstr "Options..."
+
+msgid "Next Tab"
+msgstr "Next Tab"
+
+msgid "Previous Tab"
+msgstr "Previous Tab"
+
+msgid "(no open tabs)"
+msgstr "(no open tabs)"
+
+msgid "About ADKOM Text Editor..."
+msgstr "About ADKOM Text Editor..."
+
+msgid "Repository"
+msgstr "Repository"
+
+msgid "Release Notes"
+msgstr "Release Notes"
+
+msgid "Go to Definition"
+msgstr "Go to Definition"
+
+msgid "Find Occurrences"
+msgstr "Find Occurrences"
+
+msgid "Find Occurrences of '{0}'"
+msgstr "Find Occurrences of '{0}'"
+
+msgid "Find in Tabs '{0}'"
+msgstr "Find in Tabs '{0}'"
+
+msgid "Show in File Explorer"
+msgstr "Show in File Explorer"
+
+msgid "Switch to Markdown Source"
+msgstr "Switch to Markdown Source"
+
+msgid "Switch to Rendered Markdown"
+msgstr "Switch to Rendered Markdown"
+
+msgid "Rendered Markdown — click to switch to source"
+msgstr "Rendered Markdown — click to switch to source"
+
+msgid "Markdown source — click to switch to rendered (click a block to edit it)"
+msgstr "Markdown source — click to switch to rendered (click a block to edit it)"
+
+msgid "Editor Settings"
+msgstr "Editor Settings"
+
+msgid "Color Theme"
+msgstr "Color Theme"
+
+msgid "Light/Dark Mode"
+msgstr "Light/Dark Mode"
+
+msgid "Tab Size"
+msgstr "Tab Size"
+
+msgid "Keyboard Layout"
+msgstr "Keyboard Layout"
+
+msgid "Font"
+msgstr "Font"
+
+msgid "Font Size"
+msgstr "Font Size"
+
+msgid "External Fallback"
+msgstr "External Fallback"
+
+msgid "Semantic Features"
+msgstr "Semantic Features"
+
+msgid "Smooth Scrolling"
+msgstr "Smooth Scrolling"
+
+msgid "Open Markdown Rendered"
+msgstr "Open Markdown Rendered"
+
+msgid "Recent Files Count"
+msgstr "Recent Files Count"
+
+msgid "Automatic Updates"
+msgstr "Automatic Updates"
+
+msgid "Check Every (days)"
+msgstr "Check Every (days)"
+
+msgid "Check for Updates Now"
+msgstr "Check for Updates Now"
+
+msgid "Checking…"
+msgstr "Checking…"
+
+msgid "Installed version: "
+msgstr "Installed version: "
+
+msgid "Settings"
+msgstr "Settings"
+
+msgid "Spaces a tab renders as. Applies to files opened after the change."
+msgstr "Spaces a tab renders as. Applies to files opened after the change."
+
+msgid "Which IDE's default shortcuts to use for the commands this editor supports."
+msgstr "Which IDE's default shortcuts to use for the commands this editor supports."
+
+msgid "Also: Ctrl+MouseWheel, Ctrl+'+'/'-', Ctrl+0 resets."
+msgstr "Also: Ctrl+MouseWheel, Ctrl+'+'/'-', Ctrl+0 resets."
+
+msgid "When ATE is the External Script Editor, non-text requests (solutions, binaries, project sync) are forwarded here."
+msgstr "When ATE is the External Script Editor, non-text requests (solutions, binaries, project sync) are forwarded here."
+
+msgid "Compiler-accurate colors and Go to Definition. If the project has no Roslyn, enabling installs the bundled MIT-licensed Roslyn assemblies (see THIRD-PARTY-NOTICES)."
+msgstr "Compiler-accurate colors and Go to Definition. If the project has no Roslyn, enabling installs the bundled MIT-licensed Roslyn assemblies (see THIRD-PARTY-NOTICES)."
+
+msgid "Animate wheel scrolling instead of stepping line by line."
+msgstr "Animate wheel scrolling instead of stepping line by line."
+
+msgid "Default view when opening .md files: rendered (WYSIWYG) when on, source when off. The MD/source toggle still switches per tab."
+msgstr "Default view when opening .md files: rendered (WYSIWYG) when on, source when off. The MD/source toggle still switches per tab."
+
+msgid "How many entries File → Recent Files keeps (1-30)."
+msgstr "How many entries File → Recent Files keeps (1-30)."
+
+msgid "Check GitHub for new releases and offer to install them."
+msgstr "Check GitHub for new releases and offer to install them."
+
+msgid "Days between automatic update checks. 1 = daily; never more often than once per day."
+msgstr "Days between automatic update checks. 1 = daily; never more often than once per day."
+
+msgid "No file open.\nFile → New, File → Open…, or right-click a text asset in the Project window."
+msgstr "No file open.\nFile → New, File → Open…, or right-click a text asset in the Project window."
+
+msgid "Updating ADKOM Text Editor…\nPlease wait — the editor will reload when the update completes."
+msgstr "Updating ADKOM Text Editor…\nPlease wait — the editor will reload when the update completes."
+
+msgid "(unknown version)"
+msgstr "(unknown version)"
+
+msgid "A real code editor, living right inside the Unity Editor."
+msgstr "A real code editor, living right inside the Unity Editor."
+
+msgid "100% Editor-only — nothing ships in player builds."
+msgstr "100% Editor-only — nothing ships in player builds."
+
+msgid "OK"
+msgstr "OK"
+
+msgid "Go to Definition needs Semantic Features, which are currently disabled.\n\nEnable them now? The semantics module — and, if your project has no Roslyn, the bundled MIT-licensed Roslyn assemblies — will be installed automatically."
+msgstr "Go to Definition needs Semantic Features, which are currently disabled.\n\nEnable them now? The semantics module — and, if your project has no Roslyn, the bundled MIT-licensed Roslyn assemblies — will be installed automatically."
+
+msgid "Enable and Install"
+msgstr "Enable and Install"
+
+msgid "Cancel"
+msgstr "Cancel"
+
+msgid "Semantic features are still installing or compiling — try again in a moment."
+msgstr "Semantic features are still installing or compiling — try again in a moment."
+
+msgid "Resolving symbol…"
+msgstr "Resolving symbol…"
+
+msgid "Defined in "
+msgstr "Defined in "
+
+msgid "Definition not found."
+msgstr "Definition not found."
+
+msgid "Go to Definition failed: "
+msgstr "Go to Definition failed: "
+
+msgid "Recent file no longer exists: "
+msgstr "Recent file no longer exists: "
+
+msgid "Kept buffer of deleted file {0} — Save to restore it to disk."
+msgstr "Kept buffer of deleted file {0} — Save to restore it to disk."
+
+msgid "Reloaded {0} from disk."
+msgstr "Reloaded {0} from disk."
+
+msgid "Kept in-editor version of {0}."
+msgstr "Kept in-editor version of {0}."
+
+msgid "No file open"
+msgstr "No file open"
+
+msgid "'{0}' was deleted from disk. Keep the buffer (Save can bring the file back), or close the tab?"
+msgstr "'{0}' was deleted from disk. Keep the buffer (Save can bring the file back), or close the tab?"
+
+msgid "'{0}' was modified outside the editor. Reload it? (unsaved changes here would be lost)"
+msgstr "'{0}' was modified outside the editor. Reload it? (unsaved changes here would be lost)"
+
+msgid "'{0}' has unsaved changes."
+msgstr "'{0}' has unsaved changes."
+
+msgid "{0} tabs have unsaved changes."
+msgstr "{0} tabs have unsaved changes."
+
+msgid "Keep Buffer"
+msgstr "Keep Buffer"
+
+msgid "Reload"
+msgstr "Reload"
+
+msgid "Keep Mine"
+msgstr "Keep Mine"
+
+msgid "Discard"
+msgstr "Discard"
+
+msgid "Discard All"
+msgstr "Discard All"
+
+msgid "Line {0}."
+msgstr "Line {0}."
+
+msgid "Line {0} is out of range — went to line {1} (1-{2})."
+msgstr "Line {0} is out of range — went to line {1} (1-{2})."
+
+msgid "Find / Replace"
+msgstr "Find / Replace"
+
+msgid "Find"
+msgstr "Find"
+
+msgid "Replace"
+msgstr "Replace"
+
+msgid "Match case"
+msgstr "Match case"
+
+msgid "Whole word"
+msgstr "Whole word"
+
+msgid "Regex"
+msgstr "Regex"
+
+msgid "Wrap around"
+msgstr "Wrap around"
+
+msgid "Backwards"
+msgstr "Backwards"
+
+msgid "Scope"
+msgstr "Scope"
+
+msgid "Current Tab"
+msgstr "Current Tab"
+
+msgid "All Tabs"
+msgstr "All Tabs"
+
+msgid "Replace All"
+msgstr "Replace All"
+
+msgid "A new version of the ADKOM Text Editor is available."
+msgstr "A new version of the ADKOM Text Editor is available."
+
+msgid "Installed version:  {0}\nNew version:        {1}"
+msgstr "Installed version:  {0}\nNew version:        {1}"
+
+msgid "Check for updates automatically"
+msgstr "Check for updates automatically"
+
+msgid "Later"
+msgstr "Later"
+
+msgid "Install Now"
+msgstr "Install Now"
+
+msgid "Undid {0} char(s)."
+msgstr "Undid {0} char(s)."
+
+msgid "Redid {0} char(s)."
+msgstr "Redid {0} char(s)."
