@@ -1152,7 +1152,7 @@ namespace ADKOM.TextEditor
             cursorIndex = snap.cursor;
             selectIndex = snap.select;
             BreakUndoGroup();
-            onUndoStatus?.Invoke($"Undid {Mathf.Abs(cur.Length - snap.text.Length)} char(s).");
+            onUndoStatus?.Invoke(string.Format(L10n.Tr("Undid {0} char(s)."), Mathf.Abs(cur.Length - snap.text.Length)));
             Notify();
             AfterCaretMove();
         }
@@ -1168,7 +1168,7 @@ namespace ADKOM.TextEditor
             cursorIndex = snap.cursor;
             selectIndex = snap.select;
             BreakUndoGroup();
-            onUndoStatus?.Invoke($"Redid {Mathf.Abs(cur.Length - snap.text.Length)} char(s).");
+            onUndoStatus?.Invoke(string.Format(L10n.Tr("Redid {0} char(s)."), Mathf.Abs(cur.Length - snap.text.Length)));
             Notify();
             AfterCaretMove();
         }

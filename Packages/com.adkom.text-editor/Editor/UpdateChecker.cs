@@ -243,16 +243,16 @@ namespace ADKOM.TextEditor
             root.style.paddingRight = 12;
             root.style.paddingTop = 10;
 
-            var title = new Label("A new version of the ADKOM Text Editor is available.");
+            var title = new Label(L10n.Tr("A new version of the ADKOM Text Editor is available."));
             title.style.whiteSpace = WhiteSpace.Normal;
             root.Add(title);
 
-            var versions = new Label($"Installed version:  {_current}\nNew version:        {_latest}");
+            var versions = new Label(string.Format(L10n.Tr("Installed version:  {0}\nNew version:        {1}"), _current, _latest));
             versions.style.marginTop = 8;
             versions.style.whiteSpace = WhiteSpace.Pre;
             root.Add(versions);
 
-            var auto = new Toggle("Check for updates automatically") { value = EditorConfig.AutoUpdate };
+            var auto = new Toggle(L10n.Tr("Check for updates automatically")) { value = EditorConfig.AutoUpdate };
             auto.RegisterValueChangedCallback(e => EditorConfig.AutoUpdate = e.newValue);
             auto.style.marginTop = 8;
             root.Add(auto);
@@ -261,8 +261,8 @@ namespace ADKOM.TextEditor
             buttons.style.flexDirection = FlexDirection.Row;
             buttons.style.justifyContent = Justify.FlexEnd;
             buttons.style.marginTop = 10;
-            var later = new Button(Close) { text = "Later" };
-            var install = new Button(() => { UpdateChecker.Install(_latest); Close(); }) { text = "Install Now" };
+            var later = new Button(Close) { text = L10n.Tr("Later") };
+            var install = new Button(() => { UpdateChecker.Install(_latest); Close(); }) { text = L10n.Tr("Install Now") };
             buttons.Add(later);
             buttons.Add(install);
             root.Add(buttons);
