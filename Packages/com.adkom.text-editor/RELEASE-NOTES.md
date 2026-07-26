@@ -36,13 +36,16 @@
   on the invoked member (virtual, C#-highlighted, deduplicated tabs).
 - Console text is selectable and copyable.
 
+### Fixes
+- The modal file-changed-on-disk dialog froze the Unity editor's main
+  loop (and background tooling) whenever the window regained focus
+  with a changed file — replaced by an in-window banner
+  (Reload / Keep Mine). No GitHub issue; field-reported.
+
 ### Changes
-- Non-modal dialog policy: the file-changed-on-disk prompt is now an
-  in-window banner (Reload / Keep Mine) — the old modal froze the
-  Unity editor (and background tooling) whenever the window regained
-  focus with a changed file. Async update failures and informational
-  notices are console/status messages. Decision dialogs directly after
-  user actions remain modal.
+- Non-modal dialog policy adopted: async update failures and
+  informational notices are console/status messages. Decision dialogs
+  directly after user actions remain modal.
 
 ## 0.6.1 — 2026-07-26
 
@@ -196,9 +199,12 @@
 - Window title reads "ATE - filename".
 
 ### Fixes
+- UPM git-URL installs failed on clean machines ("update_ref failed" /
+  missing objects): the repo declared Git LFS attributes without LFS
+  objects. LFS was retired from the repository entirely (issue #1).
 - Status bar pushed off-window by tall documents.
 - Editor hard-hang when opening .cs files (highlight overlay nested in a
-  TextElement).
+  TextElement) (issue #2).
 - Invisible indentation and off-by-a-bit caret placement (overlay
   whitespace collapse; caret hidden under overlay).
 - Tab key inserted a literal tab character via a duplicate key event.
