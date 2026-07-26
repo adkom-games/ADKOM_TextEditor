@@ -177,10 +177,18 @@ namespace ADKOM.TextEditor
         static UnityEditor.PackageManager.Requests.AddRequest _installRequest;
         static string _installVersion;
 
+        /// <summary>True from Install() until the request completes (success
+        /// ends in a domain reload). Windows overlay-block their UI meanwhile:
+        /// edits during the swap would be lost or corrupt the reload.</summary>
+        public static bool InstallInProgress { get; private set; }
+        public static event System.Action<bool> onInstallStateChanged;
+
         public static void Install(string version)
         {
             AteConsole.Info($"[ADKOM Text Editor] Updating to {version} via UPM…");
             _installVersion = version;
+            InstallInProgress = true;
+            onInstallStateChanged?.Invoke(true);
             _installRequest = Client.Add(GitInstallUrl + "#" + version);
             EditorApplication.update += MonitorInstall;
         }
@@ -191,6 +199,8 @@ namespace ADKOM.TextEditor
         {
             if (_installRequest == null || !_installRequest.IsCompleted) return;
             EditorApplication.update -= MonitorInstall;
+            InstallInProgress = false;
+            onInstallStateChanged?.Invoke(false);
             if (_installRequest.Status == UnityEditor.PackageManager.StatusCode.Success)
             {
                 AteConsole.Info($"[ADKOM Text Editor] Updated to {_installRequest.Result.version}.");
