@@ -3,6 +3,15 @@
 All notable changes to this package are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com); versions follow semver.
 
+## [Unreleased]
+
+### Fixed
+- The release-notes tab (and first-run update check) could be silently
+  skipped after an update: the "last seen version" was stored
+  machine-wide, so whichever project ran a new version first suppressed
+  it for every other project. Now tracked per project, with migration
+  from the old key (issue #5).
+
 ## [0.9.0] - 2026-07-26
 
 ### Added
