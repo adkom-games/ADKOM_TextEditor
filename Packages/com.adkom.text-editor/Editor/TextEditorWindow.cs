@@ -688,7 +688,7 @@ namespace ADKOM.TextEditor
                 else ScheduleSemanticPassCancel();
                 RefreshFormatter();
             });
-            _settingsSemantics.tooltip = "Compiler-accurate colors and Go to Definition. Enabling installs the semantics module and, if needed, the bundled MIT-licensed Roslyn assemblies (see the module's THIRD-PARTY-NOTICES).";
+            _settingsSemantics.tooltip = "Compiler-accurate colors and Go to Definition. If the project has no Roslyn, enabling installs the bundled MIT-licensed Roslyn assemblies (see THIRD-PARTY-NOTICES).";
             _settingsPane.Add(_settingsSemantics);
 
             _settingsSmooth = new Toggle("Smooth Scrolling") { value = EditorConfig.SmoothScrolling };

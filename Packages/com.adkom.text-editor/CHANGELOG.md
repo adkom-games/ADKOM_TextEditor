@@ -3,6 +3,17 @@
 All notable changes to this package are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com); versions follow semver.
 
+## [Unreleased]
+
+### Changed
+- The semantics module is now part of the main package — no separate
+  install, no `upm-semantics` branch. Semantic Features work out of the
+  box: the first use (or the Settings toggle) offers one-click setup,
+  copying the bundled MIT-licensed Roslyn assemblies only when the
+  project has none. The package download grows ~14MB; the bundled
+  binaries stay inert until consented. Existing installs of
+  com.adkom.text-editor.semantics can be removed.
+
 ## [0.5.1] - 2026-07-26
 
 ### Added

@@ -9,20 +9,19 @@ namespace ADKOM.TextEditor
 {
     /// <summary>
     /// Orchestrates the opt-in semantic features (compiler-accurate colors and
-    /// Go to Definition). When the user enables them, this installs whatever is
-    /// missing, in order: the companion package (UPM git URL), the bundled
-    /// Roslyn assemblies (copied into Assets/Plugins only if the project has
-    /// no Roslyn already), and the compile-gate define for the module's
-    /// asmdef. Each step triggers a reload; the bootstrap resumes on load
-    /// until everything is present. Disabling the setting only gates the
-    /// features — nothing is uninstalled.
+    /// Go to Definition). Everything ships inside the main package; when the
+    /// user consents (Settings toggle or the first-use dialog), this copies
+    /// the bundled Roslyn assemblies into Assets/Plugins — only if the
+    /// project has no Roslyn already — and sets the compile-gate define for
+    /// the semantics asmdef. Steps that recompile resume on the next load.
+    /// Disabling the setting only gates the features — nothing is
+    /// uninstalled.
     /// </summary>
     [InitializeOnLoad]
     public static class SemanticSetup
     {
         const string Define = "ADKOM_TE_ROSLYN";
-        const string ModuleName = "com.adkom.text-editor.semantics";
-        const string ModuleGitUrl = "https://github.com/adkom-games/ADKOM_TextEditor.git#upm-semantics";
+        const string PackageName = "com.adkom.text-editor";
         const string RoslynDestDir = "Assets/Plugins/ADKOM.TextEditor/Roslyn";
 
         static SemanticSetup()
@@ -32,10 +31,6 @@ namespace ADKOM.TextEditor
                 if (EditorConfig.SemanticsEnabled) EnsureInstalled(silent: true);
             };
         }
-
-        public static bool ModuleInstalled =>
-            UnityEditor.PackageManager.PackageInfo.GetAllRegisteredPackages()
-                .Any(p => p.name == ModuleName);
 
         public static bool RoslynPresent =>
             System.AppDomain.CurrentDomain.GetAssemblies()
@@ -49,12 +44,6 @@ namespace ADKOM.TextEditor
         /// reload, where the bootstrap picks up again.</summary>
         public static void EnsureInstalled(bool silent = false)
         {
-            if (!ModuleInstalled)
-            {
-                AteConsole.Info("[ADKOM Text Editor] Installing the semantics module via UPM…");
-                UnityEditor.PackageManager.Client.Add(ModuleGitUrl);
-                return; // resumes after the package resolves and reloads
-            }
             if (!RoslynPresent)
             {
                 CopyBundledRoslyn();
@@ -67,13 +56,13 @@ namespace ADKOM.TextEditor
 
         static void CopyBundledRoslyn()
         {
-            var module = UnityEditor.PackageManager.PackageInfo.GetAllRegisteredPackages()
-                .FirstOrDefault(p => p.name == ModuleName);
-            if (module == null) return;
-            string src = Path.Combine(module.resolvedPath, "RoslynBinaries~");
+            var pkg = UnityEditor.PackageManager.PackageInfo.GetAllRegisteredPackages()
+                .FirstOrDefault(p => p.name == PackageName);
+            if (pkg == null) return;
+            string src = Path.Combine(pkg.resolvedPath, "RoslynBinaries~");
             if (!Directory.Exists(src))
             {
-                AteConsole.Error("[ADKOM Text Editor] Semantics module has no bundled Roslyn binaries (RoslynBinaries~ missing). Update the module.");
+                AteConsole.Error("[ADKOM Text Editor] Bundled Roslyn binaries missing (RoslynBinaries~). Reinstall the package.");
                 return;
             }
             Directory.CreateDirectory(RoslynDestDir);
@@ -86,7 +75,7 @@ namespace ADKOM.TextEditor
                 copied++;
             }
             AteConsole.Info($"[ADKOM Text Editor] Installed {copied} bundled Roslyn assemblies to {RoslynDestDir} " +
-                "(MIT-licensed, © .NET Foundation — see the module's THIRD-PARTY-NOTICES.md).");
+                "(MIT-licensed, © .NET Foundation — see the package's THIRD-PARTY-NOTICES.md).");
             AssetDatabase.Refresh();
         }
 
