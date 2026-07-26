@@ -47,8 +47,15 @@ namespace ADKOM.TextEditor
         static bool CheckOnFirstRunOfVersion()
         {
             string current = CurrentVersion();
-            if (EditorPrefs.GetString(LastSeenVersionKey, string.Empty) == current) return false;
+            string previous = EditorPrefs.GetString(LastSeenVersionKey, string.Empty);
+            if (previous == current) return false;
             EditorPrefs.SetString(LastSeenVersionKey, current);
+            if (!string.IsNullOrEmpty(previous))
+            {
+                // An update (not a fresh install): show what's new.
+                AteConsole.Info($"[ADKOM Text Editor] Updated {previous} → {current}.");
+                TextEditorWindow.ShowReleaseNotes(current);
+            }
             if (!EditorConfig.AutoUpdate) return false;
             AteConsole.Info($"[ADKOM Text Editor] First run of version {current} — checking for updates.");
             CheckNow(manual: false);
