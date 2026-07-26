@@ -47,6 +47,8 @@ with the host project.
 | Release 0.6.1 (upgrade-path fixes; published 2026-07-26) | Done |
 | Metadata view; selectable console; non-modal dialog policy | Done |
 | Release 0.7.0 (published 2026-07-26) | Done |
+| Update experience: release-notes tab + ATE-only updating overlay | Done |
+| Release 0.7.1 (published 2026-07-26) | Done |
 | More languages; custom themes | Future (roadmap) |
 
 ## Current work area
