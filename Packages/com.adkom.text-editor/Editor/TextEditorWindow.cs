@@ -75,6 +75,7 @@ namespace ADKOM.TextEditor
         VisualElement _updatingOverlay;
         VisualElement _notifyBar;
         Label _notifyLabel;
+        Button _notifyReloadBtn, _notifyKeepBtn, _notifyKeepBufferBtn, _notifyCloseBtn;
         VisualElement _consolePane;
         ScrollView _consoleScroll;
         Label _consoleOutput;
@@ -155,6 +156,7 @@ namespace ADKOM.TextEditor
 
         void CreateGUI()
         {
+            if (_docs.Count == 0) RestoreSession();
             EnsureDocs();
 
             var root = rootVisualElement;
@@ -212,10 +214,14 @@ namespace ADKOM.TextEditor
             _notifyLabel.style.flexGrow = 1;
             _notifyLabel.style.whiteSpace = WhiteSpace.Normal;
             _notifyBar.Add(_notifyLabel);
-            var reloadBtn = new Button(ReloadActiveFromDisk) { text = "Reload" };
-            var keepBtn = new Button(KeepMineActive) { text = "Keep Mine" };
-            _notifyBar.Add(reloadBtn);
-            _notifyBar.Add(keepBtn);
+            _notifyReloadBtn = new Button(ReloadActiveFromDisk) { text = "Reload" };
+            _notifyKeepBtn = new Button(KeepMineActive) { text = "Keep Mine" };
+            _notifyKeepBufferBtn = new Button(KeepDeletedBufferActive) { text = "Keep Buffer" };
+            _notifyCloseBtn = new Button(CloseDeletedActive) { text = "Close Tab" };
+            _notifyBar.Add(_notifyReloadBtn);
+            _notifyBar.Add(_notifyKeepBtn);
+            _notifyBar.Add(_notifyKeepBufferBtn);
+            _notifyBar.Add(_notifyCloseBtn);
             root.Add(_notifyBar);
 
             // --- Editor area: virtualized code view ---
@@ -1320,6 +1326,16 @@ namespace ADKOM.TextEditor
         /// time the window regained focus with a changed file.</summary>
         bool CheckExternalChange(TextDocument doc)
         {
+            if (doc != null && doc.FileDeletedOnDisk())
+            {
+                if (_notifyBar != null)
+                {
+                    _notifyLabel.text = $"'{doc.DisplayName}' was deleted from disk. Keep the buffer (Save can bring the file back), or close the tab?";
+                    SetNotifyButtons(deleted: true);
+                    _notifyBar.style.display = DisplayStyle.Flex;
+                }
+                return true;
+            }
             if (doc == null || !doc.FileChangedOnDisk())
             {
                 if (_notifyBar != null) _notifyBar.style.display = DisplayStyle.None;
@@ -1328,9 +1344,40 @@ namespace ADKOM.TextEditor
             if (_notifyBar != null)
             {
                 _notifyLabel.text = $"'{doc.DisplayName}' was modified outside the editor. Reload it? (unsaved changes here would be lost)";
+                SetNotifyButtons(deleted: false);
                 _notifyBar.style.display = DisplayStyle.Flex;
             }
             return true;
+        }
+
+        void SetNotifyButtons(bool deleted)
+        {
+            if (_notifyReloadBtn == null) return;
+            _notifyReloadBtn.style.display = deleted ? DisplayStyle.None : DisplayStyle.Flex;
+            _notifyKeepBtn.style.display = deleted ? DisplayStyle.None : DisplayStyle.Flex;
+            _notifyKeepBufferBtn.style.display = deleted ? DisplayStyle.Flex : DisplayStyle.None;
+            _notifyCloseBtn.style.display = deleted ? DisplayStyle.Flex : DisplayStyle.None;
+        }
+
+        /// <summary>The backing file vanished but the buffer is intact — keep
+        /// it (dirty, so the save guards protect it; Save recreates the file).</summary>
+        void KeepDeletedBufferActive()
+        {
+            if (!HasDocs || !Active.HasFile) return;
+            Active.DeletionNotified = true;
+            Active.IsDirty = true;
+            RebuildTabs();
+            UpdateTitle();
+            _notifyBar.style.display = DisplayStyle.None;
+            PostStatus("Kept buffer of deleted file " + Active.DisplayName + " — Save to restore it to disk.");
+        }
+
+        void CloseDeletedActive()
+        {
+            if (!HasDocs) return;
+            _notifyBar.style.display = DisplayStyle.None;
+            Active.IsDirty = false; // user chose to let the buffer go
+            CloseTab(_active);
         }
 
         void ReloadActiveFromDisk()
@@ -1388,6 +1435,38 @@ namespace ADKOM.TextEditor
                     "Save", "Discard");
                 if (save) FileService.Save(doc);
             }
+
+            // Remember the open file tabs so reopening the window (or the
+            // editor) restores them. Settings/virtual/untitled tabs are
+            // transient and not part of the session.
+            var paths = new List<string>();
+            int activeFileIndex = 0;
+            for (int i = 0; i < _docs.Count; i++)
+            {
+                if (!_docs[i].HasFile) continue;
+                if (i == _active) activeFileIndex = paths.Count;
+                paths.Add(Path.GetFullPath(_docs[i].FilePath));
+            }
+            EditorConfig.SaveSession(paths, activeFileIndex);
+        }
+
+        /// <summary>Reopens the tabs from the last time the window was closed.
+        /// Runs only when the window starts with no documents (a fresh window;
+        /// domain reloads keep their docs via serialization). Missing files
+        /// are skipped silently.</summary>
+        void RestoreSession()
+        {
+            var paths = EditorConfig.LoadSession(out int activeIndex);
+            foreach (var p in paths)
+            {
+                if (!File.Exists(p)) continue;
+                var doc = new TextDocument();
+                try { doc.LoadFrom(p); } catch { continue; }
+                if (p.EndsWith(".md", System.StringComparison.OrdinalIgnoreCase))
+                    doc.MdRendered = EditorConfig.MdOpenRendered;
+                _docs.Add(doc);
+            }
+            if (HasDocs) _active = Mathf.Clamp(activeIndex, 0, _docs.Count - 1);
         }
 
         // --- Keyboard commands ---

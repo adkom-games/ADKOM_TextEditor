@@ -133,6 +133,28 @@ namespace ADKOM.TextEditor
             }
         }
 
+        // Open-tab session, saved when the ATE window closes and restored when
+        // it reopens (per project). First line = active index, then one path
+        // per line.
+        static string SessionKey =>
+            "ADKOM.TextEditor.Session." + Application.dataPath.GetHashCode().ToString("X8");
+
+        public static void SaveSession(System.Collections.Generic.List<string> paths, int activeIndex)
+            => EditorPrefs.SetString(SessionKey, activeIndex + "\n" + string.Join("\n", paths));
+
+        public static System.Collections.Generic.List<string> LoadSession(out int activeIndex)
+        {
+            activeIndex = 0;
+            var paths = new System.Collections.Generic.List<string>();
+            string raw = EditorPrefs.GetString(SessionKey, string.Empty);
+            if (raw.Length == 0) return paths;
+            var lines = raw.Split('\n');
+            int.TryParse(lines[0], out activeIndex);
+            for (int i = 1; i < lines.Length; i++)
+                if (!string.IsNullOrEmpty(lines[i])) paths.Add(lines[i]);
+            return paths;
+        }
+
         const string MdOpenRenderedKey = "ADKOM.TextEditor.MdOpenRendered";
 
         /// <summary>Default view for .md files when opened: rendered (WYSIWYG)
