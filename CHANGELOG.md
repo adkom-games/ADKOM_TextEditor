@@ -12,6 +12,14 @@ All notable changes to this package are documented here. Format follows
   Files" empties it. The list length is configurable in Settings
   ("Recent Files Count", default 5, 1-30).
 
+- When an open tab's file is deleted from disk, a non-modal banner asks
+  whether to keep the buffer or close the tab. Keeping marks the buffer
+  dirty so the unsaved-changes guards protect it, and Save writes the
+  file back to disk — sometimes that saves the day.
+- Open tabs survive closing the ATE window: the session (file tabs +
+  active tab) is saved on close and restored when the window reopens,
+  including across editor restarts. Files missing by then are skipped.
+
 ### Changed
 - Console and Minimap moved from the Window menu to the View menu,
   where all four view toggles now sit alphabetically: Console, Line
