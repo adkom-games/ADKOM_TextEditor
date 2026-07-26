@@ -22,7 +22,13 @@ namespace ADKOM.TextEditor
         const string RepoApiLatest = "https://api.github.com/repos/adkom-games/ADKOM_TextEditor/releases/latest";
         const string GitInstallUrl = "https://github.com/adkom-games/ADKOM_TextEditor.git";
         const string LastCheckKey = "ADKOM.TextEditor.LastUpdateCheckTicks";
-        const string LastSeenVersionKey = "ADKOM.TextEditor.LastSeenVersion";
+        // Per project: a machine-wide key let whichever project ran a new
+        // version first suppress the release-notes tab (and the first-run
+        // update check) in every other project (issue #5). The legacy global
+        // key is read as a fallback so existing installs migrate cleanly.
+        const string LegacyLastSeenVersionKey = "ADKOM.TextEditor.LastSeenVersion";
+        static string LastSeenVersionKey =>
+            "ADKOM.TextEditor.LastSeenVersion." + Application.dataPath.GetHashCode().ToString("X8");
         const double RearmIntervalSeconds = 3600; // re-evaluate hourly in long-lived editors
 
         static double _nextRearmTime;
@@ -48,6 +54,8 @@ namespace ADKOM.TextEditor
         {
             string current = CurrentVersion();
             string previous = EditorPrefs.GetString(LastSeenVersionKey, string.Empty);
+            if (previous.Length == 0) // migrate from the pre-#5 global key
+                previous = EditorPrefs.GetString(LegacyLastSeenVersionKey, string.Empty);
             if (previous == current) return false;
             EditorPrefs.SetString(LastSeenVersionKey, current);
             if (!string.IsNullOrEmpty(previous))
