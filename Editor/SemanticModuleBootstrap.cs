@@ -1,40 +1,104 @@
 #if UNITY_EDITOR
+using System.IO;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.Build;
+using UnityEngine;
 
 namespace ADKOM.TextEditor
 {
     /// <summary>
-    /// Enables the semantics module's compilation gate. The module's asmdef is
-    /// constrained on ADKOM_TE_ROSLYN so it only compiles when a Roslyn
-    /// (Microsoft.CodeAnalysis.CSharp) assembly exists in the project; this
-    /// bootstrap detects Roslyn and sets the define. Without Roslyn the module
-    /// stays dormant and the editor falls back to heuristic highlighting.
+    /// Orchestrates the opt-in semantic features (compiler-accurate colors and
+    /// Go to Definition). When the user enables them, this installs whatever is
+    /// missing, in order: the companion package (UPM git URL), the bundled
+    /// Roslyn assemblies (copied into Assets/Plugins only if the project has
+    /// no Roslyn already), and the compile-gate define for the module's
+    /// asmdef. Each step triggers a reload; the bootstrap resumes on load
+    /// until everything is present. Disabling the setting only gates the
+    /// features — nothing is uninstalled.
     /// </summary>
     [InitializeOnLoad]
-    static class SemanticModuleBootstrap
+    public static class SemanticSetup
     {
         const string Define = "ADKOM_TE_ROSLYN";
+        const string ModuleName = "com.adkom.text-editor.semantics";
+        const string ModuleGitUrl = "https://github.com/adkom-games/ADKOM_TextEditor.git#upm-semantics";
+        const string RoslynDestDir = "Assets/Plugins/ADKOM.TextEditor/Roslyn";
 
-        static SemanticModuleBootstrap()
+        static SemanticSetup()
         {
-            EditorApplication.delayCall += EnsureDefine;
+            EditorApplication.delayCall += () =>
+            {
+                if (EditorConfig.SemanticsEnabled) EnsureInstalled(silent: true);
+            };
+        }
+
+        public static bool ModuleInstalled =>
+            UnityEditor.PackageManager.PackageInfo.GetAllRegisteredPackages()
+                .Any(p => p.name == ModuleName);
+
+        public static bool RoslynPresent =>
+            System.AppDomain.CurrentDomain.GetAssemblies()
+                .Any(a => a.GetName().Name == "Microsoft.CodeAnalysis.CSharp");
+
+        public static bool Ready =>
+            EditorConfig.SemanticsEnabled && SemanticServices.Provider != null;
+
+        /// <summary>Drives installation as far as currently possible; steps
+        /// that trigger package resolution or recompiles complete after the
+        /// reload, where the bootstrap picks up again.</summary>
+        public static void EnsureInstalled(bool silent = false)
+        {
+            if (!ModuleInstalled)
+            {
+                Debug.Log("[ADKOM Text Editor] Installing the semantics module via UPM…");
+                UnityEditor.PackageManager.Client.Add(ModuleGitUrl);
+                return; // resumes after the package resolves and reloads
+            }
+            if (!RoslynPresent)
+            {
+                CopyBundledRoslyn();
+                return; // resumes after the plugin import reloads
+            }
+            EnsureDefine();
+            if (!silent && SemanticServices.Provider == null)
+                Debug.Log("[ADKOM Text Editor] Semantics module compiling — features available shortly.");
+        }
+
+        static void CopyBundledRoslyn()
+        {
+            var module = UnityEditor.PackageManager.PackageInfo.GetAllRegisteredPackages()
+                .FirstOrDefault(p => p.name == ModuleName);
+            if (module == null) return;
+            string src = Path.Combine(module.resolvedPath, "RoslynBinaries~");
+            if (!Directory.Exists(src))
+            {
+                Debug.LogError("[ADKOM Text Editor] Semantics module has no bundled Roslyn binaries (RoslynBinaries~ missing). Update the module.");
+                return;
+            }
+            Directory.CreateDirectory(RoslynDestDir);
+            int copied = 0;
+            foreach (var dll in Directory.GetFiles(src, "*.dll"))
+            {
+                string dst = Path.Combine(RoslynDestDir, Path.GetFileName(dll));
+                if (File.Exists(dst)) continue;
+                File.Copy(dll, dst);
+                copied++;
+            }
+            Debug.Log($"[ADKOM Text Editor] Installed {copied} bundled Roslyn assemblies to {RoslynDestDir} " +
+                "(MIT-licensed, © .NET Foundation — see the module's THIRD-PARTY-NOTICES.md).");
+            AssetDatabase.Refresh();
         }
 
         static void EnsureDefine()
         {
-            bool present = System.AppDomain.CurrentDomain.GetAssemblies()
-                .Any(a => a.GetName().Name == "Microsoft.CodeAnalysis.CSharp");
-            if (!present) return;
-
             var target = NamedBuildTarget.FromBuildTargetGroup(
                 BuildPipeline.GetBuildTargetGroup(EditorUserBuildSettings.activeBuildTarget));
             string defines = PlayerSettings.GetScriptingDefineSymbols(target);
             if (defines.Split(';').Contains(Define)) return;
             PlayerSettings.SetScriptingDefineSymbols(target,
                 string.IsNullOrEmpty(defines) ? Define : defines + ";" + Define);
-            UnityEngine.Debug.Log("[ADKOM Text Editor] Roslyn detected — enabling the semantics module (" + Define + ").");
+            Debug.Log("[ADKOM Text Editor] Enabling the semantics module (" + Define + ").");
         }
     }
 }

@@ -7,6 +7,18 @@ All notable changes to this package are documented here. Format follows
 
 ### Added
 - Ctrl+Alt+8 (Cmd+Alt+8 on macOS) opens the ATE window.
+- Semantic Features setting (OFF by default): enabling it installs
+  everything automatically — the semantics module via UPM and, when the
+  project has no Roslyn, the module's bundled MIT-licensed Roslyn
+  assemblies (© .NET Foundation; see the module's THIRD-PARTY-NOTICES)
+  copied into Assets/Plugins. Existing Roslyn copies are preferred and
+  nothing is duplicated.
+
+### Changed
+- Go to Definition without semantic features now asks via a dialog
+  (offering one-click Enable and Install) instead of a transient
+  status-bar message; a dialog also explains when the module is still
+  installing or compiling.
 
 ## [0.4.1] - 2026-07-25
 
