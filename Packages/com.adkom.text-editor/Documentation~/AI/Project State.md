@@ -49,8 +49,9 @@ with the host project.
 | Release 0.7.0 (published 2026-07-26) | Done |
 | Update experience: release-notes tab + ATE-only updating overlay | Done |
 | Release 0.7.1 (published 2026-07-26) | Done |
-| Markdown: source coloring + rendered WYSIWYG mode (transient MD/src toggle) | Done (unreleased) |
-| Markdown formatting toolbar + parity (strike, images, task lists, tables) | Done (unreleased) |
+| Markdown: source coloring + rendered WYSIWYG mode (transient MD/src toggle) | Done |
+| Markdown formatting toolbar + parity; default-view setting; rendered release notes | Done |
+| Release 0.8.0 (published 2026-07-26) | Done |
 | More languages; custom themes | Future (roadmap) |
 
 ## Current work area
@@ -88,13 +89,11 @@ is verified live in the editor.
    on a Roslyn-less project; confirm Cary's second project heals via
    0.6.1 or manual module removal. Plan next milestone (roadmap:
    languages, custom themes; backlog: MRU tab order, tab reorder).
-2. `[Unreleased]` holds the full Markdown feature (source coloring,
-   rendered WYSIWYG mode with block editing, formatting toolbar in
-   rendered mode, strike/image/task-list/table parity) — next release
-   ships it. Files: `MarkdownClassifier.cs`, `MarkdownView.cs` (block
-   parse/render, `ApplyFormat`, `onInsertBlock`), toolbar wiring in
-   `TextEditorWindow.cs` (`_mdFormatBar`, `BuildMdFormatBar`,
-   `OnMdInsertBlock`). Verified live via MCP reflection tests.
+2. 0.8.0 (Markdown) published 2026-07-26; tag verified against the CI
+   upm head and by fresh shallow clone. Known Markdown gaps (documented
+   for a future pass): images render as placeholders, links not
+   clickable, no table alignment, no nesting/reference
+   links/escapes/setext; Obsidian wiki-links unstyled.
 3. Roadmap candidates: JSON formatters, custom themes,
    Ctrl+Tab MRU order, drag-to-reorder tabs.
 
