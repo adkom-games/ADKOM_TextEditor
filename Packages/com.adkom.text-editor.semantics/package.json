@@ -1,6 +1,6 @@
 {
   "name": "com.adkom.text-editor.semantics",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "displayName": "ADKOM Text Editor — Semantics Module",
   "description": "Optional Roslyn-backed companion for the ADKOM Text Editor: compiler-accurate syntax highlighting and Go to Definition. Requires the ADKOM Text Editor package and a Roslyn (Microsoft.CodeAnalysis.CSharp) assembly in the project. Editor-only.",
   "unity": "6000.0",

@@ -59,6 +59,7 @@ namespace ADKOM.TextEditor
         PopupField<string> _settingsFont;
         IntegerField _settingsFontSize;
         Toggle _settingsSmooth;
+        Toggle _settingsSemantics;
 
         IVisualElementScheduledItem _semanticPending;
         System.Threading.SynchronizationContext _mainCtx;
@@ -412,8 +413,11 @@ namespace ADKOM.TextEditor
 
         // --- Semantics (optional compiler-backed module) ---
 
+        void ScheduleSemanticPassCancel() => _semanticPending?.Pause();
+
         void ScheduleSemanticPass()
         {
+            if (!EditorConfig.SemanticsEnabled) return;
             if (SemanticServices.Provider == null || !CanEditDoc || !Active.HasFile ||
                 !Active.FilePath.EndsWith(".cs", System.StringComparison.OrdinalIgnoreCase))
                 return;
@@ -448,10 +452,26 @@ namespace ADKOM.TextEditor
         /// Requires the semantics module; resolved on a background thread.</summary>
         void NavigateToDefinition(int line, int col)
         {
+            if (!EditorConfig.SemanticsEnabled)
+            {
+                if (EditorUtility.DisplayDialog("Go to Definition",
+                    "Go to Definition needs Semantic Features, which are currently disabled.\n\n" +
+                    "Enable them now? The semantics module — and, if your project has no Roslyn, " +
+                    "the bundled MIT-licensed Roslyn assemblies — will be installed automatically.",
+                    "Enable and Install", "Cancel"))
+                {
+                    EditorConfig.SemanticsEnabled = true;
+                    SyncSettingsControls();
+                    SemanticSetup.EnsureInstalled();
+                }
+                return;
+            }
             var provider = SemanticServices.Provider;
             if (provider == null)
             {
-                _statusLeft.text = "Go to Definition requires the ADKOM semantics module.";
+                EditorUtility.DisplayDialog("Go to Definition",
+                    "The semantics module is still installing or compiling.\n\nTry again in a moment.", "OK");
+                SemanticSetup.EnsureInstalled(silent: true); // nudge any stalled step
                 return;
             }
             if (!CanEditDoc || !Active.HasFile) return;
@@ -587,6 +607,17 @@ namespace ADKOM.TextEditor
             _settingsFallback.tooltip = "When ATE is the External Script Editor, non-text requests (solutions, binaries, project sync) are forwarded here.";
             _settingsPane.Add(_settingsFallback);
 
+            _settingsSemantics = new Toggle("Semantic Features") { value = EditorConfig.SemanticsEnabled };
+            _settingsSemantics.RegisterValueChangedCallback(e =>
+            {
+                EditorConfig.SemanticsEnabled = e.newValue;
+                if (e.newValue) SemanticSetup.EnsureInstalled();
+                else ScheduleSemanticPassCancel();
+                RefreshFormatter();
+            });
+            _settingsSemantics.tooltip = "Compiler-accurate colors and Go to Definition. Enabling installs the semantics module and, if needed, the bundled MIT-licensed Roslyn assemblies (see the module's THIRD-PARTY-NOTICES).";
+            _settingsPane.Add(_settingsSemantics);
+
             _settingsSmooth = new Toggle("Smooth Scrolling") { value = EditorConfig.SmoothScrolling };
             _settingsSmooth.RegisterValueChangedCallback(e => EditorConfig.SmoothScrolling = e.newValue);
             _settingsSmooth.tooltip = "Animate wheel scrolling instead of stepping line by line.";
@@ -658,6 +689,7 @@ namespace ADKOM.TextEditor
             _settingsUpdateFreq?.SetValueWithoutNotify(EditorConfig.UpdateFrequencyDays);
             _settingsFontSize?.SetValueWithoutNotify(EditorConfig.FontSize);
             _settingsSmooth?.SetValueWithoutNotify(EditorConfig.SmoothScrolling);
+            _settingsSemantics?.SetValueWithoutNotify(EditorConfig.SemanticsEnabled);
         }
 
         // --- Tabs ---

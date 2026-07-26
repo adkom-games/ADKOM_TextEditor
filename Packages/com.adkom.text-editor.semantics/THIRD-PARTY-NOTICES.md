@@ -1,0 +1,48 @@
+# Third-Party Notices
+
+The `RoslynBinaries~` folder of this package redistributes the following
+unmodified binary assemblies, which are installed into your project only
+when you enable semantic features in the ADKOM Text Editor settings:
+
+- Microsoft.CodeAnalysis.dll (Roslyn, v4.8.0)
+- Microsoft.CodeAnalysis.CSharp.dll (Roslyn, v4.8.0)
+- System.Buffers.dll
+- System.Collections.Immutable.dll
+- System.Memory.dll
+- System.Numerics.Vectors.dll
+- System.Reflection.Metadata.dll
+- System.Runtime.CompilerServices.Unsafe.dll
+- System.Text.Encoding.CodePages.dll
+- System.Threading.Tasks.Extensions.dll
+
+These are © .NET Foundation and Contributors, obtained from nuget.org,
+and licensed under the MIT License:
+
+```
+The MIT License (MIT)
+
+Copyright (c) .NET Foundation and Contributors
+
+All rights reserved.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
+
+Roslyn: https://github.com/dotnet/roslyn
+Runtime libraries: https://github.com/dotnet/runtime
