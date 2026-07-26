@@ -3,6 +3,19 @@
 All notable changes to this package are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com); versions follow semver.
 
+## [Unreleased]
+
+### Added
+- Markdown support (.md): syntax coloring in source mode (headers,
+  emphasis, code spans/fences, links, lists, quotes, rules mapped onto
+  the theme palette), and a rendered mode with block-level WYSIWYG
+  editing — headers, paragraphs, lists, quotes, code blocks, and rules
+  render styled; click any block to edit its source inline (Ctrl+Enter
+  or focus-out commits, Escape cancels), with edits applied through the
+  code view so undo/redo and dirty tracking work. A transient toggle
+  left of the settings gear (MD ⇄ source) appears only while a .md tab
+  is active; the mode is remembered per document.
+
 ## [0.7.1] - 2026-07-26
 
 ### Added
