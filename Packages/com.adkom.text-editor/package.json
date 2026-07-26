@@ -1,6 +1,6 @@
 {
   "name": "com.adkom.text-editor",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "displayName": "ADKOM Text Editor",
   "description": "An advanced text editor that lives inside the Unity Editor. Editor-only: contributes nothing to player builds.",
   "unity": "6000.0",
