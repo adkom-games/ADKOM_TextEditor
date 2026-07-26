@@ -1,5 +1,5 @@
 {
-    "name": "ADKOM.TextEditor.Semantics",
+    "name": "ADKOM.TextEditor.Editor.Semantics",
     "rootNamespace": "ADKOM.TextEditor.Semantics",
     "references": [
         "ADKOM.TextEditor.Editor"

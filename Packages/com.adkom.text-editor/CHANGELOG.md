@@ -6,6 +6,12 @@ All notable changes to this package are documented here. Format follows
 ## [Unreleased]
 
 ### Fixed
+- Upgrading from 0.5.x with the old semantics module installed broke
+  compilation (duplicate assembly name), leaving old code running while
+  About reported the new version — no minimap or console. The built-in
+  semantics assembly is renamed (ADKOM.TextEditor.Editor.Semantics) so
+  it never collides, and the obsolete module package is removed
+  automatically on load if present.
 - Update installs were fire-and-forget: a failed Client.Add was silent
   and the project stayed on the old version with no indication. The
   install request is now monitored — success and failure are logged to
