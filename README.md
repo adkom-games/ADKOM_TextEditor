@@ -136,7 +136,7 @@ https://github.com/adkom-games/ADKOM_TextEditor.git#upm-semantics
 
 Requires Unity 6000.0+. The `upm` branch delivers only the package —
 your download is lean. Then open **Tools → ADKOM → Text Editor**, or
-just right-click a file.
+just right-click a file — or press **Ctrl+Alt+8** (say it out loud).
 
 ## What's next
 
