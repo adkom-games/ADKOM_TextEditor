@@ -65,7 +65,7 @@ namespace ADKOM.TextEditor
 
         TextDocument Active => _docs[_active];
 
-        [MenuItem("Tools/ADKOM/Text Editor")]
+        [MenuItem("Tools/ADKOM/Text Editor %&8")] // Ctrl+Alt+8 (Cmd+Alt+8 on macOS)
         public static void Open()
         {
             var existing = Resources.FindObjectsOfTypeAll<TextEditorWindow>();
