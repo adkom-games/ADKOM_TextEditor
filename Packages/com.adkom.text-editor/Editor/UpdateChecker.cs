@@ -167,10 +167,37 @@ namespace ADKOM.TextEditor
             EditorApplication.update += WaitForIdle;
         }
 
+        static UnityEditor.PackageManager.Requests.AddRequest _installRequest;
+        static string _installVersion;
+
         public static void Install(string version)
         {
             AteConsole.Info($"[ADKOM Text Editor] Updating to {version} via UPM…");
-            Client.Add(GitInstallUrl + "#" + version);
+            _installVersion = version;
+            _installRequest = Client.Add(GitInstallUrl + "#" + version);
+            EditorApplication.update += MonitorInstall;
+        }
+
+        // Client.Add is async and previously fire-and-forget: a failed update
+        // was completely silent and the project stayed on the old version.
+        static void MonitorInstall()
+        {
+            if (_installRequest == null || !_installRequest.IsCompleted) return;
+            EditorApplication.update -= MonitorInstall;
+            if (_installRequest.Status == UnityEditor.PackageManager.StatusCode.Success)
+            {
+                AteConsole.Info($"[ADKOM Text Editor] Updated to {_installRequest.Result.version}.");
+            }
+            else
+            {
+                string error = _installRequest.Error?.message ?? "unknown error";
+                AteConsole.Error("[ADKOM Text Editor] Update failed: " + error);
+                EditorUtility.DisplayDialog("ADKOM Text Editor Update",
+                    "The update could not be installed:\n\n" + error +
+                    "\n\nYou can update manually: Package Manager → + → Add package from git URL…\n" +
+                    GitInstallUrl + "#" + _installVersion, "OK");
+            }
+            _installRequest = null;
         }
     }
 
