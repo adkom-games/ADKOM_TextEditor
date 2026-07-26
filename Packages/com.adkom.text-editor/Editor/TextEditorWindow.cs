@@ -237,6 +237,7 @@ namespace ADKOM.TextEditor
             _code.onFontSizeChanged += SyncSettingsControls; // zoom gestures
             _code.onNavigateRequest += NavigateToDefinition;  // Ctrl+Click
             _code.onUndoStatus += PostStatus; // "Undid 12 char(s)." feedback
+            _code.RegisterCallback<MouseUpEvent>(OnCodeContextMenu);
             _code.minimapVisible = _minimapVisible;
             _mainCtx = System.Threading.SynchronizationContext.Current;
             _editorArea.Add(_code);
@@ -1515,6 +1516,99 @@ namespace ADKOM.TextEditor
             _statusLeft.style.display = DisplayStyle.Flex;
             _code?.schedule.Execute(() => _code.Focus()).ExecuteLater(0);
         }
+
+        /// <summary>Right-click context menu inside the document area:
+        /// selection/symbol commands on top, then clipboard, file, and
+        /// language-specific entries.</summary>
+        void OnCodeContextMenu(MouseUpEvent e)
+        {
+            if (e.button != 1 || !CanEditDoc) return;
+            e.StopPropagation();
+
+            // UITK mouse events report panel-space positions, which is what
+            // HitTest's WorldToLocal expects.
+            _code.HitTestPublic(e.mousePosition, out int line, out int col);
+            int clickIdx = _code.LineColToIndex(line, col);
+            int selA = Mathf.Min(_code.cursorIndex, _code.selectIndex);
+            int selB = Mathf.Max(_code.cursorIndex, _code.selectIndex);
+            bool clickInSelection = _code.HasSelectionPublic && clickIdx >= selA && clickIdx <= selB;
+            if (!clickInSelection) _code.GoToLine(line + 1, col + 1);
+
+            BuildCodeContextMenu(line, col).DropDown(new Rect(e.mousePosition, Vector2.zero));
+        }
+
+        GenericMenu BuildCodeContextMenu(int line, int col)
+        {
+            string query = _code.SelectedTextPublic;
+            if (query != null && (query.Contains("\n") || query.Length > 200)) query = null;
+            if (query == null) query = _code.WordAt(line, col, select: false);
+
+            bool isCs = SemanticContextPath != null &&
+                (Active.VirtualCSharp || Active.FilePath.EndsWith(".cs", System.StringComparison.OrdinalIgnoreCase));
+            var m = new GenericMenu();
+
+            // --- Selection / symbol commands ---
+            if (isCs)
+                m.AddItem(new GUIContent(WithSc("Go to Definition", Sc("F12", "F12", "Ctrl+B"))), false,
+                    () => NavigateToDefinition(line, col));
+            if (query != null)
+            {
+                m.AddItem(new GUIContent($"Find Occurrences of '{Truncate(query, 24)}'"), false,
+                    () => FindReplaceWindow.OpenWithQuery(this, query, allTabs: false));
+                m.AddItem(new GUIContent($"Find in Tabs '{Truncate(query, 24)}'"), false,
+                    () => FindReplaceWindow.OpenWithQuery(this, query, allTabs: true));
+            }
+            else if (!isCs)
+                m.AddDisabledItem(new GUIContent("Find Occurrences"));
+            m.AddSeparator("");
+
+            // --- Clipboard ---
+            bool hasSel = _code.HasSelectionPublic;
+            AddOrDisable(m, WithSc("Cut", "Ctrl+X"), hasSel, _code.Cut);
+            AddOrDisable(m, WithSc("Copy", "Ctrl+C"), hasSel, _code.Copy);
+            AddOrDisable(m, WithSc("Paste", "Ctrl+V"),
+                !string.IsNullOrEmpty(EditorGUIUtility.systemCopyBuffer), _code.Paste);
+            m.AddItem(new GUIContent(WithSc("Select All", "Ctrl+A")), false, _code.SelectAll);
+            m.AddSeparator("");
+            AddOrDisable(m, WithSc("Undo", "Ctrl+Z"), _code.CanUndo, _code.Undo);
+            AddOrDisable(m, WithSc("Redo", Sc("Ctrl+Y", "Ctrl+Y", "Ctrl+Shift+Z")), _code.CanRedo, _code.Redo);
+            m.AddSeparator("");
+
+            // --- File ---
+            m.AddItem(new GUIContent(WithSc("Save", Sc("Ctrl+S", "Ctrl+S", null))), false, () => SaveFile(false));
+            m.AddItem(new GUIContent("Save As..."), false, () => SaveFile(true));
+            m.AddItem(new GUIContent(WithSc("Close Tab", Sc("Ctrl+F4", "Ctrl+W", "Ctrl+F4"))), false, () => CloseTab(_active));
+            AddOrDisable(m, "Show in File Explorer", Active.HasFile,
+                () => EditorUtility.RevealInFinder(Path.GetFullPath(Active.FilePath)));
+            m.AddSeparator("");
+            m.AddItem(new GUIContent(WithSc("Find...", "Ctrl+F")), false, () => FindReplaceWindow.Open(this, false, false));
+            m.AddItem(new GUIContent(WithSc("Replace...", Sc("Ctrl+H", "Ctrl+H", "Ctrl+R"))), false, () => FindReplaceWindow.Open(this, true, false));
+            m.AddItem(new GUIContent(WithSc("Goto Line...", "Ctrl+G")), false, GotoLineCommand);
+
+            // --- Language-specific ---
+            if (isCs)
+            {
+                m.AddSeparator("");
+                m.AddItem(new GUIContent(WithSc("Toggle Comment", "Ctrl+/")), false, ToggleComment);
+            }
+            if (ActiveIsMarkdown)
+            {
+                m.AddSeparator("");
+                m.AddItem(new GUIContent(Active.MdRendered
+                    ? "Switch to Markdown Source" : "Switch to Rendered Markdown"), false, ToggleMdMode);
+            }
+
+            return m;
+        }
+
+        static void AddOrDisable(GenericMenu m, string label, bool enabled, System.Action a)
+        {
+            if (enabled) m.AddItem(new GUIContent(label), false, () => a());
+            else m.AddDisabledItem(new GUIContent(label));
+        }
+
+        static string Truncate(string s, int max) =>
+            s.Length <= max ? s : s.Substring(0, max) + "…";
 
         /// <summary>Goto Line (Ctrl+G): status-bar prompt, numeric only,
         /// clamped to [1, line count]. Works without visible line numbers.</summary>

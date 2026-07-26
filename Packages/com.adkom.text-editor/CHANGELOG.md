@@ -6,6 +6,14 @@ All notable changes to this package are documented here. Format follows
 ## [Unreleased]
 
 ### Added
+- Right-click context menu inside the document area: Go to Definition
+  and "Find Occurrences of '<word>'" / "Find in Tabs" for the symbol
+  or selection under the cursor (pre-filling the Find dialog), the
+  clipboard set, Undo/Redo, Save / Save As / Close Tab /
+  Show in File Explorer, Find/Replace/Goto Line — plus
+  language-specific entries (C#: Toggle Comment, Go to Definition;
+  Markdown: switch rendered/source mode). Right-clicking outside the
+  selection moves the caret there first, like other editors.
 - Goto Line (Edit menu, Ctrl+G): an emacs-style prompt appears in the
   status bar ("Goto Line:" plus an inline numeric field). Enter jumps,
   Escape or clicking away cancels; the destination is clamped to the
