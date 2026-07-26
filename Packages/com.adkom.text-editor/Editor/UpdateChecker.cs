@@ -22,6 +22,7 @@ namespace ADKOM.TextEditor
         const string RepoApiLatest = "https://api.github.com/repos/adkom-games/ADKOM_TextEditor/releases/latest";
         const string GitInstallUrl = "https://github.com/adkom-games/ADKOM_TextEditor.git";
         const string LastCheckKey = "ADKOM.TextEditor.LastUpdateCheckTicks";
+        const string LastSeenVersionKey = "ADKOM.TextEditor.LastSeenVersion";
         const double RearmIntervalSeconds = 3600; // re-evaluate hourly in long-lived editors
 
         static double _nextRearmTime;
@@ -36,7 +37,22 @@ namespace ADKOM.TextEditor
         {
             if (EditorApplication.timeSinceStartup < _nextRearmTime) return;
             _nextRearmTime = EditorApplication.timeSinceStartup + RearmIntervalSeconds;
+            if (CheckOnFirstRunOfVersion()) return;
             TryScheduledCheck();
+        }
+
+        /// <summary>The first time any version runs (fresh install or upgrade),
+        /// check immediately — bypassing the daily schedule once — so new
+        /// installs are brought current right away. Returns true if it checked.</summary>
+        static bool CheckOnFirstRunOfVersion()
+        {
+            string current = CurrentVersion();
+            if (EditorPrefs.GetString(LastSeenVersionKey, string.Empty) == current) return false;
+            EditorPrefs.SetString(LastSeenVersionKey, current);
+            if (!EditorConfig.AutoUpdate) return false;
+            Debug.Log($"[ADKOM Text Editor] First run of version {current} — checking for updates.");
+            CheckNow(manual: false);
+            return true;
         }
 
         static void TryScheduledCheck()
