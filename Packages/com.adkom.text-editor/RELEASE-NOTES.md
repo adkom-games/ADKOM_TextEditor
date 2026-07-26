@@ -1,5 +1,18 @@
 # Release Notes — ADKOM Text Editor
 
+## 0.5.1 — 2026-07-26
+
+### Features
+- Syntax-colorized minimap between the document and the scrollbar:
+  whole-file overview with viewport indicator, click/drag to jump
+  (Window → Minimap; on by default).
+- Console pane at the bottom of the window collecting all ATE messages
+  and status-bar output, timestamped (closable; Window → Console; on by
+  default). Status messages also stay in the bar for 5s now.
+- Double-click selects the word under the cursor; dragging extends the
+  selection whole-word at a time.
+- Selecting text highlights all other occurrences in a weaker color.
+
 ## 0.5.0 — 2026-07-26
 
 ### Features

@@ -23,7 +23,7 @@ feature pitch.
 - C# syntax highlighting incl. types/methods/variables; opt-in Semantic Features add compiler-accurate colors and Go to Definition (Ctrl+Click / F12 / Ctrl+B) with automatic dependency install
 - Themes and keyboard layouts matching Visual Studio, VS Code, and JetBrains Rider
 - Respects your files: tab/space indentation, line endings, and UTF-8 BOMs round-trip untouched
-- Native menu bar (File/Edit/View/Tools/Window/Help) and tab context menus
+- Native menu bar (File/Edit/View/Tools/Window/Help), tab context menus, syntax-colorized minimap, and a bottom console pane
 - Selectable as Unity's External Script Editor, with a configurable fallback for solutions and binaries
 - Find/replace (regex, whole-word, case, backwards, wrap-around) across the current file or all open tabs
 - Configurable font and size with browser-style zoom; smooth scrolling; automatic update checks
@@ -46,7 +46,7 @@ https://github.com/adkom-games/ADKOM_TextEditor.git#upm
 Pinned release:
 
 ```
-https://github.com/adkom-games/ADKOM_TextEditor.git#0.5.0
+https://github.com/adkom-games/ADKOM_TextEditor.git#0.5.1
 ```
 
 The `upm` branch contains only the package, so consumer downloads stay
