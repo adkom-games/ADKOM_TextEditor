@@ -27,8 +27,7 @@ namespace ADKOM.TextEditor
         // update check) in every other project (issue #5). The legacy global
         // key is read as a fallback so existing installs migrate cleanly.
         const string LegacyLastSeenVersionKey = "ADKOM.TextEditor.LastSeenVersion";
-        static string LastSeenVersionKey =>
-            "ADKOM.TextEditor.LastSeenVersion." + Application.dataPath.GetHashCode().ToString("X8");
+        static string LastSeenVersionKey => EditorConfig.ProjectScoped(LegacyLastSeenVersionKey);
         const double RearmIntervalSeconds = 3600; // re-evaluate hourly in long-lived editors
 
         static double _nextRearmTime;
