@@ -15,8 +15,11 @@ namespace ADKOM.TextEditor
 
         static string LastDirectory
         {
-            get => EditorPrefs.GetString(LastDirKey, Application.dataPath);
-            set => EditorPrefs.SetString(LastDirKey, value);
+            // Per project: an open/save dialog should not remember another
+            // project's folder.
+            get => EditorPrefs.GetString(EditorConfig.ProjectScoped(LastDirKey),
+                EditorPrefs.GetString(LastDirKey, Application.dataPath));
+            set => EditorPrefs.SetString(EditorConfig.ProjectScoped(LastDirKey), value);
         }
 
         /// <summary>Shows an Open dialog. Returns the chosen path or null if cancelled.</summary>

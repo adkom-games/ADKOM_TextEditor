@@ -155,6 +155,12 @@ commit only — no push, no tag, no release.
   their expansion).
 - UITK quirk: programmatic caret sets need a next-frame re-assert; selection
   color override may be ignored by the engine (cosmetic only).
+- Settings scoping policy (EditorConfig.ProjectScoped): USER settings
+  (keymap, font, theme, scrolling, MD default, recent count, fallback
+  editor, update-check timestamp) are machine-wide; PROJECT settings
+  (tab size, semantics consent, auto-update + frequency, recent list,
+  session, last-seen version, last dialog dir) are project-scoped with
+  legacy-global fallback. New prefs must pick a side deliberately.
 - NEVER use the python one-liner open(p,'w').write(open(p).read()...) —
   the write-open truncates before the read runs (emptied package.json
   during the 0.5.1 release; recovered from git). Read first, then write.

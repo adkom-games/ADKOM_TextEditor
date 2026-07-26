@@ -9,13 +9,24 @@ namespace ADKOM.TextEditor
     /// <summary>Editor-wide settings persisted in EditorPrefs.</summary>
     public static class EditorConfig
     {
+        // SCOPING POLICY: settings that describe the USER (keymap, fonts,
+        // theme, scrolling, defaults) are machine-wide; settings that describe
+        // the PROJECT (tab size convention, semantics consent/install,
+        // update behavior, recent files, session, last-seen version, last
+        // dialog directory) are project-scoped via ProjectScoped(). Reads
+        // fall back to the legacy machine-wide value for migration.
+        internal static string ProjectScoped(string key) =>
+            key + "." + Application.dataPath.GetHashCode().ToString("X8");
+
         const string TabSizeKey = "ADKOM.TextEditor.TabSize";
         const string KeymapKey = "ADKOM.TextEditor.Keymap";
 
+        /// <summary>Per project: an indentation convention, not a user taste.</summary>
         public static int TabSize
         {
-            get => Mathf.Clamp(EditorPrefs.GetInt(TabSizeKey, 4), 1, 16);
-            set => EditorPrefs.SetInt(TabSizeKey, Mathf.Clamp(value, 1, 16));
+            get => Mathf.Clamp(EditorPrefs.GetInt(ProjectScoped(TabSizeKey),
+                EditorPrefs.GetInt(TabSizeKey, 4)), 1, 16);
+            set => EditorPrefs.SetInt(ProjectScoped(TabSizeKey), Mathf.Clamp(value, 1, 16));
         }
 
         public static KeymapLayout Keymap
@@ -58,10 +69,13 @@ namespace ADKOM.TextEditor
         /// <summary>Semantic features (compiler-accurate colors, Go to
         /// Definition). OFF by default: enabling installs the semantics module
         /// and, if needed, the bundled Roslyn assemblies into the project.</summary>
+        /// <summary>Per project: enabling consents to installing Roslyn into
+        /// THIS project — one project's consent must not leak to others.</summary>
         public static bool SemanticsEnabled
         {
-            get => EditorPrefs.GetBool(SemanticsKey, false);
-            set => EditorPrefs.SetBool(SemanticsKey, value);
+            get => EditorPrefs.GetBool(ProjectScoped(SemanticsKey),
+                EditorPrefs.GetBool(SemanticsKey, false));
+            set => EditorPrefs.SetBool(ProjectScoped(SemanticsKey), value);
         }
 
         const string SmoothScrollKey = "ADKOM.TextEditor.SmoothScrolling";
@@ -76,8 +90,7 @@ namespace ADKOM.TextEditor
         const string RecentMaxKey = "ADKOM.TextEditor.RecentFilesMax";
         // The list is per-project (recent files from another project would be
         // noise); the count setting is machine-wide like every other setting.
-        static string RecentListKey =>
-            "ADKOM.TextEditor.RecentFiles." + Application.dataPath.GetHashCode().ToString("X8");
+        static string RecentListKey => ProjectScoped("ADKOM.TextEditor.RecentFiles");
 
         /// <summary>How many entries the File → Recent Files menu keeps.</summary>
         public static int RecentFilesMax
@@ -157,8 +170,7 @@ namespace ADKOM.TextEditor
             System.IO.Path.GetDirectoryName(Application.dataPath),
             "Library", "ADKOMTextEditor", "session.json");
 
-        static string LegacySessionKey =>
-            "ADKOM.TextEditor.Session." + Application.dataPath.GetHashCode().ToString("X8");
+        static string LegacySessionKey => ProjectScoped("ADKOM.TextEditor.Session");
 
         public static void SaveSession(System.Collections.Generic.List<SessionTab> tabs, int activeIndex)
         {
@@ -216,27 +228,30 @@ namespace ADKOM.TextEditor
         const string AutoUpdateKey = "ADKOM.TextEditor.AutoUpdate";
         const string UpdateFreqKey = "ADKOM.TextEditor.UpdateFrequencyDays";
 
-        /// <summary>Automatic update checks (default on).</summary>
+        /// <summary>Automatic update checks (default on). Per project: the
+        /// package install and its version live in the project.</summary>
         public static bool AutoUpdate
         {
-            get => EditorPrefs.GetBool(AutoUpdateKey, true);
+            get => EditorPrefs.GetBool(ProjectScoped(AutoUpdateKey),
+                EditorPrefs.GetBool(AutoUpdateKey, true));
             set
             {
                 // Forensic breadcrumb: a field report showed this OFF after an
                 // update-install; the default is ON, so log who writes false.
-                if (value != EditorPrefs.GetBool(AutoUpdateKey, true) && !value)
+                if (value != AutoUpdate && !value)
                     AteConsole.Info("[ADKOM Text Editor] Automatic updates disabled.\n" +
                         new System.Diagnostics.StackTrace(1, false));
-                EditorPrefs.SetBool(AutoUpdateKey, value);
+                EditorPrefs.SetBool(ProjectScoped(AutoUpdateKey), value);
             }
         }
 
-        /// <summary>Days between automatic update checks. Minimum 1: checks
-        /// can never run more than once per day.</summary>
+        /// <summary>Days between automatic update checks (per project).
+        /// Minimum 1: checks can never run more than once per day.</summary>
         public static int UpdateFrequencyDays
         {
-            get => Mathf.Max(1, EditorPrefs.GetInt(UpdateFreqKey, 1));
-            set => EditorPrefs.SetInt(UpdateFreqKey, Mathf.Max(1, value));
+            get => Mathf.Max(1, EditorPrefs.GetInt(ProjectScoped(UpdateFreqKey),
+                EditorPrefs.GetInt(UpdateFreqKey, 1)));
+            set => EditorPrefs.SetInt(ProjectScoped(UpdateFreqKey), Mathf.Max(1, value));
         }
     }
 }
