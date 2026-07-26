@@ -82,7 +82,7 @@ namespace ADKOM.TextEditor
         /// <summary>What kind of edit an undoable change is. Only TypeChar,
         /// Backspace, and ForwardDelete ever coalesce — each strictly with its
         /// own kind; everything else is one undo unit per edit.</summary>
-        public enum EditKind
+        internal enum EditKind
         {
             Programmatic, TypeChar, TypeNewline, Backspace,
             ForwardDelete, ReplaceSelection, Paste, LineOp
@@ -103,7 +103,7 @@ namespace ADKOM.TextEditor
 
         /// <summary>Forces the next edit to start a new undo group (called on
         /// save and when the window loses focus).</summary>
-        public void BreakUndoGroup()
+        internal void BreakUndoGroup()
         {
             _lastKind = EditKind.Programmatic;
             _lastEditEnd = -1;
@@ -549,7 +549,7 @@ namespace ADKOM.TextEditor
 
         /// <summary>Replaces heuristic spans with compiler-accurate ones;
         /// ignored if the document changed since they were computed.</summary>
-        public void ApplySemanticSpans(List<SyntaxSpan> spans, int forVersion)
+        internal void ApplySemanticSpans(List<SyntaxSpan> spans, int forVersion)
         {
             if (forVersion != _docVersion || spans == null) return;
             BucketSpans(spans);
@@ -1112,11 +1112,11 @@ namespace ADKOM.TextEditor
 
         /// <summary>Compatibility overload: true maps to TypeChar, false to
         /// Programmatic (each programmatic edit is its own undo unit).</summary>
-        public void ReplaceRangeInternal(int start, int end, string replacement, int caret, bool typing)
+        internal void ReplaceRangeInternal(int start, int end, string replacement, int caret, bool typing)
             => ReplaceRangeInternal(start, end, replacement, caret,
                 typing ? EditKind.TypeChar : EditKind.Programmatic);
 
-        public void ReplaceRangeInternal(int start, int end, string replacement, int caret, EditKind kind)
+        internal void ReplaceRangeInternal(int start, int end, string replacement, int caret, EditKind kind)
         {
             string v = GetValueInternal();
             start = Mathf.Clamp(start, 0, v.Length);
@@ -1341,15 +1341,15 @@ namespace ADKOM.TextEditor
         public int LineCount => _lines.Count;
 
         /// <summary>Selected text, or null when there is no selection.</summary>
-        public string SelectedTextPublic => HasSelection ? SelectedText() : null;
+        internal string SelectedTextPublic => HasSelection ? SelectedText() : null;
 
         /// <summary>Maps a world position to a 0-based line/column.</summary>
-        public void HitTestPublic(Vector2 worldPos, out int line, out int col)
+        internal void HitTestPublic(Vector2 worldPos, out int line, out int col)
             => HitTest(worldPos, out line, out col);
 
         /// <summary>The word at (line, col), optionally selecting it.
         /// Returns null when the position holds no word character.</summary>
-        public string WordAt(int line, int col, bool select)
+        internal string WordAt(int line, int col, bool select)
         {
             if (line < 0 || line >= _lines.Count) return null;
             WordRangeAt(line, col, out int ws, out int we);

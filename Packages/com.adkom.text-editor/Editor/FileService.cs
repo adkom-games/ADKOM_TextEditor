@@ -66,6 +66,7 @@ namespace ADKOM.TextEditor
             }
             doc.SaveTo(path);
             RefreshIfInAssets(path);
+            Scripting.AteApi.NotifySaved(doc);
             return true;
         }
 
@@ -76,6 +77,7 @@ namespace ADKOM.TextEditor
             if (path == null) return false;
             doc.SaveTo(path);
             RefreshIfInAssets(path);
+            Scripting.AteApi.NotifySaved(doc);
             return true;
         }
 

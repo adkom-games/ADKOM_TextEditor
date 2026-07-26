@@ -5,6 +5,18 @@ All notable changes to this package are documented here. Format follows
 
 ## [Unreleased]
 
+### Added
+- Scripting API: `ADKOM.TextEditor.Scripting.AteApi` is a stable,
+  semver-governed surface for editor scripts — open window/files,
+  `NewDocument`, `Documents`/`ActiveDocument` handles (`GetText`,
+  `SetText`/`ReplaceRange`, `GoTo`, `Activate`, `Save`, `Close`), and
+  events: `documentOpened/Closed/Saved`, `activeDocumentChanged`,
+  `textChanged` (debounced). Edits to the active document are one undo
+  step; edits to background documents are documented as not undoable.
+  See `Documentation~/Scripting.md`. Accidental public members on
+  internals (CodeView edit/hit-test helpers) are now `internal` — the
+  facade is the only supported scripting surface.
+
 ### Changed
 - Settings scoping audit: settings that describe the project are now
   stored per project instead of machine-wide — Tab Size (indentation
