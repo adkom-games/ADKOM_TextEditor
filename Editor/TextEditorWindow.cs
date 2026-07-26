@@ -38,6 +38,7 @@ namespace ADKOM.TextEditor
         [SerializeField] bool _showLineNumbers;
         [SerializeField] bool _wordWrap;
         [SerializeField] bool _consoleVisible = true;
+        [SerializeField] bool _minimapVisible = true;
 
         CodeView _code;
         VisualElement _tabBar;
@@ -192,6 +193,7 @@ namespace ADKOM.TextEditor
             _code.RegisterCallback<KeyDownEvent>(OnKeyDown, TrickleDown.TrickleDown);
             _code.onFontSizeChanged += SyncSettingsControls; // zoom gestures
             _code.onNavigateRequest += NavigateToDefinition;  // Ctrl+Click
+            _code.minimapVisible = _minimapVisible;
             _mainCtx = System.Threading.SynchronizationContext.Current;
             _editorArea.Add(_code);
 
@@ -335,6 +337,11 @@ namespace ADKOM.TextEditor
         void FillWindowMenu(GenericMenu m)
         {
             m.AddItem(new GUIContent("Console"), _consoleVisible, () => SetConsoleVisible(!_consoleVisible));
+            m.AddItem(new GUIContent("Minimap"), _minimapVisible, () =>
+            {
+                _minimapVisible = !_minimapVisible;
+                _code.minimapVisible = _minimapVisible;
+            });
             m.AddSeparator("");
             bool multi = _docs.Count > 1;
             if (multi)
