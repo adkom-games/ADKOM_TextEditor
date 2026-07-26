@@ -1339,6 +1339,31 @@ namespace ADKOM.TextEditor
 
         public bool HasSelectionPublic => HasSelection;
         public int LineCount => _lines.Count;
+
+        /// <summary>Selected text, or null when there is no selection.</summary>
+        public string SelectedTextPublic => HasSelection ? SelectedText() : null;
+
+        /// <summary>Maps a world position to a 0-based line/column.</summary>
+        public void HitTestPublic(Vector2 worldPos, out int line, out int col)
+            => HitTest(worldPos, out line, out col);
+
+        /// <summary>The word at (line, col), optionally selecting it.
+        /// Returns null when the position holds no word character.</summary>
+        public string WordAt(int line, int col, bool select)
+        {
+            if (line < 0 || line >= _lines.Count) return null;
+            WordRangeAt(line, col, out int ws, out int we);
+            if (we <= ws) return null;
+            string word = _lines[line].Substring(ws, we - ws);
+            if (word.Trim().Length == 0) return null;
+            if (select)
+            {
+                _anchorLine = line; _anchorCol = ws;
+                _caretLine = line; _caretCol = we;
+                RefreshVisible();
+            }
+            return word;
+        }
         public bool CanUndo => _undo.Count > 0;
         public bool CanRedo => _redo.Count > 0;
 

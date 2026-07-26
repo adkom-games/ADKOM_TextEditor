@@ -46,6 +46,14 @@ namespace ADKOM.TextEditor
             target?.schedule.Execute(() => { target.Focus(); target.SelectAll(); }).ExecuteLater(50);
         }
 
+        /// <summary>Opens the dialog with the search field pre-filled (e.g.
+        /// "Find Occurrences" from the code view context menu).</summary>
+        public static void OpenWithQuery(TextEditorWindow owner, string query, bool allTabs)
+        {
+            if (!string.IsNullOrEmpty(query)) _sFind = query;
+            Open(owner, replaceFocus: false, allTabs);
+        }
+
         /// <summary>F3 / Shift+F3 support: repeats the last search if any.</summary>
         public static bool FindAgain(TextEditorWindow owner, bool reverse)
         {
