@@ -29,6 +29,8 @@ reloads and editor restarts, warn you about unsaved changes, close with
 a middle-click, and switch instead of duplicating when you re-open a
 file. Right-click any text asset in the Project window — scripts,
 shaders, JSON, YAML, markdown, USS/UXML, configs — and it opens in ATE.
+**File → Recent Files** remembers what you've had open (per project,
+count configurable) so yesterday's file is two clicks away.
 
 ### 🎨 Syntax highlighting & themes
 C# highlighting out of the box — keywords, strings, comments, and
@@ -143,8 +145,8 @@ reload offer when a file changes on disk, and line numbers when you want
 them. A Settings tab (the gear button, or Tools → Options…) keeps every
 preference — theme, mode, line numbers, word wrap, font and size,
 smooth scrolling, tab size, keyboard layout, Markdown default view,
-external fallback editor, automatic updates — one click away, persisted
-across sessions.
+recent-files count, external fallback editor, automatic updates — one
+click away, persisted across sessions.
 
 ## Get it
 
