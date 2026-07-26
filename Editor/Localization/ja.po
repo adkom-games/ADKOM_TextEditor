@@ -1,0 +1,415 @@
+msgid ""
+msgstr ""
+"Language: ja\n"
+"Content-Type: text/plain; charset=utf-8\n"
+
+msgid "File"
+msgstr "ファイル"
+
+msgid "Edit"
+msgstr "編集"
+
+msgid "View"
+msgstr "表示"
+
+msgid "Tools"
+msgstr "ツール"
+
+msgid "Window"
+msgstr "ウィンドウ"
+
+msgid "Help"
+msgstr "ヘルプ"
+
+msgid "New"
+msgstr "新規作成"
+
+msgid "Open..."
+msgstr "開く..."
+
+msgid "Save"
+msgstr "保存"
+
+msgid "Save As..."
+msgstr "名前を付けて保存..."
+
+msgid "Save All"
+msgstr "すべて保存"
+
+msgid "Close Tab"
+msgstr "タブを閉じる"
+
+msgid "Close"
+msgstr "閉じる"
+
+msgid "Close Other Tabs"
+msgstr "他のタブを閉じる"
+
+msgid "Close Window"
+msgstr "ウィンドウを閉じる"
+
+msgid "Recent Files"
+msgstr "最近使ったファイル"
+
+msgid "Clear Recent Files"
+msgstr "最近使ったファイルをクリア"
+
+msgid "Undo"
+msgstr "元に戻す"
+
+msgid "Redo"
+msgstr "やり直し"
+
+msgid "Cut"
+msgstr "切り取り"
+
+msgid "Copy"
+msgstr "コピー"
+
+msgid "Paste"
+msgstr "貼り付け"
+
+msgid "Select All"
+msgstr "すべて選択"
+
+msgid "Goto Line..."
+msgstr "指定行へ移動..."
+
+msgid "Goto Line:"
+msgstr "指定行へ移動:"
+
+msgid "Duplicate Line"
+msgstr "行を複製"
+
+msgid "Delete Line"
+msgstr "行を削除"
+
+msgid "Move Line Up"
+msgstr "行を上へ移動"
+
+msgid "Move Line Down"
+msgstr "行を下へ移動"
+
+msgid "Toggle Comment"
+msgstr "コメントの切り替え"
+
+msgid "Indent"
+msgstr "インデント"
+
+msgid "Unindent"
+msgstr "インデント解除"
+
+msgid "Find..."
+msgstr "検索..."
+
+msgid "Find in Tabs..."
+msgstr "タブ内を検索..."
+
+msgid "Replace..."
+msgstr "置換..."
+
+msgid "Replace in Tabs..."
+msgstr "タブ内を置換..."
+
+msgid "Find Next"
+msgstr "次を検索"
+
+msgid "Find Previous"
+msgstr "前を検索"
+
+msgid "Console"
+msgstr "コンソール"
+
+msgid "Line Numbers"
+msgstr "行番号"
+
+msgid "Minimap"
+msgstr "ミニマップ"
+
+msgid "Word Wrap"
+msgstr "折り返し"
+
+msgid "Theme"
+msgstr "テーマ"
+
+msgid "Light-Dark Mode"
+msgstr "ライト/ダークモード"
+
+msgid "Options..."
+msgstr "オプション..."
+
+msgid "Next Tab"
+msgstr "次のタブ"
+
+msgid "Previous Tab"
+msgstr "前のタブ"
+
+msgid "(no open tabs)"
+msgstr "(開いているタブはありません)"
+
+msgid "About ADKOM Text Editor..."
+msgstr "ADKOM Text Editor について..."
+
+msgid "Repository"
+msgstr "リポジトリ"
+
+msgid "Release Notes"
+msgstr "リリースノート"
+
+msgid "Go to Definition"
+msgstr "定義へ移動"
+
+msgid "Find Occurrences"
+msgstr "出現箇所を検索"
+
+msgid "Find Occurrences of '{0}'"
+msgstr "'{0}' の出現箇所を検索"
+
+msgid "Find in Tabs '{0}'"
+msgstr "タブ内で '{0}' を検索"
+
+msgid "Show in File Explorer"
+msgstr "エクスプローラーで表示"
+
+msgid "Switch to Markdown Source"
+msgstr "Markdown ソースに切り替え"
+
+msgid "Switch to Rendered Markdown"
+msgstr "レンダリング済み Markdown に切り替え"
+
+msgid "Rendered Markdown — click to switch to source"
+msgstr "レンダリング済み Markdown — クリックでソースに切り替え"
+
+msgid "Markdown source — click to switch to rendered (click a block to edit it)"
+msgstr "Markdown ソース — クリックでレンダリング表示に切り替え(ブロックをクリックで編集)"
+
+msgid "Editor Settings"
+msgstr "エディター設定"
+
+msgid "Color Theme"
+msgstr "カラーテーマ"
+
+msgid "Light/Dark Mode"
+msgstr "ライト/ダークモード"
+
+msgid "Tab Size"
+msgstr "タブサイズ"
+
+msgid "Keyboard Layout"
+msgstr "キーボードレイアウト"
+
+msgid "Font"
+msgstr "フォント"
+
+msgid "Font Size"
+msgstr "フォントサイズ"
+
+msgid "External Fallback"
+msgstr "外部フォールバック"
+
+msgid "Semantic Features"
+msgstr "セマンティック機能"
+
+msgid "Smooth Scrolling"
+msgstr "スムーズスクロール"
+
+msgid "Open Markdown Rendered"
+msgstr "Markdown をレンダリング表示で開く"
+
+msgid "Recent Files Count"
+msgstr "最近使ったファイルの数"
+
+msgid "Automatic Updates"
+msgstr "自動更新"
+
+msgid "Check Every (days)"
+msgstr "チェック間隔(日)"
+
+msgid "Check for Updates Now"
+msgstr "今すぐ更新を確認"
+
+msgid "Checking…"
+msgstr "確認中…"
+
+msgid "Installed version: "
+msgstr "インストール済みバージョン: "
+
+msgid "Settings"
+msgstr "設定"
+
+msgid "Spaces a tab renders as. Applies to files opened after the change."
+msgstr "タブを表示するスペース数。変更後に開いたファイルに適用されます。"
+
+msgid "Which IDE's default shortcuts to use for the commands this editor supports."
+msgstr "このエディターのコマンドにどの IDE の標準ショートカットを使うか。"
+
+msgid "Also: Ctrl+MouseWheel, Ctrl+'+'/'-', Ctrl+0 resets."
+msgstr "その他: Ctrl+マウスホイール、Ctrl+'+'/'-'、Ctrl+0 でリセット。"
+
+msgid "When ATE is the External Script Editor, non-text requests (solutions, binaries, project sync) are forwarded here."
+msgstr "ATE が外部スクリプトエディターの場合、テキスト以外のリクエスト(ソリューション、バイナリ、プロジェクト同期)はここに転送されます。"
+
+msgid "Compiler-accurate colors and Go to Definition. If the project has no Roslyn, enabling installs the bundled MIT-licensed Roslyn assemblies (see THIRD-PARTY-NOTICES)."
+msgstr "コンパイラー精度の色分けと定義へ移動。プロジェクトに Roslyn がない場合、有効化すると同梱の MIT ライセンス Roslyn アセンブリがインストールされます(THIRD-PARTY-NOTICES を参照)。"
+
+msgid "Animate wheel scrolling instead of stepping line by line."
+msgstr "ホイールスクロールを行単位ではなくアニメーションで表示。"
+
+msgid "Default view when opening .md files: rendered (WYSIWYG) when on, source when off. The MD/source toggle still switches per tab."
+msgstr ".md ファイルを開くときの既定表示: オンでレンダリング(WYSIWYG)、オフでソース。MD/ソース切り替えはタブごとに変更できます。"
+
+msgid "How many entries File → Recent Files keeps (1-30)."
+msgstr "[ファイル] → [最近使ったファイル] に保持する項目数(1〜30)。"
+
+msgid "Check GitHub for new releases and offer to install them."
+msgstr "GitHub で新しいリリースを確認し、インストールを提案します。"
+
+msgid "Days between automatic update checks. 1 = daily; never more often than once per day."
+msgstr "自動更新チェックの間隔(日)。1 = 毎日。1日1回を超えることはありません。"
+
+msgid "No file open.\nFile → New, File → Open…, or right-click a text asset in the Project window."
+msgstr "ファイルが開かれていません。\n[ファイル] → [新規作成]、[ファイル] → [開く…]、またはプロジェクトウィンドウでテキストアセットを右クリックしてください。"
+
+msgid "Updating ADKOM Text Editor…\nPlease wait — the editor will reload when the update completes."
+msgstr "ADKOM Text Editor を更新しています…\n更新が完了するとエディターがリロードされます。お待ちください。"
+
+msgid "(unknown version)"
+msgstr "(バージョン不明)"
+
+msgid "A real code editor, living right inside the Unity Editor."
+msgstr "Unity エディター内で動作する本格的なコードエディター。"
+
+msgid "100% Editor-only — nothing ships in player builds."
+msgstr "100% エディター専用 — プレイヤービルドには何も含まれません。"
+
+msgid "OK"
+msgstr "OK"
+
+msgid "Go to Definition needs Semantic Features, which are currently disabled.\n\nEnable them now? The semantics module — and, if your project has no Roslyn, the bundled MIT-licensed Roslyn assemblies — will be installed automatically."
+msgstr "定義へ移動にはセマンティック機能が必要ですが、現在無効です。\n\n今すぐ有効にしますか? セマンティックモジュール(プロジェクトに Roslyn がない場合は同梱の MIT ライセンス Roslyn アセンブリも)が自動的にインストールされます。"
+
+msgid "Enable and Install"
+msgstr "有効化してインストール"
+
+msgid "Cancel"
+msgstr "キャンセル"
+
+msgid "Semantic features are still installing or compiling — try again in a moment."
+msgstr "セマンティック機能はインストールまたはコンパイル中です。しばらくしてからもう一度お試しください。"
+
+msgid "Resolving symbol…"
+msgstr "シンボルを解決しています…"
+
+msgid "Defined in "
+msgstr "定義場所: "
+
+msgid "Definition not found."
+msgstr "定義が見つかりません。"
+
+msgid "Go to Definition failed: "
+msgstr "定義へ移動に失敗しました: "
+
+msgid "Recent file no longer exists: "
+msgstr "最近使ったファイルが存在しません: "
+
+msgid "Kept buffer of deleted file {0} — Save to restore it to disk."
+msgstr "削除されたファイル {0} のバッファーを保持しました — 保存するとディスクに復元されます。"
+
+msgid "Reloaded {0} from disk."
+msgstr "{0} をディスクから再読み込みしました。"
+
+msgid "Kept in-editor version of {0}."
+msgstr "{0} のエディター内バージョンを保持しました。"
+
+msgid "No file open"
+msgstr "ファイルが開かれていません"
+
+msgid "'{0}' was deleted from disk. Keep the buffer (Save can bring the file back), or close the tab?"
+msgstr "'{0}' はディスクから削除されました。バッファーを保持しますか(保存でファイルを復元できます)? それともタブを閉じますか?"
+
+msgid "'{0}' was modified outside the editor. Reload it? (unsaved changes here would be lost)"
+msgstr "'{0}' はエディターの外部で変更されました。再読み込みしますか? (ここでの未保存の変更は失われます)"
+
+msgid "'{0}' has unsaved changes."
+msgstr "'{0}' に未保存の変更があります。"
+
+msgid "{0} tabs have unsaved changes."
+msgstr "{0} 個のタブに未保存の変更があります。"
+
+msgid "Keep Buffer"
+msgstr "バッファーを保持"
+
+msgid "Reload"
+msgstr "再読み込み"
+
+msgid "Keep Mine"
+msgstr "自分の変更を保持"
+
+msgid "Discard"
+msgstr "破棄"
+
+msgid "Discard All"
+msgstr "すべて破棄"
+
+msgid "Line {0}."
+msgstr "{0} 行目。"
+
+msgid "Line {0} is out of range — went to line {1} (1-{2})."
+msgstr "{0} 行目は範囲外です — {1} 行目に移動しました (1-{2})。"
+
+msgid "Find / Replace"
+msgstr "検索 / 置換"
+
+msgid "Find"
+msgstr "検索"
+
+msgid "Replace"
+msgstr "置換"
+
+msgid "Match case"
+msgstr "大文字と小文字を区別"
+
+msgid "Whole word"
+msgstr "単語単位"
+
+msgid "Regex"
+msgstr "正規表現"
+
+msgid "Wrap around"
+msgstr "折り返し検索"
+
+msgid "Backwards"
+msgstr "後方検索"
+
+msgid "Scope"
+msgstr "範囲"
+
+msgid "Current Tab"
+msgstr "現在のタブ"
+
+msgid "All Tabs"
+msgstr "すべてのタブ"
+
+msgid "Replace All"
+msgstr "すべて置換"
+
+msgid "A new version of the ADKOM Text Editor is available."
+msgstr "ADKOM Text Editor の新しいバージョンが利用可能です。"
+
+msgid "Installed version:  {0}\nNew version:        {1}"
+msgstr "インストール済み:  {0}\n新バージョン:      {1}"
+
+msgid "Check for updates automatically"
+msgstr "自動的に更新を確認する"
+
+msgid "Later"
+msgstr "後で"
+
+msgid "Install Now"
+msgstr "今すぐインストール"
+
+msgid "Undid {0} char(s)."
+msgstr "{0} 文字を元に戻しました。"
+
+msgid "Redid {0} char(s)."
+msgstr "{0} 文字をやり直しました。"

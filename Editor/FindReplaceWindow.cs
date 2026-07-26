@@ -34,7 +34,7 @@ namespace ADKOM.TextEditor
             bool creating = _instance == null;
             var w = _instance != null ? _instance : (_instance = CreateInstance<FindReplaceWindow>());
             w._owner = owner;
-            w.titleContent = new GUIContent("Find / Replace");
+            w.titleContent = new GUIContent(L10n.Tr("Find / Replace"));
             if (creating)
             {
                 w.minSize = new Vector2(360, 200);
@@ -100,32 +100,32 @@ namespace ADKOM.TextEditor
             root.style.paddingRight = 8;
             root.style.paddingTop = 8;
 
-            _find = new TextField("Find");
-            _replace = new TextField("Replace");
+            _find = new TextField(L10n.Tr("Find"));
+            _replace = new TextField(L10n.Tr("Replace"));
             root.Add(_find);
             root.Add(_replace);
 
             var opts = new VisualElement();
             opts.style.flexDirection = FlexDirection.Row;
             opts.style.flexWrap = Wrap.Wrap;
-            _case = MakeOpt(opts, "Match case", _sCase);
-            _word = MakeOpt(opts, "Whole word", _sWord);
-            _regex = MakeOpt(opts, "Regex", _sRegex);
-            _wrap = MakeOpt(opts, "Wrap around", _sWrap);
-            _back = MakeOpt(opts, "Backwards", _sBack);
+            _case = MakeOpt(opts, L10n.Tr("Match case"), _sCase);
+            _word = MakeOpt(opts, L10n.Tr("Whole word"), _sWord);
+            _regex = MakeOpt(opts, L10n.Tr("Regex"), _sRegex);
+            _wrap = MakeOpt(opts, L10n.Tr("Wrap around"), _sWrap);
+            _back = MakeOpt(opts, L10n.Tr("Backwards"), _sBack);
             root.Add(opts);
 
-            _scope = new PopupField<string>("Scope",
-                new System.Collections.Generic.List<string> { "Current Tab", "All Tabs" },
-                _sAllTabs ? "All Tabs" : "Current Tab");
+            _scope = new PopupField<string>(L10n.Tr("Scope"),
+                new System.Collections.Generic.List<string> { L10n.Tr("Current Tab"), L10n.Tr("All Tabs") },
+                _sAllTabs ? L10n.Tr("All Tabs") : L10n.Tr("Current Tab"));
             root.Add(_scope);
 
             var buttons = new VisualElement();
             buttons.style.flexDirection = FlexDirection.Row;
             buttons.style.marginTop = 6;
-            buttons.Add(new Button(() => { SaveState(); FindNextCore(false); }) { text = "Find Next" });
-            buttons.Add(new Button(() => { SaveState(); ReplaceOnce(); }) { text = "Replace" });
-            buttons.Add(new Button(() => { SaveState(); ReplaceAll(); }) { text = "Replace All" });
+            buttons.Add(new Button(() => { SaveState(); FindNextCore(false); }) { text = L10n.Tr("Find Next") });
+            buttons.Add(new Button(() => { SaveState(); ReplaceOnce(); }) { text = L10n.Tr("Replace") });
+            buttons.Add(new Button(() => { SaveState(); ReplaceAll(); }) { text = L10n.Tr("Replace All") });
             root.Add(buttons);
 
             _status = new Label();

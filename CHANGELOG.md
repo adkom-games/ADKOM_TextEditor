@@ -6,6 +6,13 @@ All notable changes to this package are documented here. Format follows
 ## [Unreleased]
 
 ### Added
+- Localization: all user interface text (menus, settings, dialogs,
+  banners, prompts, status messages, Find/Replace, the update dialog)
+  goes through Unity's editor localization (L10n.Tr) and follows the
+  Editor Language selected in Preferences. Ships with Japanese,
+  Korean, Simplified Chinese, and Traditional Chinese catalogs;
+  English is the source language. Console/diagnostic log text
+  intentionally stays English for supportability.
 - Drag-and-drop tab reordering: left-drag a file tab along the tab bar
   and it moves live as you cross neighboring tabs' midpoints (the
   dragged tab dims while in flight). A plain click still switches; the

@@ -1,0 +1,415 @@
+msgid ""
+msgstr ""
+"Language: ko\n"
+"Content-Type: text/plain; charset=utf-8\n"
+
+msgid "File"
+msgstr "파일"
+
+msgid "Edit"
+msgstr "편집"
+
+msgid "View"
+msgstr "보기"
+
+msgid "Tools"
+msgstr "도구"
+
+msgid "Window"
+msgstr "창"
+
+msgid "Help"
+msgstr "도움말"
+
+msgid "New"
+msgstr "새 파일"
+
+msgid "Open..."
+msgstr "열기..."
+
+msgid "Save"
+msgstr "저장"
+
+msgid "Save As..."
+msgstr "다른 이름으로 저장..."
+
+msgid "Save All"
+msgstr "모두 저장"
+
+msgid "Close Tab"
+msgstr "탭 닫기"
+
+msgid "Close"
+msgstr "닫기"
+
+msgid "Close Other Tabs"
+msgstr "다른 탭 닫기"
+
+msgid "Close Window"
+msgstr "창 닫기"
+
+msgid "Recent Files"
+msgstr "최근 파일"
+
+msgid "Clear Recent Files"
+msgstr "최근 파일 지우기"
+
+msgid "Undo"
+msgstr "실행 취소"
+
+msgid "Redo"
+msgstr "다시 실행"
+
+msgid "Cut"
+msgstr "잘라내기"
+
+msgid "Copy"
+msgstr "복사"
+
+msgid "Paste"
+msgstr "붙여넣기"
+
+msgid "Select All"
+msgstr "모두 선택"
+
+msgid "Goto Line..."
+msgstr "줄 이동..."
+
+msgid "Goto Line:"
+msgstr "줄 이동:"
+
+msgid "Duplicate Line"
+msgstr "줄 복제"
+
+msgid "Delete Line"
+msgstr "줄 삭제"
+
+msgid "Move Line Up"
+msgstr "줄 위로 이동"
+
+msgid "Move Line Down"
+msgstr "줄 아래로 이동"
+
+msgid "Toggle Comment"
+msgstr "주석 전환"
+
+msgid "Indent"
+msgstr "들여쓰기"
+
+msgid "Unindent"
+msgstr "내어쓰기"
+
+msgid "Find..."
+msgstr "찾기..."
+
+msgid "Find in Tabs..."
+msgstr "탭에서 찾기..."
+
+msgid "Replace..."
+msgstr "바꾸기..."
+
+msgid "Replace in Tabs..."
+msgstr "탭에서 바꾸기..."
+
+msgid "Find Next"
+msgstr "다음 찾기"
+
+msgid "Find Previous"
+msgstr "이전 찾기"
+
+msgid "Console"
+msgstr "콘솔"
+
+msgid "Line Numbers"
+msgstr "줄 번호"
+
+msgid "Minimap"
+msgstr "미니맵"
+
+msgid "Word Wrap"
+msgstr "자동 줄 바꿈"
+
+msgid "Theme"
+msgstr "테마"
+
+msgid "Light-Dark Mode"
+msgstr "라이트/다크 모드"
+
+msgid "Options..."
+msgstr "옵션..."
+
+msgid "Next Tab"
+msgstr "다음 탭"
+
+msgid "Previous Tab"
+msgstr "이전 탭"
+
+msgid "(no open tabs)"
+msgstr "(열린 탭 없음)"
+
+msgid "About ADKOM Text Editor..."
+msgstr "ADKOM Text Editor 정보..."
+
+msgid "Repository"
+msgstr "저장소"
+
+msgid "Release Notes"
+msgstr "릴리스 노트"
+
+msgid "Go to Definition"
+msgstr "정의로 이동"
+
+msgid "Find Occurrences"
+msgstr "일치 항목 찾기"
+
+msgid "Find Occurrences of '{0}'"
+msgstr "'{0}' 일치 항목 찾기"
+
+msgid "Find in Tabs '{0}'"
+msgstr "탭에서 '{0}' 찾기"
+
+msgid "Show in File Explorer"
+msgstr "파일 탐색기에서 표시"
+
+msgid "Switch to Markdown Source"
+msgstr "Markdown 소스로 전환"
+
+msgid "Switch to Rendered Markdown"
+msgstr "렌더링된 Markdown으로 전환"
+
+msgid "Rendered Markdown — click to switch to source"
+msgstr "렌더링된 Markdown — 클릭하여 소스로 전환"
+
+msgid "Markdown source — click to switch to rendered (click a block to edit it)"
+msgstr "Markdown 소스 — 클릭하여 렌더링 보기로 전환(블록을 클릭하여 편집)"
+
+msgid "Editor Settings"
+msgstr "에디터 설정"
+
+msgid "Color Theme"
+msgstr "색상 테마"
+
+msgid "Light/Dark Mode"
+msgstr "라이트/다크 모드"
+
+msgid "Tab Size"
+msgstr "탭 크기"
+
+msgid "Keyboard Layout"
+msgstr "키보드 레이아웃"
+
+msgid "Font"
+msgstr "글꼴"
+
+msgid "Font Size"
+msgstr "글꼴 크기"
+
+msgid "External Fallback"
+msgstr "외부 대체 편집기"
+
+msgid "Semantic Features"
+msgstr "시맨틱 기능"
+
+msgid "Smooth Scrolling"
+msgstr "부드러운 스크롤"
+
+msgid "Open Markdown Rendered"
+msgstr "Markdown을 렌더링 보기로 열기"
+
+msgid "Recent Files Count"
+msgstr "최근 파일 개수"
+
+msgid "Automatic Updates"
+msgstr "자동 업데이트"
+
+msgid "Check Every (days)"
+msgstr "확인 주기(일)"
+
+msgid "Check for Updates Now"
+msgstr "지금 업데이트 확인"
+
+msgid "Checking…"
+msgstr "확인 중…"
+
+msgid "Installed version: "
+msgstr "설치된 버전: "
+
+msgid "Settings"
+msgstr "설정"
+
+msgid "Spaces a tab renders as. Applies to files opened after the change."
+msgstr "탭을 표시할 공백 수입니다. 변경 후 연 파일에 적용됩니다."
+
+msgid "Which IDE's default shortcuts to use for the commands this editor supports."
+msgstr "이 에디터가 지원하는 명령에 사용할 IDE 기본 단축키입니다."
+
+msgid "Also: Ctrl+MouseWheel, Ctrl+'+'/'-', Ctrl+0 resets."
+msgstr "추가: Ctrl+마우스 휠, Ctrl+'+'/'-', Ctrl+0으로 재설정."
+
+msgid "When ATE is the External Script Editor, non-text requests (solutions, binaries, project sync) are forwarded here."
+msgstr "ATE가 외부 스크립트 에디터일 때 텍스트가 아닌 요청(솔루션, 바이너리, 프로젝트 동기화)은 여기로 전달됩니다."
+
+msgid "Compiler-accurate colors and Go to Definition. If the project has no Roslyn, enabling installs the bundled MIT-licensed Roslyn assemblies (see THIRD-PARTY-NOTICES)."
+msgstr "컴파일러 수준의 색상과 정의로 이동. 프로젝트에 Roslyn이 없으면 활성화 시 번들된 MIT 라이선스 Roslyn 어셈블리가 설치됩니다(THIRD-PARTY-NOTICES 참조)."
+
+msgid "Animate wheel scrolling instead of stepping line by line."
+msgstr "휠 스크롤을 줄 단위 대신 애니메이션으로 표시합니다."
+
+msgid "Default view when opening .md files: rendered (WYSIWYG) when on, source when off. The MD/source toggle still switches per tab."
+msgstr ".md 파일을 열 때 기본 보기: 켜면 렌더링(WYSIWYG), 끄면 소스. MD/소스 전환은 탭별로 계속 사용할 수 있습니다."
+
+msgid "How many entries File → Recent Files keeps (1-30)."
+msgstr "파일 → 최근 파일에 유지할 항목 수(1-30)."
+
+msgid "Check GitHub for new releases and offer to install them."
+msgstr "GitHub에서 새 릴리스를 확인하고 설치를 제안합니다."
+
+msgid "Days between automatic update checks. 1 = daily; never more often than once per day."
+msgstr "자동 업데이트 확인 간격(일). 1 = 매일. 하루에 한 번을 넘지 않습니다."
+
+msgid "No file open.\nFile → New, File → Open…, or right-click a text asset in the Project window."
+msgstr "열린 파일이 없습니다.\n파일 → 새 파일, 파일 → 열기…, 또는 프로젝트 창에서 텍스트 에셋을 마우스 오른쪽 버튼으로 클릭하세요."
+
+msgid "Updating ADKOM Text Editor…\nPlease wait — the editor will reload when the update completes."
+msgstr "ADKOM Text Editor 업데이트 중…\n업데이트가 완료되면 에디터가 다시 로드됩니다. 잠시 기다려 주세요."
+
+msgid "(unknown version)"
+msgstr "(알 수 없는 버전)"
+
+msgid "A real code editor, living right inside the Unity Editor."
+msgstr "Unity 에디터 안에서 동작하는 진짜 코드 에디터."
+
+msgid "100% Editor-only — nothing ships in player builds."
+msgstr "100% 에디터 전용 — 플레이어 빌드에는 아무것도 포함되지 않습니다."
+
+msgid "OK"
+msgstr "확인"
+
+msgid "Go to Definition needs Semantic Features, which are currently disabled.\n\nEnable them now? The semantics module — and, if your project has no Roslyn, the bundled MIT-licensed Roslyn assemblies — will be installed automatically."
+msgstr "정의로 이동에는 현재 비활성화된 시맨틱 기능이 필요합니다.\n\n지금 활성화할까요? 시맨틱 모듈과, 프로젝트에 Roslyn이 없으면 번들된 MIT 라이선스 Roslyn 어셈블리가 자동으로 설치됩니다."
+
+msgid "Enable and Install"
+msgstr "활성화 및 설치"
+
+msgid "Cancel"
+msgstr "취소"
+
+msgid "Semantic features are still installing or compiling — try again in a moment."
+msgstr "시맨틱 기능이 아직 설치 또는 컴파일 중입니다. 잠시 후 다시 시도하세요."
+
+msgid "Resolving symbol…"
+msgstr "심볼 확인 중…"
+
+msgid "Defined in "
+msgstr "정의 위치: "
+
+msgid "Definition not found."
+msgstr "정의를 찾을 수 없습니다."
+
+msgid "Go to Definition failed: "
+msgstr "정의로 이동 실패: "
+
+msgid "Recent file no longer exists: "
+msgstr "최근 파일이 더 이상 존재하지 않습니다: "
+
+msgid "Kept buffer of deleted file {0} — Save to restore it to disk."
+msgstr "삭제된 파일 {0}의 버퍼를 유지했습니다 — 저장하면 디스크에 복원됩니다."
+
+msgid "Reloaded {0} from disk."
+msgstr "{0}을(를) 디스크에서 다시 불러왔습니다."
+
+msgid "Kept in-editor version of {0}."
+msgstr "{0}의 에디터 내 버전을 유지했습니다."
+
+msgid "No file open"
+msgstr "열린 파일 없음"
+
+msgid "'{0}' was deleted from disk. Keep the buffer (Save can bring the file back), or close the tab?"
+msgstr "'{0}'이(가) 디스크에서 삭제되었습니다. 버퍼를 유지할까요(저장하면 파일을 복원할 수 있습니다)? 아니면 탭을 닫을까요?"
+
+msgid "'{0}' was modified outside the editor. Reload it? (unsaved changes here would be lost)"
+msgstr "'{0}'이(가) 에디터 외부에서 수정되었습니다. 다시 불러올까요? (여기의 저장되지 않은 변경 사항은 사라집니다)"
+
+msgid "'{0}' has unsaved changes."
+msgstr "'{0}'에 저장되지 않은 변경 사항이 있습니다."
+
+msgid "{0} tabs have unsaved changes."
+msgstr "{0}개의 탭에 저장되지 않은 변경 사항이 있습니다."
+
+msgid "Keep Buffer"
+msgstr "버퍼 유지"
+
+msgid "Reload"
+msgstr "다시 불러오기"
+
+msgid "Keep Mine"
+msgstr "내 변경 유지"
+
+msgid "Discard"
+msgstr "버리기"
+
+msgid "Discard All"
+msgstr "모두 버리기"
+
+msgid "Line {0}."
+msgstr "{0}번째 줄."
+
+msgid "Line {0} is out of range — went to line {1} (1-{2})."
+msgstr "{0}번째 줄은 범위를 벗어났습니다 — {1}번째 줄로 이동했습니다 (1-{2})."
+
+msgid "Find / Replace"
+msgstr "찾기 / 바꾸기"
+
+msgid "Find"
+msgstr "찾기"
+
+msgid "Replace"
+msgstr "바꾸기"
+
+msgid "Match case"
+msgstr "대/소문자 구분"
+
+msgid "Whole word"
+msgstr "단어 단위"
+
+msgid "Regex"
+msgstr "정규식"
+
+msgid "Wrap around"
+msgstr "처음부터 계속"
+
+msgid "Backwards"
+msgstr "역방향"
+
+msgid "Scope"
+msgstr "범위"
+
+msgid "Current Tab"
+msgstr "현재 탭"
+
+msgid "All Tabs"
+msgstr "모든 탭"
+
+msgid "Replace All"
+msgstr "모두 바꾸기"
+
+msgid "A new version of the ADKOM Text Editor is available."
+msgstr "ADKOM Text Editor의 새 버전을 사용할 수 있습니다."
+
+msgid "Installed version:  {0}\nNew version:        {1}"
+msgstr "설치된 버전:  {0}\n새 버전:      {1}"
+
+msgid "Check for updates automatically"
+msgstr "자동으로 업데이트 확인"
+
+msgid "Later"
+msgstr "나중에"
+
+msgid "Install Now"
+msgstr "지금 설치"
+
+msgid "Undid {0} char(s)."
+msgstr "{0}자를 실행 취소했습니다."
+
+msgid "Redid {0} char(s)."
+msgstr "{0}자를 다시 실행했습니다."

@@ -169,12 +169,12 @@ namespace ADKOM.TextEditor
             // every platform (Windows/macOS/Linux), and building the menu on
             // click keeps item state (checks, enables, tab list) live. ---
             var toolbar = new Toolbar();
-            toolbar.Add(MenuButton("File", FillFileMenu));
-            toolbar.Add(MenuButton("Edit", FillEditMenu));
-            toolbar.Add(MenuButton("View", FillViewMenu));
-            toolbar.Add(MenuButton("Tools", FillToolsMenu));
-            toolbar.Add(MenuButton("Window", FillWindowMenu));
-            toolbar.Add(MenuButton("Help", FillHelpMenu));
+            toolbar.Add(MenuButton(L10n.Tr("File"), FillFileMenu));
+            toolbar.Add(MenuButton(L10n.Tr("Edit"), FillEditMenu));
+            toolbar.Add(MenuButton(L10n.Tr("View"), FillViewMenu));
+            toolbar.Add(MenuButton(L10n.Tr("Tools"), FillToolsMenu));
+            toolbar.Add(MenuButton(L10n.Tr("Window"), FillWindowMenu));
+            toolbar.Add(MenuButton(L10n.Tr("Help"), FillHelpMenu));
             toolbar.Add(new ToolbarSpacer { flex = true });
             _mdFormatBar = BuildMdFormatBar();
             _mdFormatBar.style.display = DisplayStyle.None; // transient: rendered MD mode only
@@ -182,7 +182,7 @@ namespace ADKOM.TextEditor
             _mdToggle = new ToolbarButton(ToggleMdMode);
             _mdToggle.style.display = DisplayStyle.None; // transient: .md tabs only
             toolbar.Add(_mdToggle);
-            var gear = new ToolbarButton(OpenSettings) { tooltip = "Settings" };
+            var gear = new ToolbarButton(OpenSettings) { tooltip = L10n.Tr("Settings") };
             var gearTex = EditorGUIUtility.IconContent("SettingsIcon").image;
             if (gearTex != null)
             {
@@ -243,7 +243,7 @@ namespace ADKOM.TextEditor
             _mdView.onInsertBlock += OnMdInsertBlock;
             _editorArea.Add(_mdView);
 
-            _emptyHint = new Label("No file open.\nFile → New, File → Open…, or right-click a text asset in the Project window.");
+            _emptyHint = new Label(L10n.Tr("No file open.\nFile → New, File → Open…, or right-click a text asset in the Project window."));
             _emptyHint.name = "empty-hint";
             _emptyHint.style.flexGrow = 1;
             _emptyHint.style.unityTextAlign = TextAnchor.MiddleCenter;
@@ -270,7 +270,7 @@ namespace ADKOM.TextEditor
             _updatingOverlay.style.justifyContent = Justify.Center;
             _updatingOverlay.focusable = true;
             var updatingLabel = new Label(
-                "Updating ADKOM Text Editor…\nPlease wait — the editor will reload when the update completes.");
+                L10n.Tr("Updating ADKOM Text Editor…\nPlease wait — the editor will reload when the update completes."));
             updatingLabel.style.unityTextAlign = TextAnchor.MiddleCenter;
             updatingLabel.style.whiteSpace = WhiteSpace.Normal;
             updatingLabel.style.fontSize = 14;
@@ -328,7 +328,7 @@ namespace ADKOM.TextEditor
         };
 
         static string WithSc(string label, string sc) =>
-            string.IsNullOrEmpty(sc) ? label : label + "\t" + sc;
+            string.IsNullOrEmpty(sc) ? L10n.Tr(label) : L10n.Tr(label) + "\t" + sc;
 
         void FillFileMenu(GenericMenu m)
         {
@@ -339,12 +339,12 @@ namespace ADKOM.TextEditor
             if (CanEditDoc)
             {
                 m.AddItem(new GUIContent(save), false, () => SaveFile(false));
-                m.AddItem(new GUIContent("Save As..."), false, () => SaveFile(true));
+                m.AddItem(new GUIContent(L10n.Tr("Save As...")), false, () => SaveFile(true));
             }
             else
             {
                 m.AddDisabledItem(new GUIContent(save));
-                m.AddDisabledItem(new GUIContent("Save As..."));
+                m.AddDisabledItem(new GUIContent(L10n.Tr("Save As...")));
             }
             m.AddItem(new GUIContent(WithSc("Save All", Sc("Ctrl+Shift+S", null, "Ctrl+S"))), false, SaveAll);
             m.AddSeparator("");
@@ -354,7 +354,7 @@ namespace ADKOM.TextEditor
             m.AddSeparator("");
             var recent = EditorConfig.RecentFiles;
             if (recent.Count == 0)
-                m.AddDisabledItem(new GUIContent("Recent Files"));
+                m.AddDisabledItem(new GUIContent(L10n.Tr("Recent Files")));
             else
             {
                 for (int i = 0; i < recent.Count; i++)
@@ -363,15 +363,15 @@ namespace ADKOM.TextEditor
                     // GenericMenu treats '/' as a submenu separator, so the
                     // label carries only the file name; ∕ fakes the dir path.
                     string dir = Path.GetDirectoryName(p)?.Replace('\\', '∕').Replace('/', '∕') ?? "";
-                    string label = $"Recent Files/{i + 1}  {Path.GetFileName(p)}   ({dir})";
+                    string label = $"{L10n.Tr("Recent Files")}/{i + 1}  {Path.GetFileName(p)}   ({dir})";
                     m.AddItem(new GUIContent(label), false, () => OpenRecent(p));
                 }
-                m.AddSeparator("Recent Files/");
-                m.AddItem(new GUIContent("Recent Files/Clear Recent Files"), false,
+                m.AddSeparator(L10n.Tr("Recent Files") + "/");
+                m.AddItem(new GUIContent(L10n.Tr("Recent Files") + "/" + L10n.Tr("Clear Recent Files")), false,
                     EditorConfig.ClearRecentFiles);
             }
             m.AddSeparator("");
-            m.AddItem(new GUIContent("Close Window"), false, Close);
+            m.AddItem(new GUIContent(L10n.Tr("Close Window")), false, Close);
         }
 
         void FillEditMenu(GenericMenu m)
@@ -410,19 +410,19 @@ namespace ADKOM.TextEditor
         void FillViewMenu(GenericMenu m)
         {
             // Alphabetical: Console, Line Numbers, Minimap, Word Wrap.
-            m.AddItem(new GUIContent("Console"), _consoleVisible, () => SetConsoleVisible(!_consoleVisible));
-            m.AddItem(new GUIContent("Line Numbers"), _showLineNumbers, () =>
+            m.AddItem(new GUIContent(L10n.Tr("Console")), _consoleVisible, () => SetConsoleVisible(!_consoleVisible));
+            m.AddItem(new GUIContent(L10n.Tr("Line Numbers")), _showLineNumbers, () =>
             {
                 _showLineNumbers = !_showLineNumbers;
                 _code.showLineNumbers = _showLineNumbers;
                 SyncSettingsControls();
             });
-            m.AddItem(new GUIContent("Minimap"), _minimapVisible, () =>
+            m.AddItem(new GUIContent(L10n.Tr("Minimap")), _minimapVisible, () =>
             {
                 _minimapVisible = !_minimapVisible;
                 _code.minimapVisible = _minimapVisible;
             });
-            m.AddItem(new GUIContent("Word Wrap"), _wordWrap, () =>
+            m.AddItem(new GUIContent(L10n.Tr("Word Wrap")), _wordWrap, () =>
             {
                 _wordWrap = !_wordWrap;
                 _code.wordWrap = _wordWrap;
@@ -432,13 +432,13 @@ namespace ADKOM.TextEditor
             foreach (var theme in HighlightTheme.All)
             {
                 var t = theme;
-                m.AddItem(new GUIContent("Theme/" + t.Name), CurrentTheme == t,
+                m.AddItem(new GUIContent(L10n.Tr("Theme") + "/" + t.Name), CurrentTheme == t,
                     () => { CurrentTheme = t; ApplyTheme(); SyncSettingsControls(); });
             }
             foreach (ThemeMode mode in System.Enum.GetValues(typeof(ThemeMode)))
             {
                 var md = mode;
-                m.AddItem(new GUIContent("Light-Dark Mode/" + md), CurrentThemeMode == md,
+                m.AddItem(new GUIContent(L10n.Tr("Light-Dark Mode") + "/" + md), CurrentThemeMode == md,
                     () => { CurrentThemeMode = md; ApplyTheme(); SyncSettingsControls(); });
             }
         }
@@ -466,7 +466,7 @@ namespace ADKOM.TextEditor
             m.AddSeparator("");
             if (!HasDocs)
             {
-                m.AddDisabledItem(new GUIContent("(no open tabs)"));
+                m.AddDisabledItem(new GUIContent(L10n.Tr("(no open tabs)")));
                 return;
             }
             for (int i = 0; i < _docs.Count; i++)
@@ -479,19 +479,19 @@ namespace ADKOM.TextEditor
 
         void FillHelpMenu(GenericMenu m)
         {
-            m.AddItem(new GUIContent("About ADKOM Text Editor..."), false, () =>
+            m.AddItem(new GUIContent(L10n.Tr("About ADKOM Text Editor...")), false, () =>
             {
                 var info = UnityEditor.PackageManager.PackageInfo.FindForAssembly(GetType().Assembly);
                 EditorUtility.DisplayDialog("ADKOM Text Editor",
-                    "ADKOM Text Editor " + (info != null ? info.version : "(unknown version)") +
-                    "\n\nA real code editor, living right inside the Unity Editor." +
-                    "\n100% Editor-only — nothing ships in player builds." +
-                    "\n\n(c) 2026 A Different Kind Of Mind Games (MIT License)", "OK");
+                    "ADKOM Text Editor " + (info != null ? info.version : L10n.Tr("(unknown version)")) +
+                    "\n\n" + L10n.Tr("A real code editor, living right inside the Unity Editor.") +
+                    "\n" + L10n.Tr("100% Editor-only — nothing ships in player builds.") +
+                    "\n\n(c) 2026 A Different Kind Of Mind Games (MIT License)", L10n.Tr("OK"));
             });
             m.AddSeparator("");
-            m.AddItem(new GUIContent("Repository"), false,
+            m.AddItem(new GUIContent(L10n.Tr("Repository")), false,
                 () => Application.OpenURL("https://github.com/adkom-games/ADKOM_TextEditor"));
-            m.AddItem(new GUIContent("Release Notes"), false,
+            m.AddItem(new GUIContent(L10n.Tr("Release Notes")), false,
                 () => Application.OpenURL("https://github.com/adkom-games/ADKOM_TextEditor/blob/main/Packages/com.adkom.text-editor/RELEASE-NOTES.md"));
             m.AddItem(new GUIContent("Report an Issue"), false,
                 () => Application.OpenURL("https://github.com/adkom-games/ADKOM_TextEditor/issues"));
@@ -572,8 +572,8 @@ namespace ADKOM.TextEditor
                     // the action — labeling the action read as the wrong state.
                     _mdToggle.text = Active.MdRendered ? "MD" : "</>";
                     _mdToggle.tooltip = Active.MdRendered
-                        ? "Rendered Markdown — click to switch to source"
-                        : "Markdown source — click to switch to rendered (click a block to edit it)";
+                        ? L10n.Tr("Rendered Markdown — click to switch to source")
+                        : L10n.Tr("Markdown source — click to switch to rendered (click a block to edit it)");
                 }
             }
             bool rendered = isMd && Active.MdRendered;
@@ -730,11 +730,11 @@ namespace ADKOM.TextEditor
         {
             if (!EditorConfig.SemanticsEnabled)
             {
-                if (EditorUtility.DisplayDialog("Go to Definition",
-                    "Go to Definition needs Semantic Features, which are currently disabled.\n\n" +
+                if (EditorUtility.DisplayDialog(L10n.Tr("Go to Definition"),
+                    L10n.Tr("Go to Definition needs Semantic Features, which are currently disabled.\n\n" +
                     "Enable them now? The semantics module — and, if your project has no Roslyn, " +
-                    "the bundled MIT-licensed Roslyn assemblies — will be installed automatically.",
-                    "Enable and Install", "Cancel"))
+                    "the bundled MIT-licensed Roslyn assemblies — will be installed automatically."),
+                    L10n.Tr("Enable and Install"), L10n.Tr("Cancel")))
                 {
                     EditorConfig.SemanticsEnabled = true;
                     SyncSettingsControls();
@@ -746,7 +746,7 @@ namespace ADKOM.TextEditor
             if (provider == null)
             {
                 // Informational only — no decision to make, so no modal.
-                PostStatus("Semantic features are still installing or compiling — try again in a moment.");
+                PostStatus(L10n.Tr("Semantic features are still installing or compiling — try again in a moment."));
                 SemanticSetup.EnsureInstalled(silent: true); // nudge any stalled step
                 return;
             }
@@ -755,7 +755,7 @@ namespace ADKOM.TextEditor
             string text = _code.value;
             int offset = _code.LineColToIndex(line, col);
             var ctx = _mainCtx;
-            PostStatus("Resolving symbol…");
+            PostStatus(L10n.Tr("Resolving symbol…"));
             System.Threading.Tasks.Task.Run(() =>
             {
                 string status = null;
@@ -772,12 +772,12 @@ namespace ADKOM.TextEditor
                             if (provider.TryGetMetadataSource(path, text, offset, out metaTitle, out metaSource, out metaLine))
                                 status = null;
                             else
-                                status = "Defined in " + origin;
+                                status = L10n.Tr("Defined in ") + origin;
                         }
                     }
-                    else status = "Definition not found.";
+                    else status = L10n.Tr("Definition not found.");
                 }
-                catch (System.Exception ex) { status = "Go to Definition failed: " + ex.Message; }
+                catch (System.Exception ex) { status = L10n.Tr("Go to Definition failed: ") + ex.Message; }
                 ctx.Post(_ =>
                 {
                     if (status != null) { PostStatus(status); return; }
@@ -858,13 +858,13 @@ namespace ADKOM.TextEditor
 
             _settingsPane = new VisualElement { name = "settings-pane" };
 
-            var title = new Label("Editor Settings");
+            var title = new Label(L10n.Tr("Editor Settings"));
             title.AddToClassList("settings-title");
             _settingsPane.Add(title);
 
             var themeNames = new List<string>();
             foreach (var t in HighlightTheme.All) themeNames.Add(t.Name);
-            _settingsTheme = new PopupField<string>("Color Theme", themeNames, CurrentTheme.Name);
+            _settingsTheme = new PopupField<string>(L10n.Tr("Color Theme"), themeNames, CurrentTheme.Name);
             _settingsTheme.RegisterValueChangedCallback(e =>
             {
                 CurrentTheme = HighlightTheme.ByName(e.newValue);
@@ -872,7 +872,7 @@ namespace ADKOM.TextEditor
             });
             _settingsPane.Add(_settingsTheme);
 
-            _settingsMode = new EnumField("Light/Dark Mode", CurrentThemeMode);
+            _settingsMode = new EnumField(L10n.Tr("Light/Dark Mode"), CurrentThemeMode);
             _settingsMode.RegisterValueChangedCallback(e =>
             {
                 CurrentThemeMode = (ThemeMode)e.newValue;
@@ -880,7 +880,7 @@ namespace ADKOM.TextEditor
             });
             _settingsPane.Add(_settingsMode);
 
-            _settingsLines = new Toggle("Line Numbers") { value = _showLineNumbers };
+            _settingsLines = new Toggle(L10n.Tr("Line Numbers")) { value = _showLineNumbers };
             _settingsLines.RegisterValueChangedCallback(e =>
             {
                 _showLineNumbers = e.newValue;
@@ -888,7 +888,7 @@ namespace ADKOM.TextEditor
             });
             _settingsPane.Add(_settingsLines);
 
-            _settingsWrap = new Toggle("Word Wrap") { value = _wordWrap };
+            _settingsWrap = new Toggle(L10n.Tr("Word Wrap")) { value = _wordWrap };
             _settingsWrap.RegisterValueChangedCallback(e =>
             {
                 _wordWrap = e.newValue;
@@ -896,27 +896,27 @@ namespace ADKOM.TextEditor
             });
             _settingsPane.Add(_settingsWrap);
 
-            _settingsTabSize = new IntegerField("Tab Size") { value = EditorConfig.TabSize };
+            _settingsTabSize = new IntegerField(L10n.Tr("Tab Size")) { value = EditorConfig.TabSize };
             _settingsTabSize.RegisterValueChangedCallback(e =>
             {
                 EditorConfig.TabSize = e.newValue;
                 _settingsTabSize.SetValueWithoutNotify(EditorConfig.TabSize); // clamp echo
                 if (_code != null) _code.TabSize = EditorConfig.TabSize;
             });
-            _settingsTabSize.tooltip = "Spaces a tab renders as. Applies to files opened after the change.";
+            _settingsTabSize.tooltip = L10n.Tr("Spaces a tab renders as. Applies to files opened after the change.");
             _settingsPane.Add(_settingsTabSize);
 
-            _settingsKeymap = new EnumField("Keyboard Layout", EditorConfig.Keymap);
+            _settingsKeymap = new EnumField(L10n.Tr("Keyboard Layout"), EditorConfig.Keymap);
             _settingsKeymap.RegisterValueChangedCallback(e =>
                 EditorConfig.Keymap = (KeymapLayout)e.newValue);
-            _settingsKeymap.tooltip = "Which IDE's default shortcuts to use for the commands this editor supports.";
+            _settingsKeymap.tooltip = L10n.Tr("Which IDE's default shortcuts to use for the commands this editor supports.");
             _settingsPane.Add(_settingsKeymap);
 
             var fontNames = new List<string> { "(Default Monospace)" };
             fontNames.AddRange(Font.GetOSInstalledFontNames().OrderBy(n => n));
             string currentFont = string.IsNullOrEmpty(EditorConfig.FontName) ? fontNames[0]
                 : (fontNames.Contains(EditorConfig.FontName) ? EditorConfig.FontName : fontNames[0]);
-            _settingsFont = new PopupField<string>("Font", fontNames, currentFont);
+            _settingsFont = new PopupField<string>(L10n.Tr("Font"), fontNames, currentFont);
             _settingsFont.RegisterValueChangedCallback(e =>
             {
                 EditorConfig.FontName = e.newValue == fontNames[0] ? string.Empty : e.newValue;
@@ -924,14 +924,14 @@ namespace ADKOM.TextEditor
             });
             _settingsPane.Add(_settingsFont);
 
-            _settingsFontSize = new IntegerField("Font Size") { value = EditorConfig.FontSize };
+            _settingsFontSize = new IntegerField(L10n.Tr("Font Size")) { value = EditorConfig.FontSize };
             _settingsFontSize.RegisterValueChangedCallback(e =>
             {
                 EditorConfig.FontSize = e.newValue;
                 _settingsFontSize.SetValueWithoutNotify(EditorConfig.FontSize); // clamp echo (8..40)
                 _code?.ApplyFontConfig();
             });
-            _settingsFontSize.tooltip = "Also: Ctrl+MouseWheel, Ctrl+'+'/'-', Ctrl+0 resets.";
+            _settingsFontSize.tooltip = L10n.Tr("Also: Ctrl+MouseWheel, Ctrl+'+'/'-', Ctrl+0 resets.");
             _settingsPane.Add(_settingsFontSize);
 
             // External-editor fallback (used when ATE is Unity's selected
@@ -943,16 +943,16 @@ namespace ADKOM.TextEditor
             string currentLabel = fallbackLabels[0];
             foreach (var kv in editors)
                 if (kv.Key == EditorConfig.FallbackEditorPath) currentLabel = kv.Value;
-            _settingsFallback = new PopupField<string>("External Fallback", fallbackLabels, currentLabel);
+            _settingsFallback = new PopupField<string>(L10n.Tr("External Fallback"), fallbackLabels, currentLabel);
             _settingsFallback.RegisterValueChangedCallback(e =>
             {
                 int idx = fallbackLabels.IndexOf(e.newValue);
                 EditorConfig.FallbackEditorPath = idx <= 0 ? string.Empty : editors[idx - 1].Key;
             });
-            _settingsFallback.tooltip = "When ATE is the External Script Editor, non-text requests (solutions, binaries, project sync) are forwarded here.";
+            _settingsFallback.tooltip = L10n.Tr("When ATE is the External Script Editor, non-text requests (solutions, binaries, project sync) are forwarded here.");
             _settingsPane.Add(_settingsFallback);
 
-            _settingsSemantics = new Toggle("Semantic Features") { value = EditorConfig.SemanticsEnabled };
+            _settingsSemantics = new Toggle(L10n.Tr("Semantic Features")) { value = EditorConfig.SemanticsEnabled };
             _settingsSemantics.RegisterValueChangedCallback(e =>
             {
                 EditorConfig.SemanticsEnabled = e.newValue;
@@ -960,40 +960,40 @@ namespace ADKOM.TextEditor
                 else ScheduleSemanticPassCancel();
                 RefreshFormatter();
             });
-            _settingsSemantics.tooltip = "Compiler-accurate colors and Go to Definition. If the project has no Roslyn, enabling installs the bundled MIT-licensed Roslyn assemblies (see THIRD-PARTY-NOTICES).";
+            _settingsSemantics.tooltip = L10n.Tr("Compiler-accurate colors and Go to Definition. If the project has no Roslyn, enabling installs the bundled MIT-licensed Roslyn assemblies (see THIRD-PARTY-NOTICES).");
             _settingsPane.Add(_settingsSemantics);
 
-            _settingsSmooth = new Toggle("Smooth Scrolling") { value = EditorConfig.SmoothScrolling };
+            _settingsSmooth = new Toggle(L10n.Tr("Smooth Scrolling")) { value = EditorConfig.SmoothScrolling };
             _settingsSmooth.RegisterValueChangedCallback(e => EditorConfig.SmoothScrolling = e.newValue);
-            _settingsSmooth.tooltip = "Animate wheel scrolling instead of stepping line by line.";
+            _settingsSmooth.tooltip = L10n.Tr("Animate wheel scrolling instead of stepping line by line.");
             _settingsPane.Add(_settingsSmooth);
 
-            _settingsMdRendered = new Toggle("Open Markdown Rendered") { value = EditorConfig.MdOpenRendered };
+            _settingsMdRendered = new Toggle(L10n.Tr("Open Markdown Rendered")) { value = EditorConfig.MdOpenRendered };
             _settingsMdRendered.RegisterValueChangedCallback(e => EditorConfig.MdOpenRendered = e.newValue);
-            _settingsMdRendered.tooltip = "Default view when opening .md files: rendered (WYSIWYG) when on, source when off. The MD/source toggle still switches per tab.";
+            _settingsMdRendered.tooltip = L10n.Tr("Default view when opening .md files: rendered (WYSIWYG) when on, source when off. The MD/source toggle still switches per tab.");
             _settingsPane.Add(_settingsMdRendered);
 
-            _settingsRecentMax = new IntegerField("Recent Files Count") { value = EditorConfig.RecentFilesMax };
+            _settingsRecentMax = new IntegerField(L10n.Tr("Recent Files Count")) { value = EditorConfig.RecentFilesMax };
             _settingsRecentMax.RegisterValueChangedCallback(e =>
             {
                 EditorConfig.RecentFilesMax = e.newValue;
                 _settingsRecentMax.SetValueWithoutNotify(EditorConfig.RecentFilesMax); // clamp echo (1-30)
             });
-            _settingsRecentMax.tooltip = "How many entries File → Recent Files keeps (1-30).";
+            _settingsRecentMax.tooltip = L10n.Tr("How many entries File → Recent Files keeps (1-30).");
             _settingsPane.Add(_settingsRecentMax);
 
-            _settingsAutoUpdate = new Toggle("Automatic Updates") { value = EditorConfig.AutoUpdate };
+            _settingsAutoUpdate = new Toggle(L10n.Tr("Automatic Updates")) { value = EditorConfig.AutoUpdate };
             _settingsAutoUpdate.RegisterValueChangedCallback(e => EditorConfig.AutoUpdate = e.newValue);
-            _settingsAutoUpdate.tooltip = "Check GitHub for new releases and offer to install them.";
+            _settingsAutoUpdate.tooltip = L10n.Tr("Check GitHub for new releases and offer to install them.");
             _settingsPane.Add(_settingsAutoUpdate);
 
-            _settingsUpdateFreq = new IntegerField("Check Every (days)") { value = EditorConfig.UpdateFrequencyDays };
+            _settingsUpdateFreq = new IntegerField(L10n.Tr("Check Every (days)")) { value = EditorConfig.UpdateFrequencyDays };
             _settingsUpdateFreq.RegisterValueChangedCallback(e =>
             {
                 EditorConfig.UpdateFrequencyDays = e.newValue;
                 _settingsUpdateFreq.SetValueWithoutNotify(EditorConfig.UpdateFrequencyDays); // clamp echo (min 1)
             });
-            _settingsUpdateFreq.tooltip = "Days between automatic update checks. 1 = daily; never more often than once per day.";
+            _settingsUpdateFreq.tooltip = L10n.Tr("Days between automatic update checks. 1 = daily; never more often than once per day.");
             _settingsPane.Add(_settingsUpdateFreq);
 
             var checkNowRow = new VisualElement();
@@ -1004,14 +1004,14 @@ namespace ADKOM.TextEditor
             updateStatus.style.alignSelf = Align.Center;
             var checkNow = new Button(() =>
             {
-                updateStatus.text = "Checking…";
+                updateStatus.text = L10n.Tr("Checking…");
                 UpdateChecker.CheckNow(manual: true, r => updateStatus.text = r);
-            }) { text = "Check for Updates Now" };
+            }) { text = L10n.Tr("Check for Updates Now") };
             checkNowRow.Add(checkNow);
             checkNowRow.Add(updateStatus);
             _settingsPane.Add(checkNowRow);
 
-            var versionLabel = new Label("Installed version: " + UpdateChecker.CurrentVersion());
+            var versionLabel = new Label(L10n.Tr("Installed version: ") + UpdateChecker.CurrentVersion());
             versionLabel.style.opacity = 0.6f;
             versionLabel.style.marginTop = 4;
             _settingsPane.Add(versionLabel);
@@ -1249,20 +1249,20 @@ namespace ADKOM.TextEditor
             var m = new GenericMenu();
             if (!doc.IsSettings)
             {
-                m.AddItem(new GUIContent("Save"), false, () => SaveTabAt(index, saveAs: false));
-                m.AddItem(new GUIContent("Save As..."), false, () => SaveTabAt(index, saveAs: true));
+                m.AddItem(new GUIContent(L10n.Tr("Save")), false, () => SaveTabAt(index, saveAs: false));
+                m.AddItem(new GUIContent(L10n.Tr("Save As...")), false, () => SaveTabAt(index, saveAs: true));
             }
             else
             {
-                m.AddDisabledItem(new GUIContent("Save"));
-                m.AddDisabledItem(new GUIContent("Save As..."));
+                m.AddDisabledItem(new GUIContent(L10n.Tr("Save")));
+                m.AddDisabledItem(new GUIContent(L10n.Tr("Save As...")));
             }
             m.AddSeparator("");
-            m.AddItem(new GUIContent("Close"), false, () => CloseTab(index));
+            m.AddItem(new GUIContent(L10n.Tr("Close")), false, () => CloseTab(index));
             if (_docs.Count > 1)
-                m.AddItem(new GUIContent("Close Other Tabs"), false, () => CloseOtherTabs(index));
+                m.AddItem(new GUIContent(L10n.Tr("Close Other Tabs")), false, () => CloseOtherTabs(index));
             else
-                m.AddDisabledItem(new GUIContent("Close Other Tabs"));
+                m.AddDisabledItem(new GUIContent(L10n.Tr("Close Other Tabs")));
             m.ShowAsContext();
         }
 
@@ -1307,11 +1307,11 @@ namespace ADKOM.TextEditor
                 }
             }
             ShowBanner(dirty.Count == 1
-                    ? $"'{dirty[0].DisplayName}' has unsaved changes."
-                    : $"{dirty.Count} tabs have unsaved changes.",
-                ("Save All", () => CloseAll(true)),
-                ("Discard All", () => CloseAll(false)),
-                ("Cancel", HideBanner));
+                    ? string.Format(L10n.Tr("'{0}' has unsaved changes."), dirty[0].DisplayName)
+                    : string.Format(L10n.Tr("{0} tabs have unsaved changes."), dirty.Count),
+                (L10n.Tr("Save All"), () => CloseAll(true)),
+                (L10n.Tr("Discard All"), () => CloseAll(false)),
+                (L10n.Tr("Cancel"), HideBanner));
         }
 
         void SwitchTo(int index)
@@ -1376,10 +1376,10 @@ namespace ADKOM.TextEditor
                 // Non-modal unsaved-changes prompt (the old modal froze
                 // Unity's main loop). Navigating away cancels implicitly.
                 if (index != _active) SwitchTo(index);
-                ShowBanner($"'{doc.DisplayName}' has unsaved changes.",
-                    ("Save", () => { HideBanner(); if (FileService.Save(doc)) CloseTabForce(doc); }),
-                    ("Discard", () => { HideBanner(); CloseTabForce(doc); }),
-                    ("Cancel", HideBanner));
+                ShowBanner(string.Format(L10n.Tr("'{0}' has unsaved changes."), doc.DisplayName),
+                    (L10n.Tr("Save"), () => { HideBanner(); if (FileService.Save(doc)) CloseTabForce(doc); }),
+                    (L10n.Tr("Discard"), () => { HideBanner(); CloseTabForce(doc); }),
+                    (L10n.Tr("Cancel"), HideBanner));
                 return;
             }
             CloseTabForce(doc);
@@ -1417,7 +1417,7 @@ namespace ADKOM.TextEditor
             {
                 EditorConfig.RemoveRecentFile(path);
                 AteConsole.Warn("[ADKOM Text Editor] Recent file no longer exists, removed from the list: " + path);
-                PostStatus("Recent file no longer exists: " + Path.GetFileName(path));
+                PostStatus(L10n.Tr("Recent file no longer exists: ") + Path.GetFileName(path));
                 return;
             }
             OpenPath(path);
@@ -1469,8 +1469,8 @@ namespace ADKOM.TextEditor
         {
             if (doc != null && doc.FileDeletedOnDisk())
             {
-                ShowBanner($"'{doc.DisplayName}' was deleted from disk. Keep the buffer (Save can bring the file back), or close the tab?",
-                    ("Keep Buffer", KeepDeletedBufferActive), ("Close Tab", CloseDeletedActive));
+                ShowBanner(string.Format(L10n.Tr("'{0}' was deleted from disk. Keep the buffer (Save can bring the file back), or close the tab?"), doc.DisplayName),
+                    (L10n.Tr("Keep Buffer"), KeepDeletedBufferActive), (L10n.Tr("Close Tab"), CloseDeletedActive));
                 return true;
             }
             if (doc == null || !doc.FileChangedOnDisk())
@@ -1478,8 +1478,8 @@ namespace ADKOM.TextEditor
                 HideBanner();
                 return false;
             }
-            ShowBanner($"'{doc.DisplayName}' was modified outside the editor. Reload it? (unsaved changes here would be lost)",
-                ("Reload", ReloadActiveFromDisk), ("Keep Mine", KeepMineActive));
+            ShowBanner(string.Format(L10n.Tr("'{0}' was modified outside the editor. Reload it? (unsaved changes here would be lost)"), doc.DisplayName),
+                (L10n.Tr("Reload"), ReloadActiveFromDisk), (L10n.Tr("Keep Mine"), KeepMineActive));
             return true;
         }
 
@@ -1513,7 +1513,7 @@ namespace ADKOM.TextEditor
             RebuildTabs();
             UpdateTitle();
             _notifyBar.style.display = DisplayStyle.None;
-            PostStatus("Kept buffer of deleted file " + Active.DisplayName + " — Save to restore it to disk.");
+            PostStatus(string.Format(L10n.Tr("Kept buffer of deleted file {0} — Save to restore it to disk."), Active.DisplayName));
         }
 
         void CloseDeletedActive()
@@ -1533,7 +1533,7 @@ namespace ADKOM.TextEditor
             RebuildTabs();
             UpdateTitle();
             _notifyBar.style.display = DisplayStyle.None;
-            PostStatus("Reloaded " + Active.DisplayName + " from disk.");
+            PostStatus(string.Format(L10n.Tr("Reloaded {0} from disk."), Active.DisplayName));
         }
 
         void KeepMineActive()
@@ -1545,7 +1545,7 @@ namespace ADKOM.TextEditor
             RebuildTabs();
             UpdateTitle();
             _notifyBar.style.display = DisplayStyle.None;
-            PostStatus("Kept in-editor version of " + Active.DisplayName + ".");
+            PostStatus(string.Format(L10n.Tr("Kept in-editor version of {0}."), Active.DisplayName));
         }
 
         // --- Status-bar mini-buffer (emacs-style): a static prompt plus an
@@ -1663,13 +1663,13 @@ namespace ADKOM.TextEditor
                     () => NavigateToDefinition(line, col));
             if (query != null)
             {
-                m.AddItem(new GUIContent($"Find Occurrences of '{Truncate(query, 24)}'"), false,
+                m.AddItem(new GUIContent(string.Format(L10n.Tr("Find Occurrences of '{0}'"), Truncate(query, 24))), false,
                     () => FindReplaceWindow.OpenWithQuery(this, query, allTabs: false));
-                m.AddItem(new GUIContent($"Find in Tabs '{Truncate(query, 24)}'"), false,
+                m.AddItem(new GUIContent(string.Format(L10n.Tr("Find in Tabs '{0}'"), Truncate(query, 24))), false,
                     () => FindReplaceWindow.OpenWithQuery(this, query, allTabs: true));
             }
             else if (!isCs)
-                m.AddDisabledItem(new GUIContent("Find Occurrences"));
+                m.AddDisabledItem(new GUIContent(L10n.Tr("Find Occurrences")));
             m.AddSeparator("");
 
             // --- Clipboard ---
@@ -1686,9 +1686,9 @@ namespace ADKOM.TextEditor
 
             // --- File ---
             m.AddItem(new GUIContent(WithSc("Save", Sc("Ctrl+S", "Ctrl+S", null))), false, () => SaveFile(false));
-            m.AddItem(new GUIContent("Save As..."), false, () => SaveFile(true));
+            m.AddItem(new GUIContent(L10n.Tr("Save As...")), false, () => SaveFile(true));
             m.AddItem(new GUIContent(WithSc("Close Tab", Sc("Ctrl+F4", "Ctrl+W", "Ctrl+F4"))), false, () => CloseTab(_active));
-            AddOrDisable(m, "Show in File Explorer", Active.HasFile,
+            AddOrDisable(m, L10n.Tr("Show in File Explorer"), Active.HasFile,
                 () => EditorUtility.RevealInFinder(Path.GetFullPath(Active.FilePath)));
             m.AddSeparator("");
             m.AddItem(new GUIContent(WithSc("Find...", "Ctrl+F")), false, () => FindReplaceWindow.Open(this, false, false));
@@ -1705,7 +1705,7 @@ namespace ADKOM.TextEditor
             {
                 m.AddSeparator("");
                 m.AddItem(new GUIContent(Active.MdRendered
-                    ? "Switch to Markdown Source" : "Switch to Rendered Markdown"), false, ToggleMdMode);
+                    ? L10n.Tr("Switch to Markdown Source") : L10n.Tr("Switch to Rendered Markdown")), false, ToggleMdMode);
             }
 
             return m;
@@ -1725,14 +1725,14 @@ namespace ADKOM.TextEditor
         void GotoLineCommand()
         {
             if (!CanEditDoc) return;
-            StartStatusPrompt("Goto Line:", digitsOnly: true, s =>
+            StartStatusPrompt(L10n.Tr("Goto Line:"), digitsOnly: true, s =>
             {
                 if (!int.TryParse(s, out int line)) return;
                 int clamped = Mathf.Clamp(line, 1, _code.LineCount);
                 _code.GoToLine(clamped, 1);
                 PostStatus(clamped == line
-                    ? $"Line {clamped}."
-                    : $"Line {line} is out of range — went to line {clamped} (1-{_code.LineCount}).");
+                    ? string.Format(L10n.Tr("Line {0}."), clamped)
+                    : string.Format(L10n.Tr("Line {0} is out of range — went to line {1} (1-{2})."), line, clamped, _code.LineCount));
             });
         }
 
@@ -2250,14 +2250,14 @@ namespace ADKOM.TextEditor
             if (!HasDocs)
             {
                 // A blank bar reads as "the status bar disappeared".
-                _statusLeft.text = "No file open";
+                _statusLeft.text = L10n.Tr("No file open");
                 _statusRight.text = string.Empty;
                 return;
             }
 
             if (Active.IsSettings)
             {
-                _statusLeft.text = "Settings";
+                _statusLeft.text = L10n.Tr("Settings");
                 _statusRight.text = string.Empty;
                 return;
             }
