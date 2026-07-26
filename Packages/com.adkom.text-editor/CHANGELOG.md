@@ -20,7 +20,20 @@ All notable changes to this package are documented here. Format follows
   active tab) is saved on close and restored when the window reopens,
   including across editor restarts. Files missing by then are skipped.
 
+### Fixed
+- Go to Definition (F12 / Ctrl+B / Ctrl+Click) now works inside "from
+  metadata" views: the stub remembers which real file it was opened
+  from and resolves symbols against that compilation — chaining from
+  stub to stub works, and stubs get semantic coloring too.
+
 ### Changed
+- Menu items now display their keyboard shortcuts (matching the active
+  keyboard layout) — Cut Ctrl+X, Copy Ctrl+C, and friends across the
+  File, Edit, Tools, and Window menus.
+- Clipboard and Select All shortcuts work with focus anywhere in the
+  ATE window (menu bar, tab bar, gutter), not just inside the code
+  view. Text inputs (settings fields, Markdown block editor) and the
+  selectable console keep their own handling.
 - Console and Minimap moved from the Window menu to the View menu,
   where all four view toggles now sit alphabetically: Console, Line
   Numbers, Minimap, Word Wrap.

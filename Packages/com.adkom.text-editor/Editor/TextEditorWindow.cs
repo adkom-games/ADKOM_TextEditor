@@ -320,25 +320,39 @@ namespace ADKOM.TextEditor
             return btn;
         }
 
+        /// <summary>Shortcut hint for the active keymap; null = no shortcut
+        /// there. Rendered after '\t' so native menus right-align it.</summary>
+        string Sc(string vs, string vscode, string rider) => EditorConfig.Keymap switch
+        {
+            KeymapLayout.VSCode => vscode,
+            KeymapLayout.Rider => rider,
+            _ => vs
+        };
+
+        static string WithSc(string label, string sc) =>
+            string.IsNullOrEmpty(sc) ? label : label + "\t" + sc;
+
         void FillFileMenu(GenericMenu m)
         {
-            m.AddItem(new GUIContent("New"), false, NewFile);
-            m.AddItem(new GUIContent("Open..."), false, OpenFile);
+            m.AddItem(new GUIContent(WithSc("New", Sc("Ctrl+N", "Ctrl+N", null))), false, NewFile);
+            m.AddItem(new GUIContent(WithSc("Open...", Sc("Ctrl+O", "Ctrl+O", null))), false, OpenFile);
             m.AddSeparator("");
+            string save = WithSc("Save", Sc("Ctrl+S", "Ctrl+S", null));
             if (CanEditDoc)
             {
-                m.AddItem(new GUIContent("Save"), false, () => SaveFile(false));
+                m.AddItem(new GUIContent(save), false, () => SaveFile(false));
                 m.AddItem(new GUIContent("Save As..."), false, () => SaveFile(true));
             }
             else
             {
-                m.AddDisabledItem(new GUIContent("Save"));
+                m.AddDisabledItem(new GUIContent(save));
                 m.AddDisabledItem(new GUIContent("Save As..."));
             }
-            m.AddItem(new GUIContent("Save All"), false, SaveAll);
+            m.AddItem(new GUIContent(WithSc("Save All", Sc("Ctrl+Shift+S", null, "Ctrl+S"))), false, SaveAll);
             m.AddSeparator("");
-            if (HasDocs) m.AddItem(new GUIContent("Close Tab"), false, () => CloseTab(_active));
-            else m.AddDisabledItem(new GUIContent("Close Tab"));
+            string closeTab = WithSc("Close Tab", Sc("Ctrl+F4", "Ctrl+W", "Ctrl+F4"));
+            if (HasDocs) m.AddItem(new GUIContent(closeTab), false, () => CloseTab(_active));
+            else m.AddDisabledItem(new GUIContent(closeTab));
             m.AddSeparator("");
             var recent = EditorConfig.RecentFiles;
             if (recent.Count == 0)
@@ -370,28 +384,28 @@ namespace ADKOM.TextEditor
                 if (enabled) m.AddItem(new GUIContent(label), false, () => a());
                 else m.AddDisabledItem(new GUIContent(label));
             }
-            Item("Undo", edit && _code.CanUndo, _code.Undo);
-            Item("Redo", edit && _code.CanRedo, _code.Redo);
+            Item(WithSc("Undo", "Ctrl+Z"), edit && _code.CanUndo, _code.Undo);
+            Item(WithSc("Redo", Sc("Ctrl+Y", "Ctrl+Y", "Ctrl+Shift+Z")), edit && _code.CanRedo, _code.Redo);
             m.AddSeparator("");
-            Item("Cut", edit && _code.HasSelectionPublic, _code.Cut);
-            Item("Copy", edit && _code.HasSelectionPublic, _code.Copy);
-            Item("Paste", edit && !string.IsNullOrEmpty(EditorGUIUtility.systemCopyBuffer), _code.Paste);
-            Item("Select All", edit, _code.SelectAll);
+            Item(WithSc("Cut", "Ctrl+X"), edit && _code.HasSelectionPublic, _code.Cut);
+            Item(WithSc("Copy", "Ctrl+C"), edit && _code.HasSelectionPublic, _code.Copy);
+            Item(WithSc("Paste", "Ctrl+V"), edit && !string.IsNullOrEmpty(EditorGUIUtility.systemCopyBuffer), _code.Paste);
+            Item(WithSc("Select All", "Ctrl+A"), edit, _code.SelectAll);
             m.AddSeparator("");
-            Item("Duplicate Line", edit, DuplicateLine);
-            Item("Delete Line", edit, DeleteLine);
-            Item("Move Line Up", edit, () => MoveLine(-1));
-            Item("Move Line Down", edit, () => MoveLine(1));
-            Item("Toggle Comment", edit, ToggleComment);
-            Item("Indent", edit, InsertTab);
-            Item("Unindent", edit, UnindentSelection);
+            Item(WithSc("Duplicate Line", Sc("Ctrl+D", "Shift+Alt+Down", "Ctrl+D")), edit, DuplicateLine);
+            Item(WithSc("Delete Line", Sc("Ctrl+L", "Ctrl+Shift+K", "Ctrl+Y")), edit, DeleteLine);
+            Item(WithSc("Move Line Up", Sc("Alt+Up", "Alt+Up", "Alt+Shift+Up")), edit, () => MoveLine(-1));
+            Item(WithSc("Move Line Down", Sc("Alt+Down", "Alt+Down", "Alt+Shift+Down")), edit, () => MoveLine(1));
+            Item(WithSc("Toggle Comment", "Ctrl+/"), edit, ToggleComment);
+            Item(WithSc("Indent", "Tab"), edit, InsertTab);
+            Item(WithSc("Unindent", "Shift+Tab"), edit, UnindentSelection);
             m.AddSeparator("");
-            m.AddItem(new GUIContent("Find..."), false, () => FindReplaceWindow.Open(this, false, false));
-            m.AddItem(new GUIContent("Find in Tabs..."), false, () => FindReplaceWindow.Open(this, false, true));
-            m.AddItem(new GUIContent("Replace..."), false, () => FindReplaceWindow.Open(this, true, false));
-            m.AddItem(new GUIContent("Replace in Tabs..."), false, () => FindReplaceWindow.Open(this, true, true));
-            m.AddItem(new GUIContent("Find Next"), false, () => FindReplaceWindow.FindAgain(this, false));
-            m.AddItem(new GUIContent("Find Previous"), false, () => FindReplaceWindow.FindAgain(this, true));
+            m.AddItem(new GUIContent(WithSc("Find...", "Ctrl+F")), false, () => FindReplaceWindow.Open(this, false, false));
+            m.AddItem(new GUIContent(WithSc("Find in Tabs...", "Ctrl+Shift+F")), false, () => FindReplaceWindow.Open(this, false, true));
+            m.AddItem(new GUIContent(WithSc("Replace...", Sc("Ctrl+H", "Ctrl+H", "Ctrl+R"))), false, () => FindReplaceWindow.Open(this, true, false));
+            m.AddItem(new GUIContent(WithSc("Replace in Tabs...", Sc("Ctrl+Shift+H", "Ctrl+Shift+H", "Ctrl+Shift+R"))), false, () => FindReplaceWindow.Open(this, true, true));
+            m.AddItem(new GUIContent(WithSc("Find Next", "F3")), false, () => FindReplaceWindow.FindAgain(this, false));
+            m.AddItem(new GUIContent(WithSc("Find Previous", "Shift+F3")), false, () => FindReplaceWindow.FindAgain(this, true));
         }
 
         void FillViewMenu(GenericMenu m)
@@ -432,21 +446,23 @@ namespace ADKOM.TextEditor
 
         void FillToolsMenu(GenericMenu m)
         {
-            m.AddItem(new GUIContent("Options..."), false, OpenSettingsPage);
+            m.AddItem(new GUIContent(WithSc("Options...", Sc(null, "Ctrl+,", "Ctrl+Alt+S"))), false, OpenSettingsPage);
         }
 
         void FillWindowMenu(GenericMenu m)
         {
             bool multi = _docs.Count > 1;
+            string next = WithSc("Next Tab", Sc("Ctrl+Tab", "Ctrl+PgDn", "Alt+Right"));
+            string prev = WithSc("Previous Tab", Sc("Ctrl+Shift+Tab", "Ctrl+PgUp", "Alt+Left"));
             if (multi)
             {
-                m.AddItem(new GUIContent("Next Tab"), false, () => StepTab(1));
-                m.AddItem(new GUIContent("Previous Tab"), false, () => StepTab(-1));
+                m.AddItem(new GUIContent(next), false, () => StepTab(1));
+                m.AddItem(new GUIContent(prev), false, () => StepTab(-1));
             }
             else
             {
-                m.AddDisabledItem(new GUIContent("Next Tab"));
-                m.AddDisabledItem(new GUIContent("Previous Tab"));
+                m.AddDisabledItem(new GUIContent(next));
+                m.AddDisabledItem(new GUIContent(prev));
             }
             m.AddSeparator("");
             if (!HasDocs)
@@ -677,8 +693,9 @@ namespace ADKOM.TextEditor
         void ScheduleSemanticPass()
         {
             if (!EditorConfig.SemanticsEnabled) return;
-            if (SemanticServices.Provider == null || !CanEditDoc || !Active.HasFile ||
-                !Active.FilePath.EndsWith(".cs", System.StringComparison.OrdinalIgnoreCase))
+            string ctxPath = SemanticContextPath;
+            if (SemanticServices.Provider == null || ctxPath == null ||
+                (Active.HasFile && !Active.FilePath.EndsWith(".cs", System.StringComparison.OrdinalIgnoreCase)))
                 return;
             if (_semanticPending == null)
                 _semanticPending = rootVisualElement.schedule.Execute(StartSemanticPass);
@@ -688,8 +705,9 @@ namespace ADKOM.TextEditor
         void StartSemanticPass()
         {
             var provider = SemanticServices.Provider;
-            if (provider == null || !CanEditDoc || !Active.HasFile) return;
-            string path = Active.FilePath;
+            if (provider == null) return;
+            string path = SemanticContextPath;
+            if (path == null) return;
             string text = _code.value;
             int version = _code.DocVersion;
             var ctx = _mainCtx;
@@ -733,8 +751,8 @@ namespace ADKOM.TextEditor
                 SemanticSetup.EnsureInstalled(silent: true); // nudge any stalled step
                 return;
             }
-            if (!CanEditDoc || !Active.HasFile) return;
-            string path = Active.FilePath;
+            string path = SemanticContextPath; // metadata views navigate too
+            if (path == null) return;
             string text = _code.value;
             int offset = _code.LineColToIndex(line, col);
             var ctx = _mainCtx;
@@ -764,7 +782,7 @@ namespace ADKOM.TextEditor
                 ctx.Post(_ =>
                 {
                     if (status != null) { PostStatus(status); return; }
-                    if (metaSource != null) { OpenMetadataView(metaTitle, metaSource, metaLine); return; }
+                    if (metaSource != null) { OpenMetadataView(metaTitle, metaSource, metaLine, path); return; }
                     OpenExternal(defPath, dl + 1, dc + 1);
                 }, null);
             });
@@ -1006,12 +1024,23 @@ namespace ADKOM.TextEditor
 
         /// <summary>Opens (or switches to) a virtual "from metadata" document
         /// and places the caret on the requested symbol's line.</summary>
-        void OpenMetadataView(string title, string source, int line)
+        void OpenMetadataView(string title, string source, int line, string contextPath)
         {
             OpenVirtualDoc(title, source, csharp: true);
+            int i = _docs.FindIndex(d => d.VirtualName == title);
+            if (i >= 0) _docs[i].VirtualContextPath = contextPath;
+            ScheduleSemanticPass();
             _code.GoToLine(line + 1, 1);
             PostStatus(title);
         }
+
+        /// <summary>The compilation-context path for the active document:
+        /// its own file, or the originating file for metadata views.</summary>
+        string SemanticContextPath =>
+            !CanEditDoc ? null
+            : Active.HasFile ? Active.FilePath
+            : Active.VirtualCSharp ? Active.VirtualContextPath
+            : null;
 
         /// <summary>Opens (or switches to and refreshes) a virtual document —
         /// named content with no backing file — and focuses it.</summary>
@@ -1543,10 +1572,34 @@ namespace ADKOM.TextEditor
                 else if (ctrl && e.keyCode == KeyCode.Tab) { StepTab(e.shiftKey ? -1 : 1); handled = true; }
                 else if (ctrl && e.keyCode == KeyCode.Comma) { OpenSettings(); handled = true; }
             }
+
+            // Clipboard/selection anywhere in the window (menu bar, tab bar,
+            // gutter...) — but never steal from real text inputs (settings
+            // fields, the Markdown block editor) or selectable labels (the
+            // console), whose own/native handling must win.
+            if (!handled && ctrl && !e.altKey && !e.shiftKey && CanEditDoc && !TargetIsTextInput(e))
+            {
+                switch (e.keyCode)
+                {
+                    case KeyCode.X: _code.Cut(); handled = true; break;
+                    case KeyCode.C: _code.Copy(); handled = true; break;
+                    case KeyCode.V: _code.Paste(); handled = true; break;
+                    case KeyCode.A: _code.SelectAll(); handled = true; break;
+                }
+            }
+
             if (handled)
             {
                 e.StopImmediatePropagation();
             }
+        }
+
+        static bool TargetIsTextInput(KeyDownEvent e)
+        {
+            var v = e.target as VisualElement;
+            if (v == null) return false;
+            if (v is TextElement) return true; // selectable labels handle copy natively
+            return v is TextField || v.GetFirstAncestorOfType<TextField>() != null;
         }
 
         /// <summary>Text-editing commands on the code view (trickle-down, so
