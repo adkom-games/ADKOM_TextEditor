@@ -45,6 +45,11 @@ All notable changes to this package are documented here. Format follows
   including across editor restarts. Files missing by then are skipped.
 
 ### Fixed
+- English-language editors showed the entire UI in Japanese after the
+  localization change: Unity's per-assembly catalog loader falls back
+  to the first PO file alphabetically when the current language has no
+  catalog. An en.po identity catalog makes English resolve explicitly
+  (issue #4).
 - Undo/redo grouping is now humanly predictable (VS Code model). Typing
   coalesces per word — one undo removes one word, not minutes of
   typing. Groups also break on: Enter, selection replacement, paste,
