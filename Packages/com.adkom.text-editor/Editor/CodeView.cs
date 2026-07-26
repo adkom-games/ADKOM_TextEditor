@@ -1178,6 +1178,10 @@ namespace ADKOM.TextEditor
             AfterCaretMove();
         }
 
+        // Word-snap drag state: set by double-click, extends by whole words.
+        bool _wordDrag;
+        int _wordDragLine, _wordDragStart, _wordDragEnd;
+
         void OnPointerDown(PointerDownEvent e)
         {
             if (e.button != 0) return;
@@ -1189,6 +1193,18 @@ namespace ADKOM.TextEditor
                 e.StopPropagation();
                 return; // no drag-select from a navigate gesture
             }
+            if (e.clickCount >= 2)
+            {
+                // Double-click: select the word under the cursor; dragging from
+                // here extends the selection a whole word at a time.
+                WordRangeAt(_caretLine, _caretCol, out _wordDragStart, out _wordDragEnd);
+                _wordDragLine = _caretLine;
+                _anchorLine = _caretLine;
+                _anchorCol = _wordDragStart;
+                _caretCol = _wordDragEnd;
+                _wordDrag = true;
+                RefreshVisible();
+            }
             _dragging = true;
             this.CapturePointer(e.pointerId);
             e.StopPropagation();
@@ -1197,26 +1213,81 @@ namespace ADKOM.TextEditor
         void OnPointerMove(PointerMoveEvent e)
         {
             if (!_dragging) return;
-            PlaceCaretAt(e.position, true);
+            if (_wordDrag) WordSnapSelectTo(e.position);
+            else PlaceCaretAt(e.position, true);
         }
 
         void OnPointerUp(PointerUpEvent e)
         {
             if (!_dragging) return;
             _dragging = false;
+            _wordDrag = false;
             this.ReleasePointer(e.pointerId);
+        }
+
+        void HitTest(Vector2 worldPos, out int line, out int col)
+        {
+            Vector2 local = _content.WorldToLocal(worldPos);
+            int row = Mathf.Clamp((int)(local.y / _lineHeight), 0, Mathf.Max(0, _totalRows - 1));
+            RowToLineSub(row, out line, out int sub);
+            col = ColForXInRow(line, sub, local.x);
         }
 
         void PlaceCaretAt(Vector2 worldPos, bool extend)
         {
-            Vector2 local = _content.WorldToLocal(worldPos);
-            int row = Mathf.Clamp((int)(local.y / _lineHeight), 0, Mathf.Max(0, _totalRows - 1));
-            RowToLineSub(row, out int line, out int sub);
+            HitTest(worldPos, out int line, out int col);
             _caretLine = line;
-            _caretCol = ColForXInRow(line, sub, local.x);
+            _caretCol = col;
             _preferredCol = -1;
             if (!extend) CollapseAnchor();
             AfterCaretMove();
+        }
+
+        /// <summary>Extends the double-click selection so it always covers
+        /// whole words: the original word stays selected, and the moving end
+        /// snaps to the boundary of the word under the cursor.</summary>
+        void WordSnapSelectTo(Vector2 worldPos)
+        {
+            HitTest(worldPos, out int line, out int col);
+            WordRangeAt(line, col, out int ws, out int we);
+            bool before = line < _wordDragLine || (line == _wordDragLine && ws < _wordDragStart);
+            if (before)
+            {
+                _anchorLine = _wordDragLine; _anchorCol = _wordDragEnd;
+                _caretLine = line; _caretCol = ws;
+            }
+            else
+            {
+                _anchorLine = _wordDragLine; _anchorCol = _wordDragStart;
+                _caretLine = line; _caretCol = we;
+            }
+            _preferredCol = -1;
+            EnsureCaretVisible();
+            RefreshVisible();
+        }
+
+        /// <summary>The word at (line, col): an identifier run when touching
+        /// one (preferring the run just left of the boundary), else a
+        /// whitespace run, else the single character.</summary>
+        void WordRangeAt(int line, int col, out int start, out int end)
+        {
+            string t = _lines[Mathf.Clamp(line, 0, _lines.Count - 1)];
+            col = Mathf.Clamp(col, 0, t.Length);
+            bool Id(char c) => char.IsLetterOrDigit(c) || c == '_';
+            if (t.Length == 0) { start = end = 0; return; }
+
+            if ((col < t.Length && Id(t[col])) || (col > 0 && Id(t[col - 1])))
+            {
+                start = col; while (start > 0 && Id(t[start - 1])) start--;
+                end = col; while (end < t.Length && Id(t[end])) end++;
+            }
+            else if (col < t.Length && char.IsWhiteSpace(t[col]))
+            {
+                start = col; while (start > 0 && char.IsWhiteSpace(t[start - 1])) start--;
+                end = col; while (end < t.Length && char.IsWhiteSpace(t[end])) end++;
+            }
+            else if (col < t.Length) { start = col; end = col + 1; }
+            else { start = col - 1; end = col; }
         }
 
         void OnValidateCommand(ValidateCommandEvent e)

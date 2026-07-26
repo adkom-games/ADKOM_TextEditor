@@ -6,6 +6,9 @@ All notable changes to this package are documented here. Format follows
 ## [Unreleased]
 
 ### Added
+- Double-click selects the word under the cursor; dragging from a
+  double-click extends the selection a whole word at a time in either
+  direction (identifier runs, whitespace runs, or single symbols).
 - Console pane attached to the bottom of the window (horizontal tab
   strip; Console is the only tab for now, visible by default). It
   collects every ATE message — tool output, update checks, semantic
