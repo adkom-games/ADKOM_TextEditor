@@ -78,8 +78,40 @@ namespace ADKOM.TextEditor
         struct Snapshot { public string text; public int cursor, select; }
         readonly List<Snapshot> _undo = new List<Snapshot>();
         readonly List<Snapshot> _redo = new List<Snapshot>();
+
+        /// <summary>What kind of edit an undoable change is. Only TypeChar,
+        /// Backspace, and ForwardDelete ever coalesce — each strictly with its
+        /// own kind; everything else is one undo unit per edit.</summary>
+        public enum EditKind
+        {
+            Programmatic, TypeChar, TypeNewline, Backspace,
+            ForwardDelete, ReplaceSelection, Paste, LineOp
+        }
+
+        // Undo-group state. A group chains same-kind, contiguous edits with
+        // short gaps, breaks at word starts, and is hard-capped in size and
+        // age so one undo step is always a humanly predictable amount.
+        EditKind _lastKind = EditKind.Programmatic;
         double _lastEditTime;
-        bool _lastEditWasTyping;
+        double _groupStartTime;
+        int _lastEditEnd = -1;   // doc offset where the next chained edit must occur
+        int _groupChars;
+        char _lastTypedChar = '\0';
+        const double CoalesceGapSeconds = 0.75; // pause since LAST keystroke breaks
+        const double MaxGroupSeconds = 5.0;     // hard age cap per group
+        const int MaxGroupChars = 100;          // hard size cap per group
+
+        /// <summary>Forces the next edit to start a new undo group (called on
+        /// save and when the window loses focus).</summary>
+        public void BreakUndoGroup()
+        {
+            _lastKind = EditKind.Programmatic;
+            _lastEditEnd = -1;
+        }
+
+        /// <summary>Raised after Undo/Redo with a human-readable summary
+        /// (e.g. "Undid 12 chars") for the status bar.</summary>
+        public event Action<string> onUndoStatus;
 
         public event Action<string> onValueChanged;
         public int TabSize = 4;
@@ -1035,27 +1067,61 @@ namespace ADKOM.TextEditor
 
         // ---------- Editing ----------
 
-        void PushUndo(bool typing)
+        void PushUndo(EditKind kind, int start, int end, string replacement)
         {
             double now = EditorApplication.timeSinceStartup;
-            if (typing && _lastEditWasTyping && now - _lastEditTime < 1.0)
+
+            // Coalesce only same-kind, contiguous, recent edits within caps.
+            bool coalesce = false;
+            if (kind == _lastKind &&
+                now - _lastEditTime < CoalesceGapSeconds &&
+                now - _groupStartTime < MaxGroupSeconds &&
+                _groupChars < MaxGroupChars)
             {
-                _lastEditTime = now;
-                return; // coalesce
+                switch (kind)
+                {
+                    case EditKind.TypeChar:
+                        // Starting a word char after space/punct opens a new
+                        // group, so words undo one at a time (VS Code model).
+                        char c = replacement.Length > 0 ? replacement[0] : ' ';
+                        bool startsWord = IsWordCharUndo(c) && !IsWordCharUndo(_lastTypedChar);
+                        coalesce = start == _lastEditEnd && !startsWord;
+                        break;
+                    case EditKind.Backspace: coalesce = end == _lastEditEnd; break;
+                    case EditKind.ForwardDelete: coalesce = start == _lastEditEnd; break;
+                }
             }
-            _undo.Add(new Snapshot { text = GetValueInternal(), cursor = cursorIndex, select = selectIndex });
-            if (_undo.Count > UndoCap) _undo.RemoveAt(0);
+
+            if (!coalesce)
+            {
+                _undo.Add(new Snapshot { text = GetValueInternal(), cursor = cursorIndex, select = selectIndex });
+                if (_undo.Count > UndoCap) _undo.RemoveAt(0);
+                _groupStartTime = now;
+                _groupChars = 0;
+            }
             _redo.Clear();
             _lastEditTime = now;
-            _lastEditWasTyping = typing;
+            _lastKind = kind;
+            _groupChars += Mathf.Max(replacement.Length, end - start);
+            _lastEditEnd = kind == EditKind.Backspace ? start : start + replacement.Length;
+            _lastTypedChar = kind == EditKind.TypeChar && replacement.Length > 0
+                ? replacement[replacement.Length - 1] : '\0';
         }
 
+        static bool IsWordCharUndo(char c) => char.IsLetterOrDigit(c) || c == '_';
+
+        /// <summary>Compatibility overload: true maps to TypeChar, false to
+        /// Programmatic (each programmatic edit is its own undo unit).</summary>
         public void ReplaceRangeInternal(int start, int end, string replacement, int caret, bool typing)
+            => ReplaceRangeInternal(start, end, replacement, caret,
+                typing ? EditKind.TypeChar : EditKind.Programmatic);
+
+        public void ReplaceRangeInternal(int start, int end, string replacement, int caret, EditKind kind)
         {
-            PushUndo(typing);
             string v = GetValueInternal();
             start = Mathf.Clamp(start, 0, v.Length);
             end = Mathf.Clamp(end, start, v.Length);
+            PushUndo(kind, start, end, replacement);
             SetValueWithoutNotify(v.Substring(0, start) + replacement + v.Substring(end));
             cursorIndex = Mathf.Clamp(caret, 0, GetValueInternal().Length);
             CollapseAnchor();
@@ -1063,22 +1129,30 @@ namespace ADKOM.TextEditor
             AfterCaretMove();
         }
 
-        void InsertText(string text, bool typing)
+        void InsertText(string text, EditKind kind)
         {
             int s = Mathf.Min(cursorIndex, selectIndex), e = Mathf.Max(cursorIndex, selectIndex);
-            ReplaceRangeInternal(s, e, text, s + text.Length, typing);
+            // Replacing a selection is never part of a typing chain.
+            if (s != e && (kind == EditKind.TypeChar || kind == EditKind.TypeNewline))
+                kind = EditKind.ReplaceSelection;
+            ReplaceRangeInternal(s, e, text, s + text.Length, kind);
         }
+
+        void InsertText(string text, bool typing) =>
+            InsertText(text, typing ? EditKind.TypeChar : EditKind.Programmatic);
 
         public void Undo()
         {
             if (_undo.Count == 0) return;
             var snap = _undo[_undo.Count - 1];
             _undo.RemoveAt(_undo.Count - 1);
-            _redo.Add(new Snapshot { text = GetValueInternal(), cursor = cursorIndex, select = selectIndex });
+            string cur = GetValueInternal();
+            _redo.Add(new Snapshot { text = cur, cursor = cursorIndex, select = selectIndex });
             SetValueWithoutNotify(snap.text);
             cursorIndex = snap.cursor;
             selectIndex = snap.select;
-            _lastEditWasTyping = false;
+            BreakUndoGroup();
+            onUndoStatus?.Invoke($"Undid {Mathf.Abs(cur.Length - snap.text.Length)} char(s).");
             Notify();
             AfterCaretMove();
         }
@@ -1088,11 +1162,13 @@ namespace ADKOM.TextEditor
             if (_redo.Count == 0) return;
             var snap = _redo[_redo.Count - 1];
             _redo.RemoveAt(_redo.Count - 1);
-            _undo.Add(new Snapshot { text = GetValueInternal(), cursor = cursorIndex, select = selectIndex });
+            string cur = GetValueInternal();
+            _undo.Add(new Snapshot { text = cur, cursor = cursorIndex, select = selectIndex });
             SetValueWithoutNotify(snap.text);
             cursorIndex = snap.cursor;
             selectIndex = snap.select;
-            _lastEditWasTyping = false;
+            BreakUndoGroup();
+            onUndoStatus?.Invoke($"Redid {Mathf.Abs(cur.Length - snap.text.Length)} char(s).");
             Notify();
             AfterCaretMove();
         }
@@ -1151,29 +1227,29 @@ namespace ADKOM.TextEditor
                     string line = _lines[_caretLine];
                     int indent = 0;
                     while (indent < line.Length && indent < _caretCol && line[indent] == ' ') indent++;
-                    InsertText("\n" + new string(' ', indent), typing: true);
+                    InsertText("\n" + new string(' ', indent), EditKind.TypeNewline);
                     break;
                 }
                 case KeyCode.Backspace:
                 {
-                    if (HasSelection) { InsertText(string.Empty, true); break; }
+                    if (HasSelection) { InsertText(string.Empty, EditKind.ReplaceSelection); break; }
                     int idx = cursorIndex;
                     if (idx == 0) { handled = true; break; }
                     // Whitespace deletes back to the previous tab stop.
                     int p = _caretCol > 0 ? PrevTabStopInSpaces(_lines[_caretLine], _caretCol) : -1;
                     int remove = p >= 0 ? _caretCol - p : 1;
-                    ReplaceRangeInternal(idx - remove, idx, string.Empty, idx - remove, true);
+                    ReplaceRangeInternal(idx - remove, idx, string.Empty, idx - remove, EditKind.Backspace);
                     break;
                 }
                 case KeyCode.Delete:
                 {
-                    if (HasSelection) { InsertText(string.Empty, true); break; }
+                    if (HasSelection) { InsertText(string.Empty, EditKind.ReplaceSelection); break; }
                     int idx = cursorIndex;
                     if (idx >= GetValueInternal().Length) break;
                     // Whitespace deletes forward to the next tab stop.
                     int nx = NextTabStopInSpaces(_lines[_caretLine], _caretCol);
                     int count = nx >= 0 ? nx - _caretCol : 1;
-                    ReplaceRangeInternal(idx, idx + count, string.Empty, idx, true);
+                    ReplaceRangeInternal(idx, idx + count, string.Empty, idx, EditKind.ForwardDelete);
                     break;
                 }
                 case KeyCode.LeftArrow: MoveCaretH(-1, e.shiftKey, ctrl); break;
@@ -1217,7 +1293,7 @@ namespace ADKOM.TextEditor
                 {
                     string clip = EditorGUIUtility.systemCopyBuffer;
                     if (!string.IsNullOrEmpty(clip))
-                        InsertText(clip.Replace("\r\n", "\n").Replace("\r", "\n"), false);
+                        InsertText(clip.Replace("\r\n", "\n").Replace("\r", "\n"), EditKind.Paste);
                     break;
                 }
                 case KeyCode.Z when ctrl && e.shiftKey: Redo(); break;
@@ -1238,7 +1314,7 @@ namespace ADKOM.TextEditor
         {
             string clip = EditorGUIUtility.systemCopyBuffer;
             if (!string.IsNullOrEmpty(clip))
-                InsertText(clip.Replace("\r\n", "\n").Replace("\r", "\n"), false);
+                InsertText(clip.Replace("\r\n", "\n").Replace("\r", "\n"), EditKind.Paste);
         }
 
         /// <summary>Places the caret at a 1-based line/column (as Unity's
@@ -1269,7 +1345,7 @@ namespace ADKOM.TextEditor
         {
             if (!HasSelection) return;
             EditorGUIUtility.systemCopyBuffer = SelectedText();
-            if (cut) InsertText(string.Empty, false);
+            if (cut) InsertText(string.Empty, EditKind.ReplaceSelection);
         }
 
         /// <summary>Previous tab-stop-aligned column within the whitespace run
@@ -1521,7 +1597,7 @@ namespace ADKOM.TextEditor
                 case "Paste":
                     string clip = EditorGUIUtility.systemCopyBuffer;
                     if (!string.IsNullOrEmpty(clip))
-                        InsertText(clip.Replace("\r\n", "\n").Replace("\r", "\n"), false);
+                        InsertText(clip.Replace("\r\n", "\n").Replace("\r", "\n"), EditKind.Paste);
                     e.StopPropagation();
                     break;
                 case "SelectAll":
