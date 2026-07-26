@@ -232,6 +232,27 @@ the bottom. See [[Project State]] for the current snapshot.
   Unity itself stays responsive (modality policy). Clears on failure;
   success ends in the reload.
 
+## 2026-07-26 — Markdown (0.8.0)
+
+- **Markdown support**: `MarkdownClassifier` (source coloring onto the
+  TokenClass palette) + `MarkdownView` (block parse/render with char
+  offsets; block-level WYSIWYG editing routed through
+  `CodeView.ReplaceRangeInternal` for undo). Transient MD/source
+  toggle left of the gear; per-document mode.
+- **Formatting toolbar**: 16 element buttons shown for any `.md` tab.
+  Rendered mode targets the open block editor or appends a template
+  block; source mode wraps the selection / transforms lines / inserts
+  after the current line. Shared statics on `MarkdownView`
+  (`TemplateFor`, `TryGetInlineWrap`, `TransformLines`).
+- **Parity additions**: strikethrough, images (placeholder render),
+  task lists (☐/☑), pipe tables (bold header grid) across classifier,
+  renderer, and toolbar.
+- **Default view setting** (`MdOpenRendered`, off by default) +
+  `TextDocument.VirtualMarkdown` so the post-update release-notes tab
+  always opens rendered with full Markdown treatment.
+- **Toggle-status fix** (field report): button label showed the switch
+  target, reading as the wrong state; now shows the current mode.
+
 ## Conventions
 
 - Branch per feature/fix from main; merge with `--no-ff`; branches are kept.
