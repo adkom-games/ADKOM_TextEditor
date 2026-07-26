@@ -38,6 +38,8 @@ with the host project.
 | Release 0.3.0 (published 2026-07-24: tag on upm split, GitHub Release) | Done |
 | Menu bar; auto-update; External Script Editor; fonts/zoom; smooth scroll | Done |
 | Release 0.4.0 (published 2026-07-25; first release on the auto-update channel) | Done |
+| Semantic highlighting + Go to Definition (Roslyn module, opt-in auto-install) | Done |
+| Release 0.5.0 (published 2026-07-26; semantics module tagged semantics-0.2.0) | Done |
 | More languages; custom themes | Future (roadmap) |
 
 ## Current work area
@@ -70,7 +72,9 @@ is verified live in the editor.
 
 ## Immediate next steps
 
-1. 0.4.0 published 2026-07-25. Watch for the first in-the-wild auto-update install (Client.Add path is not yet field-tested). Plan next milestone.
+1. 0.5.0 published 2026-07-26. Field-tests pending in the wild:
+   auto-update Client.Add; semantics module Client.Add + bundled-Roslyn
+   copy on a clean project. Plan next milestone.
 2. Roadmap candidates: JSON/Markdown formatters, custom themes,
    Ctrl+Tab MRU order, drag-to-reorder tabs.
 
