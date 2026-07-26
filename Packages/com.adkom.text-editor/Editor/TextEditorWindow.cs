@@ -35,8 +35,10 @@ namespace ADKOM.TextEditor
 
         [SerializeField] List<TextDocument> _docs = new List<TextDocument>();
         [SerializeField] int _active;
-        [SerializeField] bool _showLineNumbers;
-        [SerializeField] bool _wordWrap;
+        // Defaults apply to fresh windows only: Unity's layout serialization
+        // restores whatever an existing user already had configured.
+        [SerializeField] bool _showLineNumbers = true;
+        [SerializeField] bool _wordWrap = true;
         [SerializeField] bool _consoleVisible = true;
         [SerializeField] bool _minimapVisible = true;
 
@@ -370,11 +372,18 @@ namespace ADKOM.TextEditor
 
         void FillViewMenu(GenericMenu m)
         {
+            // Alphabetical: Console, Line Numbers, Minimap, Word Wrap.
+            m.AddItem(new GUIContent("Console"), _consoleVisible, () => SetConsoleVisible(!_consoleVisible));
             m.AddItem(new GUIContent("Line Numbers"), _showLineNumbers, () =>
             {
                 _showLineNumbers = !_showLineNumbers;
                 _code.showLineNumbers = _showLineNumbers;
                 SyncSettingsControls();
+            });
+            m.AddItem(new GUIContent("Minimap"), _minimapVisible, () =>
+            {
+                _minimapVisible = !_minimapVisible;
+                _code.minimapVisible = _minimapVisible;
             });
             m.AddItem(new GUIContent("Word Wrap"), _wordWrap, () =>
             {
@@ -404,13 +413,6 @@ namespace ADKOM.TextEditor
 
         void FillWindowMenu(GenericMenu m)
         {
-            m.AddItem(new GUIContent("Console"), _consoleVisible, () => SetConsoleVisible(!_consoleVisible));
-            m.AddItem(new GUIContent("Minimap"), _minimapVisible, () =>
-            {
-                _minimapVisible = !_minimapVisible;
-                _code.minimapVisible = _minimapVisible;
-            });
-            m.AddSeparator("");
             bool multi = _docs.Count > 1;
             if (multi)
             {

@@ -3,6 +3,16 @@
 All notable changes to this package are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com); versions follow semver.
 
+## [Unreleased]
+
+### Changed
+- Console and Minimap moved from the Window menu to the View menu,
+  where all four view toggles now sit alphabetically: Console, Line
+  Numbers, Minimap, Word Wrap.
+- All four view toggles default ON for fresh installations. Existing
+  windows keep whatever was already configured (settings are preserved
+  by Unity's layout serialization).
+
 ## [0.8.0] - 2026-07-26
 
 ### Changed
