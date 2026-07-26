@@ -236,6 +236,7 @@ namespace ADKOM.TextEditor
             _code.RegisterCallback<KeyDownEvent>(OnKeyDown, TrickleDown.TrickleDown);
             _code.onFontSizeChanged += SyncSettingsControls; // zoom gestures
             _code.onNavigateRequest += NavigateToDefinition;  // Ctrl+Click
+            _code.onUndoStatus += PostStatus; // "Undid 12 char(s)." feedback
             _code.minimapVisible = _minimapVisible;
             _mainCtx = System.Threading.SynchronizationContext.Current;
             _editorArea.Add(_code);
@@ -1328,6 +1329,7 @@ namespace ADKOM.TextEditor
             bool saved = saveAs ? FileService.SaveAs(Active) : FileService.Save(Active);
             if (saved)
             {
+                _code?.BreakUndoGroup(); // undo-past-save is a deliberate step
                 if (saveAs && Active.HasFile) EditorConfig.AddRecentFile(Path.GetFullPath(Active.FilePath));
                 RefreshFormatter(); // Save As can change the extension/language
                 RebuildTabs();
@@ -1431,6 +1433,11 @@ namespace ADKOM.TextEditor
             UpdateTitle();
             _notifyBar.style.display = DisplayStyle.None;
             PostStatus("Kept in-editor version of " + Active.DisplayName + ".");
+        }
+
+        void OnLostFocus()
+        {
+            _code?.BreakUndoGroup();
         }
 
         void OnFocus()
