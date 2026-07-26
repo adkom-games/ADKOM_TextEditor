@@ -24,6 +24,10 @@ namespace ADKOM.TextEditor
         public string VirtualName;
         public bool VirtualCSharp;
         public bool VirtualMarkdown; // requests Markdown treatment (e.g. release notes)
+        // Real source file this virtual doc was opened from (metadata views):
+        // lets the semantic provider pick that file's compilation, so
+        // classification and Go to Definition work inside the stub too.
+        public string VirtualContextPath;
         // Markdown documents: true = rendered (WYSIWYG) mode, false = source.
         public bool MdRendered;
         public LineEnding Eol = LineEnding.Windows;
