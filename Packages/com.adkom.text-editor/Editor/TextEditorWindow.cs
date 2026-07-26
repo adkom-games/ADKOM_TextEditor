@@ -532,7 +532,7 @@ namespace ADKOM.TextEditor
             }
             bool rendered = isMd && Active.MdRendered;
             if (_mdFormatBar != null)
-                _mdFormatBar.style.display = rendered ? DisplayStyle.Flex : DisplayStyle.None;
+                _mdFormatBar.style.display = isMd ? DisplayStyle.Flex : DisplayStyle.None;
             if (_code != null) _code.style.display = rendered || !HasDocs ? DisplayStyle.None : DisplayStyle.Flex;
             if (_mdView != null)
             {
@@ -574,7 +574,7 @@ namespace ADKOM.TextEditor
             foreach (var (id, label, tip) in defs)
             {
                 string captured = id;
-                var b = new ToolbarButton(() => _mdView?.ApplyFormat(captured)) { text = label, tooltip = tip };
+                var b = new ToolbarButton(() => ApplyMdFormat(captured)) { text = label, tooltip = tip };
                 b.style.unityTextAlign = TextAnchor.MiddleCenter;
                 b.style.paddingLeft = 4;
                 b.style.paddingRight = 4;
@@ -583,6 +583,43 @@ namespace ADKOM.TextEditor
                 bar.Add(b);
             }
             return bar;
+        }
+
+        /// <summary>Routes a formatting button by mode: rendered mode goes to
+        /// the MarkdownView (block editor or new block); source mode acts on
+        /// the CodeView selection directly.</summary>
+        void ApplyMdFormat(string id)
+        {
+            if (!ActiveIsMarkdown) return;
+            if (Active.MdRendered) { _mdView?.ApplyFormat(id); return; }
+
+            string v = _code.value;
+            int a = Mathf.Clamp(Mathf.Min(_code.cursorIndex, _code.selectIndex), 0, v.Length);
+            int b = Mathf.Clamp(Mathf.Max(_code.cursorIndex, _code.selectIndex), a, v.Length);
+
+            if (MarkdownView.TryGetInlineWrap(id, out string pre, out string post, out string ph))
+            {
+                string inner = b > a ? v.Substring(a, b - a) : ph;
+                _code.ReplaceRangeInternal(a, b, pre + inner + post,
+                    a + pre.Length + inner.Length, typing: false);
+                return;
+            }
+            if (id == "hr" || id == "table")
+            {
+                // Insert on its own lines after the current line.
+                int le = v.IndexOf('\n', b);
+                if (le < 0) le = v.Length;
+                string ins = (le == 0 || v.Length == 0 ? "" : "\n") + "\n" + MarkdownView.TemplateFor(id) + "\n";
+                _code.ReplaceRangeInternal(le, le, ins, le + ins.Length, typing: false);
+                return;
+            }
+            // Line-level transform over the full lines covering the selection.
+            int ls = a == 0 ? 0 : v.LastIndexOf('\n', a - 1) + 1;
+            int lineEnd = v.IndexOf('\n', b);
+            if (lineEnd < 0) lineEnd = v.Length;
+            string transformed = MarkdownView.TransformLines(id, v.Substring(ls, lineEnd - ls));
+            if (transformed != null)
+                _code.ReplaceRangeInternal(ls, lineEnd, transformed, ls + transformed.Length, typing: false);
         }
 
         /// <summary>New block from a formatting button when no block editor is
