@@ -63,6 +63,8 @@ namespace ADKOM.TextEditor
         readonly Label _measure;
         readonly List<Label> _gutterPool = new List<Label>();
         readonly VisualElement _gutterCol;
+        VisualElement _minimap;
+        bool _minimapDragging;
         IVisualElementScheduledItem _blink;
         bool _blinkOn = true;
         bool _dragging;
@@ -265,6 +267,100 @@ namespace ADKOM.TextEditor
             _scroll.contentViewport.RegisterCallback<GeometryChangedEvent>(_ => OnViewportChanged());
             _scroll.verticalScroller.valueChanged += _ => RefreshVisible();
             _scroll.horizontalScroller.valueChanged += _ => RefreshVisible();
+
+            // Minimap: a code-shape overview between the content viewport and
+            // the vertical scrollbar, painted with Painter2D (one mesh, not
+            // per-line elements). Click/drag jumps the view.
+            _minimap = new VisualElement { name = "code-minimap" };
+            _minimap.style.width = 90;
+            _minimap.style.flexShrink = 0;
+            _minimap.generateVisualContent += OnMinimapPaint;
+            _minimap.RegisterCallback<PointerDownEvent>(e =>
+            {
+                if (e.button != 0) return;
+                _minimapDragging = true;
+                _minimap.CapturePointer(e.pointerId);
+                MinimapJump(_minimap.WorldToLocal(e.position).y);
+                e.StopPropagation();
+            });
+            _minimap.RegisterCallback<PointerMoveEvent>(e =>
+            {
+                if (_minimapDragging) MinimapJump(_minimap.WorldToLocal(e.position).y);
+            });
+            _minimap.RegisterCallback<PointerUpEvent>(e =>
+            {
+                if (!_minimapDragging) return;
+                _minimapDragging = false;
+                _minimap.ReleasePointer(e.pointerId);
+            });
+            var scrollRow = _scroll.verticalScroller.parent;
+            scrollRow.Insert(scrollRow.IndexOf(_scroll.verticalScroller), _minimap);
+        }
+
+        void MinimapJump(float localY)
+        {
+            float h = _minimap.contentRect.height;
+            if (h <= 0 || _totalRows == 0) return;
+            float mapScale = Mathf.Min(h / _totalRows, 2f); // matches the paint scale
+            float mapContentH = _totalRows * mapScale;
+            float frac = Mathf.Clamp01(localY / Mathf.Min(h, mapContentH));
+            float viewH = _scroll.contentViewport.layout.height;
+            float target = frac * _totalRows * _lineHeight - viewH * 0.5f;
+            _scroll.verticalScroller.value = Mathf.Clamp(target,
+                _scroll.verticalScroller.lowValue, _scroll.verticalScroller.highValue);
+        }
+
+        void OnMinimapPaint(MeshGenerationContext ctx)
+        {
+            float h = _minimap.contentRect.height, w = _minimap.contentRect.width;
+            if (h <= 4 || _totalRows == 0) return;
+            var p = ctx.painter2D;
+            float rowH = Mathf.Min(h / _totalRows, 2f);
+            int drawRows = Mathf.Min(_totalRows, Mathf.Max(1, (int)(h / Mathf.Max(rowH, 1f))));
+            float step = (float)_totalRows / drawRows;
+            float charPx = w / 120f; // fit ~120 columns across the strip
+
+            p.fillColor = new Color(_textColor.r, _textColor.g, _textColor.b, 0.35f);
+            p.BeginPath();
+            for (int i = 0; i < drawRows; i++)
+            {
+                int row = Mathf.Min(_totalRows - 1, (int)(i * step));
+                RowToLineSub(row, out int line, out int sub);
+                RowBounds(line, sub, out int rs, out int re);
+                string text = _lines[line];
+                int indent = 0;
+                if (sub == 0)
+                    while (indent < re - rs && rs + indent < text.Length && text[rs + indent] == ' ') indent++;
+                int len = Mathf.Max(0, re - rs - indent);
+                if (len == 0) continue;
+                float x = Mathf.Min(indent * charPx, w - 2);
+                float bw = Mathf.Clamp(len * charPx, 1, w - 2 - x);
+                float y = i * rowH;
+                p.MoveTo(new Vector2(x, y));
+                p.LineTo(new Vector2(x + bw, y));
+                p.LineTo(new Vector2(x + bw, y + Mathf.Max(1f, rowH * 0.7f)));
+                p.LineTo(new Vector2(x, y + Mathf.Max(1f, rowH * 0.7f)));
+                p.ClosePath();
+            }
+            p.Fill();
+
+            // Viewport indicator
+            float contentH = _totalRows * _lineHeight;
+            float viewH = _scroll.contentViewport.layout.height;
+            if (contentH > 0)
+            {
+                float mapContentH = drawRows * rowH;
+                float top = _scroll.verticalScroller.value / contentH * mapContentH;
+                float ih = Mathf.Max(6, viewH / contentH * mapContentH);
+                p.fillColor = new Color(_textColor.r, _textColor.g, _textColor.b, 0.12f);
+                p.BeginPath();
+                p.MoveTo(new Vector2(0, top));
+                p.LineTo(new Vector2(w, top));
+                p.LineTo(new Vector2(w, top + ih));
+                p.LineTo(new Vector2(0, top + ih));
+                p.ClosePath();
+                p.Fill();
+            }
         }
 
         void OnViewportChanged()
@@ -386,6 +482,16 @@ namespace ADKOM.TextEditor
             BucketSpans(spans);
             _lineMarkup = null;
             RefreshVisible();
+        }
+
+        public bool minimapVisible
+        {
+            get => _minimap != null && _minimap.resolvedStyle.display == DisplayStyle.Flex;
+            set
+            {
+                if (_minimap != null)
+                    _minimap.style.display = value ? DisplayStyle.Flex : DisplayStyle.None;
+            }
         }
 
         public bool showLineNumbers
@@ -665,6 +771,7 @@ namespace ADKOM.TextEditor
             }
 
             RefreshGutter(firstRow, visible, scrollY);
+            _minimap?.MarkDirtyRepaint();
             RefreshSelection(firstRow, visible);
             RefreshSelectionMatches(firstRow, visible);
             RefreshCaret();
