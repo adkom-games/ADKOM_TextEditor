@@ -45,6 +45,8 @@ with the host project.
 | Semantics merged into main package (out-of-box, consented setup) | Done |
 | Release 0.6.0 (published 2026-07-26; first Discord-announced release) | Done |
 | Release 0.6.1 (upgrade-path fixes; published 2026-07-26) | Done |
+| Metadata view; selectable console; non-modal dialog policy | Done |
+| Release 0.7.0 (published 2026-07-26) | Done |
 | More languages; custom themes | Future (roadmap) |
 
 ## Current work area
