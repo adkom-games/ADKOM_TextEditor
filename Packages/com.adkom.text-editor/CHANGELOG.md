@@ -5,6 +5,11 @@ All notable changes to this package are documented here. Format follows
 
 ## [Unreleased]
 
+### Changed
+- The MD/source toggle now shows the CURRENT mode ("MD" while rendered,
+  "</>" while in source) instead of the mode it would switch to — the
+  action label read as the wrong state. The tooltip names the action.
+
 ### Added
 - Markdown support (.md): syntax coloring in source mode (headers,
   emphasis, code spans/fences, links, lists, quotes, rules mapped onto
