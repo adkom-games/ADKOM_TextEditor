@@ -94,6 +94,13 @@ word, plain text or full regular expressions (with $1 group
 replacements), wrap-around, and backwards search, all from a compact
 modeless dialog. F3 repeats your last search without reopening it.
 
+### 📝 Markdown, both ways
+Open a `.md` file and a toggle appears next to the settings gear:
+**source mode** with full markdown syntax coloring, or **rendered
+mode** — headers, lists, quotes, and code blocks styled properly, with
+block-level WYSIWYG editing: click any block, edit its source inline,
+and it re-renders on commit. Undo works across both modes.
+
 ### 🗺 See the whole file
 A **syntax-colorized minimap** runs along the right edge — the shape of
 your whole document at a glance, with a viewport indicator; click or

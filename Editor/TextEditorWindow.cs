@@ -46,6 +46,8 @@ namespace ADKOM.TextEditor
         Label _statusRight;
 
         VisualElement _editorArea;
+        MarkdownView _mdView;
+        UnityEditor.UIElements.ToolbarButton _mdToggle;
         Label _emptyHint;
         VisualElement _settingsPane;
         ScrollView _settingsScroll;
@@ -167,6 +169,9 @@ namespace ADKOM.TextEditor
             toolbar.Add(MenuButton("Window", FillWindowMenu));
             toolbar.Add(MenuButton("Help", FillHelpMenu));
             toolbar.Add(new ToolbarSpacer { flex = true });
+            _mdToggle = new ToolbarButton(ToggleMdMode);
+            _mdToggle.style.display = DisplayStyle.None; // transient: .md tabs only
+            toolbar.Add(_mdToggle);
             var gear = new ToolbarButton(OpenSettings) { tooltip = "Settings" };
             var gearTex = EditorGUIUtility.IconContent("SettingsIcon").image;
             if (gearTex != null)
@@ -220,6 +225,11 @@ namespace ADKOM.TextEditor
             _code.minimapVisible = _minimapVisible;
             _mainCtx = System.Threading.SynchronizationContext.Current;
             _editorArea.Add(_code);
+
+            _mdView = new MarkdownView();
+            _mdView.style.display = DisplayStyle.None;
+            _mdView.onEditBlock += OnMdBlockEdited;
+            _editorArea.Add(_mdView);
 
             _emptyHint = new Label("No file open.\nFile → New, File → Open…, or right-click a text asset in the Project window.");
             _emptyHint.name = "empty-hint";
@@ -454,6 +464,7 @@ namespace ADKOM.TextEditor
         {
             if (!CanEditDoc) return;
             Active.Content = newValue;
+            if (ActiveIsMarkdown && Active.MdRendered) _mdView?.Render(newValue);
             ScheduleSemanticPass();
             if (!Active.IsDirty)
             {
@@ -483,6 +494,55 @@ namespace ADKOM.TextEditor
             }
             _code?.SetClassifier(SyntaxClassifiers.ForPath(classifierPath));
             ScheduleSemanticPass();
+        }
+
+        // --- Markdown rendered mode ---
+
+        bool ActiveIsMarkdown =>
+            HasDocs && !Active.IsSettings && Active.HasFile &&
+            Active.FilePath.EndsWith(".md", System.StringComparison.OrdinalIgnoreCase);
+
+        void ToggleMdMode()
+        {
+            if (!ActiveIsMarkdown) return;
+            Active.MdRendered = !Active.MdRendered;
+            UpdateMdUi();
+        }
+
+        /// <summary>Shows/hides the transient toggle and swaps the code view
+        /// against the rendered Markdown view for the active document.</summary>
+        void UpdateMdUi()
+        {
+            bool isMd = ActiveIsMarkdown;
+            if (_mdToggle != null)
+            {
+                _mdToggle.style.display = isMd ? DisplayStyle.Flex : DisplayStyle.None;
+                if (isMd)
+                {
+                    _mdToggle.text = Active.MdRendered ? "</>" : "MD";
+                    _mdToggle.tooltip = Active.MdRendered
+                        ? "Switch to Markdown source"
+                        : "Switch to rendered Markdown (click a block to edit it)";
+                }
+            }
+            bool rendered = isMd && Active.MdRendered;
+            if (_code != null) _code.style.display = rendered || !HasDocs ? DisplayStyle.None : DisplayStyle.Flex;
+            if (_mdView != null)
+            {
+                _mdView.style.display = rendered ? DisplayStyle.Flex : DisplayStyle.None;
+                if (rendered)
+                {
+                    _mdView.SetPalette(CurrentTheme.Current);
+                    _mdView.Render(_code.value);
+                }
+            }
+        }
+
+        void OnMdBlockEdited(int start, int end, string replacement)
+        {
+            // Through the code view so undo/redo and dirty tracking apply;
+            // the value-change event re-renders via UpdateMdUi.
+            _code.ReplaceRangeInternal(start, end, replacement, start + replacement.Length, typing: false);
         }
 
         // --- Semantics (optional compiler-backed module) ---
@@ -978,6 +1038,8 @@ namespace ADKOM.TextEditor
                 if (_editorArea != null) _editorArea.style.display = DisplayStyle.Flex;
                 if (_settingsScroll != null) _settingsScroll.style.display = DisplayStyle.None;
                 if (_code != null) { _code.SetValueWithoutNotify(string.Empty); _code.style.display = DisplayStyle.None; }
+                if (_mdView != null) _mdView.style.display = DisplayStyle.None;
+                if (_mdToggle != null) _mdToggle.style.display = DisplayStyle.None;
                 if (_emptyHint != null) _emptyHint.style.display = DisplayStyle.Flex;
                 RebuildTabs();
                 UpdateTitle();
@@ -997,6 +1059,8 @@ namespace ADKOM.TextEditor
                 _settingsScroll.style.display = settings ? DisplayStyle.Flex : DisplayStyle.None;
             if (settings)
             {
+                if (_mdView != null) _mdView.style.display = DisplayStyle.None;
+                if (_mdToggle != null) _mdToggle.style.display = DisplayStyle.None;
                 SyncSettingsControls();
                 RebuildTabs();
                 UpdateTitle();
@@ -1007,12 +1071,14 @@ namespace ADKOM.TextEditor
             CheckExternalChange(Active);
             _code?.SetValueWithoutNotify(Active.Content);
             RefreshFormatter();
+            UpdateMdUi();
             RebuildTabs();
             UpdateTitle();
             UpdateStatus();
             // Ready for typing immediately (New, Open, tab click). Deferred a
             // frame so the view is laid out/visible before taking focus.
-            _code?.schedule.Execute(() => _code.Focus()).ExecuteLater(0);
+            if (!(ActiveIsMarkdown && Active.MdRendered))
+                _code?.schedule.Execute(() => _code.Focus()).ExecuteLater(0);
         }
 
         void CloseTab(int index)

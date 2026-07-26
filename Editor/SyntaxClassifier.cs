@@ -38,6 +38,7 @@ namespace ADKOM.TextEditor
     public static class SyntaxClassifiers
     {
         static readonly CSharpClassifier CSharp = new CSharpClassifier();
+        static readonly MarkdownClassifier Markdown = new MarkdownClassifier();
 
         public static ISyntaxClassifier ForPath(string path)
         {
@@ -45,6 +46,7 @@ namespace ADKOM.TextEditor
             return System.IO.Path.GetExtension(path).ToLowerInvariant() switch
             {
                 ".cs" => CSharp,
+                ".md" => Markdown,
                 _ => null
             };
         }

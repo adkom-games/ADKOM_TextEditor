@@ -23,6 +23,8 @@ namespace ADKOM.TextEditor
         // backing file; VirtualCSharp requests C# highlighting.
         public string VirtualName;
         public bool VirtualCSharp;
+        // Markdown documents: true = rendered (WYSIWYG) mode, false = source.
+        public bool MdRendered;
         public LineEnding Eol = LineEnding.Windows;
         public bool HasBom;
         // True when the file on disk indents with tabs. In memory tabs are
