@@ -73,6 +73,66 @@ namespace ADKOM.TextEditor
             set => EditorPrefs.SetBool(SmoothScrollKey, value);
         }
 
+        const string RecentMaxKey = "ADKOM.TextEditor.RecentFilesMax";
+        // The list is per-project (recent files from another project would be
+        // noise); the count setting is machine-wide like every other setting.
+        static string RecentListKey =>
+            "ADKOM.TextEditor.RecentFiles." + Application.dataPath.GetHashCode().ToString("X8");
+
+        /// <summary>How many entries the File → Recent Files menu keeps.</summary>
+        public static int RecentFilesMax
+        {
+            get => Mathf.Clamp(EditorPrefs.GetInt(RecentMaxKey, 5), 1, 30);
+            set
+            {
+                EditorPrefs.SetInt(RecentMaxKey, Mathf.Clamp(value, 1, 30));
+                TrimRecentFiles();
+            }
+        }
+
+        /// <summary>Most-recent-first absolute paths, at most RecentFilesMax.</summary>
+        public static System.Collections.Generic.List<string> RecentFiles
+        {
+            get
+            {
+                var list = new System.Collections.Generic.List<string>();
+                string raw = EditorPrefs.GetString(RecentListKey, string.Empty);
+                foreach (var p in raw.Split('\n'))
+                    if (!string.IsNullOrEmpty(p)) list.Add(p);
+                return list;
+            }
+        }
+
+        public static void AddRecentFile(string path)
+        {
+            if (string.IsNullOrEmpty(path)) return;
+            var list = RecentFiles;
+            list.RemoveAll(p => string.Equals(p, path, System.StringComparison.OrdinalIgnoreCase));
+            list.Insert(0, path);
+            if (list.Count > RecentFilesMax) list.RemoveRange(RecentFilesMax, list.Count - RecentFilesMax);
+            EditorPrefs.SetString(RecentListKey, string.Join("\n", list));
+        }
+
+        public static void RemoveRecentFile(string path)
+        {
+            var list = RecentFiles;
+            list.RemoveAll(p => string.Equals(p, path, System.StringComparison.OrdinalIgnoreCase));
+            EditorPrefs.SetString(RecentListKey, string.Join("\n", list));
+        }
+
+        public static void ClearRecentFiles() => EditorPrefs.SetString(RecentListKey, string.Empty);
+
+        static void TrimRecentFiles()
+        {
+            var list = RecentFiles;
+            int max = RecentFilesMax;
+            if (list.Count > max)
+            {
+                list.RemoveRange(max, list.Count - max);
+                EditorPrefs.SetString(RecentListKey, string.Join("\n", list));
+            }
+        }
+
         const string MdOpenRenderedKey = "ADKOM.TextEditor.MdOpenRendered";
 
         /// <summary>Default view for .md files when opened: rendered (WYSIWYG)

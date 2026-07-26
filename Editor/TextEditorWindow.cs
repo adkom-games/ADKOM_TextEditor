@@ -67,6 +67,7 @@ namespace ADKOM.TextEditor
         IntegerField _settingsFontSize;
         Toggle _settingsSmooth;
         Toggle _settingsMdRendered;
+        IntegerField _settingsRecentMax;
         Toggle _settingsSemantics;
 
         IVisualElementScheduledItem _semanticPending;
@@ -333,7 +334,24 @@ namespace ADKOM.TextEditor
             if (HasDocs) m.AddItem(new GUIContent("Close Tab"), false, () => CloseTab(_active));
             else m.AddDisabledItem(new GUIContent("Close Tab"));
             m.AddSeparator("");
-            m.AddDisabledItem(new GUIContent("Recent Files")); // stub
+            var recent = EditorConfig.RecentFiles;
+            if (recent.Count == 0)
+                m.AddDisabledItem(new GUIContent("Recent Files"));
+            else
+            {
+                for (int i = 0; i < recent.Count; i++)
+                {
+                    string p = recent[i];
+                    // GenericMenu treats '/' as a submenu separator, so the
+                    // label carries only the file name; ∕ fakes the dir path.
+                    string dir = Path.GetDirectoryName(p)?.Replace('\\', '∕').Replace('/', '∕') ?? "";
+                    string label = $"Recent Files/{i + 1}  {Path.GetFileName(p)}   ({dir})";
+                    m.AddItem(new GUIContent(label), false, () => OpenRecent(p));
+                }
+                m.AddSeparator("Recent Files/");
+                m.AddItem(new GUIContent("Recent Files/Clear Recent Files"), false,
+                    EditorConfig.ClearRecentFiles);
+            }
             m.AddSeparator("");
             m.AddItem(new GUIContent("Close Window"), false, Close);
         }
@@ -932,6 +950,15 @@ namespace ADKOM.TextEditor
             _settingsMdRendered.tooltip = "Default view when opening .md files: rendered (WYSIWYG) when on, source when off. The MD/source toggle still switches per tab.";
             _settingsPane.Add(_settingsMdRendered);
 
+            _settingsRecentMax = new IntegerField("Recent Files Count") { value = EditorConfig.RecentFilesMax };
+            _settingsRecentMax.RegisterValueChangedCallback(e =>
+            {
+                EditorConfig.RecentFilesMax = e.newValue;
+                _settingsRecentMax.SetValueWithoutNotify(EditorConfig.RecentFilesMax); // clamp echo (1-30)
+            });
+            _settingsRecentMax.tooltip = "How many entries File → Recent Files keeps (1-30).";
+            _settingsPane.Add(_settingsRecentMax);
+
             _settingsAutoUpdate = new Toggle("Automatic Updates") { value = EditorConfig.AutoUpdate };
             _settingsAutoUpdate.RegisterValueChangedCallback(e => EditorConfig.AutoUpdate = e.newValue);
             _settingsAutoUpdate.tooltip = "Check GitHub for new releases and offer to install them.";
@@ -1055,6 +1082,7 @@ namespace ADKOM.TextEditor
             _settingsSmooth?.SetValueWithoutNotify(EditorConfig.SmoothScrolling);
             _settingsSemantics?.SetValueWithoutNotify(EditorConfig.SemanticsEnabled);
             _settingsMdRendered?.SetValueWithoutNotify(EditorConfig.MdOpenRendered);
+            _settingsRecentMax?.SetValueWithoutNotify(EditorConfig.RecentFilesMax);
         }
 
         // --- Tabs ---
@@ -1222,6 +1250,20 @@ namespace ADKOM.TextEditor
             if (path != null) OpenPath(path);
         }
 
+        /// <summary>Recent Files menu entry: files gone from disk are dropped
+        /// from the list with a console note instead of throwing.</summary>
+        void OpenRecent(string path)
+        {
+            if (!File.Exists(path))
+            {
+                EditorConfig.RemoveRecentFile(path);
+                AteConsole.Warn("[ADKOM Text Editor] Recent file no longer exists, removed from the list: " + path);
+                PostStatus("Recent file no longer exists: " + Path.GetFileName(path));
+                return;
+            }
+            OpenPath(path);
+        }
+
         /// <summary>Opens the file at <paramref name="path"/> in a tab: switches to
         /// its tab if already open, otherwise adds a new one.</summary>
         public void OpenPath(string path)
@@ -1241,6 +1283,7 @@ namespace ADKOM.TextEditor
             if (full.EndsWith(".md", System.StringComparison.OrdinalIgnoreCase))
                 doc.MdRendered = EditorConfig.MdOpenRendered;
             _docs.Add(doc);
+            EditorConfig.AddRecentFile(full);
             SwitchTo(_docs.Count - 1);
         }
 
@@ -1250,6 +1293,7 @@ namespace ADKOM.TextEditor
             bool saved = saveAs ? FileService.SaveAs(Active) : FileService.Save(Active);
             if (saved)
             {
+                if (saveAs && Active.HasFile) EditorConfig.AddRecentFile(Path.GetFullPath(Active.FilePath));
                 RefreshFormatter(); // Save As can change the extension/language
                 RebuildTabs();
                 UpdateTitle();
