@@ -35,6 +35,10 @@ namespace ADKOM.TextEditor
         // Ticks of File.GetLastWriteTimeUtc at load/save time, for external-change detection.
         public long LastKnownWriteTimeUtcTicks;
 
+        // "Keep Buffer" was chosen after the backing file vanished — stop
+        // re-prompting; the buffer lives on (dirty) until saved or closed.
+        public bool DeletionNotified;
+
         public bool HasFile => !string.IsNullOrEmpty(FilePath);
         public string DisplayName =>
             IsSettings ? "Settings"
@@ -54,6 +58,7 @@ namespace ADKOM.TextEditor
             Content = ExpandTabs(text, EditorConfig.TabSize);
             FilePath = path;
             IsDirty = false;
+            DeletionNotified = false;
             LastKnownWriteTimeUtcTicks = File.GetLastWriteTimeUtc(path).Ticks;
         }
 
@@ -70,8 +75,11 @@ namespace ADKOM.TextEditor
 
             FilePath = path;
             IsDirty = false;
+            DeletionNotified = false;
             LastKnownWriteTimeUtcTicks = File.GetLastWriteTimeUtc(path).Ticks;
         }
+
+        public bool FileDeletedOnDisk() => HasFile && !DeletionNotified && !File.Exists(FilePath);
 
         public bool FileChangedOnDisk()
         {

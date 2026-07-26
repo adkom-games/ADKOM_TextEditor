@@ -141,8 +141,10 @@ and afterwards, the new version's release notes open in a tab.
 
 ### 🛡 Safe by design
 Unsaved-changes prompts on close, external-change detection with a
-reload offer when a file changes on disk, and line numbers when you want
-them. A Settings tab (the gear button, or Tools → Options…) keeps every
+reload offer when a file changes on disk — and if a file is **deleted**
+out from under you, ATE offers to keep the buffer so one Save brings
+the file back. Close the whole window and your tabs come back when you
+reopen it, even across editor restarts. A Settings tab (the gear button, or Tools → Options…) keeps every
 preference — theme, mode, line numbers, word wrap, font and size,
 smooth scrolling, tab size, keyboard layout, Markdown default view,
 recent-files count, external fallback editor, automatic updates — one
