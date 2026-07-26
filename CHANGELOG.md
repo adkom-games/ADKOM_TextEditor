@@ -3,7 +3,7 @@
 All notable changes to this package are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com); versions follow semver.
 
-## [Unreleased]
+## [0.7.1] - 2026-07-26
 
 ### Added
 - While an update is installing, the ATE window shows an ATE-only modal
