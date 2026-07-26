@@ -64,6 +64,7 @@ namespace ADKOM.TextEditor
         PopupField<string> _settingsFont;
         IntegerField _settingsFontSize;
         Toggle _settingsSmooth;
+        Toggle _settingsMdRendered;
         Toggle _settingsSemantics;
 
         IVisualElementScheduledItem _semanticPending;
@@ -496,6 +497,7 @@ namespace ADKOM.TextEditor
             {
                 if (Active.HasFile) classifierPath = Active.FilePath;
                 else if (Active.VirtualCSharp) classifierPath = "virtual.cs";
+                else if (Active.VirtualMarkdown) classifierPath = "virtual.md";
             }
             _code?.SetClassifier(SyntaxClassifiers.ForPath(classifierPath));
             ScheduleSemanticPass();
@@ -504,8 +506,9 @@ namespace ADKOM.TextEditor
         // --- Markdown rendered mode ---
 
         bool ActiveIsMarkdown =>
-            HasDocs && !Active.IsSettings && Active.HasFile &&
-            Active.FilePath.EndsWith(".md", System.StringComparison.OrdinalIgnoreCase);
+            HasDocs && !Active.IsSettings &&
+            ((Active.HasFile && Active.FilePath.EndsWith(".md", System.StringComparison.OrdinalIgnoreCase))
+             || Active.VirtualMarkdown);
 
         void ToggleMdMode()
         {
@@ -920,6 +923,11 @@ namespace ADKOM.TextEditor
             _settingsSmooth.tooltip = "Animate wheel scrolling instead of stepping line by line.";
             _settingsPane.Add(_settingsSmooth);
 
+            _settingsMdRendered = new Toggle("Open Markdown Rendered") { value = EditorConfig.MdOpenRendered };
+            _settingsMdRendered.RegisterValueChangedCallback(e => EditorConfig.MdOpenRendered = e.newValue);
+            _settingsMdRendered.tooltip = "Default view when opening .md files: rendered (WYSIWYG) when on, source when off. The MD/source toggle still switches per tab.";
+            _settingsPane.Add(_settingsMdRendered);
+
             _settingsAutoUpdate = new Toggle("Automatic Updates") { value = EditorConfig.AutoUpdate };
             _settingsAutoUpdate.RegisterValueChangedCallback(e => EditorConfig.AutoUpdate = e.newValue);
             _settingsAutoUpdate.tooltip = "Check GitHub for new releases and offer to install them.";
@@ -970,24 +978,31 @@ namespace ADKOM.TextEditor
 
         /// <summary>Opens (or switches to and refreshes) a virtual document —
         /// named content with no backing file — and focuses it.</summary>
-        void OpenVirtualDoc(string title, string content, bool csharp)
+        void OpenVirtualDoc(string title, string content, bool csharp,
+            bool markdown = false, bool rendered = false)
         {
             int existing = _docs.FindIndex(d => d.VirtualName == title);
             if (existing >= 0)
             {
                 _docs[existing].Content = content;
                 _docs[existing].IsDirty = false;
+                _docs[existing].VirtualMarkdown = markdown;
+                _docs[existing].MdRendered = markdown && rendered;
                 SwitchTo(existing);
             }
             else
             {
-                _docs.Add(new TextDocument { Content = content, VirtualName = title, VirtualCSharp = csharp });
+                _docs.Add(new TextDocument
+                {
+                    Content = content, VirtualName = title, VirtualCSharp = csharp,
+                    VirtualMarkdown = markdown, MdRendered = markdown && rendered
+                });
                 SwitchTo(_docs.Count - 1);
             }
         }
 
         /// <summary>Shown after an update: the packaged RELEASE-NOTES.md as a
-        /// focused virtual tab (raw markdown text).</summary>
+        /// focused virtual tab, always in rendered (WYSIWYG) Markdown mode.</summary>
         public static void ShowReleaseNotes(string version)
         {
             var pkg = UnityEditor.PackageManager.PackageInfo.GetAllRegisteredPackages()
@@ -1003,7 +1018,8 @@ namespace ADKOM.TextEditor
             window.Focus();
             // CreateGUI may not have run yet on a fresh window; defer a frame.
             window.rootVisualElement.schedule.Execute(() =>
-                window.OpenVirtualDoc("Release Notes " + version, text, csharp: false)).ExecuteLater(0);
+                window.OpenVirtualDoc("Release Notes " + version, text, csharp: false,
+                    markdown: true, rendered: true)).ExecuteLater(0);
         }
 
         /// <summary>Gear behavior: open the settings tab, bring it to the front
@@ -1034,6 +1050,7 @@ namespace ADKOM.TextEditor
             _settingsFontSize?.SetValueWithoutNotify(EditorConfig.FontSize);
             _settingsSmooth?.SetValueWithoutNotify(EditorConfig.SmoothScrolling);
             _settingsSemantics?.SetValueWithoutNotify(EditorConfig.SemanticsEnabled);
+            _settingsMdRendered?.SetValueWithoutNotify(EditorConfig.MdOpenRendered);
         }
 
         // --- Tabs ---
@@ -1217,6 +1234,8 @@ namespace ADKOM.TextEditor
 
             var doc = new TextDocument();
             doc.LoadFrom(full);
+            if (full.EndsWith(".md", System.StringComparison.OrdinalIgnoreCase))
+                doc.MdRendered = EditorConfig.MdOpenRendered;
             _docs.Add(doc);
             SwitchTo(_docs.Count - 1);
         }

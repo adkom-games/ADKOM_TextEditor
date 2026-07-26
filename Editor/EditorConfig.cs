@@ -73,6 +73,17 @@ namespace ADKOM.TextEditor
             set => EditorPrefs.SetBool(SmoothScrollKey, value);
         }
 
+        const string MdOpenRenderedKey = "ADKOM.TextEditor.MdOpenRendered";
+
+        /// <summary>Default view for .md files when opened: rendered (WYSIWYG)
+        /// when true, source when false (default). The release-notes tab shown
+        /// after an update always opens rendered regardless.</summary>
+        public static bool MdOpenRendered
+        {
+            get => EditorPrefs.GetBool(MdOpenRenderedKey, false);
+            set => EditorPrefs.SetBool(MdOpenRenderedKey, value);
+        }
+
         const string AutoUpdateKey = "ADKOM.TextEditor.AutoUpdate";
         const string UpdateFreqKey = "ADKOM.TextEditor.UpdateFrequencyDays";
 
