@@ -125,3 +125,39 @@
     font-size: 11px;
     opacity: 0.8;
 }
+
+#console-pane {
+    height: 150px;
+    flex-shrink: 0;
+    border-top-width: 1px;
+    border-top-color: rgba(128, 128, 128, 0.35);
+}
+
+#console-tabs {
+    flex-direction: row;
+    flex-shrink: 0;
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(128, 128, 128, 0.35);
+}
+
+.console-tab {
+    flex-direction: row;
+    align-items: center;
+    padding: 2px 2px 2px 8px;
+    border-right-width: 1px;
+    border-right-color: rgba(128, 128, 128, 0.35);
+    background-color: rgba(128, 128, 128, 0.15);
+}
+
+.console-tab Label {
+    font-size: 11px;
+}
+
+#console-scroll {
+    flex-grow: 1;
+}
+
+#console-output {
+    padding: 2px 6px;
+    font-size: 11px;
+}

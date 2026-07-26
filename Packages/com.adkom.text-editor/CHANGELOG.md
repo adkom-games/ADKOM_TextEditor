@@ -3,6 +3,17 @@
 All notable changes to this package are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com); versions follow semver.
 
+## [Unreleased]
+
+### Added
+- Console pane attached to the bottom of the window (horizontal tab
+  strip; Console is the only tab for now, visible by default). It
+  collects every ATE message — tool output, update checks, semantic
+  setup, find/replace results — and every status-bar message, which
+  are also now held in the status bar for a few seconds instead of
+  being immediately overwritten. Closing the tab hides the pane;
+  Window → Console shows it again.
+
 ## [0.5.0] - 2026-07-26
 
 ### Added

@@ -88,7 +88,7 @@ namespace ADKOM.TextEditor
                     try { _provider = (ISemanticProvider)System.Activator.CreateInstance(t); break; }
                     catch (System.Exception ex)
                     {
-                        UnityEngine.Debug.LogWarning("[ADKOM Text Editor] Semantic provider failed to load: " + ex.Message);
+                        AteConsole.Warn("[ADKOM Text Editor] Semantic provider failed to load: " + ex.Message);
                     }
                 }
                 return _provider;

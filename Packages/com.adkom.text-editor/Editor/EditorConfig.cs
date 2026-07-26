@@ -85,7 +85,7 @@ namespace ADKOM.TextEditor
                 // Forensic breadcrumb: a field report showed this OFF after an
                 // update-install; the default is ON, so log who writes false.
                 if (value != EditorPrefs.GetBool(AutoUpdateKey, true) && !value)
-                    Debug.Log("[ADKOM Text Editor] Automatic updates disabled.\n" +
+                    AteConsole.Info("[ADKOM Text Editor] Automatic updates disabled.\n" +
                         new System.Diagnostics.StackTrace(1, false));
                 EditorPrefs.SetBool(AutoUpdateKey, value);
             }

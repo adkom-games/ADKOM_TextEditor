@@ -50,7 +50,7 @@ namespace ADKOM.TextEditor
             if (EditorPrefs.GetString(LastSeenVersionKey, string.Empty) == current) return false;
             EditorPrefs.SetString(LastSeenVersionKey, current);
             if (!EditorConfig.AutoUpdate) return false;
-            Debug.Log($"[ADKOM Text Editor] First run of version {current} — checking for updates.");
+            AteConsole.Info($"[ADKOM Text Editor] First run of version {current} — checking for updates.");
             CheckNow(manual: false);
             return true;
         }
@@ -95,7 +95,7 @@ namespace ADKOM.TextEditor
                     if (req.result != UnityWebRequest.Result.Success)
                     {
                         string err = "Update check failed: " + req.error;
-                        if (manual) Debug.Log("[ADKOM Text Editor] " + err);
+                        if (manual) AteConsole.Info("[ADKOM Text Editor] " + err);
                         onResult?.Invoke(err);
                         return;
                     }
@@ -108,7 +108,7 @@ namespace ADKOM.TextEditor
                     }
                     if (CompareVersions(latest, current) > 0)
                     {
-                        Debug.Log($"[ADKOM Text Editor] New version available: {latest} (installed: {current}). " +
+                        AteConsole.Info($"[ADKOM Text Editor] New version available: {latest} (installed: {current}). " +
                             (IsEmbedded()
                                 ? "This copy is embedded for development — update manually via git."
                                 : "You will be offered the update when the editor is idle."));
@@ -117,7 +117,7 @@ namespace ADKOM.TextEditor
                     }
                     else
                     {
-                        if (manual) Debug.Log($"[ADKOM Text Editor] Up to date ({current}).");
+                        if (manual) AteConsole.Info($"[ADKOM Text Editor] Up to date ({current}).");
                         onResult?.Invoke("Up to date (" + current + ").");
                     }
                 }
@@ -169,7 +169,7 @@ namespace ADKOM.TextEditor
 
         public static void Install(string version)
         {
-            Debug.Log($"[ADKOM Text Editor] Updating to {version} via UPM…");
+            AteConsole.Info($"[ADKOM Text Editor] Updating to {version} via UPM…");
             Client.Add(GitInstallUrl + "#" + version);
         }
     }
