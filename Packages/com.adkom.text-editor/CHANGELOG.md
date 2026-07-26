@@ -48,6 +48,16 @@ All notable changes to this package are documented here. Format follows
   stub to stub works, and stubs get semantic coloring too.
 
 ### Changed
+- The "Unsaved Changes" dialog no longer uses Unity's modal system.
+  Closing a dirty tab shows the non-modal in-window banner
+  (Save / Discard / Cancel; navigating away cancels); Close Other Tabs
+  raises one banner for the whole batch (Save All / Discard All /
+  Cancel). Closing the ATE window shows no dialog at all: dirty tabs
+  persist their unsaved content in the session and come back dirty
+  when the window reopens — nothing is lost, nothing blocks Unity.
+  (Remaining Unity dialogs — Help→About and the semantics
+  enable-and-install prompt — are direct responses to a click and stay
+  modal per the modality policy.)
 - Menu items now display their keyboard shortcuts (matching the active
   keyboard layout) — Cut Ctrl+X, Copy Ctrl+C, and friends across the
   File, Edit, Tools, and Window menus.

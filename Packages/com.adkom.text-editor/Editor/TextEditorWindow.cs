@@ -75,7 +75,7 @@ namespace ADKOM.TextEditor
         VisualElement _updatingOverlay;
         VisualElement _notifyBar;
         Label _notifyLabel;
-        Button _notifyReloadBtn, _notifyKeepBtn, _notifyKeepBufferBtn, _notifyCloseBtn;
+        VisualElement _notifyButtons;
         VisualElement _consolePane;
         ScrollView _consoleScroll;
         Label _consoleOutput;
@@ -214,14 +214,9 @@ namespace ADKOM.TextEditor
             _notifyLabel.style.flexGrow = 1;
             _notifyLabel.style.whiteSpace = WhiteSpace.Normal;
             _notifyBar.Add(_notifyLabel);
-            _notifyReloadBtn = new Button(ReloadActiveFromDisk) { text = "Reload" };
-            _notifyKeepBtn = new Button(KeepMineActive) { text = "Keep Mine" };
-            _notifyKeepBufferBtn = new Button(KeepDeletedBufferActive) { text = "Keep Buffer" };
-            _notifyCloseBtn = new Button(CloseDeletedActive) { text = "Close Tab" };
-            _notifyBar.Add(_notifyReloadBtn);
-            _notifyBar.Add(_notifyKeepBtn);
-            _notifyBar.Add(_notifyKeepBufferBtn);
-            _notifyBar.Add(_notifyCloseBtn);
+            _notifyButtons = new VisualElement();
+            _notifyButtons.style.flexDirection = FlexDirection.Row;
+            _notifyBar.Add(_notifyButtons);
             root.Add(_notifyBar);
 
             // --- Editor area: virtualized code view ---
@@ -1197,19 +1192,38 @@ namespace ADKOM.TextEditor
             }
         }
 
-        /// <summary>Closes every tab except <paramref name="keep"/>, prompting
-        /// per dirty document; Cancel aborts the remaining closes.</summary>
+        /// <summary>Closes every tab except <paramref name="keep"/>. Clean
+        /// tabs close immediately; dirty ones raise one non-modal banner for
+        /// the whole batch (Save All / Discard All / Cancel).</summary>
         void CloseOtherTabs(int keep)
         {
+            var keepDoc = keep >= 0 && keep < _docs.Count ? _docs[keep] : null;
+            var dirty = new List<TextDocument>();
             for (int i = _docs.Count - 1; i >= 0; i--)
             {
-                if (i == keep) continue;
-                if (!ConfirmDiscardIfDirty(_docs[i])) break; // Cancel stops here
+                if (_docs[i] == keepDoc) continue;
+                if (_docs[i].IsDirty && !_docs[i].IsSettings) { dirty.Add(_docs[i]); continue; }
                 _docs.RemoveAt(i);
-                if (i < keep) keep--;
             }
-            _active = Mathf.Clamp(keep, 0, _docs.Count - 1);
+            _active = Mathf.Clamp(_docs.IndexOf(keepDoc), 0, _docs.Count - 1);
             SwitchTo(_active);
+            if (dirty.Count == 0) return;
+
+            void CloseAll(bool save)
+            {
+                HideBanner();
+                foreach (var d in dirty)
+                {
+                    if (save && !FileService.Save(d)) continue; // cancelled Save As keeps the tab
+                    CloseTabForce(d);
+                }
+            }
+            ShowBanner(dirty.Count == 1
+                    ? $"'{dirty[0].DisplayName}' has unsaved changes."
+                    : $"{dirty.Count} tabs have unsaved changes.",
+                ("Save All", () => CloseAll(true)),
+                ("Discard All", () => CloseAll(false)),
+                ("Cancel", HideBanner));
         }
 
         void SwitchTo(int index)
@@ -1268,7 +1282,25 @@ namespace ADKOM.TextEditor
         void CloseTab(int index)
         {
             if (index < 0 || index >= _docs.Count) return;
-            if (!ConfirmDiscardIfDirty(_docs[index])) return;
+            var doc = _docs[index];
+            if (doc.IsDirty && !doc.IsSettings)
+            {
+                // Non-modal unsaved-changes prompt (the old modal froze
+                // Unity's main loop). Navigating away cancels implicitly.
+                if (index != _active) SwitchTo(index);
+                ShowBanner($"'{doc.DisplayName}' has unsaved changes.",
+                    ("Save", () => { HideBanner(); if (FileService.Save(doc)) CloseTabForce(doc); }),
+                    ("Discard", () => { HideBanner(); CloseTabForce(doc); }),
+                    ("Cancel", HideBanner));
+                return;
+            }
+            CloseTabForce(doc);
+        }
+
+        void CloseTabForce(TextDocument doc)
+        {
+            int index = _docs.IndexOf(doc);
+            if (index < 0) return;
             _docs.RemoveAt(index);
             if (index < _active || _active >= _docs.Count)
                 _active = Mathf.Max(0, _active - 1);
@@ -1341,19 +1373,6 @@ namespace ADKOM.TextEditor
             }
         }
 
-        /// <summary>Returns true to proceed (saved or discarded), false to cancel.</summary>
-        bool ConfirmDiscardIfDirty(TextDocument doc)
-        {
-            if (!doc.IsDirty) return true;
-            int choice = EditorUtility.DisplayDialogComplex(
-                "Unsaved Changes",
-                $"'{doc.DisplayName}' has unsaved changes.",
-                "Save", "Cancel", "Discard");
-            if (choice == 1) return false;                // Cancel
-            if (choice == 0) return FileService.Save(doc); // Save (false if dialog cancelled)
-            return true;                                   // Discard
-        }
-
         /// <summary>Shows the non-modal banner when the active document's
         /// backing file changed on disk. Never blocks the editor: the old
         /// modal dialog froze Unity's main loop (and background tooling) any
@@ -1362,35 +1381,38 @@ namespace ADKOM.TextEditor
         {
             if (doc != null && doc.FileDeletedOnDisk())
             {
-                if (_notifyBar != null)
-                {
-                    _notifyLabel.text = $"'{doc.DisplayName}' was deleted from disk. Keep the buffer (Save can bring the file back), or close the tab?";
-                    SetNotifyButtons(deleted: true);
-                    _notifyBar.style.display = DisplayStyle.Flex;
-                }
+                ShowBanner($"'{doc.DisplayName}' was deleted from disk. Keep the buffer (Save can bring the file back), or close the tab?",
+                    ("Keep Buffer", KeepDeletedBufferActive), ("Close Tab", CloseDeletedActive));
                 return true;
             }
             if (doc == null || !doc.FileChangedOnDisk())
             {
-                if (_notifyBar != null) _notifyBar.style.display = DisplayStyle.None;
+                HideBanner();
                 return false;
             }
-            if (_notifyBar != null)
-            {
-                _notifyLabel.text = $"'{doc.DisplayName}' was modified outside the editor. Reload it? (unsaved changes here would be lost)";
-                SetNotifyButtons(deleted: false);
-                _notifyBar.style.display = DisplayStyle.Flex;
-            }
+            ShowBanner($"'{doc.DisplayName}' was modified outside the editor. Reload it? (unsaved changes here would be lost)",
+                ("Reload", ReloadActiveFromDisk), ("Keep Mine", KeepMineActive));
             return true;
         }
 
-        void SetNotifyButtons(bool deleted)
+        /// <summary>The non-modal in-window prompt: a message plus arbitrary
+        /// action buttons in the notify banner. Never blocks Unity.</summary>
+        void ShowBanner(string msg, params (string label, System.Action act)[] actions)
         {
-            if (_notifyReloadBtn == null) return;
-            _notifyReloadBtn.style.display = deleted ? DisplayStyle.None : DisplayStyle.Flex;
-            _notifyKeepBtn.style.display = deleted ? DisplayStyle.None : DisplayStyle.Flex;
-            _notifyKeepBufferBtn.style.display = deleted ? DisplayStyle.Flex : DisplayStyle.None;
-            _notifyCloseBtn.style.display = deleted ? DisplayStyle.Flex : DisplayStyle.None;
+            if (_notifyBar == null) return;
+            _notifyLabel.text = msg;
+            _notifyButtons.Clear();
+            foreach (var (label, act) in actions)
+            {
+                var a = act;
+                _notifyButtons.Add(new Button(() => a?.Invoke()) { text = label });
+            }
+            _notifyBar.style.display = DisplayStyle.Flex;
+        }
+
+        void HideBanner()
+        {
+            if (_notifyBar != null) _notifyBar.style.display = DisplayStyle.None;
         }
 
         /// <summary>The backing file vanished but the buffer is intact — keep
@@ -1653,44 +1675,52 @@ namespace ADKOM.TextEditor
         void OnDestroy()
         {
             if (_docs == null) return;
-            foreach (var doc in _docs)
-            {
-                if (!doc.IsDirty) continue;
-                bool save = EditorUtility.DisplayDialog(
-                    "Unsaved Changes",
-                    $"'{doc.DisplayName}' has unsaved changes.",
-                    "Save", "Discard");
-                if (save) FileService.Save(doc);
-            }
-
-            // Remember the open file tabs so reopening the window (or the
-            // editor) restores them. Settings/virtual/untitled tabs are
-            // transient and not part of the session.
-            var paths = new List<string>();
-            int activeFileIndex = 0;
+            // NO dialogs here — the window is being torn down, so a modal
+            // would block Unity. Instead dirty tabs persist their unsaved
+            // CONTENT into the session and come back dirty on reopen.
+            var tabs = new List<EditorConfig.SessionTab>();
+            int activeIndex = 0;
             for (int i = 0; i < _docs.Count; i++)
             {
-                if (!_docs[i].HasFile) continue;
-                if (i == _active) activeFileIndex = paths.Count;
-                paths.Add(Path.GetFullPath(_docs[i].FilePath));
+                var d = _docs[i];
+                if (d.IsSettings || !string.IsNullOrEmpty(d.VirtualName)) continue;
+                if (!d.HasFile && !d.IsDirty) continue; // empty untitled
+                if (i == _active) activeIndex = tabs.Count;
+                tabs.Add(new EditorConfig.SessionTab
+                {
+                    path = d.HasFile ? Path.GetFullPath(d.FilePath) : string.Empty,
+                    dirty = d.IsDirty,
+                    content = d.IsDirty ? d.Content : null,
+                    mdRendered = d.MdRendered
+                });
             }
-            EditorConfig.SaveSession(paths, activeFileIndex);
+            EditorConfig.SaveSession(tabs, activeIndex);
         }
 
         /// <summary>Reopens the tabs from the last time the window was closed.
         /// Runs only when the window starts with no documents (a fresh window;
-        /// domain reloads keep their docs via serialization). Missing files
-        /// are skipped silently.</summary>
+        /// domain reloads keep their docs via serialization). Dirty tabs are
+        /// restored from their persisted content, still dirty; clean tabs load
+        /// from disk; files missing by now are skipped.</summary>
         void RestoreSession()
         {
-            var paths = EditorConfig.LoadSession(out int activeIndex);
-            foreach (var p in paths)
+            var tabs = EditorConfig.LoadSession(out int activeIndex);
+            foreach (var t in tabs)
             {
-                if (!File.Exists(p)) continue;
                 var doc = new TextDocument();
-                try { doc.LoadFrom(p); } catch { continue; }
-                if (p.EndsWith(".md", System.StringComparison.OrdinalIgnoreCase))
-                    doc.MdRendered = EditorConfig.MdOpenRendered;
+                bool hasFile = !string.IsNullOrEmpty(t.path) && File.Exists(t.path);
+                if (hasFile)
+                {
+                    try { doc.LoadFrom(t.path); } catch { continue; }
+                }
+                if (t.dirty && t.content != null)
+                {
+                    if (!hasFile && !string.IsNullOrEmpty(t.path)) doc.FilePath = t.path;
+                    doc.Content = t.content;
+                    doc.IsDirty = true;
+                }
+                else if (!hasFile) continue;
+                doc.MdRendered = t.mdRendered;
                 _docs.Add(doc);
             }
             if (HasDocs) _active = Mathf.Clamp(activeIndex, 0, _docs.Count - 1);
