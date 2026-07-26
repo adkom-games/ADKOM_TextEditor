@@ -99,6 +99,11 @@ is verified live in the editor.
 
 ## Release procedure (FORMAL — follow every step when Cary says "publish X.Y.Z")
 
+0. **Editor-guard test** (gate — abort the release if it fails):
+   `powershell -File Tools/check-editor-guards.ps1` — verifies every
+   package .cs starts `#if UNITY_EDITOR` / ends `#endif` and every
+   asmdef is `includePlatforms: ["Editor"]`. Also runs in CI on every
+   push (upm-branch workflow), so a failure blocks the upm split.
 1. **Docs consistency sweep** (do this FIRST, before any version bumps):
    - Package README: every shipped feature represented; keymap table
      current; "What's next" roadmap pruned of anything now shipped.
