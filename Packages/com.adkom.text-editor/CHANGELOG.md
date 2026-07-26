@@ -3,6 +3,15 @@
 All notable changes to this package are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com); versions follow semver.
 
+## [Unreleased]
+
+### Fixed
+- Update installs were fire-and-forget: a failed Client.Add was silent
+  and the project stayed on the old version with no indication. The
+  install request is now monitored — success and failure are logged to
+  the ATE console, and failures show a dialog with the manual install
+  URL.
+
 ## [0.6.0] - 2026-07-26
 
 ### Changed
