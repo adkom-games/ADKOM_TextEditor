@@ -1,0 +1,26 @@
+{
+    "name": "ADKOM.TextEditor.Semantics",
+    "rootNamespace": "ADKOM.TextEditor.Semantics",
+    "references": [
+        "ADKOM.TextEditor.Editor"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "Microsoft.CodeAnalysis.dll",
+        "Microsoft.CodeAnalysis.CSharp.dll",
+        "System.Collections.Immutable.dll",
+        "System.Reflection.Metadata.dll",
+        "System.Memory.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "ADKOM_TE_ROSLYN"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

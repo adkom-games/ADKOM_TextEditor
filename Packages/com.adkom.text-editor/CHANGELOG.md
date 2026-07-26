@@ -6,6 +6,25 @@ All notable changes to this package are documented here. Format follows
 ## [Unreleased]
 
 ### Added
+- Syntax highlighting now colors identifiers — types, methods,
+  variables, and parameters — with theme-authentic colors in all six
+  palettes. A built-in heuristic classifier works everywhere; with the
+  new optional semantics module installed the colors are
+  compiler-accurate (Roslyn).
+- Symbol navigation (requires the semantics module): Ctrl+Click any
+  identifier, or press F12 (Visual Studio / VS Code layouts) or Ctrl+B
+  (Rider), to jump to its definition — locals, parameters, members,
+  and types across files and assemblies; symbols defined in referenced
+  binaries report their assembly in the status bar.
+- New companion package `com.adkom.text-editor.semantics` (install from
+  the `upm-semantics` branch): builds real Roslyn compilations from
+  Unity's CompilationPipeline (sources, defines, references), cached
+  and incrementally updated, off the main thread. It activates only
+  when a Microsoft.CodeAnalysis.CSharp assembly exists in the project
+  (the main package detects Roslyn and enables the module's compile
+  gate automatically).
+- The highlighting engine is span-based internally (per-line classified
+  spans instead of markup strings) — groundwork for more languages.
 - The first run of any newly installed version checks for updates
   immediately (once), bypassing the daily schedule, so fresh installs
   are brought current right away. Automatic updates remain ON by

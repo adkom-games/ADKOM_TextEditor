@@ -25,6 +25,23 @@ namespace ADKOM.TextEditor
             public string Number;
             public string Preprocessor;
             public string Selection;
+            public string Type;
+            public string Method;
+            public string Variable;
+
+            public string ColorFor(TokenClass cls) => cls switch
+            {
+                TokenClass.Keyword => Keyword,
+                TokenClass.String => String,
+                TokenClass.Comment => Comment,
+                TokenClass.Number => Number,
+                TokenClass.Preprocessor => Preprocessor,
+                TokenClass.Type => Type,
+                TokenClass.Method => Method,
+                TokenClass.Variable => Variable,
+                TokenClass.Parameter => Variable,
+                _ => null
+            };
 
             public Color TextColor => Parse(Text);
             public Color BackgroundColor => Parse(Background);
@@ -58,13 +75,15 @@ namespace ADKOM.TextEditor
             {
                 Text = "#DCDCDC", Background = "#1E1E1E", Keyword = "#569CD6",
                 String = "#D69D85", Comment = "#57A64A", Number = "#B5CEA8",
-                Preprocessor = "#9B9B9B", Selection = "#264F78"
+                Preprocessor = "#9B9B9B", Selection = "#264F78",
+                Type = "#4EC9B0", Method = "#DCDCAA", Variable = "#9CDCFE"
             },
             new Palette
             {
                 Text = "#000000", Background = "#FFFFFF", Keyword = "#0000FF",
                 String = "#A31515", Comment = "#008000", Number = "#000000",
-                Preprocessor = "#808080", Selection = "#ADD6FF"
+                Preprocessor = "#808080", Selection = "#ADD6FF",
+                Type = "#2B91AF", Method = "#74531F", Variable = "#001080"
             });
 
         /// <summary>VS Code defaults: Dark+ / Light+.</summary>
@@ -74,13 +93,15 @@ namespace ADKOM.TextEditor
             {
                 Text = "#D4D4D4", Background = "#1E1E1E", Keyword = "#569CD6",
                 String = "#CE9178", Comment = "#6A9955", Number = "#B5CEA8",
-                Preprocessor = "#C586C0", Selection = "#264F78"
+                Preprocessor = "#C586C0", Selection = "#264F78",
+                Type = "#4EC9B0", Method = "#DCDCAA", Variable = "#9CDCFE"
             },
             new Palette
             {
                 Text = "#000000", Background = "#FFFFFF", Keyword = "#0000FF",
                 String = "#A31515", Comment = "#008000", Number = "#098658",
-                Preprocessor = "#AF00DB", Selection = "#ADD6FF"
+                Preprocessor = "#AF00DB", Selection = "#ADD6FF",
+                Type = "#267F99", Method = "#795E26", Variable = "#001080"
             });
 
         /// <summary>JetBrains Rider defaults: Rider Dark (Darcula) / IntelliJ Light.</summary>
@@ -90,13 +111,15 @@ namespace ADKOM.TextEditor
             {
                 Text = "#A9B7C6", Background = "#2B2B2B", Keyword = "#CC7832",
                 String = "#6A8759", Comment = "#808080", Number = "#6897BB",
-                Preprocessor = "#BBB529", Selection = "#214283"
+                Preprocessor = "#BBB529", Selection = "#214283",
+                Type = "#A9B7C6", Method = "#FFC66D", Variable = "#9876AA"
             },
             new Palette
             {
                 Text = "#000000", Background = "#FFFFFF", Keyword = "#0033B3",
                 String = "#067D17", Comment = "#8C8C8C", Number = "#1750EB",
-                Preprocessor = "#9E880D", Selection = "#A6D2FF"
+                Preprocessor = "#9E880D", Selection = "#A6D2FF",
+                Type = "#000000", Method = "#00627A", Variable = "#871094"
             });
 
         public static readonly HighlightTheme[] All = { VisualStudio, VSCode, Rider };
