@@ -3,6 +3,26 @@
 All notable changes to this package are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com); versions follow semver.
 
+## [Unreleased]
+
+### Added
+- Go to Definition on symbols defined in referenced assemblies (e.g.
+  UnityEngine types) now opens a "from metadata" view: a generated C#
+  signature stub of the containing type, with the caret on the invoked
+  member. Virtual documents are C#-highlighted and deduplicated by
+  title.
+- Console text is selectable and copyable (Ctrl+C).
+
+### Changed
+- Dialogs that can appear without a user decision no longer block the
+  editor: the file-changed-on-disk prompt is a non-modal banner with
+  Reload / Keep Mine buttons (the modal froze Unity's main loop — and
+  background tooling — whenever the window regained focus with a
+  changed file); the async update-failure dialog and the
+  "semantics still compiling" notice are console/status messages.
+  Decision dialogs that immediately follow a user action (unsaved
+  changes, Enable & Install consent, About) remain modal by design.
+
 ## [0.6.1] - 2026-07-26
 
 ### Fixed
