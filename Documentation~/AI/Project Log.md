@@ -197,6 +197,18 @@ the bottom. See [[Project State]] for the current snapshot.
   (semantics-0.2.0 tag kept for history). Download +~14MB, binaries
   inert until consented.
 
+## 2026-07-26 — Upgrade-path fixes (0.6.1)
+
+- **Field-tested the update path at last** — and found two defects.
+  (1) Duplicate-assembly collision: projects upgrading to 0.6.0 with
+  the old semantics module installed failed compilation and silently
+  kept running 0.5.x while About said 0.6.0. Fixed: built-in semantics
+  asmdef renamed ADKOM.TextEditor.Editor.Semantics + auto-removal of
+  the obsolete module on load. (2) Client.Add was fire-and-forget;
+  failures now log to the ATE console and show a dialog with the
+  manual URL. Lesson: never ship a merged assembly under a name a
+  previous optional package used.
+
 ## Conventions
 
 - Branch per feature/fix from main; merge with `--no-ff`; branches are kept.

@@ -3,7 +3,7 @@
 All notable changes to this package are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com); versions follow semver.
 
-## [Unreleased]
+## [0.6.1] - 2026-07-26
 
 ### Fixed
 - Upgrading from 0.5.x with the old semantics module installed broke

@@ -1,5 +1,17 @@
 # Release Notes — ADKOM Text Editor
 
+## 0.6.1 — 2026-07-26
+
+### Fixes
+- Upgrading from 0.5.x with the old semantics module installed broke
+  compilation (duplicate assembly name), leaving 0.5.x code running
+  while About reported the new version. The built-in semantics assembly
+  is renamed and the obsolete module package is removed automatically.
+  If you hit this on 0.6.0: remove "ADKOM Text Editor — Semantics
+  Module" in the Package Manager, or simply install this update.
+- Update installs are no longer fire-and-forget: failures are logged to
+  the ATE console and shown in a dialog with the manual install URL.
+
 ## 0.6.0 — 2026-07-26
 
 ### Changes
