@@ -3,7 +3,7 @@
 All notable changes to this package are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com); versions follow semver.
 
-## [Unreleased]
+## [0.5.0] - 2026-07-26
 
 ### Added
 - Ctrl+Alt+8 (Cmd+Alt+8 on macOS) opens the ATE window.

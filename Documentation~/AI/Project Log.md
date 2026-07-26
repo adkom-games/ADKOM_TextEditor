@@ -155,6 +155,22 @@ the bottom. See [[Project State]] for the current snapshot.
 - **Known gap**: no bundled Roslyn for projects without one (module
   stays dormant); planned: bundled DLLs + installer.
 
+## 2026-07-26 — Opt-in semantics with auto-install (0.5.0)
+
+- **Semantic Features setting (OFF by default)**: enabling drives
+  SemanticSetup across reloads — module install (Client.Add
+  #upm-semantics), bundled Roslyn copy (only when the project has none),
+  compile-gate define. Roslyn 4.8 netstandard2.0 binaries (10 DLLs,
+  ~14MB) ship inert in the module's RoslynBinaries~ with
+  THIRD-PARTY-NOTICES.md (MIT, .NET Foundation) satisfying
+  redistribution. Decision: bundle rather than NuGetForUnity (Cary:
+  no NuGet); prefer any Roslyn already present.
+- Go to Definition without the feature now opens a dialog with
+  one-click Enable and Install (was a transient status message).
+- Ctrl+Alt+8 opens the ATE window ("Ctrl-Alt-ATE").
+- Field-test pending: Client.Add and DLL-copy paths can't run in the
+  dev project (module embedded, Roslyn present via MCP).
+
 ## Conventions
 
 - Branch per feature/fix from main; merge with `--no-ff`; branches are kept.
