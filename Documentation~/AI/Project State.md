@@ -40,6 +40,8 @@ with the host project.
 | Release 0.4.0 (published 2026-07-25; first release on the auto-update channel) | Done |
 | Semantic highlighting + Go to Definition (Roslyn module, opt-in auto-install) | Done |
 | Release 0.5.0 (published 2026-07-26; semantics module tagged semantics-0.2.0) | Done |
+| Console pane; colorized minimap; word selection; occurrence highlight | Done |
+| Release 0.5.1 (published 2026-07-26) | Done |
 | More languages; custom themes | Future (roadmap) |
 
 ## Current work area
@@ -114,6 +116,9 @@ commit only — no push, no tag, no release.
   their expansion).
 - UITK quirk: programmatic caret sets need a next-frame re-assert; selection
   color override may be ignored by the engine (cosmetic only).
+- NEVER use the python one-liner open(p,'w').write(open(p).read()...) —
+  the write-open truncates before the read runs (emptied package.json
+  during the 0.5.1 release; recovered from git). Read first, then write.
 
 ## Research Efforts Log
 
