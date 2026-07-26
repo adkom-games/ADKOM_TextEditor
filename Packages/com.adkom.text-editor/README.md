@@ -119,7 +119,9 @@ still one click away.
 ### 🔄 Stays current
 Automatic update checks (daily to every-N-days, or off) announce new
 releases in the console and offer a one-click UPM install when the
-editor is idle — showing you exactly which version you'd get.
+editor is idle — showing you exactly which version you'd get. While an
+update installs, ATE locks itself (never Unity) so no edits get lost —
+and afterwards, the new version's release notes open in a tab.
 
 ### 🛡 Safe by design
 Unsaved-changes prompts on close, external-change detection with a
@@ -140,7 +142,7 @@ https://github.com/adkom-games/ADKOM_TextEditor.git#upm
 Prefer a pinned version?
 
 ```
-https://github.com/adkom-games/ADKOM_TextEditor.git#0.7.0
+https://github.com/adkom-games/ADKOM_TextEditor.git#0.7.1
 ```
 
 Semantic Features (compiler-accurate colors + Go to Definition) are

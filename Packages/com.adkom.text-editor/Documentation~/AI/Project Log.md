@@ -222,6 +222,16 @@ the bottom. See [[Project State]] for the current snapshot.
   actions stay modal by design.
 - Console text selectable/copyable.
 
+## 2026-07-26 — Update experience (0.7.1)
+
+- **Release notes after update**: first run of a new version (updates
+  only, not fresh installs) opens the packaged RELEASE-NOTES.md as a
+  focused virtual tab. OpenVirtualDoc extracted from the metadata view.
+- **ATE-only updating overlay**: InstallInProgress state + event; the
+  window dims and blocks pointer/keyboard/commands during Client.Add —
+  Unity itself stays responsive (modality policy). Clears on failure;
+  success ends in the reload.
+
 ## Conventions
 
 - Branch per feature/fix from main; merge with `--no-ff`; branches are kept.

@@ -1,5 +1,14 @@
 # Release Notes — ADKOM Text Editor
 
+## 0.7.1 — 2026-07-26
+
+### Features
+- After an update, the new version's release notes open in a focused
+  tab (you may be reading this in one right now).
+- While an update installs, the ATE window shows an ATE-only "Updating…"
+  overlay that blocks editing so nothing is lost in the reload — Unity
+  itself stays fully responsive.
+
 ## 0.7.0 — 2026-07-26
 
 ### Features
