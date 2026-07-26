@@ -3,6 +3,13 @@
 All notable changes to this package are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com); versions follow semver.
 
+## [Unreleased]
+
+### Added
+- After an update, the new version's release notes open in a focused
+  tab (raw markdown text from the packaged RELEASE-NOTES.md). Fresh
+  installs are not interrupted.
+
 ## [0.7.0] - 2026-07-26
 
 ### Added
