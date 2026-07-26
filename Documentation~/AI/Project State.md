@@ -81,6 +81,15 @@ is verified live in the editor.
 - **No LFS in this repo** — binaries are plain blobs; LFS attributes broke UPM
   installs on clean machines (issue #1).
 - Editor-only guarantee = asmdef `includePlatforms: ["Editor"]`.
+- **Minimum Unity = 6000.0, cannot go lower** (analyzed 2026-07-26):
+  UIToolkit `WhiteSpace.Pre`/`PreWrap` first exist in 6000.0 — 2023.2
+  has only Normal/NoWrap, and Normal collapses space runs, destroying
+  indentation in every code line, the gutter, and the Markdown views.
+  Whitespace preservation is load-bearing (see the virtualization
+  saga); there is no pre-6000 workaround that keeps correctness.
+  Secondary gates: FocusController.IgnoreEvent (2023.2+), ITextSelection
+  selectable console (2023.1+), Painter2D minimap (2022.1+), and the
+  Unity 6 text-engine behaviors the editor is tuned against.
 
 ## Immediate next steps
 
