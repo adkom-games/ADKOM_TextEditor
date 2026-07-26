@@ -65,6 +65,8 @@ namespace ADKOM.TextEditor
 
         IVisualElementScheduledItem _semanticPending;
         System.Threading.SynchronizationContext _mainCtx;
+        VisualElement _notifyBar;
+        Label _notifyLabel;
         VisualElement _consolePane;
         ScrollView _consoleScroll;
         Label _consoleOutput;
@@ -180,6 +182,27 @@ namespace ADKOM.TextEditor
             // --- Tab bar ---
             _tabBar = new VisualElement { name = "tab-bar" };
             root.Add(_tabBar);
+
+            // --- Non-modal notification banner (e.g. file changed on disk).
+            // Modal dialogs here would block Unity's main loop — including
+            // background tooling — every time the window regains focus. ---
+            _notifyBar = new VisualElement { name = "notify-bar" };
+            _notifyBar.style.display = DisplayStyle.None;
+            _notifyBar.style.flexDirection = FlexDirection.Row;
+            _notifyBar.style.alignItems = Align.Center;
+            _notifyBar.style.paddingLeft = 8;
+            _notifyBar.style.paddingTop = 2;
+            _notifyBar.style.paddingBottom = 2;
+            _notifyBar.style.backgroundColor = new Color(0.55f, 0.45f, 0.15f, 0.25f);
+            _notifyLabel = new Label();
+            _notifyLabel.style.flexGrow = 1;
+            _notifyLabel.style.whiteSpace = WhiteSpace.Normal;
+            _notifyBar.Add(_notifyLabel);
+            var reloadBtn = new Button(ReloadActiveFromDisk) { text = "Reload" };
+            var keepBtn = new Button(KeepMineActive) { text = "Keep Mine" };
+            _notifyBar.Add(reloadBtn);
+            _notifyBar.Add(keepBtn);
+            root.Add(_notifyBar);
 
             // --- Editor area: virtualized code view ---
             _editorArea = new VisualElement { name = "editor-row" };
@@ -423,7 +446,13 @@ namespace ADKOM.TextEditor
 
         void RefreshFormatter()
         {
-            _code?.SetClassifier(SyntaxClassifiers.ForPath(HasDocs && Active.HasFile ? Active.FilePath : null));
+            string classifierPath = null;
+            if (HasDocs)
+            {
+                if (Active.HasFile) classifierPath = Active.FilePath;
+                else if (Active.VirtualCSharp) classifierPath = "virtual.cs";
+            }
+            _code?.SetClassifier(SyntaxClassifiers.ForPath(classifierPath));
             ScheduleSemanticPass();
         }
 
@@ -485,8 +514,8 @@ namespace ADKOM.TextEditor
             var provider = SemanticServices.Provider;
             if (provider == null)
             {
-                EditorUtility.DisplayDialog("Go to Definition",
-                    "The semantics module is still installing or compiling.\n\nTry again in a moment.", "OK");
+                // Informational only — no decision to make, so no modal.
+                PostStatus("Semantic features are still installing or compiling — try again in a moment.");
                 SemanticSetup.EnsureInstalled(silent: true); // nudge any stalled step
                 return;
             }
@@ -500,18 +529,28 @@ namespace ADKOM.TextEditor
             {
                 string status = null;
                 string defPath = null;
-                int dl = 0, dc = 0;
+                string metaTitle = null, metaSource = null;
+                int dl = 0, dc = 0, metaLine = 0;
                 try
                 {
                     if (provider.TryFindDefinition(path, text, offset, out defPath, out dl, out dc, out string origin))
-                        status = defPath == null ? "Defined in " + origin : null;
-                    else
-                        status = "Definition not found.";
+                    {
+                        if (defPath == null)
+                        {
+                            // Metadata symbol: open a signature-stub view.
+                            if (provider.TryGetMetadataSource(path, text, offset, out metaTitle, out metaSource, out metaLine))
+                                status = null;
+                            else
+                                status = "Defined in " + origin;
+                        }
+                    }
+                    else status = "Definition not found.";
                 }
                 catch (System.Exception ex) { status = "Go to Definition failed: " + ex.Message; }
                 ctx.Post(_ =>
                 {
                     if (status != null) { PostStatus(status); return; }
+                    if (metaSource != null) { OpenMetadataView(metaTitle, metaSource, metaLine); return; }
                     OpenExternal(defPath, dl + 1, dc + 1);
                 }, null);
             });
@@ -538,6 +577,8 @@ namespace ADKOM.TextEditor
             _consoleScroll = new ScrollView(ScrollViewMode.Vertical) { name = "console-scroll" };
             _consoleOutput = new Label { name = "console-output" };
             _consoleOutput.AddToClassList("code-line");
+            _consoleOutput.focusable = true;
+            _consoleOutput.selection.isSelectable = true; // select + Ctrl+C
             _consoleScroll.Add(_consoleOutput);
             _consolePane.Add(_consoleScroll);
 
@@ -733,6 +774,26 @@ namespace ADKOM.TextEditor
             scroller.Add(_settingsPane);
             _settingsScroll = scroller;
             root.Add(scroller);
+        }
+
+        /// <summary>Opens (or switches to) a virtual "from metadata" document
+        /// and places the caret on the requested symbol's line.</summary>
+        void OpenMetadataView(string title, string source, int line)
+        {
+            int existing = _docs.FindIndex(d => d.VirtualName == title);
+            if (existing >= 0)
+            {
+                _docs[existing].Content = source;
+                _docs[existing].IsDirty = false;
+                SwitchTo(existing);
+            }
+            else
+            {
+                _docs.Add(new TextDocument { Content = source, VirtualName = title, VirtualCSharp = true });
+                SwitchTo(_docs.Count - 1);
+            }
+            _code.GoToLine(line + 1, 1);
+            PostStatus(title);
         }
 
         /// <summary>Gear behavior: open the settings tab, bring it to the front
@@ -968,39 +1029,54 @@ namespace ADKOM.TextEditor
             return true;                                   // Discard
         }
 
-        /// <summary>Prompts to reload <paramref name="doc"/> if its backing file
-        /// changed on disk. Returns true if the document was reloaded or marked.</summary>
+        /// <summary>Shows the non-modal banner when the active document's
+        /// backing file changed on disk. Never blocks the editor: the old
+        /// modal dialog froze Unity's main loop (and background tooling) any
+        /// time the window regained focus with a changed file.</summary>
         bool CheckExternalChange(TextDocument doc)
         {
-            if (doc == null || !doc.FileChangedOnDisk()) return false;
-            bool reload = EditorUtility.DisplayDialog(
-                "File Changed on Disk",
-                $"'{doc.DisplayName}' was modified outside the editor.\n\nReload it? Unsaved changes here will be lost.",
-                "Reload", "Keep Mine");
-            if (reload)
+            if (doc == null || !doc.FileChangedOnDisk())
             {
-                doc.LoadFrom(doc.FilePath);
+                if (_notifyBar != null) _notifyBar.style.display = DisplayStyle.None;
+                return false;
             }
-            else
+            if (_notifyBar != null)
             {
-                // Stop re-prompting until it changes again.
-                doc.LastKnownWriteTimeUtcTicks = File.GetLastWriteTimeUtc(doc.FilePath).Ticks;
-                doc.IsDirty = true;
+                _notifyLabel.text = $"'{doc.DisplayName}' was modified outside the editor. Reload it? (unsaved changes here would be lost)";
+                _notifyBar.style.display = DisplayStyle.Flex;
             }
             return true;
+        }
+
+        void ReloadActiveFromDisk()
+        {
+            if (!HasDocs || !Active.HasFile) return;
+            Active.LoadFrom(Active.FilePath);
+            _code?.SetValueWithoutNotify(Active.Content);
+            RefreshFormatter();
+            RebuildTabs();
+            UpdateTitle();
+            _notifyBar.style.display = DisplayStyle.None;
+            PostStatus("Reloaded " + Active.DisplayName + " from disk.");
+        }
+
+        void KeepMineActive()
+        {
+            if (!HasDocs || !Active.HasFile) return;
+            // Stop re-prompting until the file changes again.
+            Active.LastKnownWriteTimeUtcTicks = File.GetLastWriteTimeUtc(Active.FilePath).Ticks;
+            Active.IsDirty = true;
+            RebuildTabs();
+            UpdateTitle();
+            _notifyBar.style.display = DisplayStyle.None;
+            PostStatus("Kept in-editor version of " + Active.DisplayName + ".");
         }
 
         void OnFocus()
         {
             // Inactive tabs are checked when they are activated (SwitchTo).
             if (_docs == null || _docs.Count == 0 || _active >= _docs.Count) return;
-            if (CheckExternalChange(Active))
-            {
-                _code?.SetValueWithoutNotify(Active.Content);
-                RefreshFormatter();
-                RebuildTabs();
-                UpdateTitle();
-            }
+            CheckExternalChange(Active); // non-modal banner
         }
 
         void OnDestroy()

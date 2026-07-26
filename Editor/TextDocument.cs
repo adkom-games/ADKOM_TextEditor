@@ -19,6 +19,10 @@ namespace ADKOM.TextEditor
         public bool IsDirty;
         // Special tab that shows the editor's settings pane instead of text.
         public bool IsSettings;
+        // Virtual documents (e.g. "Foo [metadata]"): named content with no
+        // backing file; VirtualCSharp requests C# highlighting.
+        public string VirtualName;
+        public bool VirtualCSharp;
         public LineEnding Eol = LineEnding.Windows;
         public bool HasBom;
         // True when the file on disk indents with tabs. In memory tabs are
@@ -30,7 +34,9 @@ namespace ADKOM.TextEditor
 
         public bool HasFile => !string.IsNullOrEmpty(FilePath);
         public string DisplayName =>
-            IsSettings ? "Settings" : HasFile ? Path.GetFileName(FilePath) : "Untitled";
+            IsSettings ? "Settings"
+            : !string.IsNullOrEmpty(VirtualName) ? VirtualName
+            : HasFile ? Path.GetFileName(FilePath) : "Untitled";
 
         public void LoadFrom(string path)
         {

@@ -256,6 +256,77 @@ namespace ADKOM.TextEditor.Semantics
             metadataOrigin = symbol.ContainingAssembly?.Name ?? "metadata";
             return true;
         }
+
+        // --- "From metadata" stub view ---
+
+        public bool TryGetMetadataSource(string path, string text, int offset,
+            out string title, out string source, out int line)
+        {
+            title = null; source = null; line = 0;
+            var (model, tree) = GetModel(path, text);
+            if (model == null) return false;
+            var root = tree.GetRoot();
+            offset = Math.Max(0, Math.Min(offset, root.FullSpan.End - 1));
+            var symbol = ResolveSymbol(model, root.FindToken(offset));
+            if (symbol == null || symbol.Locations.Any(l => l.IsInSource)) return false;
+
+            var type = symbol as INamedTypeSymbol ?? symbol.ContainingType;
+            if (type == null) return false;
+
+            title = type.Name + " [metadata]";
+            var fmt = SymbolDisplayFormat.MinimallyQualifiedFormat;
+            var sb = new System.Text.StringBuilder(4096);
+            int currentLine = 0;
+            void Line(string s) { sb.Append(s).Append('\n'); currentLine++; }
+
+            Line("// From metadata: " + (type.ContainingAssembly?.Name ?? "?") + ".dll — signatures only.");
+            Line("");
+            if (!type.ContainingNamespace.IsGlobalNamespace)
+            {
+                Line("namespace " + type.ContainingNamespace.ToDisplayString());
+                Line("{");
+            }
+            string indent = type.ContainingNamespace.IsGlobalNamespace ? "" : "    ";
+            string kind = type.TypeKind switch
+            {
+                TypeKind.Interface => "interface",
+                TypeKind.Struct => "struct",
+                TypeKind.Enum => "enum",
+                TypeKind.Delegate => "delegate",
+                _ => "class"
+            };
+            string bases = "";
+            if (type.BaseType != null && type.BaseType.SpecialType != SpecialType.System_Object &&
+                type.TypeKind == TypeKind.Class)
+                bases = " : " + type.BaseType.ToDisplayString(fmt);
+            if (SymbolEqualityComparer.Default.Equals(type, symbol)) line = currentLine;
+            Line(indent + "public " + kind + " " + type.ToDisplayString(fmt) + bases);
+            Line(indent + "{");
+
+            var members = type.GetMembers()
+                .Where(m => !m.IsImplicitlyDeclared &&
+                    (m.DeclaredAccessibility == Accessibility.Public ||
+                     m.DeclaredAccessibility == Accessibility.Protected))
+                .Where(m => !(m is IMethodSymbol ms &&
+                    (ms.MethodKind == MethodKind.PropertyGet || ms.MethodKind == MethodKind.PropertySet ||
+                     ms.MethodKind == MethodKind.EventAdd || ms.MethodKind == MethodKind.EventRemove)))
+                .OrderBy(m => m.Kind).ThenBy(m => m.Name, StringComparer.Ordinal);
+
+            foreach (var m in members)
+            {
+                if (SymbolEqualityComparer.Default.Equals(m.OriginalDefinition, symbol.OriginalDefinition))
+                    line = currentLine;
+                string sig;
+                try { sig = m.ToDisplayString(fmt); }
+                catch (Exception) { sig = m.Name; }
+                Line(indent + "    public " + sig + ";");
+            }
+
+            Line(indent + "}");
+            if (!type.ContainingNamespace.IsGlobalNamespace) Line("}");
+            source = sb.ToString();
+            return true;
+        }
     }
 }
 #endif

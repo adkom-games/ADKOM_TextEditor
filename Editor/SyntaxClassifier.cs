@@ -69,6 +69,12 @@ namespace ADKOM.TextEditor
         /// (referenced assembly); metadataOrigin then names the assembly.</summary>
         bool TryFindDefinition(string path, string text, int offset,
             out string defPath, out int line, out int column, out string metadataOrigin);
+
+        /// <summary>For a symbol defined in metadata, generates a C# signature
+        /// stub of its containing type ("from metadata" view). line is the
+        /// 0-based line of the requested symbol within the stub.</summary>
+        bool TryGetMetadataSource(string path, string text, int offset,
+            out string title, out string source, out int line);
     }
 
     public static class SemanticServices
