@@ -511,11 +511,23 @@ namespace ADKOM.TextEditor
             SwitchTo(_docs.Count - 1);
         }
 
+        IVisualElementScheduledItem _apiTextPending;
+        TextDocument _apiTextDoc;
+
         void OnTextChanged(string newValue)
         {
             if (!CanEditDoc) return;
             Active.Content = newValue;
             if (ActiveIsMarkdown && Active.MdRendered) _mdView?.Render(newValue);
+            // Debounced AteApi.textChanged (typing coalesces into one event).
+            _apiTextDoc = Active;
+            if (_apiTextPending == null)
+                _apiTextPending = rootVisualElement.schedule.Execute(() =>
+                {
+                    var d = _apiTextDoc;
+                    if (d != null && _docs.Contains(d)) Scripting.AteApi.NotifyTextChanged(this, d);
+                });
+            _apiTextPending.ExecuteLater(400);
             ScheduleSemanticPass();
             if (!Active.IsDirty)
             {
@@ -1071,11 +1083,13 @@ namespace ADKOM.TextEditor
             }
             else
             {
-                _docs.Add(new TextDocument
+                var vdoc = new TextDocument
                 {
                     Content = content, VirtualName = title, VirtualCSharp = csharp,
                     VirtualMarkdown = markdown, MdRendered = markdown && rendered
-                });
+                };
+                _docs.Add(vdoc);
+                Scripting.AteApi.NotifyOpened(this, vdoc);
                 SwitchTo(_docs.Count - 1);
             }
         }
@@ -1343,6 +1357,7 @@ namespace ADKOM.TextEditor
                 RebuildTabs();
                 UpdateTitle();
                 UpdateStatus();
+                Scripting.AteApi.NotifyActiveChanged(this, null);
                 return;
             }
             if (_code != null) _code.style.display = DisplayStyle.Flex;
@@ -1379,6 +1394,7 @@ namespace ADKOM.TextEditor
             // frame so the view is laid out/visible before taking focus.
             if (!(ActiveIsMarkdown && Active.MdRendered))
                 _code?.schedule.Execute(() => _code.Focus()).ExecuteLater(0);
+            Scripting.AteApi.NotifyActiveChanged(this, Active);
         }
 
         void CloseTab(int index)
@@ -1404,6 +1420,7 @@ namespace ADKOM.TextEditor
             int index = _docs.IndexOf(doc);
             if (index < 0) return;
             _docs.RemoveAt(index);
+            Scripting.AteApi.NotifyClosed(this, doc);
             if (index < _active || _active >= _docs.Count)
                 _active = Mathf.Max(0, _active - 1);
             SwitchTo(_active); // handles the now-empty case without auto-Untitled
@@ -1413,7 +1430,9 @@ namespace ADKOM.TextEditor
 
         void NewFile()
         {
-            _docs.Add(new TextDocument());
+            var doc = new TextDocument();
+            _docs.Add(doc);
+            Scripting.AteApi.NotifyOpened(this, doc);
             SwitchTo(_docs.Count - 1);
         }
 
@@ -1456,6 +1475,7 @@ namespace ADKOM.TextEditor
                 doc.MdRendered = EditorConfig.MdOpenRendered;
             _docs.Add(doc);
             EditorConfig.AddRecentFile(full);
+            Scripting.AteApi.NotifyOpened(this, doc);
             SwitchTo(_docs.Count - 1);
         }
 
@@ -2224,6 +2244,85 @@ namespace ADKOM.TextEditor
         public int DocCount => _docs.Count;
         public int ActiveIndex => _active;
         public bool IsSettingsTab(int i) => _docs[i].IsSettings;
+
+        // --- AteApi plumbing (the stable facade lives in Scripting/AteApi.cs;
+        // these internals are its only touchpoints). ---
+
+        internal bool ApiContains(TextDocument d) => _docs.Contains(d);
+
+        internal IEnumerable<TextDocument> ApiDocuments()
+        {
+            foreach (var d in _docs)
+                if (!d.IsSettings) yield return d;
+        }
+
+        internal TextDocument ApiActiveDocument() =>
+            HasDocs && !Active.IsSettings ? Active : null;
+
+        internal TextDocument ApiNewDocument(string initialText)
+        {
+            NewFile();
+            var doc = Active;
+            if (initialText.Length > 0)
+            {
+                doc.Content = initialText;
+                doc.IsDirty = true;
+                _code?.SetValueWithoutNotify(doc.Content);
+                RebuildTabs();
+                UpdateTitle();
+            }
+            return doc;
+        }
+
+        internal void ApiActivate(TextDocument d)
+        {
+            int i = _docs.IndexOf(d);
+            if (i >= 0 && i != _active) SwitchTo(i);
+        }
+
+        internal void ApiGoTo(int line, int col) => _code?.GoToLine(line, col);
+
+        /// <summary>Facade write path. Active document: routed through the
+        /// undo system as one Programmatic step. Background document: applied
+        /// directly to the model — documented as NOT undoable.</summary>
+        internal void ApiReplaceRange(TextDocument d, int start, int end, string replacement)
+        {
+            if (HasDocs && Active == d && _code != null)
+            {
+                _code.ReplaceRangeInternal(start, end, replacement,
+                    Mathf.Min(start, _code.value.Length) + replacement.Length,
+                    CodeView.EditKind.Programmatic);
+                return; // OnTextChanged handles model sync, dirty, and events
+            }
+            string v = d.Content ?? string.Empty;
+            start = Mathf.Clamp(start, 0, v.Length);
+            end = Mathf.Clamp(end, start, v.Length);
+            d.Content = v.Substring(0, start) + replacement + v.Substring(end);
+            d.IsDirty = true;
+            RebuildTabs();
+            UpdateTitle();
+            Scripting.AteApi.NotifyTextChanged(this, d);
+        }
+
+        internal bool ApiSave(TextDocument d)
+        {
+            bool ok = FileService.Save(d);
+            if (ok)
+            {
+                if (HasDocs && Active == d) RefreshFormatter();
+                RebuildTabs();
+                UpdateTitle();
+                UpdateStatus();
+            }
+            return ok;
+        }
+
+        internal void ApiClose(TextDocument d, bool discardChanges)
+        {
+            if (discardChanges) d.IsDirty = false;
+            int i = _docs.IndexOf(d);
+            if (i >= 0) CloseTab(i); // dirty + !discard → non-modal banner
+        }
         public string GetDocName(int i) => _docs[i].DisplayName;
 
         public string GetDocContent(int i) =>
