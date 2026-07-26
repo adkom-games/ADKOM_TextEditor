@@ -83,9 +83,9 @@ whitespace, so space-indented files *feel* tab-indented.
 layouts) or Ctrl+B (Rider) — and jump straight to its definition:
 locals, parameters, members, and types, across files and assemblies.
 Symbols from referenced binaries report their assembly in the status
-bar. Part of the opt-in Semantic Features: the first use offers to
-enable and install everything for you (the Roslyn-backed semantics
-module; MIT-licensed, notices included).
+bar. Part of the opt-in Semantic Features: everything ships in the box,
+and the first use offers one-click setup (bundled MIT-licensed Roslyn,
+notices included; an existing project Roslyn is used as-is).
 
 ### 🔍 Find & replace, everywhere
 Search the current file or every open tab at once — match case, whole
@@ -142,13 +142,9 @@ Prefer a pinned version?
 https://github.com/adkom-games/ADKOM_TextEditor.git#0.5.1
 ```
 
-The semantics module (compiler-accurate colors + Go to Definition)
-installs automatically when you enable Semantic Features in Settings —
-or add it manually:
-
-```
-https://github.com/adkom-games/ADKOM_TextEditor.git#upm-semantics
-```
+Semantic Features (compiler-accurate colors + Go to Definition) are
+built in — the first use, or the Settings toggle, sets everything up
+automatically.
 
 Requires Unity 6000.0+. The `upm` branch delivers only the package —
 your download is lean. Then open **Tools → ADKOM → Text Editor**, or
