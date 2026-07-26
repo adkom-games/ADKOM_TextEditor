@@ -137,6 +137,24 @@ the bottom. See [[Project State]] for the current snapshot.
 - **Smooth scrolling** (optional, same per-notch velocity, exponential
   ease).
 
+## 2026-07-25 — Semantic highlighting and navigation (0.4.1)
+
+- **Span-based highlighting engine**: classifiers emit per-line
+  (start,len,TokenClass) spans; markup built lazily per visible row;
+  wrap slicing clips spans. Replaced CSharpFormatter/ITextFormatter.
+- **Heuristic identifier classification** (types/methods/variables/
+  params) + identifier colors in all six palettes.
+- **Companion package com.adkom.text-editor.semantics** (Roslyn):
+  asmdef gated on ADKOM_TE_ROSLYN (set by main-package bootstrap when
+  Roslyn is detected — avoids duplicate-DLL conflicts, e.g. with the
+  MCP's copies). Builds cached CSharpCompilations from
+  CompilationPipeline data; bg-thread classification (~80ms warm,
+  515 spans) replaces heuristics version-checked.
+- **Go to Definition**: Ctrl+Click / F12 / Ctrl+B; cross-file, locals,
+  metadata provenance. Distributed via new upm-semantics split branch.
+- **Known gap**: no bundled Roslyn for projects without one (module
+  stays dormant); planned: bundled DLLs + installer.
+
 ## Conventions
 
 - Branch per feature/fix from main; merge with `--no-ff`; branches are kept.

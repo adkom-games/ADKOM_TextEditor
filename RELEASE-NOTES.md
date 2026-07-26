@@ -1,5 +1,21 @@
 # Release Notes — ADKOM Text Editor
 
+## 0.4.1 — 2026-07-25
+
+### Features
+- Identifier syntax highlighting: types, methods, variables, parameters
+  in theme-authentic colors (built-in heuristics; compiler-accurate
+  with the semantics module).
+- Symbol navigation with the new optional Roslyn semantics module
+  (`#upm-semantics`): Ctrl+Click / F12 / Ctrl+B jumps to definitions
+  across files and assemblies; metadata symbols report their assembly.
+- First run of a newly installed version checks for updates immediately.
+
+### Notes
+- The semantics module activates only when a Microsoft.CodeAnalysis.
+  CSharp assembly exists in the project (detected automatically).
+- Forensic console log when automatic updates are disabled.
+
 ## 0.4.0 — 2026-07-25
 
 ### Features
