@@ -7,9 +7,9 @@ All notable changes to this package are documented here. Format follows
 
 ### Added
 - Minimap along the right edge of the document area (between content
-  and scrollbar): a code-shape overview of the whole document with a
-  viewport indicator; click or drag to jump. Toggled via Window →
-  Minimap; on by default.
+  and scrollbar): a syntax-colorized code-shape overview of the whole
+  document with a viewport indicator; click or drag to jump. Toggled
+  via Window → Minimap; on by default.
 - Selecting text highlights every other occurrence of the selection in
   the file in a weaker color, so matches stand out while the active
   selection stays dominant (single-line selections up to 200 chars;
