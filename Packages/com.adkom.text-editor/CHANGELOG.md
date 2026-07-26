@@ -5,6 +5,13 @@ All notable changes to this package are documented here. Format follows
 
 ## [Unreleased]
 
+### Added
+- File → Recent Files: the most recently opened files (per project,
+  newest first, deduplicated), each entry reopening its file; missing
+  files are dropped from the list with a console note. "Clear Recent
+  Files" empties it. The list length is configurable in Settings
+  ("Recent Files Count", default 5, 1-30).
+
 ### Changed
 - Console and Minimap moved from the Window menu to the View menu,
   where all four view toggles now sit alphabetically: Console, Line
