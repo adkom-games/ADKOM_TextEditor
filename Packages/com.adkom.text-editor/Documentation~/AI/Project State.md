@@ -16,7 +16,7 @@ with the host project.
   to main (`git subtree split`).
 - **Install:** `https://github.com/adkom-games/ADKOM_TextEditor.git#upm`
   (pinned: `#0.1.0`).
-- **Last updated:** 2026-07-24
+- **Last updated:** 2026-07-26
 - **Active branch:** main (feature branches merged with --no-ff and kept)
 
 ## Milestones
@@ -49,6 +49,8 @@ with the host project.
 | Release 0.7.0 (published 2026-07-26) | Done |
 | Update experience: release-notes tab + ATE-only updating overlay | Done |
 | Release 0.7.1 (published 2026-07-26) | Done |
+| Markdown: source coloring + rendered WYSIWYG mode (transient MD/src toggle) | Done (unreleased) |
+| Markdown formatting toolbar + parity (strike, images, task lists, tables) | Done (unreleased) |
 | More languages; custom themes | Future (roadmap) |
 
 ## Current work area
@@ -86,7 +88,14 @@ is verified live in the editor.
    on a Roslyn-less project; confirm Cary's second project heals via
    0.6.1 or manual module removal. Plan next milestone (roadmap:
    languages, custom themes; backlog: MRU tab order, tab reorder).
-2. Roadmap candidates: JSON/Markdown formatters, custom themes,
+2. `[Unreleased]` holds the full Markdown feature (source coloring,
+   rendered WYSIWYG mode with block editing, formatting toolbar in
+   rendered mode, strike/image/task-list/table parity) — next release
+   ships it. Files: `MarkdownClassifier.cs`, `MarkdownView.cs` (block
+   parse/render, `ApplyFormat`, `onInsertBlock`), toolbar wiring in
+   `TextEditorWindow.cs` (`_mdFormatBar`, `BuildMdFormatBar`,
+   `OnMdInsertBlock`). Verified live via MCP reflection tests.
+3. Roadmap candidates: JSON formatters, custom themes,
    Ctrl+Tab MRU order, drag-to-reorder tabs.
 
 ## Release procedure (FORMAL — follow every step when Cary says "publish X.Y.Z")
