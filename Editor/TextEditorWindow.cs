@@ -60,7 +60,8 @@ namespace ADKOM.TextEditor
         IntegerField _settingsFontSize;
         Toggle _settingsSmooth;
 
-        ITextFormatter _formatter = new PlainTextFormatter();
+        IVisualElementScheduledItem _semanticPending;
+        System.Threading.SynchronizationContext _mainCtx;
 
         TextDocument Active => _docs[_active];
 
@@ -183,6 +184,8 @@ namespace ADKOM.TextEditor
             _code.wordWrap = _wordWrap;
             _code.RegisterCallback<KeyDownEvent>(OnKeyDown, TrickleDown.TrickleDown);
             _code.onFontSizeChanged += SyncSettingsControls; // zoom gestures
+            _code.onNavigateRequest += NavigateToDefinition;  // Ctrl+Click
+            _mainCtx = System.Threading.SynchronizationContext.Current;
             _editorArea.Add(_code);
 
             _emptyHint = new Label("No file open.\nFile → New, File → Open…, or right-click a text asset in the Project window.");
@@ -382,6 +385,7 @@ namespace ADKOM.TextEditor
         {
             if (!CanEditDoc) return;
             Active.Content = newValue;
+            ScheduleSemanticPass();
             if (!Active.IsDirty)
             {
                 Active.IsDirty = true;
@@ -396,15 +400,85 @@ namespace ADKOM.TextEditor
         {
             HighlightTheme.Mode = CurrentThemeMode;
             var palette = CurrentTheme.Current;
-            TextFormatters.Theme = CurrentTheme;
-            _code?.SetTheme(palette.TextColor, palette.BackgroundColor, palette.SelectionColor);
+            _code?.SetPalette(palette);
             RefreshFormatter();
         }
 
         void RefreshFormatter()
         {
-            _formatter = TextFormatters.ForPath(HasDocs && Active.HasFile ? Active.FilePath : null);
-            _code?.SetFormatter(_formatter);
+            _code?.SetClassifier(SyntaxClassifiers.ForPath(HasDocs && Active.HasFile ? Active.FilePath : null));
+            ScheduleSemanticPass();
+        }
+
+        // --- Semantics (optional compiler-backed module) ---
+
+        void ScheduleSemanticPass()
+        {
+            if (SemanticServices.Provider == null || !CanEditDoc || !Active.HasFile ||
+                !Active.FilePath.EndsWith(".cs", System.StringComparison.OrdinalIgnoreCase))
+                return;
+            if (_semanticPending == null)
+                _semanticPending = rootVisualElement.schedule.Execute(StartSemanticPass);
+            _semanticPending.ExecuteLater(400); // debounce typing
+        }
+
+        void StartSemanticPass()
+        {
+            var provider = SemanticServices.Provider;
+            if (provider == null || !CanEditDoc || !Active.HasFile) return;
+            string path = Active.FilePath;
+            string text = _code.value;
+            int version = _code.DocVersion;
+            var ctx = _mainCtx;
+            System.Threading.Tasks.Task.Run(() =>
+            {
+                try
+                {
+                    if (provider.TryGetClassifiedSpans(path, text, out var spans))
+                        ctx.Post(_ => { if (_code != null) _code.ApplySemanticSpans(spans, version); }, null);
+                }
+                catch (System.Exception ex)
+                {
+                    Debug.LogWarning("[ADKOM Text Editor] Semantic pass failed: " + ex.Message);
+                }
+            });
+        }
+
+        /// <summary>Go to Definition at (line, col) — Ctrl+Click / F12 / Ctrl+B.
+        /// Requires the semantics module; resolved on a background thread.</summary>
+        void NavigateToDefinition(int line, int col)
+        {
+            var provider = SemanticServices.Provider;
+            if (provider == null)
+            {
+                _statusLeft.text = "Go to Definition requires the ADKOM semantics module.";
+                return;
+            }
+            if (!CanEditDoc || !Active.HasFile) return;
+            string path = Active.FilePath;
+            string text = _code.value;
+            int offset = _code.LineColToIndex(line, col);
+            var ctx = _mainCtx;
+            _statusLeft.text = "Resolving symbol…";
+            System.Threading.Tasks.Task.Run(() =>
+            {
+                string status = null;
+                string defPath = null;
+                int dl = 0, dc = 0;
+                try
+                {
+                    if (provider.TryFindDefinition(path, text, offset, out defPath, out dl, out dc, out string origin))
+                        status = defPath == null ? "Defined in " + origin : null;
+                    else
+                        status = "Definition not found.";
+                }
+                catch (System.Exception ex) { status = "Go to Definition failed: " + ex.Message; }
+                ctx.Post(_ =>
+                {
+                    if (status != null) { if (_statusLeft != null) _statusLeft.text = status; return; }
+                    OpenExternal(defPath, dl + 1, dc + 1);
+                }, null);
+            });
         }
 
         // --- Settings tab ---
@@ -872,7 +946,6 @@ namespace ADKOM.TextEditor
 
             if (handled)
             {
-                e.PreventDefault();
                 e.StopImmediatePropagation();
                 return;
             }
@@ -914,7 +987,6 @@ namespace ADKOM.TextEditor
             }
             if (handled)
             {
-                e.PreventDefault();
                 e.StopImmediatePropagation();
             }
         }
@@ -926,7 +998,6 @@ namespace ADKOM.TextEditor
             // Swallow the character-only Tab event; the keyCode event acts.
             if (e.keyCode == KeyCode.None && e.character == '\t')
             {
-                e.PreventDefault();
                 e.StopImmediatePropagation();
                 return;
             }
@@ -964,10 +1035,21 @@ namespace ADKOM.TextEditor
             else if (rider && e.altKey && e.shiftKey && !ctrl && e.keyCode == KeyCode.UpArrow) { MoveLine(-1); handled = true; }
             else if (rider && e.altKey && e.shiftKey && !ctrl && e.keyCode == KeyCode.DownArrow) { MoveLine(1); handled = true; }
             else if (ctrl && !e.shiftKey && !e.altKey && e.keyCode == KeyCode.Slash) { ToggleComment(); handled = true; }
+            else if ((vs || vscode) && !ctrl && !e.altKey && e.keyCode == KeyCode.F12)
+            {
+                _code.IndexToLineCol(_code.cursorIndex, out int nl, out int ncol);
+                NavigateToDefinition(nl, ncol);
+                handled = true;
+            }
+            else if (rider && ctrl && !e.shiftKey && !e.altKey && e.keyCode == KeyCode.B)
+            {
+                _code.IndexToLineCol(_code.cursorIndex, out int nl, out int ncol);
+                NavigateToDefinition(nl, ncol);
+                handled = true;
+            }
 
             if (handled)
             {
-                e.PreventDefault();
                 e.StopImmediatePropagation();
             }
         }
@@ -1253,7 +1335,7 @@ namespace ADKOM.TextEditor
                 else col++;
             }
             _statusLeft.text = $"Ln {line}, Col {col}";
-            _statusRight.text = $"{_formatter.Name}  |  UTF-8{(Active.HasBom ? " BOM" : "")}  |  {Active.EolLabel}";
+            _statusRight.text = $"{_code.ClassifierName ?? "Plain Text"}  |  UTF-8{(Active.HasBom ? " BOM" : "")}  |  {Active.EolLabel}";
         }
     }
 }

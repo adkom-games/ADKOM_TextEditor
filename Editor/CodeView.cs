@@ -28,8 +28,16 @@ namespace ADKOM.TextEditor
         string _cachedValue = string.Empty;
         bool _cacheValid = true;
 
-        ITextFormatter _formatter;
-        string[] _richLines; // null => render plain
+        ISyntaxClassifier _classifier;
+        List<SyntaxSpan>[] _lineSpans;   // per-line, sorted by Start; null => plain
+        string[] _lineMarkup;            // lazy per-line markup cache
+        HighlightTheme.Palette _palette;
+        int _docVersion;
+
+        /// <summary>Fires on Ctrl+Click with the (line, col) under the cursor.</summary>
+        public event Action<int, int> onNavigateRequest;
+        public int DocVersion => _docVersion;
+        public string ClassifierName => _classifier?.Name;
 
         // Word wrap layout: per line, the columns where new visual rows start
         // (null = single row); _rowStarts[i] = first visual row of line i.
@@ -225,13 +233,11 @@ namespace ADKOM.TextEditor
                 if (e.ctrlKey || e.commandKey)
                 {
                     ZoomBy(e.delta.y < 0 ? 1 : -1);
-                    e.PreventDefault();
                     e.StopImmediatePropagation();
                     return;
                 }
                 if (!EditorConfig.SmoothScrolling) return; // ScrollView steps as usual
                 SmoothScrollBy(e.delta.y * _scroll.mouseWheelScrollSize);
-                e.PreventDefault();
                 e.StopImmediatePropagation();
             }, TrickleDown.TrickleDown);
             RegisterCallback<PointerDownEvent>(OnPointerDown);
@@ -247,7 +253,7 @@ namespace ADKOM.TextEditor
             // does not stop, so consume them here.
             RegisterCallback<NavigationMoveEvent>(e =>
             {
-                e.PreventDefault();
+                focusController?.IgnoreEvent(e);
                 e.StopPropagation();
             });
             // The viewport gets its size after this element's own geometry
@@ -289,8 +295,9 @@ namespace ADKOM.TextEditor
             }
             _cachedValue = v;
             _cacheValid = true;
+            _docVersion++;
             ClampCaret();
-            Reformat();
+            Reclassify();
             RecomputeWrap();
             RefreshVisible();
             // Re-fill once post-layout state (viewport size, line height from
@@ -346,21 +353,33 @@ namespace ADKOM.TextEditor
 
         // ---------- Theme / formatter ----------
 
-        public void SetTheme(Color text, Color background, Color selection)
+        public void SetPalette(HighlightTheme.Palette palette)
         {
-            _textColor = text;
+            _palette = palette;
+            _textColor = palette.TextColor;
+            var selection = palette.SelectionColor;
             _selectionColor = new Color(selection.r, selection.g, selection.b, 0.55f);
-            style.backgroundColor = background;
-            _gutterCol.style.backgroundColor = background;
-            _caret.style.backgroundColor = text;
-            Reformat();
+            style.backgroundColor = palette.BackgroundColor;
+            _gutterCol.style.backgroundColor = palette.BackgroundColor;
+            _caret.style.backgroundColor = _textColor;
+            _lineMarkup = null; // colors changed; markup rebuilds lazily
             RefreshVisible();
         }
 
-        public void SetFormatter(ITextFormatter formatter)
+        public void SetClassifier(ISyntaxClassifier classifier)
         {
-            _formatter = formatter is PlainTextFormatter ? null : formatter;
-            Reformat();
+            _classifier = classifier;
+            Reclassify();
+            RefreshVisible();
+        }
+
+        /// <summary>Replaces heuristic spans with compiler-accurate ones;
+        /// ignored if the document changed since they were computed.</summary>
+        public void ApplySemanticSpans(List<SyntaxSpan> spans, int forVersion)
+        {
+            if (forVersion != _docVersion || spans == null) return;
+            BucketSpans(spans);
+            _lineMarkup = null;
             RefreshVisible();
         }
 
@@ -370,12 +389,64 @@ namespace ADKOM.TextEditor
             set { _gutterCol.style.display = value ? DisplayStyle.Flex : DisplayStyle.None; RefreshVisible(); }
         }
 
-        void Reformat()
+        void Reclassify()
         {
-            if (_formatter == null) { _richLines = null; return; }
-            string v = GetValueInternal();
-            if (v.Length > 400_000) { _richLines = null; return; }
-            _richLines = _formatter.Format(v).Split('\n');
+            _lineMarkup = null;
+            if (_classifier == null || GetValueInternal().Length > 400_000)
+            {
+                _lineSpans = null;
+                return;
+            }
+            BucketSpans(_classifier.Classify(_lines));
+        }
+
+        void BucketSpans(List<SyntaxSpan> spans)
+        {
+            var buckets = new List<SyntaxSpan>[_lines.Count];
+            foreach (var s in spans)
+            {
+                if (s.Line < 0 || s.Line >= _lines.Count || s.Length <= 0) continue;
+                (buckets[s.Line] = buckets[s.Line] ?? new List<SyntaxSpan>(8)).Add(s);
+            }
+            for (int i = 0; i < buckets.Length; i++)
+                buckets[i]?.Sort((a, b) => a.Start.CompareTo(b.Start));
+            _lineSpans = buckets;
+        }
+
+        /// <summary>Builds rich-text markup for line columns [fromCol, toCol)
+        /// from that line's spans, escaping literal '&lt;' with noparse.</summary>
+        string MarkupForRange(int line, int fromCol, int toCol)
+        {
+            string text = _lines[line];
+            toCol = Mathf.Min(toCol, text.Length);
+            var sb = new StringBuilder((toCol - fromCol) + 32);
+            var spans = _lineSpans[line];
+            int pos = fromCol;
+            if (spans != null)
+            {
+                foreach (var s in spans)
+                {
+                    int ss = Mathf.Max(s.Start, fromCol);
+                    int se = Mathf.Min(s.Start + s.Length, toCol);
+                    if (se <= ss) continue;
+                    if (ss > pos) AppendEscaped(sb, text, pos, ss, null);
+                    AppendEscaped(sb, text, ss, se, _palette?.ColorFor(s.Class));
+                    pos = se;
+                }
+            }
+            if (pos < toCol) AppendEscaped(sb, text, pos, toCol, null);
+            return sb.ToString();
+        }
+
+        static void AppendEscaped(StringBuilder sb, string text, int from, int to, string color)
+        {
+            if (to <= from) return;
+            if (color != null) sb.Append("<color=").Append(color).Append('>');
+            bool hasLt = text.IndexOf('<', from, to - from) >= 0;
+            if (hasLt) sb.Append("<noparse>");
+            sb.Append(text, from, to - from);
+            if (hasLt) sb.Append("</noparse>");
+            if (color != null) sb.Append("</color>");
         }
 
         // ---------- Word wrap layout ----------
@@ -559,13 +630,20 @@ namespace ADKOM.TextEditor
                 label.style.top = row * _lineHeight;
                 label.style.left = 0;
                 label.style.color = _textColor;
-                bool rich = _richLines != null && line < _richLines.Length;
+                bool rich = _lineSpans != null && line < _lineSpans.Length;
                 label.enableRichText = rich;
                 if (rich)
                 {
                     var br = _breaks?[line];
-                    label.text = br == null ? _richLines[line]
-                        : MarkupSlice(_richLines[line], sc, ec);
+                    if (br == null)
+                    {
+                        // Cache full-line markup for the common unwrapped case.
+                        if (_lineMarkup == null || _lineMarkup.Length != _lines.Count)
+                            _lineMarkup = new string[_lines.Count];
+                        label.text = _lineMarkup[line] ??
+                            (_lineMarkup[line] = MarkupForRange(line, 0, _lines[line].Length));
+                    }
+                    else label.text = MarkupForRange(line, sc, ec);
                 }
                 else label.text = _lines[line].Substring(sc, ec - sc);
 
@@ -584,64 +662,6 @@ namespace ADKOM.TextEditor
             RefreshGutter(firstRow, visible, scrollY);
             RefreshSelection(firstRow, visible);
             RefreshCaret();
-        }
-
-        /// <summary>Slices a rich-text line's markup to the plain-char range
-        /// [fromCol, toCol), reopening color/noparse state at the slice start.
-        /// Only tags this package's formatters emit are understood.</summary>
-        static string MarkupSlice(string markup, int fromCol, int toCol)
-        {
-            var sb = new StringBuilder();
-            string openColor = null;
-            bool inNoparse = false;
-            int plain = 0;
-            bool started = false;
-
-            for (int i = 0; i < markup.Length;)
-            {
-                if (inNoparse && string.CompareOrdinal(markup, i, "</noparse>", 0, 10) == 0)
-                {
-                    if (started && plain < toCol) sb.Append("</noparse>");
-                    inNoparse = false;
-                    i += 10;
-                    continue;
-                }
-                if (!inNoparse && markup[i] == '<')
-                {
-                    int close = markup.IndexOf('>', i);
-                    if (close < 0) close = markup.Length - 1;
-                    string tag = markup.Substring(i, close - i + 1);
-                    if (tag.StartsWith("<color", StringComparison.Ordinal)) openColor = tag;
-                    else if (tag == "</color>") openColor = null;
-                    else if (tag == "<noparse>") inNoparse = true;
-                    if (started && plain < toCol)
-                    {
-                        sb.Append(tag);
-                    }
-                    i = close + 1;
-                    continue;
-                }
-
-                if (plain >= toCol) break;
-                if (plain >= fromCol)
-                {
-                    if (!started)
-                    {
-                        started = true;
-                        if (openColor != null) sb.Append(openColor);
-                        if (inNoparse) sb.Append("<noparse>");
-                    }
-                    sb.Append(markup[i]);
-                }
-                plain++;
-                i++;
-            }
-            if (started)
-            {
-                if (inNoparse) sb.Append("</noparse>");
-                if (openColor != null) sb.Append("</color>");
-            }
-            return sb.ToString();
         }
 
         // One pooled label per visible row, positioned with the SAME row math
@@ -895,17 +915,17 @@ namespace ADKOM.TextEditor
                     case KeyCode.Plus:
                     case KeyCode.KeypadPlus:
                         ZoomBy(1);
-                        e.PreventDefault(); e.StopImmediatePropagation();
+                        e.StopImmediatePropagation();
                         return;
                     case KeyCode.Minus:
                     case KeyCode.KeypadMinus:
                         ZoomBy(-1);
-                        e.PreventDefault(); e.StopImmediatePropagation();
+                        e.StopImmediatePropagation();
                         return;
                     case KeyCode.Alpha0:
                     case KeyCode.Keypad0:
                         ZoomBy(0); // reset to default size
-                        e.PreventDefault(); e.StopImmediatePropagation();
+                        e.StopImmediatePropagation();
                         return;
                 }
             }
@@ -996,7 +1016,6 @@ namespace ADKOM.TextEditor
             }
             if (handled)
             {
-                e.PreventDefault();
                 e.StopPropagation();
             }
         }
@@ -1164,6 +1183,12 @@ namespace ADKOM.TextEditor
             if (e.button != 0) return;
             Focus();
             PlaceCaretAt(e.position, e.shiftKey);
+            if (e.ctrlKey || e.commandKey)
+            {
+                onNavigateRequest?.Invoke(_caretLine, _caretCol);
+                e.StopPropagation();
+                return; // no drag-select from a navigate gesture
+            }
             _dragging = true;
             this.CapturePointer(e.pointerId);
             e.StopPropagation();
