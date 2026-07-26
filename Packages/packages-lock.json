@@ -6,6 +6,12 @@
       "source": "embedded",
       "dependencies": {}
     },
+    "com.adkom.text-editor.semantics": {
+      "version": "file:com.adkom.text-editor.semantics",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {}
+    },
     "com.ivanmurzak.unity.mcp": {
       "version": "0.86.1",
       "depth": 0,

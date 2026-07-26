@@ -7,7 +7,9 @@ name: Sync upm branch
 on:
   push:
     branches: [main]
-    paths: ['Packages/com.adkom.text-editor/**']
+    paths:
+      - 'Packages/com.adkom.text-editor/**'
+      - 'Packages/com.adkom.text-editor.semantics/**'
   workflow_dispatch:
 
 permissions:
@@ -20,7 +22,9 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Split package subtree and push
+      - name: Split package subtrees and push
         run: |
           git subtree split --prefix=Packages/com.adkom.text-editor -b upm
           git push -f origin upm
+          git subtree split --prefix=Packages/com.adkom.text-editor.semantics -b upm-semantics
+          git push -f origin upm-semantics

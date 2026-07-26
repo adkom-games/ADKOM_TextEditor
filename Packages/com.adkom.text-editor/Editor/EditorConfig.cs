@@ -69,7 +69,15 @@ namespace ADKOM.TextEditor
         public static bool AutoUpdate
         {
             get => EditorPrefs.GetBool(AutoUpdateKey, true);
-            set => EditorPrefs.SetBool(AutoUpdateKey, value);
+            set
+            {
+                // Forensic breadcrumb: a field report showed this OFF after an
+                // update-install; the default is ON, so log who writes false.
+                if (value != EditorPrefs.GetBool(AutoUpdateKey, true) && !value)
+                    Debug.Log("[ADKOM Text Editor] Automatic updates disabled.\n" +
+                        new System.Diagnostics.StackTrace(1, false));
+                EditorPrefs.SetBool(AutoUpdateKey, value);
+            }
         }
 
         /// <summary>Days between automatic update checks. Minimum 1: checks
