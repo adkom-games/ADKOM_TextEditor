@@ -15,6 +15,17 @@ All notable changes to this package are documented here. Format follows
   code view so undo/redo and dirty tracking work. A transient toggle
   left of the settings gear (MD ⇄ source) appears only while a .md tab
   is active; the mode is remembered per document.
+- Markdown formatting toolbar: while rendered (WYSIWYG) mode is active,
+  a button strip appears left of the MD/source toggle — one button per
+  element type (H1–H3, bold, italic, strikethrough, inline code, link,
+  image, bullet/numbered/task lists, blockquote, code block, table,
+  horizontal rule). Buttons act on the block being edited (wrapping the
+  selection or transforming its lines) or append a new template block
+  when no block editor is open, always through the undo-tracked path.
+- Markdown feature parity across source coloring, rendering, and the
+  toolbar: strikethrough (~~text~~), images (![alt](url)), task lists
+  (- [ ] / - [x] render as ☐/☑), and tables (| cells |, header row
+  bold with a separator-aware grid).
 
 ## [0.7.1] - 2026-07-26
 

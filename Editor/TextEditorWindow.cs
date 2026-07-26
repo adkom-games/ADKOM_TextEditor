@@ -48,6 +48,7 @@ namespace ADKOM.TextEditor
         VisualElement _editorArea;
         MarkdownView _mdView;
         UnityEditor.UIElements.ToolbarButton _mdToggle;
+        VisualElement _mdFormatBar;
         Label _emptyHint;
         VisualElement _settingsPane;
         ScrollView _settingsScroll;
@@ -169,6 +170,9 @@ namespace ADKOM.TextEditor
             toolbar.Add(MenuButton("Window", FillWindowMenu));
             toolbar.Add(MenuButton("Help", FillHelpMenu));
             toolbar.Add(new ToolbarSpacer { flex = true });
+            _mdFormatBar = BuildMdFormatBar();
+            _mdFormatBar.style.display = DisplayStyle.None; // transient: rendered MD mode only
+            toolbar.Add(_mdFormatBar);
             _mdToggle = new ToolbarButton(ToggleMdMode);
             _mdToggle.style.display = DisplayStyle.None; // transient: .md tabs only
             toolbar.Add(_mdToggle);
@@ -229,6 +233,7 @@ namespace ADKOM.TextEditor
             _mdView = new MarkdownView();
             _mdView.style.display = DisplayStyle.None;
             _mdView.onEditBlock += OnMdBlockEdited;
+            _mdView.onInsertBlock += OnMdInsertBlock;
             _editorArea.Add(_mdView);
 
             _emptyHint = new Label("No file open.\nFile → New, File → Open…, or right-click a text asset in the Project window.");
@@ -526,6 +531,8 @@ namespace ADKOM.TextEditor
                 }
             }
             bool rendered = isMd && Active.MdRendered;
+            if (_mdFormatBar != null)
+                _mdFormatBar.style.display = rendered ? DisplayStyle.Flex : DisplayStyle.None;
             if (_code != null) _code.style.display = rendered || !HasDocs ? DisplayStyle.None : DisplayStyle.Flex;
             if (_mdView != null)
             {
@@ -536,6 +543,56 @@ namespace ADKOM.TextEditor
                     _mdView.Render(_code.value);
                 }
             }
+        }
+
+        /// <summary>One button per Markdown element type, shown only while
+        /// rendered (WYSIWYG) mode is active. Acts on the open block editor,
+        /// or appends a new template block when none is being edited.</summary>
+        VisualElement BuildMdFormatBar()
+        {
+            var bar = new VisualElement();
+            bar.style.flexDirection = FlexDirection.Row;
+            (string id, string label, string tip)[] defs =
+            {
+                ("h1", "H1", "Heading 1"),
+                ("h2", "H2", "Heading 2"),
+                ("h3", "H3", "Heading 3"),
+                ("bold", "B", "Bold"),
+                ("italic", "I", "Italic"),
+                ("strike", "S", "Strikethrough"),
+                ("code", "<>", "Inline code"),
+                ("link", "🔗", "Link"),
+                ("image", "🖼", "Image"),
+                ("ul", "•", "Bullet list"),
+                ("ol", "1.", "Numbered list"),
+                ("task", "☑", "Task list"),
+                ("quote", "❝", "Blockquote"),
+                ("codeblock", "{ }", "Code block"),
+                ("table", "▦", "Table"),
+                ("hr", "―", "Horizontal rule"),
+            };
+            foreach (var (id, label, tip) in defs)
+            {
+                string captured = id;
+                var b = new ToolbarButton(() => _mdView?.ApplyFormat(captured)) { text = label, tooltip = tip };
+                b.style.unityTextAlign = TextAnchor.MiddleCenter;
+                b.style.paddingLeft = 4;
+                b.style.paddingRight = 4;
+                if (id == "bold") b.style.unityFontStyleAndWeight = FontStyle.Bold;
+                if (id == "italic") b.style.unityFontStyleAndWeight = FontStyle.Italic;
+                bar.Add(b);
+            }
+            return bar;
+        }
+
+        /// <summary>New block from a formatting button when no block editor is
+        /// open: appended at the end of the document, blank-line separated.</summary>
+        void OnMdInsertBlock(string src)
+        {
+            string v = _code.value;
+            string sep = v.Length == 0 ? "" : v.EndsWith("\n\n") ? "" : v.EndsWith("\n") ? "\n" : "\n\n";
+            string insert = sep + src + "\n";
+            _code.ReplaceRangeInternal(v.Length, v.Length, insert, v.Length + insert.Length, typing: false);
         }
 
         void OnMdBlockEdited(int start, int end, string replacement)
@@ -1040,6 +1097,7 @@ namespace ADKOM.TextEditor
                 if (_code != null) { _code.SetValueWithoutNotify(string.Empty); _code.style.display = DisplayStyle.None; }
                 if (_mdView != null) _mdView.style.display = DisplayStyle.None;
                 if (_mdToggle != null) _mdToggle.style.display = DisplayStyle.None;
+                if (_mdFormatBar != null) _mdFormatBar.style.display = DisplayStyle.None;
                 if (_emptyHint != null) _emptyHint.style.display = DisplayStyle.Flex;
                 RebuildTabs();
                 UpdateTitle();
@@ -1061,6 +1119,7 @@ namespace ADKOM.TextEditor
             {
                 if (_mdView != null) _mdView.style.display = DisplayStyle.None;
                 if (_mdToggle != null) _mdToggle.style.display = DisplayStyle.None;
+                if (_mdFormatBar != null) _mdFormatBar.style.display = DisplayStyle.None;
                 SyncSettingsControls();
                 RebuildTabs();
                 UpdateTitle();
