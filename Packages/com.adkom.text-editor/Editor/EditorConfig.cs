@@ -134,25 +134,72 @@ namespace ADKOM.TextEditor
         }
 
         // Open-tab session, saved when the ATE window closes and restored when
-        // it reopens (per project). First line = active index, then one path
-        // per line.
-        static string SessionKey =>
+        // it reopens. Lives in Library/ (per project, not versioned) as JSON
+        // so dirty tabs can carry their unsaved CONTENT — closing the window
+        // never needs an unsaved-changes dialog; the buffers just come back.
+        [System.Serializable]
+        public class SessionTab
+        {
+            public string path;      // empty for untitled documents
+            public bool dirty;
+            public string content;   // only stored when dirty
+            public bool mdRendered;
+        }
+
+        [System.Serializable]
+        class SessionData
+        {
+            public int active;
+            public System.Collections.Generic.List<SessionTab> tabs;
+        }
+
+        static string SessionFilePath => System.IO.Path.Combine(
+            System.IO.Path.GetDirectoryName(Application.dataPath),
+            "Library", "ADKOMTextEditor", "session.json");
+
+        static string LegacySessionKey =>
             "ADKOM.TextEditor.Session." + Application.dataPath.GetHashCode().ToString("X8");
 
-        public static void SaveSession(System.Collections.Generic.List<string> paths, int activeIndex)
-            => EditorPrefs.SetString(SessionKey, activeIndex + "\n" + string.Join("\n", paths));
+        public static void SaveSession(System.Collections.Generic.List<SessionTab> tabs, int activeIndex)
+        {
+            try
+            {
+                System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(SessionFilePath));
+                System.IO.File.WriteAllText(SessionFilePath,
+                    JsonUtility.ToJson(new SessionData { active = activeIndex, tabs = tabs }));
+            }
+            catch (System.Exception ex)
+            {
+                AteConsole.Warn("[ADKOM Text Editor] Could not save the tab session: " + ex.Message);
+            }
+        }
 
-        public static System.Collections.Generic.List<string> LoadSession(out int activeIndex)
+        public static System.Collections.Generic.List<SessionTab> LoadSession(out int activeIndex)
         {
             activeIndex = 0;
-            var paths = new System.Collections.Generic.List<string>();
-            string raw = EditorPrefs.GetString(SessionKey, string.Empty);
-            if (raw.Length == 0) return paths;
-            var lines = raw.Split('\n');
-            int.TryParse(lines[0], out activeIndex);
-            for (int i = 1; i < lines.Length; i++)
-                if (!string.IsNullOrEmpty(lines[i])) paths.Add(lines[i]);
-            return paths;
+            try
+            {
+                if (System.IO.File.Exists(SessionFilePath))
+                {
+                    var d = JsonUtility.FromJson<SessionData>(System.IO.File.ReadAllText(SessionFilePath));
+                    if (d != null && d.tabs != null) { activeIndex = d.active; return d.tabs; }
+                }
+            }
+            catch (System.Exception) { }
+
+            // One-time migration from the old EditorPrefs path-list format.
+            var tabs = new System.Collections.Generic.List<SessionTab>();
+            string raw = EditorPrefs.GetString(LegacySessionKey, string.Empty);
+            if (raw.Length > 0)
+            {
+                var lines = raw.Split('\n');
+                int.TryParse(lines[0], out activeIndex);
+                for (int i = 1; i < lines.Length; i++)
+                    if (!string.IsNullOrEmpty(lines[i]))
+                        tabs.Add(new SessionTab { path = lines[i] });
+                EditorPrefs.DeleteKey(LegacySessionKey);
+            }
+            return tabs;
         }
 
         const string MdOpenRenderedKey = "ADKOM.TextEditor.MdOpenRendered";
