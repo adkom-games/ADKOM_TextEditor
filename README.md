@@ -66,7 +66,9 @@ Choose your keyboard layout — **Visual Studio**, **VS Code**, or
 | Open the ATE window | Ctrl+Alt+8 | Ctrl+Alt+8 | Ctrl+Alt+8 |
 
 Plus undo/redo with typing coalescing, word-wise navigation, smart Home,
-auto-indent on Enter, and full clipboard support.
+auto-indent on Enter, full clipboard support, double-click word
+selection with whole-word drag, and automatic highlighting of every
+other occurrence of whatever you select.
 
 ### 🔧 Respects your files
 Tabs render as spaces at your configured tab size — but on save, files
@@ -90,6 +92,14 @@ Search the current file or every open tab at once — match case, whole
 word, plain text or full regular expressions (with $1 group
 replacements), wrap-around, and backwards search, all from a compact
 modeless dialog. F3 repeats your last search without reopening it.
+
+### 🗺 See the whole file
+A **syntax-colorized minimap** runs along the right edge — the shape of
+your whole document at a glance, with a viewport indicator; click or
+drag it to jump anywhere. A **console pane** at the bottom collects
+every ATE message (tool output, update checks, find/replace results,
+status messages) with timestamps. Both close away cleanly and come back
+from the Window menu.
 
 ### 🖱 Feels like an application
 A real **menu bar** — File, Edit, View, Tools, Window, Help — rendered
@@ -129,7 +139,7 @@ https://github.com/adkom-games/ADKOM_TextEditor.git#upm
 Prefer a pinned version?
 
 ```
-https://github.com/adkom-games/ADKOM_TextEditor.git#0.5.0
+https://github.com/adkom-games/ADKOM_TextEditor.git#0.5.1
 ```
 
 The semantics module (compiler-accurate colors + Go to Definition)

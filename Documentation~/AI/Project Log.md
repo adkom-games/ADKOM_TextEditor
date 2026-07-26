@@ -171,6 +171,21 @@ the bottom. See [[Project State]] for the current snapshot.
 - Field-test pending: Client.Add and DLL-copy paths can't run in the
   dev project (module embedded, Roslyn present via MCP).
 
+## 2026-07-26 — Overview & selection wave (0.5.1)
+
+- **Console pane** (bottom, tab strip, closable, Window menu restores,
+  on by default): AteConsole thread-safe sink; all ATE tool logs and
+  status-bar messages route through it; status messages now pinned 5s
+  in the bar (fixes the too-short-to-read complaint).
+- **Minimap** between content and scrollbar: Painter2D single-mesh
+  code-shape overview, syntax-colorized from the span classifier,
+  batched per color; viewport indicator; click/drag jump; Window menu
+  toggle, on by default (verified stale serialized layouts keep the
+  initializer default — update-safe).
+- **Double-click word selection** with whole-word snap drag.
+- **Selection occurrence highlighting** on visible rows in a weaker
+  color than the active selection.
+
 ## Conventions
 
 - Branch per feature/fix from main; merge with `--no-ff`; branches are kept.
