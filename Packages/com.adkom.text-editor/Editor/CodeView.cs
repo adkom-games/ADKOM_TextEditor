@@ -65,6 +65,7 @@ namespace ADKOM.TextEditor
         readonly VisualElement _gutterCol;
         VisualElement _minimap;
         bool _minimapDragging;
+        readonly Dictionary<TokenClass, Color> _minimapColors = new Dictionary<TokenClass, Color>();
         IVisualElementScheduledItem _blink;
         bool _blinkOn = true;
         bool _dragging;
@@ -320,29 +321,61 @@ namespace ADKOM.TextEditor
             float step = (float)_totalRows / drawRows;
             float charPx = w / 120f; // fit ~120 columns across the strip
 
-            p.fillColor = new Color(_textColor.r, _textColor.g, _textColor.b, 0.35f);
-            p.BeginPath();
+            // Colorized: segments follow the syntax spans, batched by color
+            // into one fill pass per color.
+            var batches = new Dictionary<Color, List<Rect>>();
+            Color defaultColor = new Color(_textColor.r, _textColor.g, _textColor.b, 0.35f);
+            void Add(Color color, float x, float y, float bw, float bh)
+            {
+                if (bw < 0.5f) return;
+                if (!batches.TryGetValue(color, out var list)) batches[color] = list = new List<Rect>(64);
+                list.Add(new Rect(x, y, bw, bh));
+            }
             for (int i = 0; i < drawRows; i++)
             {
                 int row = Mathf.Min(_totalRows - 1, (int)(i * step));
                 RowToLineSub(row, out int line, out int sub);
                 RowBounds(line, sub, out int rs, out int re);
                 string text = _lines[line];
-                int indent = 0;
-                if (sub == 0)
-                    while (indent < re - rs && rs + indent < text.Length && text[rs + indent] == ' ') indent++;
-                int len = Mathf.Max(0, re - rs - indent);
-                if (len == 0) continue;
-                float x = Mathf.Min(indent * charPx, w - 2);
-                float bw = Mathf.Clamp(len * charPx, 1, w - 2 - x);
                 float y = i * rowH;
-                p.MoveTo(new Vector2(x, y));
-                p.LineTo(new Vector2(x + bw, y));
-                p.LineTo(new Vector2(x + bw, y + Mathf.Max(1f, rowH * 0.7f)));
-                p.LineTo(new Vector2(x, y + Mathf.Max(1f, rowH * 0.7f)));
-                p.ClosePath();
+                float bh = Mathf.Max(1f, rowH * 0.7f);
+                var spans = _lineSpans != null && line < _lineSpans.Length ? _lineSpans[line] : null;
+                int pos = rs;
+                // skip leading whitespace of the row
+                while (pos < re && pos < text.Length && text[pos] == ' ') pos++;
+                if (spans != null)
+                {
+                    foreach (var sp in spans)
+                    {
+                        int ss = Mathf.Max(sp.Start, pos), se = Mathf.Min(sp.Start + sp.Length, re);
+                        if (se <= ss) continue;
+                        if (ss > pos) // default-colored gap
+                            Add(defaultColor, Mathf.Min(pos * charPx, w - 2), y,
+                                Mathf.Min((ss - pos) * charPx, w - 2 - pos * charPx), bh);
+                        Add(_minimapColors.TryGetValue(sp.Class, out var c) ? c : defaultColor,
+                            Mathf.Min(ss * charPx, w - 2), y,
+                            Mathf.Min((se - ss) * charPx, w - 2 - ss * charPx), bh);
+                        pos = se;
+                    }
+                }
+                if (pos < re)
+                    Add(defaultColor, Mathf.Min(pos * charPx, w - 2), y,
+                        Mathf.Min((re - pos) * charPx, w - 2 - pos * charPx), bh);
             }
-            p.Fill();
+            foreach (var kv in batches)
+            {
+                p.fillColor = kv.Key;
+                p.BeginPath();
+                foreach (var r in kv.Value)
+                {
+                    p.MoveTo(new Vector2(r.x, r.y));
+                    p.LineTo(new Vector2(r.xMax, r.y));
+                    p.LineTo(new Vector2(r.xMax, r.yMax));
+                    p.LineTo(new Vector2(r.x, r.yMax));
+                    p.ClosePath();
+                }
+                p.Fill();
+            }
 
             // Viewport indicator
             float contentH = _totalRows * _lineHeight;
@@ -463,6 +496,14 @@ namespace ADKOM.TextEditor
             style.backgroundColor = palette.BackgroundColor;
             _gutterCol.style.backgroundColor = palette.BackgroundColor;
             _caret.style.backgroundColor = _textColor;
+            _minimapColors.Clear();
+            foreach (TokenClass cls in System.Enum.GetValues(typeof(TokenClass)))
+            {
+                string hex = palette.ColorFor(cls);
+                _minimapColors[cls] = hex != null && ColorUtility.TryParseHtmlString(hex, out var c)
+                    ? new Color(c.r, c.g, c.b, 0.55f)
+                    : new Color(_textColor.r, _textColor.g, _textColor.b, 0.35f);
+            }
             _lineMarkup = null; // colors changed; markup rebuilds lazily
             RefreshVisible();
         }
