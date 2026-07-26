@@ -120,7 +120,7 @@ namespace ADKOM.TextEditor
         {
             if (string.IsNullOrEmpty(path)) return;
             var list = RecentFiles;
-            list.RemoveAll(p => string.Equals(p, path, System.StringComparison.OrdinalIgnoreCase));
+            list.RemoveAll(p => FileService.PathsEqual(p, path));
             list.Insert(0, path);
             if (list.Count > RecentFilesMax) list.RemoveRange(RecentFilesMax, list.Count - RecentFilesMax);
             EditorPrefs.SetString(RecentListKey, string.Join("\n", list));
@@ -129,7 +129,7 @@ namespace ADKOM.TextEditor
         public static void RemoveRecentFile(string path)
         {
             var list = RecentFiles;
-            list.RemoveAll(p => string.Equals(p, path, System.StringComparison.OrdinalIgnoreCase));
+            list.RemoveAll(p => FileService.PathsEqual(p, path));
             EditorPrefs.SetString(RecentListKey, string.Join("\n", list));
         }
 
@@ -197,7 +197,10 @@ namespace ADKOM.TextEditor
                     if (d != null && d.tabs != null) { activeIndex = d.active; return d.tabs; }
                 }
             }
-            catch (System.Exception) { }
+            catch (System.Exception ex)
+            {
+                AteConsole.Warn("[ADKOM Text Editor] Tab session file unreadable, starting empty: " + ex.Message);
+            }
 
             // One-time migration from the old EditorPrefs path-list format.
             var tabs = new System.Collections.Generic.List<SessionTab>();

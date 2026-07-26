@@ -82,7 +82,10 @@ namespace ADKOM.TextEditor
         int _consoleVersionShown = -1;
         double _statusHoldUntil;
 
-        TextDocument Active => _docs[_active];
+        // Defensive: clamp a stale index; null when no docs (callers guard
+        // with HasDocs, this keeps a future unguarded call from throwing).
+        TextDocument Active =>
+            _docs.Count == 0 ? null : _docs[Mathf.Clamp(_active, 0, _docs.Count - 1)];
 
         [MenuItem("Tools/ADKOM/Text Editor %&8")] // Ctrl+Alt+8 (Cmd+Alt+8 on macOS)
         public static void Open()
@@ -158,6 +161,7 @@ namespace ADKOM.TextEditor
         {
             if (_docs.Count == 0) RestoreSession();
             EnsureDocs();
+            StartSessionAutosave();
 
             var root = rootVisualElement;
             var uss = AssetDatabase.LoadAssetAtPath<StyleSheet>(UssPath);
@@ -715,7 +719,12 @@ namespace ADKOM.TextEditor
                 try
                 {
                     if (provider.TryGetClassifiedSpans(path, text, out var spans))
-                        ctx.Post(_ => { if (_code != null) _code.ApplySemanticSpans(spans, version); }, null);
+                        ctx.Post(_ =>
+                        {
+                            // Window may have been destroyed while the task ran.
+                            if (this == null || _code == null || _code.panel == null) return;
+                            _code.ApplySemanticSpans(spans, version);
+                        }, null);
                 }
                 catch (System.Exception ex)
                 {
@@ -780,6 +789,7 @@ namespace ADKOM.TextEditor
                 catch (System.Exception ex) { status = L10n.Tr("Go to Definition failed: ") + ex.Message; }
                 ctx.Post(_ =>
                 {
+                    if (this == null) return; // window destroyed mid-resolve
                     if (status != null) { PostStatus(status); return; }
                     if (metaSource != null) { OpenMetadataView(metaTitle, metaSource, metaLine, path); return; }
                     OpenExternal(defPath, dl + 1, dc + 1);
@@ -1023,6 +1033,10 @@ namespace ADKOM.TextEditor
 
         /// <summary>Opens (or switches to) a virtual "from metadata" document
         /// and places the caret on the requested symbol's line.</summary>
+        // NOTE: a metadata stub is generated from the compilation at the time
+        // it was opened. If sources change afterwards, navigating FROM a stale
+        // stub can land on shifted line numbers in the real file (defect #12,
+        // inherent to snapshot-based stubs — reopen the stub to refresh).
         void OpenMetadataView(string title, string source, int line, string contextPath)
         {
             OpenVirtualDoc(title, source, csharp: true);
@@ -1429,8 +1443,7 @@ namespace ADKOM.TextEditor
         {
             EnsureDocs();
             string full = Path.GetFullPath(path);
-            int existing = _docs.FindIndex(d => d.HasFile &&
-                string.Equals(Path.GetFullPath(d.FilePath), full, System.StringComparison.OrdinalIgnoreCase));
+            int existing = _docs.FindIndex(d => d.HasFile && FileService.PathsEqual(d.FilePath, full));
             if (existing >= 0)
             {
                 SwitchTo(existing);
@@ -1762,10 +1775,19 @@ namespace ADKOM.TextEditor
 
         void OnDestroy()
         {
-            if (_docs == null) return;
             // NO dialogs here — the window is being torn down, so a modal
             // would block Unity. Instead dirty tabs persist their unsaved
             // CONTENT into the session and come back dirty on reopen.
+            SaveSessionNow();
+        }
+
+        /// <summary>Writes the current tab session (including dirty tabs'
+        /// unsaved content). Called on window close AND periodically while
+        /// any tab is dirty, so a hard editor crash loses at most
+        /// SessionAutosaveMs of typing (defect #2).</summary>
+        void SaveSessionNow()
+        {
+            if (_docs == null) return;
             var tabs = new List<EditorConfig.SessionTab>();
             int activeIndex = 0;
             for (int i = 0; i < _docs.Count; i++)
@@ -1785,6 +1807,15 @@ namespace ADKOM.TextEditor
             EditorConfig.SaveSession(tabs, activeIndex);
         }
 
+        const long SessionAutosaveMs = 30000;
+
+        void StartSessionAutosave()
+        {
+            rootVisualElement.schedule
+                .Execute(() => { if (_docs != null && _docs.Exists(d => d.IsDirty)) SaveSessionNow(); })
+                .Every(SessionAutosaveMs);
+        }
+
         /// <summary>Reopens the tabs from the last time the window was closed.
         /// Runs only when the window starts with no documents (a fresh window;
         /// domain reloads keep their docs via serialization). Dirty tabs are
@@ -1799,7 +1830,12 @@ namespace ADKOM.TextEditor
                 bool hasFile = !string.IsNullOrEmpty(t.path) && File.Exists(t.path);
                 if (hasFile)
                 {
-                    try { doc.LoadFrom(t.path); } catch { continue; }
+                    try { doc.LoadFrom(t.path); }
+                    catch (System.Exception ex)
+                    {
+                        AteConsole.Warn("[ADKOM Text Editor] Session tab could not be restored: " + t.path + " — " + ex.Message);
+                        continue;
+                    }
                 }
                 if (t.dirty && t.content != null)
                 {

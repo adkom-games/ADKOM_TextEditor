@@ -24,6 +24,9 @@ jobs:
       - name: Editor-guard check (no code may leak into user builds)
         shell: pwsh
         run: ./Tools/check-editor-guards.ps1
+      - name: Localization completeness check
+        shell: pwsh
+        run: ./Tools/check-l10n.ps1
       - name: Split package subtrees and push
         run: |
           git subtree split --prefix=Packages/com.adkom.text-editor -b upm
