@@ -6,6 +6,10 @@ All notable changes to this package are documented here. Format follows
 ## [Unreleased]
 
 ### Added
+- Selecting text highlights every other occurrence of the selection in
+  the file in a weaker color, so matches stand out while the active
+  selection stays dominant (single-line selections up to 200 chars;
+  whitespace-only selections excluded).
 - Double-click selects the word under the cursor; dragging from a
   double-click extends the selection a whole word at a time in either
   direction (identifier runs, whitespace runs, or single symbols).
