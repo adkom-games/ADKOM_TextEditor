@@ -137,6 +137,12 @@ Japanese, Korean, Simplified Chinese, and Traditional Chinese ship in
 the box (English is the source). Menus, settings, dialogs, prompts,
 and status messages all translate — shortcuts stay universal.
 
+### 🤖 Script it
+A **stable scripting API** (`ADKOM.TextEditor.Scripting.AteApi`) lets
+your editor scripts open files, read and edit documents, save, close,
+and subscribe to events (opened/closed/saved/changed) — VS Code-shaped
+and semver-stable. See `Documentation~/Scripting.md`.
+
 ### 🔌 Unity's External Script Editor
 Select ATE in **Preferences → External Tools** and double-clicked
 scripts and console log entries open in ATE at the exact line and
