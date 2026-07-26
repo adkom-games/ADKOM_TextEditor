@@ -33,8 +33,9 @@ shaders, JSON, YAML, markdown, USS/UXML, configs — and it opens in ATE.
 ### 🎨 Syntax highlighting & themes
 C# highlighting out of the box — keywords, strings, comments, and
 **identifiers too**: types, methods, variables, and parameters, in each
-theme's authentic colors. Install the optional **semantics module** and
-the colors become compiler-accurate (powered by Roslyn). Pick your palette: **Visual Studio**, **VS Code**,
+theme's authentic colors. Flip on **Semantic
+Features** in Settings and the colors become compiler-accurate (powered
+by Roslyn) — every dependency installs itself automatically. Pick your palette: **Visual Studio**, **VS Code**,
 or **JetBrains Rider** — each with authentic dark and light variants,
 following your Unity Editor skin automatically (or forced Dark/Light,
 your call).
@@ -60,7 +61,9 @@ Choose your keyboard layout — **Visual Studio**, **VS Code**, or
 | Zoom in / out / reset | Ctrl+'+' / Ctrl+'-' / Ctrl+0 | Ctrl+'+' / Ctrl+'-' / Ctrl+0 | Ctrl+'+' / Ctrl+'-' / Ctrl+0 |
 | Toggle line comment | Ctrl+/ | Ctrl+/ | Ctrl+/ |
 | Indent / unindent | Tab / Shift+Tab | Tab / Shift+Tab | Tab / Shift+Tab |
+| Go to Definition | F12 / Ctrl+Click | F12 / Ctrl+Click | Ctrl+B / Ctrl+Click |
 | Settings | — | Ctrl+, | Ctrl+Alt+S |
+| Open the ATE window | Ctrl+Alt+8 | Ctrl+Alt+8 | Ctrl+Alt+8 |
 
 Plus undo/redo with typing coalescing, word-wise navigation, smart Home,
 auto-indent on Enter, and full clipboard support.
@@ -74,11 +77,13 @@ them). Navigation, Backspace, and Delete all honor tab stops across
 whitespace, so space-indented files *feel* tab-indented.
 
 ### 🧭 Go to Definition
-With the semantics module installed, **Ctrl+Click** any symbol — or
-press F12 (Visual Studio / VS Code layouts) or Ctrl+B (Rider) — and
-jump straight to its definition: locals, parameters, members, and types,
-across files and assemblies. Symbols from referenced binaries report
-their assembly in the status bar.
+**Ctrl+Click** any symbol — or press F12 (Visual Studio / VS Code
+layouts) or Ctrl+B (Rider) — and jump straight to its definition:
+locals, parameters, members, and types, across files and assemblies.
+Symbols from referenced binaries report their assembly in the status
+bar. Part of the opt-in Semantic Features: the first use offers to
+enable and install everything for you (the Roslyn-backed semantics
+module; MIT-licensed, notices included).
 
 ### 🔍 Find & replace, everywhere
 Search the current file or every open tab at once — match case, whole
@@ -124,11 +129,12 @@ https://github.com/adkom-games/ADKOM_TextEditor.git#upm
 Prefer a pinned version?
 
 ```
-https://github.com/adkom-games/ADKOM_TextEditor.git#0.4.1
+https://github.com/adkom-games/ADKOM_TextEditor.git#0.5.0
 ```
 
-Optional semantics module (compiler-accurate colors + Go to
-Definition; requires a Roslyn assembly in your project):
+The semantics module (compiler-accurate colors + Go to Definition)
+installs automatically when you enable Semantic Features in Settings —
+or add it manually:
 
 ```
 https://github.com/adkom-games/ADKOM_TextEditor.git#upm-semantics

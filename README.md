@@ -20,7 +20,7 @@ feature pitch.
 - Dockable text/code editor window inside Unity (**Tools → ADKOM → Text Editor**), or right-click any text asset → *Open in ADKOM Text Editor*
 - Fully virtualized rendering — fast typing even in 5,000+ line files
 - Multiple tabs that survive domain reloads and editor restarts
-- C# syntax highlighting incl. types/methods/variables; optional Roslyn semantics module adds compiler-accurate colors and Go to Definition (Ctrl+Click / F12 / Ctrl+B)
+- C# syntax highlighting incl. types/methods/variables; opt-in Semantic Features add compiler-accurate colors and Go to Definition (Ctrl+Click / F12 / Ctrl+B) with automatic dependency install
 - Themes and keyboard layouts matching Visual Studio, VS Code, and JetBrains Rider
 - Respects your files: tab/space indentation, line endings, and UTF-8 BOMs round-trip untouched
 - Native menu bar (File/Edit/View/Tools/Window/Help) and tab context menus
@@ -46,7 +46,7 @@ https://github.com/adkom-games/ADKOM_TextEditor.git#upm
 Pinned release:
 
 ```
-https://github.com/adkom-games/ADKOM_TextEditor.git#0.4.1
+https://github.com/adkom-games/ADKOM_TextEditor.git#0.5.0
 ```
 
 The `upm` branch contains only the package, so consumer downloads stay

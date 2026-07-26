@@ -1,6 +1,23 @@
 # Release Notes — ADKOM Text Editor
 
-## 0.4.1 — 2026-07-25
+## 0.5.0 — 2026-07-26
+
+### Features
+- Semantic Features setting (OFF by default) with fully automatic
+  dependency installation: enabling it installs the semantics module
+  via UPM and, if the project has no Roslyn, the module's bundled
+  MIT-licensed Roslyn 4.8 assemblies (THIRD-PARTY-NOTICES included);
+  existing Roslyn copies are preferred.
+- Go to Definition without the feature enabled asks via a dialog with
+  one-click Enable and Install (replacing a transient status message).
+- Ctrl+Alt+8 opens the ATE window. Say it out loud.
+- Semantics module 0.2.0 (bundled Roslyn binaries + notices).
+
+### Notes
+- Includes everything listed under 0.4.1 below, which was version-
+  bumped but never tagged; 0.5.0 is its release vehicle.
+
+## 0.4.1 — 2026-07-25 (not tagged; shipped in 0.5.0)
 
 ### Features
 - Identifier syntax highlighting: types, methods, variables, parameters
