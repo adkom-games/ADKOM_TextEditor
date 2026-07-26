@@ -3,6 +3,14 @@
 All notable changes to this package are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com); versions follow semver.
 
+## [Unreleased]
+
+### Added
+- The first run of any newly installed version checks for updates
+  immediately (once), bypassing the daily schedule, so fresh installs
+  are brought current right away. Automatic updates remain ON by
+  default on clean installs.
+
 ## [0.4.0] - 2026-07-25
 
 ### Changed
