@@ -527,10 +527,12 @@ namespace ADKOM.TextEditor
                 _mdToggle.style.display = isMd ? DisplayStyle.Flex : DisplayStyle.None;
                 if (isMd)
                 {
-                    _mdToggle.text = Active.MdRendered ? "</>" : "MD";
+                    // The label shows the CURRENT mode (status), the tooltip
+                    // the action — labeling the action read as the wrong state.
+                    _mdToggle.text = Active.MdRendered ? "MD" : "</>";
                     _mdToggle.tooltip = Active.MdRendered
-                        ? "Switch to Markdown source"
-                        : "Switch to rendered Markdown (click a block to edit it)";
+                        ? "Rendered Markdown — click to switch to source"
+                        : "Markdown source — click to switch to rendered (click a block to edit it)";
                 }
             }
             bool rendered = isMd && Active.MdRendered;
