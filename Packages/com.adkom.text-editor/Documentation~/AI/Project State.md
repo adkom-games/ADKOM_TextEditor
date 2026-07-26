@@ -52,6 +52,8 @@ with the host project.
 | Markdown: source coloring + rendered WYSIWYG mode (transient MD/src toggle) | Done |
 | Markdown formatting toolbar + parity; default-view setting; rendered release notes | Done |
 | Release 0.8.0 (published 2026-07-26) | Done |
+| QoL wave: View menu, Recent Files, Goto Line, deleted-file rescue, session persistence, non-modal unsaved, menu shortcuts, doc context menu, drag tabs, word-level undo, localization | Done |
+| Release 0.9.0 (published 2026-07-26) | Done |
 | More languages; custom themes | Future (roadmap) |
 
 ## Current work area
@@ -98,11 +100,15 @@ is verified live in the editor.
    on a Roslyn-less project; confirm Cary's second project heals via
    0.6.1 or manual module removal. Plan next milestone (roadmap:
    languages, custom themes; backlog: MRU tab order, tab reorder).
-2. 0.8.0 (Markdown) published 2026-07-26; tag verified against the CI
-   upm head and by fresh shallow clone. Known Markdown gaps (documented
-   for a future pass): images render as placeholders, links not
-   clickable, no table alignment, no nesting/reference
-   links/escapes/setext; Obsidian wiki-links unstyled.
+2. 0.9.0 published 2026-07-26 (tag == CI upm head; fresh-clone
+   verified). Backlogs on record: Markdown gaps (image display,
+   clickable links, table alignment, nesting, escapes, wiki-links);
+   editor must-have gaps (multi-caret, auto-close brackets, brace
+   match, word delete, autocomplete, line-cut/copy, column select,
+   folding, rename/references, format, quick-open); code-debt report
+   2026-07-26 (undo snapshot memory, crash-safe session autosave,
+   FindAgain probe-window hack, silent catches, god-class split,
+   command table unification, l10n completeness check, AteApi facade).
 3. Roadmap candidates: JSON formatters, custom themes,
    Ctrl+Tab MRU order. (Drag-to-reorder tabs shipped in [Unreleased].)
 
