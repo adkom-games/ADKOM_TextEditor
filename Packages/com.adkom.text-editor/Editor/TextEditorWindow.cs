@@ -65,6 +65,7 @@ namespace ADKOM.TextEditor
 
         IVisualElementScheduledItem _semanticPending;
         System.Threading.SynchronizationContext _mainCtx;
+        VisualElement _updatingOverlay;
         VisualElement _notifyBar;
         Label _notifyLabel;
         VisualElement _consolePane;
@@ -232,6 +233,33 @@ namespace ADKOM.TextEditor
             BuildSettingsPane(root);
             BuildConsolePane(root);
 
+            // --- Updating overlay: ATE-only modal. While a package update
+            // installs, edits would be lost in the reload — block THIS window
+            // without blocking Unity (our modality policy). ---
+            _updatingOverlay = new VisualElement { name = "updating-overlay" };
+            _updatingOverlay.style.position = Position.Absolute;
+            _updatingOverlay.style.left = 0;
+            _updatingOverlay.style.top = 0;
+            _updatingOverlay.style.right = 0;
+            _updatingOverlay.style.bottom = 0;
+            _updatingOverlay.style.backgroundColor = new Color(0f, 0f, 0f, 0.6f);
+            _updatingOverlay.style.display = DisplayStyle.None;
+            _updatingOverlay.style.alignItems = Align.Center;
+            _updatingOverlay.style.justifyContent = Justify.Center;
+            _updatingOverlay.focusable = true;
+            var updatingLabel = new Label(
+                "Updating ADKOM Text Editor…\nPlease wait — the editor will reload when the update completes.");
+            updatingLabel.style.unityTextAlign = TextAnchor.MiddleCenter;
+            updatingLabel.style.whiteSpace = WhiteSpace.Normal;
+            updatingLabel.style.fontSize = 14;
+            _updatingOverlay.Add(updatingLabel);
+            _updatingOverlay.RegisterCallback<KeyDownEvent>(e => e.StopImmediatePropagation(), TrickleDown.TrickleDown);
+            _updatingOverlay.RegisterCallback<PointerDownEvent>(e => e.StopImmediatePropagation(), TrickleDown.TrickleDown);
+            root.Add(_updatingOverlay); // last child: renders above everything
+
+            UpdateChecker.onInstallStateChanged += SetUpdatingOverlay;
+            if (UpdateChecker.InstallInProgress) SetUpdatingOverlay(true);
+
             // --- Status bar ---
             var status = new VisualElement { name = "status-bar" };
             status.style.flexDirection = FlexDirection.Row;
@@ -241,6 +269,7 @@ namespace ADKOM.TextEditor
             status.Add(_statusLeft);
             status.Add(_statusRight);
             root.Add(status);
+            _updatingOverlay.BringToFront(); // above everything, incl. status bar
 
             ApplyTheme();
             SwitchTo(_active); // also restores settings-tab visibility state
@@ -1106,6 +1135,18 @@ namespace ADKOM.TextEditor
             CheckExternalChange(Active); // non-modal banner
         }
 
+        void SetUpdatingOverlay(bool updating)
+        {
+            if (_updatingOverlay == null) return;
+            _updatingOverlay.style.display = updating ? DisplayStyle.Flex : DisplayStyle.None;
+            if (updating) _updatingOverlay.Focus(); // pull keyboard focus off the code view
+        }
+
+        void OnDisable()
+        {
+            UpdateChecker.onInstallStateChanged -= SetUpdatingOverlay;
+        }
+
         void OnDestroy()
         {
             if (_docs == null) return;
@@ -1127,6 +1168,7 @@ namespace ADKOM.TextEditor
         /// <summary>Window-level commands; works from any tab including Settings.</summary>
         void OnGlobalKeyDown(KeyDownEvent e)
         {
+            if (UpdateChecker.InstallInProgress) { e.StopImmediatePropagation(); return; }
             bool ctrl = e.ctrlKey || e.commandKey;
             bool handled = false;
 
@@ -1203,6 +1245,7 @@ namespace ADKOM.TextEditor
         /// they win over CodeView's own typing/navigation handling).</summary>
         void OnKeyDown(KeyDownEvent e)
         {
+            if (UpdateChecker.InstallInProgress) { e.StopImmediatePropagation(); return; }
             // Swallow the character-only Tab event; the keyCode event acts.
             if (e.keyCode == KeyCode.None && e.character == '\t')
             {

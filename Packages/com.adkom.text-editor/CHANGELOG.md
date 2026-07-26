@@ -6,6 +6,11 @@ All notable changes to this package are documented here. Format follows
 ## [Unreleased]
 
 ### Added
+- While an update is installing, the ATE window shows an ATE-only modal
+  overlay ("Updating…") that blocks editing and commands — edits during
+  the package swap would be lost in the reload. Unity itself is never
+  blocked (per the modality policy); the overlay clears on failure or
+  is replaced by the reload on success.
 - After an update, the new version's release notes open in a focused
   tab (raw markdown text from the packaged RELEASE-NOTES.md). Fresh
   installs are not interrupted.
