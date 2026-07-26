@@ -124,6 +124,8 @@ is verified live in the editor.
    version anywhere else).
 3. **Histories:** CHANGELOG — roll `[Unreleased]` to `[X.Y.Z] - date`;
    RELEASE-NOTES — add the X.Y.Z section (concise features/fixes).
+   POLICY: list EVERY fixed defect in the release notes, even without
+   a GitHub issue; when an issue exists, cite its number (issue #N).
 4. **Pinned URLs:** update the `#X.Y.Z` install URL in BOTH READMEs.
 5. **Publish:** commit; push main; `git subtree split
    --prefix=Packages/com.adkom.text-editor` and tag the split commit
