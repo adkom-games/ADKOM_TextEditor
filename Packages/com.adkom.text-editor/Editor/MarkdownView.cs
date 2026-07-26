@@ -263,103 +263,109 @@ namespace ADKOM.TextEditor
         {
             if (_activeEditor == null)
             {
-                string template = id switch
-                {
-                    "h1" => "# Heading",
-                    "h2" => "## Heading",
-                    "h3" => "### Heading",
-                    "bold" => "**bold text**",
-                    "italic" => "*italic text*",
-                    "strike" => "~~struck text~~",
-                    "code" => "`code`",
-                    "link" => "[link text](https://)",
-                    "image" => "![alt text](https://)",
-                    "ul" => "- item",
-                    "ol" => "1. item",
-                    "task" => "- [ ] task",
-                    "quote" => "> quote",
-                    "codeblock" => "```\ncode\n```",
-                    "table" => "| Column A | Column B |\n|---|---|\n| a | b |",
-                    "hr" => "---",
-                    _ => null
-                };
+                string template = TemplateFor(id);
                 if (template != null) onInsertBlock?.Invoke(template);
                 return;
             }
 
+            if (TryGetInlineWrap(id, out string pre, out string post, out string ph))
+            {
+                var ed = _activeEditor;
+                string v = ed.value;
+                int a = Mathf.Clamp(Mathf.Min(ed.cursorIndex, ed.selectIndex), 0, v.Length);
+                int b = Mathf.Clamp(Mathf.Max(ed.cursorIndex, ed.selectIndex), a, v.Length);
+                string innerText = b > a ? v.Substring(a, b - a) : ph;
+                ed.value = v.Substring(0, a) + pre + innerText + post + v.Substring(b);
+                ed.selectIndex = a + pre.Length;
+                ed.cursorIndex = a + pre.Length + innerText.Length;
+            }
+            else if (id == "hr" || id == "table")
+            {
+                var ed = _activeEditor;
+                string v = ed.value;
+                int a = Mathf.Clamp(Mathf.Min(ed.cursorIndex, ed.selectIndex), 0, v.Length);
+                string ins = "\n" + TemplateFor(id) + "\n";
+                ed.value = v.Substring(0, a) + ins + v.Substring(a);
+                ed.cursorIndex = ed.selectIndex = a + ins.Length;
+            }
+            else
+            {
+                string transformed = TransformLines(id, _activeEditor.value);
+                if (transformed != null) _activeEditor.value = transformed;
+            }
+            var focusEd = _activeEditor;
+            focusEd.schedule.Execute(() => focusEd.Focus()).ExecuteLater(0);
+        }
+
+        /// <summary>Template block source for a formatting id (new-block path).</summary>
+        internal static string TemplateFor(string id) => id switch
+        {
+            "h1" => "# Heading",
+            "h2" => "## Heading",
+            "h3" => "### Heading",
+            "bold" => "**bold text**",
+            "italic" => "*italic text*",
+            "strike" => "~~struck text~~",
+            "code" => "`code`",
+            "link" => "[link text](https://)",
+            "image" => "![alt text](https://)",
+            "ul" => "- item",
+            "ol" => "1. item",
+            "task" => "- [ ] task",
+            "quote" => "> quote",
+            "codeblock" => "```\ncode\n```",
+            "table" => "| Column A | Column B |\n|---|---|\n| a | b |",
+            "hr" => "---",
+            _ => null
+        };
+
+        /// <summary>Inline styles wrap the selection (or a placeholder).</summary>
+        internal static bool TryGetInlineWrap(string id, out string pre, out string post, out string placeholder)
+        {
+            (pre, post, placeholder) = id switch
+            {
+                "bold" => ("**", "**", "bold text"),
+                "italic" => ("*", "*", "italic text"),
+                "strike" => ("~~", "~~", "struck text"),
+                "code" => ("`", "`", "code"),
+                "link" => ("[", "](https://)", "link text"),
+                "image" => ("![", "](https://)", "alt text"),
+                _ => (null, null, null)
+            };
+            return pre != null;
+        }
+
+        /// <summary>Line-level transforms (headings, list/quote prefixes,
+        /// fence wrap) applied to a block of text; null if id is not one.</summary>
+        internal static string TransformLines(string id, string text)
+        {
+            var lines = text.Split('\n');
             switch (id)
             {
-                case "bold": WrapSelection("**", "**", "bold text"); break;
-                case "italic": WrapSelection("*", "*", "italic text"); break;
-                case "strike": WrapSelection("~~", "~~", "struck text"); break;
-                case "code": WrapSelection("`", "`", "code"); break;
-                case "link": WrapSelection("[", "](https://)", "link text"); break;
-                case "image": WrapSelection("![", "](https://)", "alt text"); break;
-                case "h1": SetHeading(1); break;
-                case "h2": SetHeading(2); break;
-                case "h3": SetHeading(3); break;
-                case "ul": PrefixLines("- "); break;
-                case "ol": PrefixLinesNumbered(); break;
-                case "task": PrefixLines("- [ ] "); break;
-                case "quote": PrefixLines("> "); break;
-                case "codeblock":
-                    _activeEditor.value = "```\n" + _activeEditor.value + "\n```";
-                    break;
-                case "hr": InsertAtCaret("\n---\n"); break;
-                case "table": InsertAtCaret("\n| Column A | Column B |\n|---|---|\n| a | b |\n"); break;
+                case "h1": case "h2": case "h3":
+                    int level = id[1] - '0';
+                    lines[0] = new string('#', level) + " " + lines[0].TrimStart('#').TrimStart();
+                    return string.Join("\n", lines);
+                case "ul": return PrefixLines(lines, "- ");
+                case "task": return PrefixLines(lines, "- [ ] ");
+                case "quote": return PrefixLines(lines, "> ");
+                case "ol":
+                    int num = 1;
+                    for (int i = 0; i < lines.Length; i++)
+                        if (lines[i].Trim().Length > 0)
+                            lines[i] = (num++) + ". " + lines[i].TrimStart();
+                    return string.Join("\n", lines);
+                case "codeblock": return "```\n" + text + "\n```";
+                default: return null;
             }
-            var ed = _activeEditor;
-            ed.schedule.Execute(() => ed.Focus()).ExecuteLater(0);
         }
 
-        void WrapSelection(string pre, string post, string placeholder)
+        static string PrefixLines(string[] lines, string prefix)
         {
-            var ed = _activeEditor;
-            string v = ed.value;
-            int a = Mathf.Clamp(Mathf.Min(ed.cursorIndex, ed.selectIndex), 0, v.Length);
-            int b = Mathf.Clamp(Mathf.Max(ed.cursorIndex, ed.selectIndex), a, v.Length);
-            string innerText = b > a ? v.Substring(a, b - a) : placeholder;
-            ed.value = v.Substring(0, a) + pre + innerText + post + v.Substring(b);
-            ed.selectIndex = a + pre.Length;
-            ed.cursorIndex = a + pre.Length + innerText.Length;
-        }
-
-        void InsertAtCaret(string textToInsert)
-        {
-            var ed = _activeEditor;
-            string v = ed.value;
-            int a = Mathf.Clamp(Mathf.Min(ed.cursorIndex, ed.selectIndex), 0, v.Length);
-            ed.value = v.Substring(0, a) + textToInsert + v.Substring(a);
-            ed.cursorIndex = ed.selectIndex = a + textToInsert.Length;
-        }
-
-        void SetHeading(int level)
-        {
-            var ed = _activeEditor;
-            var lines = ed.value.Split('\n');
-            lines[0] = new string('#', level) + " " + lines[0].TrimStart('#').TrimStart();
-            ed.value = string.Join("\n", lines);
-        }
-
-        void PrefixLines(string prefix)
-        {
-            var ed = _activeEditor;
-            var lines = ed.value.Split('\n');
             for (int i = 0; i < lines.Length; i++)
                 if (lines[i].Trim().Length > 0 && !lines[i].TrimStart().StartsWith(prefix.TrimEnd()))
                     lines[i] = prefix + lines[i].TrimStart();
-            ed.value = string.Join("\n", lines);
-        }
-
-        void PrefixLinesNumbered()
-        {
-            var ed = _activeEditor;
-            var lines = ed.value.Split('\n');
-            int num = 1;
-            for (int i = 0; i < lines.Length; i++)
-                if (lines[i].Trim().Length > 0)
-                    lines[i] = (num++) + ". " + lines[i].TrimStart();
-            ed.value = string.Join("\n", lines);
+            return string.Join("\n", lines);
         }
 
         string RenderBlockText(Block block)
