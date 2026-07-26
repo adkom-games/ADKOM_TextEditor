@@ -1135,8 +1135,10 @@ namespace ADKOM.TextEditor
                 if (i == _active) tab.AddToClassList("tab--active");
                 tab.RegisterCallback<MouseDownEvent>(e =>
                 {
-                    if (e.button == 0) SwitchTo(index);
-                    else if (e.button == 1) ShowTabContextMenu(index); // right-click
+                    // Button 0 (switch) is handled in the pointer-drag handler:
+                    // switching rebuilds the tab bar, which would destroy the
+                    // element holding the pointer capture and kill the drag.
+                    if (e.button == 1) ShowTabContextMenu(index); // right-click
                     else if (e.button == 2) CloseTab(index); // middle-click close
                 });
                 RegisterTabDrag(tab, doc);
@@ -1170,10 +1172,18 @@ namespace ADKOM.TextEditor
             tab.RegisterCallback<PointerDownEvent>(e =>
             {
                 if (e.button != 0) return;
+                // Switch FIRST (this rebuilds the tab bar), then start the
+                // drag on the rebuilt element — capturing on `tab` would be
+                // useless once RebuildTabs removes it from the hierarchy.
+                SwitchTo(_docs.IndexOf(doc));
+                int now = _docs.IndexOf(doc);
+                if (now < 0 || now >= _tabBar.childCount) return;
+                var liveTab = _tabBar[now];
                 _dragDoc = doc;
                 _dragActive = false;
                 _dragStart = e.position;
-                tab.CapturePointer(e.pointerId);
+                liveTab.CapturePointer(e.pointerId);
+                e.StopPropagation();
             });
             tab.RegisterCallback<PointerMoveEvent>(e =>
             {
