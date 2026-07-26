@@ -3,7 +3,7 @@
 All notable changes to this package are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com); versions follow semver.
 
-## [Unreleased]
+## [0.7.0] - 2026-07-26
 
 ### Added
 - Go to Definition on symbols defined in referenced assemblies (e.g.

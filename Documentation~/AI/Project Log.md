@@ -209,6 +209,19 @@ the bottom. See [[Project State]] for the current snapshot.
   manual URL. Lesson: never ship a merged assembly under a name a
   previous optional package used.
 
+## 2026-07-26 — Metadata view and modality policy (0.7.0)
+
+- **"From metadata" view**: F12 on referenced-assembly symbols opens a
+  Roslyn-generated signature stub as a virtual document
+  (TextDocument.VirtualName/VirtualCSharp; deduped by title; caret on
+  the invoked member).
+- **Non-modal policy** (field-driven: modal file-changed dialog blocked
+  Unity's main loop and the MCP): file-changed prompt is a banner with
+  Reload/Keep Mine; async update-failure and semantics-compiling
+  notices are console/status. Decision dialogs immediately after user
+  actions stay modal by design.
+- Console text selectable/copyable.
+
 ## Conventions
 
 - Branch per feature/fix from main; merge with `--no-ff`; branches are kept.

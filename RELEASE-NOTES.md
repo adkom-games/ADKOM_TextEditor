@@ -1,5 +1,21 @@
 # Release Notes — ADKOM Text Editor
 
+## 0.7.0 — 2026-07-26
+
+### Features
+- Go to Definition on referenced-assembly symbols (UnityEngine, BCL)
+  opens a generated "from metadata" signature view of the type, caret
+  on the invoked member (virtual, C#-highlighted, deduplicated tabs).
+- Console text is selectable and copyable.
+
+### Changes
+- Non-modal dialog policy: the file-changed-on-disk prompt is now an
+  in-window banner (Reload / Keep Mine) — the old modal froze the
+  Unity editor (and background tooling) whenever the window regained
+  focus with a changed file. Async update failures and informational
+  notices are console/status messages. Decision dialogs directly after
+  user actions remain modal.
+
 ## 0.6.1 — 2026-07-26
 
 ### Fixes
