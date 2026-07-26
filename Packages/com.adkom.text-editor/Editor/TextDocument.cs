@@ -23,6 +23,7 @@ namespace ADKOM.TextEditor
         // backing file; VirtualCSharp requests C# highlighting.
         public string VirtualName;
         public bool VirtualCSharp;
+        public bool VirtualMarkdown; // requests Markdown treatment (e.g. release notes)
         // Markdown documents: true = rendered (WYSIWYG) mode, false = source.
         public bool MdRendered;
         public LineEnding Eol = LineEnding.Windows;

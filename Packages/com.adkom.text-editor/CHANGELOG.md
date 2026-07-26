@@ -25,6 +25,12 @@ All notable changes to this package are documented here. Format follows
   act on the code view directly — wrapping the selection, transforming
   the selected lines, or inserting after the current line. Always
   through the undo-tracked path.
+- Settings: "Open Markdown Rendered" — the default view for .md files
+  when opened (rendered/WYSIWYG when on, source when off; off by
+  default). The per-tab MD/source toggle still switches freely. The
+  release-notes tab shown after an update always opens rendered (with
+  full Markdown treatment: coloring, toolbar, block editing) regardless
+  of the setting.
 - Markdown feature parity across source coloring, rendering, and the
   toolbar: strikethrough (~~text~~), images (![alt](url)), task lists
   (- [ ] / - [x] render as ☐/☑), and tables (| cells |, header row
