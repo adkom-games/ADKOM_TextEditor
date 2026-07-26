@@ -253,6 +253,35 @@ the bottom. See [[Project State]] for the current snapshot.
 - **Toggle-status fix** (field report): button label showed the switch
   target, reading as the wrong state; now shows the current mode.
 
+## 2026-07-26 — Quality-of-life wave (0.9.0)
+
+- **View menu** owns Console/Line Numbers/Minimap/Word Wrap
+  (alphabetical, all default ON; existing configs preserved via layout
+  serialization).
+- **Recent Files** (per project, configurable count 1-30) and
+  **Goto Line** (Ctrl+G) via a generic status-bar mini-buffer.
+- **Deleted-file rescue** (Keep Buffer/Close Tab banner; Save restores)
+  and **tab session persistence** — the session (Library/
+  ADKOMTextEditor/session.json) now stores dirty tabs' unsaved CONTENT,
+  eliminating the window-close Unsaved Changes dialog entirely.
+- **Non-modal Unsaved Changes**: generic ShowBanner replaces
+  DisplayDialogComplex for tab close and Close Other Tabs.
+- **Menu shortcut hints** per keymap; **window-wide clipboard**;
+  **document context menu** (symbol/clipboard/file/language groups,
+  Show in File Explorer); **drag-to-reorder tabs** (capture-transfer
+  across mid-drag rebuilds; fix: switch-before-capture, the compat
+  MouseDown's rebuild was killing the captured element).
+- **Deterministic word-level undo** (EditKind grouper: same-kind +
+  contiguous + gap/caps + word boundaries; status feedback).
+- **F12 in metadata views** via VirtualContextPath.
+- **Localization** (L10n.Tr + po catalogs ja/ko/zh-hans/zh-hant);
+  defect #4: Unity's loader falls back to the first po alphabetically
+  when the language has no catalog — en.po identity catalog fixes
+  English UIs showing Japanese.
+- **Release gate**: Tools/check-editor-guards.ps1 in CI and the release
+  procedure (step 0). Release-notes policy: all fixed defects listed,
+  issue numbers cited.
+
 ## Conventions
 
 - Branch per feature/fix from main; merge with `--no-ff`; branches are kept.

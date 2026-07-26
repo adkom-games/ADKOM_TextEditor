@@ -3,7 +3,7 @@
 All notable changes to this package are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com); versions follow semver.
 
-## [Unreleased]
+## [0.9.0] - 2026-07-26
 
 ### Added
 - Localization: all user interface text (menus, settings, dialogs,

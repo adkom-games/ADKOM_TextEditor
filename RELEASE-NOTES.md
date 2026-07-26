@@ -1,5 +1,49 @@
 # Release Notes — ADKOM Text Editor
 
+## 0.9.0 — 2026-07-26
+
+### Features
+- **Localized interface**: menus, settings, dialogs, prompts, and
+  status messages follow Unity's Editor Language — Japanese, Korean,
+  Simplified Chinese, and Traditional Chinese ship in the box.
+- **Recent Files** (File menu): per project, most recent first, count
+  configurable in Settings (default 5); missing files clean themselves
+  up; "Clear Recent Files" empties the list.
+- **Goto Line** (Ctrl+G): an emacs-style prompt in the status bar;
+  numeric input, clamped to the file; line numbers not required.
+- **Document context menu**: right-click in the editor for Go to
+  Definition, Find Occurrences of the word under the cursor, clipboard,
+  Save / Save As / Close Tab / Show in File Explorer, Find/Replace/
+  Goto Line, and language-specific commands (C# comment toggle,
+  Markdown mode switch).
+- **Drag-and-drop tab reordering** — tabs move live as you drag.
+- **Tabs survive closing the window**: the session (including each
+  dirty tab's unsaved content) is restored when ATE reopens, even
+  across editor restarts.
+- **Deleted-file rescue**: when an open file vanishes from disk, a
+  banner offers Keep Buffer / Close Tab — Save writes the file back.
+- Menu items display their keyboard shortcuts for the active layout;
+  clipboard shortcuts work with focus anywhere in the ATE window.
+- Console and Minimap moved to the View menu (alphabetical with Line
+  Numbers and Word Wrap); all four default ON for fresh installs.
+- Settings: "Open Markdown Rendered" is joined by "Recent Files Count".
+
+### Fixes
+- Undo/redo grouping is now humanly predictable (VS Code model): one
+  undo removes one word; groups break on Enter, paste, caret moves,
+  direction changes, pauses, save, and hard size/age caps. The status
+  bar reports "Undid N char(s)". No GitHub issue; design defect.
+- English-language editors showed the entire UI in Japanese after the
+  localization change — Unity's catalog loader falls back to the first
+  PO file alphabetically when the current language has no catalog; an
+  English identity catalog fixes it (issue #4).
+- Go to Definition (F12/Ctrl+B/Ctrl+Click) now works inside "from
+  metadata" views and chains stub to stub. No GitHub issue.
+- The "Unsaved Changes" dialogs no longer use Unity's modal system:
+  closing a dirty tab uses the non-modal in-window banner, and closing
+  the window silently preserves dirty buffers in the session instead
+  of prompting. No GitHub issue; modality-policy completion.
+
 ## 0.8.0 — 2026-07-26
 
 ### Features

@@ -26,8 +26,8 @@ No lag, no stutter, no matter how big the file.
 ### 🗂 Tabs, like a real editor
 Open as many files as you want. Tabs remember themselves across domain
 reloads and editor restarts, warn you about unsaved changes, close with
-a middle-click, and switch instead of duplicating when you re-open a
-file. Right-click any text asset in the Project window — scripts,
+a middle-click, **reorder with drag-and-drop**, and switch instead of
+duplicating when you re-open a file. Right-click any text asset in the Project window — scripts,
 shaders, JSON, YAML, markdown, USS/UXML, configs — and it opens in ATE.
 **File → Recent Files** remembers what you've had open (per project,
 count configurable) so yesterday's file is two clicks away.
@@ -65,12 +65,18 @@ Choose your keyboard layout — **Visual Studio**, **VS Code**, or
 | Indent / unindent | Tab / Shift+Tab | Tab / Shift+Tab | Tab / Shift+Tab |
 | Go to Definition | F12 / Ctrl+Click | F12 / Ctrl+Click | Ctrl+B / Ctrl+Click |
 | Settings | — | Ctrl+, | Ctrl+Alt+S |
+| Goto Line | Ctrl+G | Ctrl+G | Ctrl+G |
 | Open the ATE window | Ctrl+Alt+8 | Ctrl+Alt+8 | Ctrl+Alt+8 |
 
-Plus undo/redo with typing coalescing, word-wise navigation, smart Home,
-auto-indent on Enter, full clipboard support, double-click word
-selection with whole-word drag, and automatic highlighting of every
-other occurrence of whatever you select.
+Plus **word-level undo/redo** (one undo removes one word, never minutes
+of typing — with "Undid N chars" feedback in the status bar), word-wise
+navigation, smart Home, auto-indent on Enter, full clipboard support
+anywhere in the window, double-click word selection with whole-word
+drag, and automatic highlighting of every other occurrence of whatever
+you select. Every menu item shows its shortcut for your chosen layout,
+**Ctrl+G** opens an emacs-style Goto Line prompt in the status bar, and
+a **right-click menu in the document** puts Go to Definition, Find
+Occurrences, clipboard, file, and language commands under the cursor.
 
 ### 🔧 Respects your files
 Tabs render as spaces at your configured tab size — but on save, files
@@ -125,6 +131,12 @@ file tabs (Save, Save As, Close, Close Other Tabs). Pick any installed
 **font** and size, zoom with Ctrl+MouseWheel or Ctrl+'+'/'-' (Ctrl+0
 resets), and enjoy **smooth scrolling** (toggleable).
 
+### 🌏 Speaks your language
+The entire interface follows Unity's **Editor Language** setting:
+Japanese, Korean, Simplified Chinese, and Traditional Chinese ship in
+the box (English is the source). Menus, settings, dialogs, prompts,
+and status messages all translate — shortcuts stay universal.
+
 ### 🔌 Unity's External Script Editor
 Select ATE in **Preferences → External Tools** and double-clicked
 scripts and console log entries open in ATE at the exact line and
@@ -161,7 +173,7 @@ https://github.com/adkom-games/ADKOM_TextEditor.git#upm
 Prefer a pinned version?
 
 ```
-https://github.com/adkom-games/ADKOM_TextEditor.git#0.8.0
+https://github.com/adkom-games/ADKOM_TextEditor.git#0.9.0
 ```
 
 Semantic Features (compiler-accurate colors + Go to Definition) are
