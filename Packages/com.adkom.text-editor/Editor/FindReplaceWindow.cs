@@ -153,7 +153,7 @@ namespace ADKOM.TextEditor
             return true;
         }
 
-        void SetStatus(string s) { if (_status != null) _status.text = s; }
+        void SetStatus(string s) { if (_status != null) _status.text = s; AteConsole.Log("Find/Replace: " + s); }
 
         Regex BuildRegex(bool rightToLeft, out string error)
         {

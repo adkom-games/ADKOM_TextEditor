@@ -108,7 +108,7 @@ namespace ADKOM.TextEditor
                 try { return fallback.OpenProject(path, line, column); }
                 catch (System.Exception ex)
                 {
-                    Debug.LogWarning("[ADKOM Text Editor] Fallback editor failed: " + ex.Message);
+                    AteConsole.Warn("[ADKOM Text Editor] Fallback editor failed: " + ex.Message);
                 }
             }
             if (!string.IsNullOrEmpty(path) && File.Exists(path))

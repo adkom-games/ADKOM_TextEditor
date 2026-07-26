@@ -37,6 +37,7 @@ namespace ADKOM.TextEditor
         [SerializeField] int _active;
         [SerializeField] bool _showLineNumbers;
         [SerializeField] bool _wordWrap;
+        [SerializeField] bool _consoleVisible = true;
 
         CodeView _code;
         VisualElement _tabBar;
@@ -63,6 +64,11 @@ namespace ADKOM.TextEditor
 
         IVisualElementScheduledItem _semanticPending;
         System.Threading.SynchronizationContext _mainCtx;
+        VisualElement _consolePane;
+        ScrollView _consoleScroll;
+        Label _consoleOutput;
+        int _consoleVersionShown = -1;
+        double _statusHoldUntil;
 
         TextDocument Active => _docs[_active];
 
@@ -199,6 +205,7 @@ namespace ADKOM.TextEditor
             root.Add(_editorArea);
 
             BuildSettingsPane(root);
+            BuildConsolePane(root);
 
             // --- Status bar ---
             var status = new VisualElement { name = "status-bar" };
@@ -327,6 +334,8 @@ namespace ADKOM.TextEditor
 
         void FillWindowMenu(GenericMenu m)
         {
+            m.AddItem(new GUIContent("Console"), _consoleVisible, () => SetConsoleVisible(!_consoleVisible));
+            m.AddSeparator("");
             bool multi = _docs.Count > 1;
             if (multi)
             {
@@ -443,7 +452,7 @@ namespace ADKOM.TextEditor
                 }
                 catch (System.Exception ex)
                 {
-                    Debug.LogWarning("[ADKOM Text Editor] Semantic pass failed: " + ex.Message);
+                    AteConsole.Warn("[ADKOM Text Editor] Semantic pass failed: " + ex.Message);
                 }
             });
         }
@@ -479,7 +488,7 @@ namespace ADKOM.TextEditor
             string text = _code.value;
             int offset = _code.LineColToIndex(line, col);
             var ctx = _mainCtx;
-            _statusLeft.text = "Resolving symbol…";
+            PostStatus("Resolving symbol…");
             System.Threading.Tasks.Task.Run(() =>
             {
                 string status = null;
@@ -495,10 +504,67 @@ namespace ADKOM.TextEditor
                 catch (System.Exception ex) { status = "Go to Definition failed: " + ex.Message; }
                 ctx.Post(_ =>
                 {
-                    if (status != null) { if (_statusLeft != null) _statusLeft.text = status; return; }
+                    if (status != null) { PostStatus(status); return; }
                     OpenExternal(defPath, dl + 1, dc + 1);
                 }, null);
             });
+        }
+
+        // --- Console pane (bottom, horizontal tabs; Console is the only
+        // tab for now). Closing the tab hides the whole pane; the Window
+        // menu shows it again. Visible by default. ---
+
+        void BuildConsolePane(VisualElement root)
+        {
+            _consolePane = new VisualElement { name = "console-pane" };
+
+            var tabs = new VisualElement { name = "console-tabs" };
+            var tab = new VisualElement();
+            tab.AddToClassList("console-tab");
+            tab.Add(new Label("Console"));
+            var close = new Button(() => SetConsoleVisible(false)) { text = "×" };
+            close.AddToClassList("tab__close");
+            tab.Add(close);
+            tabs.Add(tab);
+            _consolePane.Add(tabs);
+
+            _consoleScroll = new ScrollView(ScrollViewMode.Vertical) { name = "console-scroll" };
+            _consoleOutput = new Label { name = "console-output" };
+            _consoleOutput.AddToClassList("code-line");
+            _consoleScroll.Add(_consoleOutput);
+            _consolePane.Add(_consoleScroll);
+
+            root.Add(_consolePane);
+            SetConsoleVisible(_consoleVisible);
+        }
+
+        void SetConsoleVisible(bool visible)
+        {
+            _consoleVisible = visible;
+            if (_consolePane != null)
+                _consolePane.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
+            if (visible) _consoleVersionShown = -1; // force refresh
+        }
+
+        void PollConsole()
+        {
+            if (!_consoleVisible || _consoleOutput == null) return;
+            if (_consoleVersionShown == AteConsole.Version) return;
+            _consoleVersionShown = AteConsole.Version;
+            _consoleOutput.text = AteConsole.GetText();
+            // Stick to the bottom once the new content has been laid out.
+            _consoleScroll.schedule.Execute(() =>
+                _consoleScroll.verticalScroller.value = _consoleScroll.verticalScroller.highValue)
+                .ExecuteLater(30);
+        }
+
+        /// <summary>Status-bar messages also land in the console, and are held
+        /// in the bar for a few seconds so the Ln/Col poll doesn't stomp them.</summary>
+        void PostStatus(string message)
+        {
+            AteConsole.Log(message);
+            if (_statusLeft != null) _statusLeft.text = message;
+            _statusHoldUntil = EditorApplication.timeSinceStartup + 5.0;
         }
 
         // --- Settings tab ---
@@ -1343,6 +1409,8 @@ namespace ADKOM.TextEditor
         void UpdateStatus()
         {
             if (_statusLeft == null || _code == null) return;
+            PollConsole();
+            if (EditorApplication.timeSinceStartup < _statusHoldUntil) return; // message pinned
 
             if (!HasDocs)
             {

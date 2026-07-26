@@ -51,7 +51,7 @@ namespace ADKOM.TextEditor
         {
             if (!ModuleInstalled)
             {
-                Debug.Log("[ADKOM Text Editor] Installing the semantics module via UPM…");
+                AteConsole.Info("[ADKOM Text Editor] Installing the semantics module via UPM…");
                 UnityEditor.PackageManager.Client.Add(ModuleGitUrl);
                 return; // resumes after the package resolves and reloads
             }
@@ -62,7 +62,7 @@ namespace ADKOM.TextEditor
             }
             EnsureDefine();
             if (!silent && SemanticServices.Provider == null)
-                Debug.Log("[ADKOM Text Editor] Semantics module compiling — features available shortly.");
+                AteConsole.Info("[ADKOM Text Editor] Semantics module compiling — features available shortly.");
         }
 
         static void CopyBundledRoslyn()
@@ -73,7 +73,7 @@ namespace ADKOM.TextEditor
             string src = Path.Combine(module.resolvedPath, "RoslynBinaries~");
             if (!Directory.Exists(src))
             {
-                Debug.LogError("[ADKOM Text Editor] Semantics module has no bundled Roslyn binaries (RoslynBinaries~ missing). Update the module.");
+                AteConsole.Error("[ADKOM Text Editor] Semantics module has no bundled Roslyn binaries (RoslynBinaries~ missing). Update the module.");
                 return;
             }
             Directory.CreateDirectory(RoslynDestDir);
@@ -85,7 +85,7 @@ namespace ADKOM.TextEditor
                 File.Copy(dll, dst);
                 copied++;
             }
-            Debug.Log($"[ADKOM Text Editor] Installed {copied} bundled Roslyn assemblies to {RoslynDestDir} " +
+            AteConsole.Info($"[ADKOM Text Editor] Installed {copied} bundled Roslyn assemblies to {RoslynDestDir} " +
                 "(MIT-licensed, © .NET Foundation — see the module's THIRD-PARTY-NOTICES.md).");
             AssetDatabase.Refresh();
         }
@@ -98,7 +98,7 @@ namespace ADKOM.TextEditor
             if (defines.Split(';').Contains(Define)) return;
             PlayerSettings.SetScriptingDefineSymbols(target,
                 string.IsNullOrEmpty(defines) ? Define : defines + ";" + Define);
-            Debug.Log("[ADKOM Text Editor] Enabling the semantics module (" + Define + ").");
+            AteConsole.Info("[ADKOM Text Editor] Enabling the semantics module (" + Define + ").");
         }
     }
 }
