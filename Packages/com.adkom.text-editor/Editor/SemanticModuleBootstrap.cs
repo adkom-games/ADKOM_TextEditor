@@ -24,12 +24,42 @@ namespace ADKOM.TextEditor
         const string PackageName = "com.adkom.text-editor";
         const string RoslynDestDir = "Assets/Plugins/ADKOM.TextEditor/Roslyn";
 
+        const string ObsoleteModuleName = "com.adkom.text-editor.semantics";
+        static UnityEditor.PackageManager.Requests.RemoveRequest _removeRequest;
+
         static SemanticSetup()
         {
             EditorApplication.delayCall += () =>
             {
+                RemoveObsoleteModule();
                 if (EditorConfig.SemanticsEnabled) EnsureInstalled(silent: true);
             };
+        }
+
+        /// <summary>The pre-0.6.0 companion module defines the same-named
+        /// assembly the main package now ships; leaving both installed breaks
+        /// compilation. Remove it automatically.</summary>
+        static void RemoveObsoleteModule()
+        {
+            if (!UnityEditor.PackageManager.PackageInfo.GetAllRegisteredPackages()
+                    .Any(p => p.name == ObsoleteModuleName))
+                return;
+            AteConsole.Info("[ADKOM Text Editor] Removing the obsolete semantics module package (its features now ship in the main package)…");
+            _removeRequest = UnityEditor.PackageManager.Client.Remove(ObsoleteModuleName);
+            EditorApplication.update += MonitorRemove;
+        }
+
+        static void MonitorRemove()
+        {
+            if (_removeRequest == null || !_removeRequest.IsCompleted) return;
+            EditorApplication.update -= MonitorRemove;
+            if (_removeRequest.Status == UnityEditor.PackageManager.StatusCode.Success)
+                AteConsole.Info("[ADKOM Text Editor] Obsolete semantics module removed.");
+            else
+                AteConsole.Warn("[ADKOM Text Editor] Could not remove the obsolete semantics module (" +
+                    (_removeRequest.Error?.message ?? "unknown error") +
+                    ") — remove 'ADKOM Text Editor — Semantics Module' in the Package Manager.");
+            _removeRequest = null;
         }
 
         public static bool RoslynPresent =>
