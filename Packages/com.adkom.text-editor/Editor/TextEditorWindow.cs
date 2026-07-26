@@ -293,6 +293,7 @@ namespace ADKOM.TextEditor
             _statusLeft = new Label();
             _statusRight = new Label();
             status.Add(_statusLeft);
+            BuildMiniBuffer(status); // emacs-style prompt, between left and right
             status.Add(_statusRight);
             root.Add(status);
             _updatingOverlay.BringToFront(); // above everything, incl. status bar
@@ -392,6 +393,7 @@ namespace ADKOM.TextEditor
             Item(WithSc("Copy", "Ctrl+C"), edit && _code.HasSelectionPublic, _code.Copy);
             Item(WithSc("Paste", "Ctrl+V"), edit && !string.IsNullOrEmpty(EditorGUIUtility.systemCopyBuffer), _code.Paste);
             Item(WithSc("Select All", "Ctrl+A"), edit, _code.SelectAll);
+            Item(WithSc("Goto Line...", "Ctrl+G"), edit, GotoLineCommand);
             m.AddSeparator("");
             Item(WithSc("Duplicate Line", Sc("Ctrl+D", "Shift+Alt+Down", "Ctrl+D")), edit, DuplicateLine);
             Item(WithSc("Delete Line", Sc("Ctrl+L", "Ctrl+Shift+K", "Ctrl+Y")), edit, DeleteLine);
@@ -1435,6 +1437,101 @@ namespace ADKOM.TextEditor
             PostStatus("Kept in-editor version of " + Active.DisplayName + ".");
         }
 
+        // --- Status-bar mini-buffer (emacs-style): a static prompt plus an
+        // inline edit field in the status bar. Generic so future commands can
+        // reuse it; Goto Line is the first client. ---
+
+        VisualElement _miniBuffer;
+        Label _miniPrompt;
+        TextField _miniInput;
+        System.Action<string> _miniCommit;
+        bool _miniDigitsOnly;
+
+        void BuildMiniBuffer(VisualElement statusBar)
+        {
+            _miniBuffer = new VisualElement { name = "mini-buffer" };
+            _miniBuffer.style.flexDirection = FlexDirection.Row;
+            _miniBuffer.style.alignItems = Align.Center;
+            _miniBuffer.style.flexGrow = 1;
+            _miniBuffer.style.display = DisplayStyle.None;
+            _miniPrompt = new Label();
+            _miniPrompt.style.unityFontStyleAndWeight = FontStyle.Bold;
+            _miniPrompt.style.marginRight = 4;
+            _miniInput = new TextField();
+            _miniInput.style.minWidth = 80;
+            _miniInput.style.marginTop = -2;
+            _miniInput.style.marginBottom = -2;
+            _miniInput.RegisterValueChangedCallback(e =>
+            {
+                if (!_miniDigitsOnly || e.newValue == null) return;
+                string filtered = new string(System.Linq.Enumerable
+                    .Where(e.newValue, char.IsDigit).ToArray());
+                if (filtered != e.newValue) _miniInput.SetValueWithoutNotify(filtered);
+            });
+            _miniInput.RegisterCallback<KeyDownEvent>(e =>
+            {
+                if (e.keyCode == KeyCode.Return || e.keyCode == KeyCode.KeypadEnter)
+                {
+                    var commit = _miniCommit;
+                    string val = _miniInput.value;
+                    CloseMiniBuffer();
+                    commit?.Invoke(val);
+                    e.StopPropagation();
+                }
+                else if (e.keyCode == KeyCode.Escape)
+                {
+                    CloseMiniBuffer();
+                    e.StopPropagation();
+                }
+            }, TrickleDown.TrickleDown);
+            // Clicking elsewhere cancels, like emacs quitting the minibuffer.
+            _miniInput.RegisterCallback<FocusOutEvent>(_ =>
+            {
+                if (_miniBuffer.style.display == DisplayStyle.Flex) CloseMiniBuffer();
+            });
+            _miniBuffer.Add(_miniPrompt);
+            _miniBuffer.Add(_miniInput);
+            statusBar.Add(_miniBuffer);
+        }
+
+        /// <summary>Shows the status-bar prompt; Enter passes the entry to
+        /// <paramref name="onCommit"/>, Escape (or focus loss) cancels.</summary>
+        void StartStatusPrompt(string prompt, bool digitsOnly, System.Action<string> onCommit)
+        {
+            if (_miniBuffer == null) return;
+            _miniPrompt.text = prompt;
+            _miniDigitsOnly = digitsOnly;
+            _miniCommit = onCommit;
+            _miniInput.SetValueWithoutNotify(string.Empty);
+            _statusLeft.style.display = DisplayStyle.None;
+            _miniBuffer.style.display = DisplayStyle.Flex;
+            _miniInput.schedule.Execute(() => _miniInput.Focus()).ExecuteLater(0);
+        }
+
+        void CloseMiniBuffer()
+        {
+            _miniCommit = null;
+            _miniBuffer.style.display = DisplayStyle.None;
+            _statusLeft.style.display = DisplayStyle.Flex;
+            _code?.schedule.Execute(() => _code.Focus()).ExecuteLater(0);
+        }
+
+        /// <summary>Goto Line (Ctrl+G): status-bar prompt, numeric only,
+        /// clamped to [1, line count]. Works without visible line numbers.</summary>
+        void GotoLineCommand()
+        {
+            if (!CanEditDoc) return;
+            StartStatusPrompt("Goto Line:", digitsOnly: true, s =>
+            {
+                if (!int.TryParse(s, out int line)) return;
+                int clamped = Mathf.Clamp(line, 1, _code.LineCount);
+                _code.GoToLine(clamped, 1);
+                PostStatus(clamped == line
+                    ? $"Line {clamped}."
+                    : $"Line {line} is out of range — went to line {clamped} (1-{_code.LineCount}).");
+            });
+        }
+
         void OnLostFocus()
         {
             _code?.BreakUndoGroup();
@@ -1531,6 +1628,11 @@ namespace ADKOM.TextEditor
             else if (rider && ctrl && !e.altKey && e.keyCode == KeyCode.R)
             {
                 FindReplaceWindow.Open(this, replaceFocus: true, allTabs: e.shiftKey);
+                handled = true;
+            }
+            else if (ctrl && !e.altKey && !e.shiftKey && e.keyCode == KeyCode.G)
+            {
+                GotoLineCommand();
                 handled = true;
             }
             else if (e.keyCode == KeyCode.F3 && !ctrl && !e.altKey)

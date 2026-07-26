@@ -1338,6 +1338,7 @@ namespace ADKOM.TextEditor
         }
 
         public bool HasSelectionPublic => HasSelection;
+        public int LineCount => _lines.Count;
         public bool CanUndo => _undo.Count > 0;
         public bool CanRedo => _redo.Count > 0;
 

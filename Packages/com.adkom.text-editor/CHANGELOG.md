@@ -6,6 +6,11 @@ All notable changes to this package are documented here. Format follows
 ## [Unreleased]
 
 ### Added
+- Goto Line (Edit menu, Ctrl+G): an emacs-style prompt appears in the
+  status bar ("Goto Line:" plus an inline numeric field). Enter jumps,
+  Escape or clicking away cancels; the destination is clamped to the
+  file's line range; visible line numbers are not required. The
+  status-bar mini-buffer is generic and will host future commands.
 - File → Recent Files: the most recently opened files (per project,
   newest first, deduplicated), each entry reopening its file; missing
   files are dropped from the list with a console note. "Clear Recent
