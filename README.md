@@ -113,7 +113,8 @@ your whole document at a glance, with a viewport indicator; click or
 drag it to jump anywhere. A **console pane** at the bottom collects
 every ATE message (tool output, update checks, find/replace results,
 status messages) with timestamps — selectable and copyable. Both close away cleanly and come back
-from the Window menu.
+from the View menu — and both are on by default, along with line
+numbers and word wrap.
 
 ### 🖱 Feels like an application
 A real **menu bar** — File, Edit, View, Tools, Window, Help — rendered
