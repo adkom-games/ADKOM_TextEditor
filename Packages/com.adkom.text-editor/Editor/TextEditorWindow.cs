@@ -1139,6 +1139,7 @@ namespace ADKOM.TextEditor
                     else if (e.button == 1) ShowTabContextMenu(index); // right-click
                     else if (e.button == 2) CloseTab(index); // middle-click close
                 });
+                RegisterTabDrag(tab, doc);
 
                 var label = new Label((doc.IsDirty ? "*" : "") + doc.DisplayName)
                 {
@@ -1152,6 +1153,83 @@ namespace ADKOM.TextEditor
 
                 _tabBar.Add(tab);
             }
+        }
+
+        // --- Drag-to-reorder tabs. Left-drag past a small threshold enters
+        // drag mode; crossing another tab's midpoint moves the dragged
+        // document there live (browser-style). A plain click still switches
+        // (handled on MouseDown before the threshold is reached). ---
+
+        TextDocument _dragDoc;
+        bool _dragActive;
+        Vector2 _dragStart;
+        const float DragThreshold = 5f;
+
+        void RegisterTabDrag(VisualElement tab, TextDocument doc)
+        {
+            tab.RegisterCallback<PointerDownEvent>(e =>
+            {
+                if (e.button != 0) return;
+                _dragDoc = doc;
+                _dragActive = false;
+                _dragStart = e.position;
+                tab.CapturePointer(e.pointerId);
+            });
+            tab.RegisterCallback<PointerMoveEvent>(e =>
+            {
+                if (_dragDoc == null || !tab.HasPointerCapture(e.pointerId)) return;
+                if (!_dragActive)
+                {
+                    if (Mathf.Abs(e.position.x - _dragStart.x) < DragThreshold &&
+                        Mathf.Abs(e.position.y - _dragStart.y) < DragThreshold) return;
+                    _dragActive = true;
+                    tab.AddToClassList("tab--dragging");
+                }
+                int from = _docs.IndexOf(_dragDoc);
+                int to = TabIndexAt(e.position.x, from);
+                if (to != from && to >= 0 && from >= 0)
+                {
+                    _docs.RemoveAt(from);
+                    _docs.Insert(to, _dragDoc);
+                    // MouseDown already switched to the dragged tab, so the
+                    // active document IS the dragged one — track its new slot.
+                    _active = to;
+                    RebuildTabs();
+                    // The rebuilt tab under the pointer continues the drag.
+                    var newTab = _tabBar[to];
+                    newTab.CapturePointer(e.pointerId);
+                    newTab.AddToClassList("tab--dragging");
+                }
+            });
+            tab.RegisterCallback<PointerUpEvent>(e =>
+            {
+                if (tab.HasPointerCapture(e.pointerId)) tab.ReleasePointer(e.pointerId);
+                tab.RemoveFromClassList("tab--dragging");
+                bool wasDrag = _dragActive;
+                _dragDoc = null;
+                _dragActive = false;
+                if (wasDrag) RebuildTabs(); // clean styling
+            });
+            tab.RegisterCallback<PointerCaptureOutEvent>(_ =>
+            {
+                tab.RemoveFromClassList("tab--dragging");
+            });
+        }
+
+        /// <summary>Target slot for the dragged tab: crossing another tab's
+        /// horizontal midpoint claims that tab's index (it shifts aside);
+        /// otherwise the tab stays at <paramref name="current"/>.</summary>
+        int TabIndexAt(float worldX, int current)
+        {
+            for (int i = 0; i < _tabBar.childCount; i++)
+            {
+                if (i == current) continue;
+                var r = _tabBar[i].worldBound;
+                if (worldX < r.xMin || worldX > r.xMax) continue;
+                bool pastMidpoint = i < current ? worldX < r.center.x : worldX > r.center.x;
+                if (pastMidpoint) return i;
+            }
+            return current;
         }
 
         void ShowTabContextMenu(int index)
