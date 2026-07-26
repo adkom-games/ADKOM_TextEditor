@@ -780,20 +780,47 @@ namespace ADKOM.TextEditor
         /// and places the caret on the requested symbol's line.</summary>
         void OpenMetadataView(string title, string source, int line)
         {
+            OpenVirtualDoc(title, source, csharp: true);
+            _code.GoToLine(line + 1, 1);
+            PostStatus(title);
+        }
+
+        /// <summary>Opens (or switches to and refreshes) a virtual document —
+        /// named content with no backing file — and focuses it.</summary>
+        void OpenVirtualDoc(string title, string content, bool csharp)
+        {
             int existing = _docs.FindIndex(d => d.VirtualName == title);
             if (existing >= 0)
             {
-                _docs[existing].Content = source;
+                _docs[existing].Content = content;
                 _docs[existing].IsDirty = false;
                 SwitchTo(existing);
             }
             else
             {
-                _docs.Add(new TextDocument { Content = source, VirtualName = title, VirtualCSharp = true });
+                _docs.Add(new TextDocument { Content = content, VirtualName = title, VirtualCSharp = csharp });
                 SwitchTo(_docs.Count - 1);
             }
-            _code.GoToLine(line + 1, 1);
-            PostStatus(title);
+        }
+
+        /// <summary>Shown after an update: the packaged RELEASE-NOTES.md as a
+        /// focused virtual tab (raw markdown text).</summary>
+        public static void ShowReleaseNotes(string version)
+        {
+            var pkg = UnityEditor.PackageManager.PackageInfo.GetAllRegisteredPackages()
+                .FirstOrDefault(p => p.name == "com.adkom.text-editor");
+            if (pkg == null) return;
+            string path = Path.Combine(pkg.resolvedPath, "RELEASE-NOTES.md");
+            if (!File.Exists(path)) return;
+            string text = File.ReadAllText(path).Replace("\r\n", "\n").Replace("\r", "\n");
+
+            var existing = Resources.FindObjectsOfTypeAll<TextEditorWindow>();
+            var window = existing.Length > 0 ? existing[0] : CreateWindow<TextEditorWindow>();
+            window.Show();
+            window.Focus();
+            // CreateGUI may not have run yet on a fresh window; defer a frame.
+            window.rootVisualElement.schedule.Execute(() =>
+                window.OpenVirtualDoc("Release Notes " + version, text, csharp: false)).ExecuteLater(0);
         }
 
         /// <summary>Gear behavior: open the settings tab, bring it to the front
