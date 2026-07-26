@@ -1,0 +1,415 @@
+msgid ""
+msgstr ""
+"Language: zh-hans\n"
+"Content-Type: text/plain; charset=utf-8\n"
+
+msgid "File"
+msgstr "文件"
+
+msgid "Edit"
+msgstr "编辑"
+
+msgid "View"
+msgstr "视图"
+
+msgid "Tools"
+msgstr "工具"
+
+msgid "Window"
+msgstr "窗口"
+
+msgid "Help"
+msgstr "帮助"
+
+msgid "New"
+msgstr "新建"
+
+msgid "Open..."
+msgstr "打开..."
+
+msgid "Save"
+msgstr "保存"
+
+msgid "Save As..."
+msgstr "另存为..."
+
+msgid "Save All"
+msgstr "全部保存"
+
+msgid "Close Tab"
+msgstr "关闭标签页"
+
+msgid "Close"
+msgstr "关闭"
+
+msgid "Close Other Tabs"
+msgstr "关闭其他标签页"
+
+msgid "Close Window"
+msgstr "关闭窗口"
+
+msgid "Recent Files"
+msgstr "最近的文件"
+
+msgid "Clear Recent Files"
+msgstr "清除最近的文件"
+
+msgid "Undo"
+msgstr "撤销"
+
+msgid "Redo"
+msgstr "重做"
+
+msgid "Cut"
+msgstr "剪切"
+
+msgid "Copy"
+msgstr "复制"
+
+msgid "Paste"
+msgstr "粘贴"
+
+msgid "Select All"
+msgstr "全选"
+
+msgid "Goto Line..."
+msgstr "转到行..."
+
+msgid "Goto Line:"
+msgstr "转到行:"
+
+msgid "Duplicate Line"
+msgstr "复制行"
+
+msgid "Delete Line"
+msgstr "删除行"
+
+msgid "Move Line Up"
+msgstr "上移行"
+
+msgid "Move Line Down"
+msgstr "下移行"
+
+msgid "Toggle Comment"
+msgstr "切换注释"
+
+msgid "Indent"
+msgstr "增加缩进"
+
+msgid "Unindent"
+msgstr "减少缩进"
+
+msgid "Find..."
+msgstr "查找..."
+
+msgid "Find in Tabs..."
+msgstr "在标签页中查找..."
+
+msgid "Replace..."
+msgstr "替换..."
+
+msgid "Replace in Tabs..."
+msgstr "在标签页中替换..."
+
+msgid "Find Next"
+msgstr "查找下一个"
+
+msgid "Find Previous"
+msgstr "查找上一个"
+
+msgid "Console"
+msgstr "控制台"
+
+msgid "Line Numbers"
+msgstr "行号"
+
+msgid "Minimap"
+msgstr "缩略图"
+
+msgid "Word Wrap"
+msgstr "自动换行"
+
+msgid "Theme"
+msgstr "主题"
+
+msgid "Light-Dark Mode"
+msgstr "浅色/深色模式"
+
+msgid "Options..."
+msgstr "选项..."
+
+msgid "Next Tab"
+msgstr "下一个标签页"
+
+msgid "Previous Tab"
+msgstr "上一个标签页"
+
+msgid "(no open tabs)"
+msgstr "(没有打开的标签页)"
+
+msgid "About ADKOM Text Editor..."
+msgstr "关于 ADKOM Text Editor..."
+
+msgid "Repository"
+msgstr "代码仓库"
+
+msgid "Release Notes"
+msgstr "版本说明"
+
+msgid "Go to Definition"
+msgstr "转到定义"
+
+msgid "Find Occurrences"
+msgstr "查找匹配项"
+
+msgid "Find Occurrences of '{0}'"
+msgstr "查找 '{0}' 的匹配项"
+
+msgid "Find in Tabs '{0}'"
+msgstr "在标签页中查找 '{0}'"
+
+msgid "Show in File Explorer"
+msgstr "在文件资源管理器中显示"
+
+msgid "Switch to Markdown Source"
+msgstr "切换到 Markdown 源码"
+
+msgid "Switch to Rendered Markdown"
+msgstr "切换到渲染的 Markdown"
+
+msgid "Rendered Markdown — click to switch to source"
+msgstr "已渲染的 Markdown — 点击切换到源码"
+
+msgid "Markdown source — click to switch to rendered (click a block to edit it)"
+msgstr "Markdown 源码 — 点击切换到渲染视图(点击块进行编辑)"
+
+msgid "Editor Settings"
+msgstr "编辑器设置"
+
+msgid "Color Theme"
+msgstr "颜色主题"
+
+msgid "Light/Dark Mode"
+msgstr "浅色/深色模式"
+
+msgid "Tab Size"
+msgstr "制表符宽度"
+
+msgid "Keyboard Layout"
+msgstr "键盘布局"
+
+msgid "Font"
+msgstr "字体"
+
+msgid "Font Size"
+msgstr "字号"
+
+msgid "External Fallback"
+msgstr "外部后备编辑器"
+
+msgid "Semantic Features"
+msgstr "语义功能"
+
+msgid "Smooth Scrolling"
+msgstr "平滑滚动"
+
+msgid "Open Markdown Rendered"
+msgstr "以渲染视图打开 Markdown"
+
+msgid "Recent Files Count"
+msgstr "最近文件数量"
+
+msgid "Automatic Updates"
+msgstr "自动更新"
+
+msgid "Check Every (days)"
+msgstr "检查间隔(天)"
+
+msgid "Check for Updates Now"
+msgstr "立即检查更新"
+
+msgid "Checking…"
+msgstr "正在检查…"
+
+msgid "Installed version: "
+msgstr "已安装版本: "
+
+msgid "Settings"
+msgstr "设置"
+
+msgid "Spaces a tab renders as. Applies to files opened after the change."
+msgstr "制表符显示为的空格数。适用于更改后打开的文件。"
+
+msgid "Which IDE's default shortcuts to use for the commands this editor supports."
+msgstr "此编辑器支持的命令使用哪个 IDE 的默认快捷键。"
+
+msgid "Also: Ctrl+MouseWheel, Ctrl+'+'/'-', Ctrl+0 resets."
+msgstr "另外:Ctrl+鼠标滚轮、Ctrl+'+'/'-',Ctrl+0 重置。"
+
+msgid "When ATE is the External Script Editor, non-text requests (solutions, binaries, project sync) are forwarded here."
+msgstr "当 ATE 是外部脚本编辑器时,非文本请求(解决方案、二进制文件、项目同步)将转发到此处。"
+
+msgid "Compiler-accurate colors and Go to Definition. If the project has no Roslyn, enabling installs the bundled MIT-licensed Roslyn assemblies (see THIRD-PARTY-NOTICES)."
+msgstr "编译器级准确的颜色和转到定义。如果项目没有 Roslyn,启用时将安装捆绑的 MIT 许可 Roslyn 程序集(参见 THIRD-PARTY-NOTICES)。"
+
+msgid "Animate wheel scrolling instead of stepping line by line."
+msgstr "滚轮滚动使用动画而不是逐行跳动。"
+
+msgid "Default view when opening .md files: rendered (WYSIWYG) when on, source when off. The MD/source toggle still switches per tab."
+msgstr "打开 .md 文件时的默认视图:开启时为渲染(所见即所得),关闭时为源码。MD/源码切换仍可按标签页切换。"
+
+msgid "How many entries File → Recent Files keeps (1-30)."
+msgstr "文件 → 最近的文件保留的条目数(1-30)。"
+
+msgid "Check GitHub for new releases and offer to install them."
+msgstr "在 GitHub 上检查新版本并提示安装。"
+
+msgid "Days between automatic update checks. 1 = daily; never more often than once per day."
+msgstr "自动更新检查的间隔天数。1 = 每天;每天最多检查一次。"
+
+msgid "No file open.\nFile → New, File → Open…, or right-click a text asset in the Project window."
+msgstr "没有打开的文件。\n文件 → 新建、文件 → 打开…,或在 Project 窗口中右键单击文本资源。"
+
+msgid "Updating ADKOM Text Editor…\nPlease wait — the editor will reload when the update completes."
+msgstr "正在更新 ADKOM Text Editor…\n请稍候 — 更新完成后编辑器将重新加载。"
+
+msgid "(unknown version)"
+msgstr "(未知版本)"
+
+msgid "A real code editor, living right inside the Unity Editor."
+msgstr "一个真正的代码编辑器,就在 Unity 编辑器内。"
+
+msgid "100% Editor-only — nothing ships in player builds."
+msgstr "100% 仅限编辑器 — 玩家构建中不包含任何内容。"
+
+msgid "OK"
+msgstr "确定"
+
+msgid "Go to Definition needs Semantic Features, which are currently disabled.\n\nEnable them now? The semantics module — and, if your project has no Roslyn, the bundled MIT-licensed Roslyn assemblies — will be installed automatically."
+msgstr "转到定义需要语义功能,当前已禁用。\n\n现在启用吗?语义模块(如果项目没有 Roslyn,还有捆绑的 MIT 许可 Roslyn 程序集)将自动安装。"
+
+msgid "Enable and Install"
+msgstr "启用并安装"
+
+msgid "Cancel"
+msgstr "取消"
+
+msgid "Semantic features are still installing or compiling — try again in a moment."
+msgstr "语义功能仍在安装或编译中 — 请稍后重试。"
+
+msgid "Resolving symbol…"
+msgstr "正在解析符号…"
+
+msgid "Defined in "
+msgstr "定义于 "
+
+msgid "Definition not found."
+msgstr "未找到定义。"
+
+msgid "Go to Definition failed: "
+msgstr "转到定义失败: "
+
+msgid "Recent file no longer exists: "
+msgstr "最近的文件已不存在: "
+
+msgid "Kept buffer of deleted file {0} — Save to restore it to disk."
+msgstr "已保留被删除文件 {0} 的缓冲区 — 保存即可将其恢复到磁盘。"
+
+msgid "Reloaded {0} from disk."
+msgstr "已从磁盘重新加载 {0}。"
+
+msgid "Kept in-editor version of {0}."
+msgstr "已保留 {0} 的编辑器内版本。"
+
+msgid "No file open"
+msgstr "没有打开的文件"
+
+msgid "'{0}' was deleted from disk. Keep the buffer (Save can bring the file back), or close the tab?"
+msgstr "'{0}' 已从磁盘删除。保留缓冲区(保存可恢复文件),还是关闭标签页?"
+
+msgid "'{0}' was modified outside the editor. Reload it? (unsaved changes here would be lost)"
+msgstr "'{0}' 已在编辑器外部被修改。重新加载吗?(此处未保存的更改将丢失)"
+
+msgid "'{0}' has unsaved changes."
+msgstr "'{0}' 有未保存的更改。"
+
+msgid "{0} tabs have unsaved changes."
+msgstr "{0} 个标签页有未保存的更改。"
+
+msgid "Keep Buffer"
+msgstr "保留缓冲区"
+
+msgid "Reload"
+msgstr "重新加载"
+
+msgid "Keep Mine"
+msgstr "保留我的版本"
+
+msgid "Discard"
+msgstr "放弃"
+
+msgid "Discard All"
+msgstr "全部放弃"
+
+msgid "Line {0}."
+msgstr "第 {0} 行。"
+
+msgid "Line {0} is out of range — went to line {1} (1-{2})."
+msgstr "第 {0} 行超出范围 — 已转到第 {1} 行 (1-{2})。"
+
+msgid "Find / Replace"
+msgstr "查找 / 替换"
+
+msgid "Find"
+msgstr "查找"
+
+msgid "Replace"
+msgstr "替换"
+
+msgid "Match case"
+msgstr "区分大小写"
+
+msgid "Whole word"
+msgstr "全字匹配"
+
+msgid "Regex"
+msgstr "正则表达式"
+
+msgid "Wrap around"
+msgstr "循环查找"
+
+msgid "Backwards"
+msgstr "向后查找"
+
+msgid "Scope"
+msgstr "范围"
+
+msgid "Current Tab"
+msgstr "当前标签页"
+
+msgid "All Tabs"
+msgstr "所有标签页"
+
+msgid "Replace All"
+msgstr "全部替换"
+
+msgid "A new version of the ADKOM Text Editor is available."
+msgstr "ADKOM Text Editor 有新版本可用。"
+
+msgid "Installed version:  {0}\nNew version:        {1}"
+msgstr "已安装版本:  {0}\n新版本:      {1}"
+
+msgid "Check for updates automatically"
+msgstr "自动检查更新"
+
+msgid "Later"
+msgstr "稍后"
+
+msgid "Install Now"
+msgstr "立即安装"
+
+msgid "Undid {0} char(s)."
+msgstr "已撤销 {0} 个字符。"
+
+msgid "Redid {0} char(s)."
+msgstr "已重做 {0} 个字符。"
