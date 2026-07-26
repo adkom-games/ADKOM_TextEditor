@@ -190,12 +190,12 @@ namespace ADKOM.TextEditor
             }
             else
             {
+                // Completes async, possibly with nobody at the keyboard — a
+                // modal here would block the whole editor until dismissed.
                 string error = _installRequest.Error?.message ?? "unknown error";
-                AteConsole.Error("[ADKOM Text Editor] Update failed: " + error);
-                EditorUtility.DisplayDialog("ADKOM Text Editor Update",
-                    "The update could not be installed:\n\n" + error +
-                    "\n\nYou can update manually: Package Manager → + → Add package from git URL…\n" +
-                    GitInstallUrl + "#" + _installVersion, "OK");
+                AteConsole.Error("[ADKOM Text Editor] Update failed: " + error +
+                    " — update manually via Package Manager → + → Add package from git URL: " +
+                    GitInstallUrl + "#" + _installVersion);
             }
             _installRequest = null;
         }
