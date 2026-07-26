@@ -3,7 +3,7 @@
 All notable changes to this package are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com); versions follow semver.
 
-## [Unreleased]
+## [0.4.1] - 2026-07-25
 
 ### Added
 - Syntax highlighting now colors identifiers — types, methods,
