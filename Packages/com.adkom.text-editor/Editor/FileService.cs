@@ -13,6 +13,19 @@ namespace ADKOM.TextEditor
     {
         const string LastDirKey = "ADKOM.TextEditor.LastDirectory";
 
+        /// <summary>The one path-equality used everywhere paths are compared
+        /// (dedupe, recent files): full path, case-insensitive (Windows).</summary>
+        public static bool PathsEqual(string a, string b)
+        {
+            if (string.IsNullOrEmpty(a) || string.IsNullOrEmpty(b)) return a == b;
+            try
+            {
+                return string.Equals(Path.GetFullPath(a), Path.GetFullPath(b),
+                    System.StringComparison.OrdinalIgnoreCase);
+            }
+            catch (System.Exception) { return false; }
+        }
+
         static string LastDirectory
         {
             // Per project: an open/save dialog should not remember another

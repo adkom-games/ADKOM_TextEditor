@@ -54,19 +54,28 @@ namespace ADKOM.TextEditor
             Open(owner, replaceFocus: false, allTabs);
         }
 
+        // Reusable hidden instance for F3-with-dialog-closed: the search core
+        // is instance-shaped but needs no UI (never shown, CreateGUI never
+        // runs, _status stays null). Replaces the old create-and-
+        // DestroyImmediate-per-keypress probe (defect #4).
+        static FindReplaceWindow _headless;
+
         /// <summary>F3 / Shift+F3 support: repeats the last search if any.</summary>
         public static bool FindAgain(TextEditorWindow owner, bool reverse)
         {
             if (string.IsNullOrEmpty(_sFind)) return false;
-            if (_instance == null)
+            var w = _instance;
+            if (w == null)
             {
-                var probe = new FindReplaceWindow { _owner = owner };
-                probe.FindNextCore(reverse);
-                DestroyImmediate(probe);
-                return true;
+                if (_headless == null)
+                {
+                    _headless = CreateInstance<FindReplaceWindow>();
+                    _headless.hideFlags = HideFlags.HideAndDontSave;
+                }
+                w = _headless;
             }
-            _instance._owner = owner;
-            _instance.FindNextCore(reverse);
+            w._owner = owner;
+            w.FindNextCore(reverse);
             return true;
         }
 

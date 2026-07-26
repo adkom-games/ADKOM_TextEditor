@@ -54,7 +54,10 @@ namespace ADKOM.TextEditor.Semantics
                         }).ToList();
                     lock (_lock) _cache.Clear(); // assemblies changed; drop compilations
                 }
-                catch (Exception) { }
+                catch (Exception ex)
+                {
+                    AteConsole.Warn("[ADKOM Text Editor] Could not capture the assembly list for semantics: " + ex.Message);
+                }
             }
             Capture();
             CompilationPipeline.compilationFinished += _ => Capture();
@@ -90,6 +93,7 @@ namespace ADKOM.TextEditor.Semantics
             var parse = new CSharpParseOptions(LanguageVersion.Latest,
                 preprocessorSymbols: asm.Defines);
             var trees = new Dictionary<string, SyntaxTree>();
+            int unreadable = 0;
             foreach (var src in asm.SourceList)
             {
                 try
@@ -97,14 +101,18 @@ namespace ADKOM.TextEditor.Semantics
                     string full = Norm(src);
                     trees[full] = CSharpSyntaxTree.ParseText(File.ReadAllText(full), parse, full);
                 }
-                catch (Exception) { }
+                catch (Exception) { unreadable++; }
             }
             var refs = new List<MetadataReference>();
+            int badRefs = 0;
             foreach (var r in asm.References.Distinct())
             {
                 try { if (File.Exists(r)) refs.Add(MetadataReference.CreateFromFile(r)); }
-                catch (Exception) { }
+                catch (Exception) { badRefs++; }
             }
+            if (unreadable > 0 || badRefs > 0) // one aggregate breadcrumb, not per-file spam
+                AteConsole.Warn($"[ADKOM Text Editor] Semantics compilation for {asm.Name}: " +
+                    $"{unreadable} unreadable source file(s), {badRefs} unloadable reference(s) skipped.");
             var comp = CSharpCompilation.Create(asm.Name, trees.Values, refs,
                 new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, allowUnsafe: true));
             var cached = new Cached { Comp = comp, Trees = trees, Parse = parse };

@@ -17,6 +17,16 @@ All notable changes to this package are documented here. Format follows
   the update-check timestamp (a per-machine GitHub rate limiter).
 
 ### Fixed
+- Defect sweep (from the 2026-07-26 code review): dirty buffers now
+  autosave to the session every 30s, so an editor crash loses at most
+  half a minute of unsaved work (previously only saved on window
+  close); F3 with the Find dialog closed no longer creates and
+  destroys a throwaway window per keypress; background Go to
+  Definition / semantic results are dropped if the window was closed
+  mid-resolve; silent failures (unreadable session, unrestorable tab,
+  Roslyn source/reference load) now leave console breadcrumbs; path
+  comparisons unified on one normalizer; the active-document accessor
+  is clamped defensively; metadata-stub staleness documented.
 - The release-notes tab (and first-run update check) could be silently
   skipped after an update: the "last seen version" was stored
   machine-wide, so whichever project ran a new version first suppressed
