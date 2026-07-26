@@ -6,6 +6,10 @@ All notable changes to this package are documented here. Format follows
 ## [Unreleased]
 
 ### Added
+- Drag-and-drop tab reordering: left-drag a file tab along the tab bar
+  and it moves live as you cross neighboring tabs' midpoints (the
+  dragged tab dims while in flight). A plain click still switches; the
+  reordered layout persists through the tab session.
 - Right-click context menu inside the document area: Go to Definition
   and "Find Occurrences of '<word>'" / "Find in Tabs" for the symbol
   or selection under the cursor (pre-filling the Find dialog), the

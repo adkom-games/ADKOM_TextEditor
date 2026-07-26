@@ -104,7 +104,7 @@ is verified live in the editor.
    clickable, no table alignment, no nesting/reference
    links/escapes/setext; Obsidian wiki-links unstyled.
 3. Roadmap candidates: JSON formatters, custom themes,
-   Ctrl+Tab MRU order, drag-to-reorder tabs.
+   Ctrl+Tab MRU order. (Drag-to-reorder tabs shipped in [Unreleased].)
 
 ## Release procedure (FORMAL — follow every step when Cary says "publish X.Y.Z")
 
