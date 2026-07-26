@@ -21,6 +21,14 @@ All notable changes to this package are documented here. Format follows
   including across editor restarts. Files missing by then are skipped.
 
 ### Fixed
+- Undo/redo grouping is now humanly predictable (VS Code model). Typing
+  coalesces per word — one undo removes one word, not minutes of
+  typing. Groups also break on: Enter, selection replacement, paste,
+  backspace/delete direction changes, moving the caret between edits,
+  a 0.75s typing pause, save, window focus loss, and hard caps
+  (100 chars / 5s) so a group can never grow unbounded. Backspace and
+  forward-delete runs each chain as their own group. The status bar
+  reports "Undid N char(s)" so the step size is visible.
 - Go to Definition (F12 / Ctrl+B / Ctrl+Click) now works inside "from
   metadata" views: the stub remembers which real file it was opened
   from and resolves symbols against that compilation — chaining from
