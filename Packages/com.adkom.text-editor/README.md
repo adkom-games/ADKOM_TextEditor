@@ -82,8 +82,9 @@ whitespace, so space-indented files *feel* tab-indented.
 **Ctrl+Click** any symbol — or press F12 (Visual Studio / VS Code
 layouts) or Ctrl+B (Rider) — and jump straight to its definition:
 locals, parameters, members, and types, across files and assemblies.
-Symbols from referenced binaries report their assembly in the status
-bar. Part of the opt-in Semantic Features: everything ships in the box,
+Symbols from referenced binaries (UnityEngine, the BCL) open a
+generated **"from metadata" signature view** of their type, caret on
+the member. Part of the opt-in Semantic Features: everything ships in the box,
 and the first use offers one-click setup (bundled MIT-licensed Roslyn,
 notices included; an existing project Roslyn is used as-is).
 
@@ -98,7 +99,7 @@ A **syntax-colorized minimap** runs along the right edge — the shape of
 your whole document at a glance, with a viewport indicator; click or
 drag it to jump anywhere. A **console pane** at the bottom collects
 every ATE message (tool output, update checks, find/replace results,
-status messages) with timestamps. Both close away cleanly and come back
+status messages) with timestamps — selectable and copyable. Both close away cleanly and come back
 from the Window menu.
 
 ### 🖱 Feels like an application
@@ -139,7 +140,7 @@ https://github.com/adkom-games/ADKOM_TextEditor.git#upm
 Prefer a pinned version?
 
 ```
-https://github.com/adkom-games/ADKOM_TextEditor.git#0.6.1
+https://github.com/adkom-games/ADKOM_TextEditor.git#0.7.0
 ```
 
 Semantic Features (compiler-accurate colors + Go to Definition) are
