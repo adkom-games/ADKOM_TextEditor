@@ -42,6 +42,8 @@ with the host project.
 | Release 0.5.0 (published 2026-07-26; semantics module tagged semantics-0.2.0) | Done |
 | Console pane; colorized minimap; word selection; occurrence highlight | Done |
 | Release 0.5.1 (published 2026-07-26) | Done |
+| Semantics merged into main package (out-of-box, consented setup) | Done |
+| Release 0.6.0 (published 2026-07-26; first Discord-announced release) | Done |
 | More languages; custom themes | Future (roadmap) |
 
 ## Current work area
@@ -74,9 +76,10 @@ is verified live in the editor.
 
 ## Immediate next steps
 
-1. 0.5.0 published 2026-07-26. Field-tests pending in the wild:
-   auto-update Client.Add; semantics module Client.Add + bundled-Roslyn
-   copy on a clean project. Plan next milestone.
+1. 0.6.0 published 2026-07-26. Field-tests pending in the wild:
+   auto-update Client.Add; bundled-Roslyn copy on a Roslyn-less
+   project. Plan next milestone (roadmap: languages, custom themes;
+   backlog: MRU tab order, tab reorder).
 2. Roadmap candidates: JSON/Markdown formatters, custom themes,
    Ctrl+Tab MRU order, drag-to-reorder tabs.
 
