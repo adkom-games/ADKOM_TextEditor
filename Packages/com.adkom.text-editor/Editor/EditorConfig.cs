@@ -53,6 +53,17 @@ namespace ADKOM.TextEditor
             set => EditorPrefs.SetString(FallbackEditorKey, value ?? string.Empty);
         }
 
+        const string SemanticsKey = "ADKOM.TextEditor.SemanticsEnabled";
+
+        /// <summary>Semantic features (compiler-accurate colors, Go to
+        /// Definition). OFF by default: enabling installs the semantics module
+        /// and, if needed, the bundled Roslyn assemblies into the project.</summary>
+        public static bool SemanticsEnabled
+        {
+            get => EditorPrefs.GetBool(SemanticsKey, false);
+            set => EditorPrefs.SetBool(SemanticsKey, value);
+        }
+
         const string SmoothScrollKey = "ADKOM.TextEditor.SmoothScrolling";
 
         /// <summary>Animate wheel scrolling instead of stepping (default on).</summary>
