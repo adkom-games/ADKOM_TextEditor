@@ -688,3 +688,18 @@ msgstr "Sign In"
 
 msgid "Sign Out"
 msgstr "Sign Out"
+
+msgid "Ask Unity AI About Selection..."
+msgstr "Ask Unity AI About Selection..."
+
+msgid "Ask Unity AI About This File..."
+msgstr "Ask Unity AI About This File..."
+
+msgid "Select some text first."
+msgstr "Select some text first."
+
+msgid "Ask about the attached selection…"
+msgstr "Ask about the attached selection…"
+
+msgid "Ask about the attached document…"
+msgstr "Ask about the attached document…"

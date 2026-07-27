@@ -9,6 +9,12 @@ All notable changes to this package are documented here. Format follows
 - The notification banner (sign-in codes, file conflicts) is now RED,
   bold, white-on-red and roomier — impossible to miss, no more
   squished text.
+- Ask Unity AI (when com.unity.ai.assistant is installed): 'Ask Unity
+  AI About Selection...' and '...About This File...' in the document
+  right-click menu and the Tools menu open Unity Assistant's prompt
+  popup with the text attached — you type the question there, and no
+  AI call (no points) happens until you submit it. The menu items
+  simply don't appear when the package is absent.
 - GitHub Copilot inline suggestions (Settings, default off; requires
   Node.js and your own Copilot subscription): ghost-text completions
   appear as you type in file-backed documents — Tab accepts, Escape

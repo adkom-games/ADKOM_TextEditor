@@ -686,3 +686,18 @@ msgstr "サインイン"
 
 msgid "Sign Out"
 msgstr "サインアウト"
+
+msgid "Ask Unity AI About Selection..."
+msgstr "選択範囲について Unity AI に質問..."
+
+msgid "Ask Unity AI About This File..."
+msgstr "このファイルについて Unity AI に質問..."
+
+msgid "Select some text first."
+msgstr "先にテキストを選択してください。"
+
+msgid "Ask about the attached selection…"
+msgstr "添付した選択範囲について質問…"
+
+msgid "Ask about the attached document…"
+msgstr "添付したドキュメントについて質問…"
