@@ -1,5 +1,7 @@
 # ADKOM Text Editor
 
+[![Ko-fi](https://img.shields.io/badge/Ko--fi-Support%20ADKOM%20Games-FF5E5B?logo=ko-fi&logoColor=white)](https://ko-fi.com/adkomgames)
+
 **A real code editor, living right inside the Unity Editor.**
 
 Stop alt-tabbing. Whether it's a quick tweak to a config file, a README
