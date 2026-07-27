@@ -887,28 +887,18 @@ namespace ADKOM.TextEditor
             _settingsCopilotRow.Add(_settingsCopilotStatus);
             _settingsPane.Add(_settingsCopilotRow);
 
-            // Unity AI rides the Editor's Unity account; sign-out is
-            // editor-wide, so it goes through a banner confirmation.
+            // Unity AI rides the Editor's Unity account. Deliberately NO
+            // sign-out here (removed 2026-07-27, Cary's call): logging out is
+            // editor-wide — collab, licensing, everything — far beyond ATE's
+            // remit. Unity's own account UI owns that. We only SHOW which
+            // account Unity AI will use.
             if (UnityAiBridge.Available)
             {
                 _settingsUnityAiRow = new VisualElement();
                 _settingsUnityAiRow.style.flexDirection = FlexDirection.Row;
                 _settingsUnityAiRow.style.alignItems = Align.Center;
                 _settingsUnityAiStatus = new Label();
-                var signOutBtn = new Button(() =>
-                {
-                    string user = UnityAiBridge.UnityAccountName ?? "";
-                    ShowBanner(string.Format(
-                        L10n.Tr("Sign the whole Unity Editor out of {0}? Unity AI (and every other cloud feature) disconnects until you sign in again."), user),
-                        (L10n.Tr("Sign Out"), () =>
-                        {
-                            UnityAiBridge.SignOutUnityAccount();
-                            HideBanner();
-                            SyncSettingsControls();
-                        }),
-                        (L10n.Tr("Cancel"), HideBanner));
-                }) { text = L10n.Tr("Sign Out of Unity Account…") };
-                _settingsUnityAiRow.Add(signOutBtn);
+                _settingsUnityAiStatus.tooltip = L10n.Tr("Unity AI uses the Unity account the Editor is signed into; manage it from the account menu in the Editor's top-right corner.");
                 _settingsUnityAiRow.Add(_settingsUnityAiStatus);
                 _settingsPane.Add(_settingsUnityAiRow);
             }
@@ -1068,10 +1058,9 @@ namespace ADKOM.TextEditor
             if (_settingsUnityAiRow != null)
             {
                 string user = UnityAiBridge.UnityAccountName;
-                _settingsUnityAiStatus.text = "  " + (user != null
+                _settingsUnityAiStatus.text = user != null
                     ? string.Format(L10n.Tr("Unity AI account: {0}"), user)
-                    : L10n.Tr("Unity account: signed out"));
-                _settingsUnityAiRow.Q<Button>()?.SetEnabled(user != null);
+                    : L10n.Tr("Unity account: signed out");
             }
             _settingsTrimSave?.SetValueWithoutNotify(EditorConfig.TrimTrailingOnSave);
             _settingsFinalNewline?.SetValueWithoutNotify(EditorConfig.FinalNewlineOnSave);
