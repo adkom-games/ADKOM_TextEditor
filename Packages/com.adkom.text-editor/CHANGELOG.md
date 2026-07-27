@@ -9,6 +9,11 @@ All notable changes to this package are documented here. Format follows
 - The notification banner (sign-in codes, file conflicts) is now RED,
   bold, white-on-red and roomier — impossible to miss, no more
   squished text.
+- Multi-line Copilot suggestions render correctly: the first line
+  continues at the caret and the remaining lines start at column 0
+  with the suggestion's own indentation (they were all shifted right
+  by the caret offset). Copilot status changes also log once instead
+  of repeating 'Copilot is ready.'.
 - When a Copilot suggestion arrives, the word-autocomplete popup
   hides automatically — the two no longer fight for the same screen
   space (Copilot wins; the popup returns as you keep typing whenever
