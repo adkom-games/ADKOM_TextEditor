@@ -554,3 +554,21 @@ msgstr "ドキュメントは既にフォーマット済みです。"
 
 msgid "Document formatted."
 msgstr "ドキュメントをフォーマットしました。"
+
+msgid "Quick Open..."
+msgstr "クイックオープン..."
+
+msgid "Toggle Bookmark"
+msgstr "ブックマークの切り替え"
+
+msgid "Next Bookmark"
+msgstr "次のブックマーク"
+
+msgid "Previous Bookmark"
+msgstr "前のブックマーク"
+
+msgid "Clear Bookmarks"
+msgstr "ブックマークをクリア"
+
+msgid "No bookmarks in this document."
+msgstr "このドキュメントにブックマークはありません。"

@@ -28,6 +28,7 @@ namespace ADKOM.TextEditor
         {
             m.AddItem(new GUIContent(WithSc("New", Dsp("new-file"))), false, NewFile);
             m.AddItem(new GUIContent(WithSc("Open...", Dsp("open-file"))), false, OpenFile);
+            m.AddItem(new GUIContent(WithSc("Quick Open...", Dsp("quick-open"))), false, ShowQuickOpen);
             m.AddSeparator("");
             string save = WithSc("Save", Dsp("save"));
             if (CanEditDoc)
@@ -105,6 +106,11 @@ namespace ADKOM.TextEditor
             Item(WithSc("Rename Symbol...", Dsp("rename-symbol")), edit, RenameSymbolAtCaret);
             Item(WithSc("Find All References", Dsp("find-references")), edit, FindAllReferences);
             Item(WithSc("Format Document", Dsp("format-document")), edit, FormatDocument);
+            m.AddSeparator("");
+            Item(WithSc("Toggle Bookmark", Dsp("toggle-bookmark")), edit, ToggleBookmark);
+            Item(WithSc("Next Bookmark", Dsp("next-bookmark")), edit, () => JumpBookmark(1));
+            Item(WithSc("Previous Bookmark", Dsp("prev-bookmark")), edit, () => JumpBookmark(-1));
+            Item(WithSc("Clear Bookmarks", null), edit, ClearBookmarks);
             Item(WithSc("Indent", Dsp("indent")), edit, InsertTab);
             Item(WithSc("Unindent", Dsp("unindent")), edit, UnindentSelection);
             m.AddSeparator("");

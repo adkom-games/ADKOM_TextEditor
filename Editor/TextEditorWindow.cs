@@ -242,6 +242,8 @@ namespace ADKOM.TextEditor
             _code.onFontSizeChanged += SyncSettingsControls; // zoom gestures
             _code.onNavigateRequest += NavigateToDefinition;  // Ctrl+Click
             _code.onUndoStatus += PostStatus; // "Undid 12 char(s)." feedback
+            _code.isLineBookmarked = line => CanEditDoc && Active.Bookmarks.Contains(line);
+            _code.onLineDelta += OnCodeLineDelta;
             _code.completionTextSources = () =>
             {
                 var texts = new List<string>();

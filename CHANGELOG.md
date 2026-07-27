@@ -6,6 +6,20 @@ All notable changes to this package are documented here. Format follows
 ## [Unreleased]
 
 ### Added
+- Quick Open (Ctrl+, / Ctrl+P VSCode / Ctrl+T Rider): a centered
+  overlay that fuzzy-lists open tabs and recent files instantly and
+  every text file under Assets/ and Packages/ once you type a filter;
+  Up/Down navigate, Enter or click opens (recorded in navigation
+  history), Escape dismisses. Also in the File menu.
+- Bookmarks (Ctrl+Alt+K toggle, Ctrl+Alt+N / Ctrl+Alt+P next and
+  previous with wrap-around, Clear Bookmarks in the Edit menu):
+  per-document line bookmarks shown as an orange line number in the
+  gutter; they shift with edits above them, and jumps are recorded in
+  navigation history.
+- Drag and drop of selected text: press inside the selection and drag
+  to move it to the drop point — one undo step; hold Ctrl to copy
+  instead. The dropped text stays selected; a simple click inside the
+  selection still just places the caret.
 - Semantic refactoring commands (Semantic Features required for the
   first two): Rename Symbol (F2 / Shift+F6 Rider) renames every
   in-document occurrence via the status-bar prompt as one undo step;

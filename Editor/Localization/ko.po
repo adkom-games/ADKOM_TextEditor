@@ -554,3 +554,21 @@ msgstr "문서가 이미 서식 지정되어 있습니다."
 
 msgid "Document formatted."
 msgstr "문서 서식을 지정했습니다."
+
+msgid "Quick Open..."
+msgstr "빠른 열기..."
+
+msgid "Toggle Bookmark"
+msgstr "북마크 전환"
+
+msgid "Next Bookmark"
+msgstr "다음 북마크"
+
+msgid "Previous Bookmark"
+msgstr "이전 북마크"
+
+msgid "Clear Bookmarks"
+msgstr "북마크 지우기"
+
+msgid "No bookmarks in this document."
+msgstr "이 문서에는 북마크가 없습니다."

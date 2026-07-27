@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 
 namespace ADKOM.TextEditor
@@ -58,6 +59,59 @@ namespace ADKOM.TextEditor
                 JumpTo(loc);
                 return;
             }
+        }
+
+        // ---------- Bookmarks (must-have #19b) ----------
+
+        internal void ToggleBookmark()
+        {
+            if (!CanEditDoc) return;
+            _code.IndexToLineCol(_code.cursorIndex, out int line, out _);
+            if (!Active.Bookmarks.Remove(line)) Active.Bookmarks.Add(line);
+            _code.RefreshVisiblePublic();
+        }
+
+        internal void JumpBookmark(int dir)
+        {
+            if (!CanEditDoc || Active.Bookmarks.Count == 0)
+            {
+                PostStatus(L10n.Tr("No bookmarks in this document."));
+                return;
+            }
+            var lines = new List<int>(Active.Bookmarks);
+            lines.Sort();
+            _code.IndexToLineCol(_code.cursorIndex, out int cur, out _);
+            int target = -1;
+            if (dir > 0)
+            {
+                foreach (int l in lines) if (l > cur) { target = l; break; }
+                if (target < 0) target = lines[0]; // wrap around
+            }
+            else
+            {
+                for (int i = lines.Count - 1; i >= 0; i--)
+                    if (lines[i] < cur) { target = lines[i]; break; }
+                if (target < 0) target = lines[lines.Count - 1];
+            }
+            PushNavLocation();
+            _code.GoToLine(target + 1, 1);
+        }
+
+        internal void ClearBookmarks()
+        {
+            if (!CanEditDoc) return;
+            Active.Bookmarks.Clear();
+            _code.RefreshVisiblePublic();
+        }
+
+        /// <summary>Shifts bookmarks below an edit that added/removed lines.</summary>
+        void OnCodeLineDelta(int afterLine, int delta)
+        {
+            if (!CanEditDoc || Active.Bookmarks.Count == 0) return;
+            var shifted = new HashSet<int>();
+            foreach (int l in Active.Bookmarks)
+                shifted.Add(l > afterLine ? Mathf.Max(0, l + delta) : l);
+            Active.Bookmarks = shifted;
         }
 
         void JumpTo(NavLoc loc)
