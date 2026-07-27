@@ -12,7 +12,9 @@ All notable changes to this package are documented here. Format follows
   URL — or anywhere on a markdown [label](url) — to open it in the
   browser/mail client; hovering shows a "Ctrl+Click to open …"
   tooltip. Go to Definition still handles everything that isn't a
-  link.
+  link. Works in rendered Markdown mode too: link labels and bare URLs
+  are underlined link spans — Ctrl+Click opens them (a plain click
+  still edits the block), with the same tooltip on hover.
 
 ## [0.10.1] - 2026-07-27
 
