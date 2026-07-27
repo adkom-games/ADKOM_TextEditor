@@ -26,7 +26,7 @@ feature pitch.
 - **Goto Line** (Ctrl+G) via an emacs-style status-bar prompt
 
 **Tabs & files**
-- Multiple tabs: drag-to-reorder, middle-click close, context menus, dirty markers
+- Multiple tabs: single-line strip with overflow scroll arrows and a jump-to-tab dropdown, drag-to-reorder, middle-click close, context menus, dirty markers, settings-tinted colors
 - **Sessions**: open tabs — including *unsaved buffer content* — survive closing the window, domain reloads, editor restarts, and (via 30-second autosave) even editor crashes
 - **Recent Files** menu (per project, configurable length)
 - External change detection with a non-modal reload banner; **deleted-file rescue** (keep the buffer, one Save restores the file)
@@ -35,6 +35,15 @@ feature pitch.
 **Languages**
 - **C# syntax highlighting** incl. types/methods/variables out of the box; opt-in **Semantic Features** add compiler-accurate colors, **Go to Definition** (Ctrl+Click / F12 / Ctrl+B) across files and assemblies, and generated "from metadata" views for engine/BCL symbols — dependencies (bundled MIT Roslyn) install themselves on consent
 - **Markdown**: full source-mode coloring plus a rendered **WYSIWYG mode** with click-to-edit blocks, a 16-button formatting toolbar (headings, emphasis, lists, task lists, tables, links, images, code, quotes, rules), and a per-file mode toggle
+
+**IDE editing** (new in 0.10.0)
+- **Multi-caret editing** (Alt+Click, add-next/select-all occurrences, caret columns) with single-undo multi-edits; **column selection**
+- **Word-based autocomplete** (current doc + open tabs + language keywords, Ctrl+Space)
+- Auto-closing brackets/quotes, brace matching with jump, **code folding** (clickable gutter arrows, `{ ⋯ }` headers, double-click a brace to fold), indentation guides
+- **Rename Symbol** (F2), **Find All References**, **Format Document** — on the same Roslyn semantics as Go to Definition
+- **Quick Open** (Ctrl+, / Ctrl+P / Ctrl+T), per-document **bookmarks** with gutter markers, **drag-and-drop of selected text** (Ctrl to copy)
+- Expand/shrink selection, insert line above/below, join lines, case transforms, sort lines, block comments, word-wise delete, whole-line cut/copy, navigate back/forward through caret history
+- Save cleanups: trim trailing whitespace, ensure final newline
 
 **IDE comfort**
 - Native menu bar (File/Edit/View/Tools/Window/Help) with **per-layout shortcut hints** on every item; right-click context menu inside the document (Go to Definition, Find Occurrences, clipboard, file ops, Show in File Explorer, language commands)
@@ -65,7 +74,7 @@ https://github.com/adkom-games/ADKOM_TextEditor.git#upm
 Pinned release:
 
 ```
-https://github.com/adkom-games/ADKOM_TextEditor.git#0.9.0
+https://github.com/adkom-games/ADKOM_TextEditor.git#0.10.0
 ```
 
 The `upm` branch contains only the package, so consumer downloads stay
@@ -95,9 +104,8 @@ Version history: [RELEASE-NOTES.md](Packages/com.adkom.text-editor/RELEASE-NOTES
 ## Contributing
 
 Issues and pull requests are welcome. If you hit a bug or want a
-feature (multi-caret editing, bracket auto-closing, code folding, more
-languages, and custom themes are already on the roadmap), please open
-an issue.
+feature (more languages, custom themes, and Copilot integration are
+already on the roadmap), please open an issue.
 
 ## License
 

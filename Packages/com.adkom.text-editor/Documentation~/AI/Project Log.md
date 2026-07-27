@@ -282,6 +282,27 @@ the bottom. See [[Project State]] for the current snapshot.
   procedure (step 0). Release-notes policy: all fixed defects listed,
   issue numbers cited.
 
+- **0.10.0 feature campaign (2026-07-27)**: all 19 must-have editor
+  features in 7 batches — editing primitives, structural editing
+  (auto-close/brace match/block comment/expand selection), multi-caret
+  + column selection, word autocomplete (+ language keywords), code
+  folding + indent guides, Rename/Find All References/Format Document,
+  Quick Open + bookmarks + drag-drop text; plus Tab UX (single-line
+  strip w/ scroll arrows, tab-list dropdown, Tabs context submenu,
+  settings-tinted tabs). New partials: Navigation, QuickOpen,
+  CodeView.Completion, CodeView.Folding.
+- **0.10.0 polish round (2026-07-27, Cary's Defects.md)**: minimap
+  squish on big files (issue #7), indent guides invisible (CharWidth
+  measured spaces as 1px), smooth-scroll pixel-snap shimmer fix,
+  folded-header "{ ⋯ }" + double-click fold/unfold with centered
+  reveal, clickable gutter fold arrows (PickingMode bug), Add Tab menu
+  integration (populateDefaultMenuItems hook), non-modal close-time
+  Save All notice + reopen banner (modal reverted — MCP freeze),
+  singular/plural l10n strings (no "(s)"), Window-menu shortcut
+  display, resizable console splitter, Markdown local-image rendering
+  + MarkdownTest.md, Auto-Reload Changed Files setting,
+  SelectionNeedle clamp (issue #8).
+
 ## Conventions
 
 - Branch per feature/fix from main; merge with `--no-ff`; branches are kept.

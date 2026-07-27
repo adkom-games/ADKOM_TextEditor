@@ -27,7 +27,11 @@ No lag, no stutter, no matter how big the file.
 Open as many files as you want. Tabs remember themselves across domain
 reloads and editor restarts, warn you about unsaved changes, close with
 a middle-click, **reorder with drag-and-drop**, and switch instead of
-duplicating when you re-open a file. Right-click any text asset in the Project window — scripts,
+duplicating when you re-open a file. The strip stays on a single line
+with **scroll arrows** when tabs overflow (the active tab keeps itself
+in view), a **tab-list dropdown** at the far right jumps to any tab,
+tabs are tinted with a color you pick in Settings (the active tab
+pops), and a **Tabs submenu** tops the document right-click menu. Right-click any text asset in the Project window — scripts,
 shaders, JSON, YAML, markdown, USS/UXML, configs — and it opens in ATE.
 **File → Recent Files** remembers what you've had open (per project,
 count configurable) so yesterday's file is two clicks away.
@@ -88,7 +92,7 @@ Choose your keyboard layout — **Visual Studio**, **VS Code**, or
 | Open the ATE window | Ctrl+Alt+8 | Ctrl+Alt+8 | Ctrl+Alt+8 |
 
 Plus **word-level undo/redo** (one undo removes one word, never minutes
-of typing — with "Undid N chars" feedback in the status bar), word-wise
+of typing — with "Undid N characters" feedback in the status bar), word-wise
 navigation, smart Home, auto-indent on Enter, full clipboard support
 anywhere in the window, double-click word selection with whole-word
 drag, and automatic highlighting of every other occurrence of whatever
@@ -96,6 +100,30 @@ you select. Every menu item shows its shortcut for your chosen layout,
 **Ctrl+G** opens an emacs-style Goto Line prompt in the status bar, and
 a **right-click menu in the document** puts Go to Definition, Find
 Occurrences, clipboard, file, and language commands under the cursor.
+
+### ✍️ Edits like an IDE
+**Multi-caret editing**: Alt+Click adds carets, add-next-occurrence
+(Ctrl+D in VS Code layout) and select-all-occurrences turn every match
+into a caret, Ctrl+Alt+Up/Down grows a caret column — then type,
+paste, or delete everywhere at once (one undo step). **Word-based
+autocomplete** pops as you type (plus the language's keywords and words
+from your other open tabs; Ctrl+Space on demand). Brackets and quotes
+**auto-close** (type-over, wrap the selection, Backspace removes the
+pair), the **matching brace** highlights with jump (and double-clicking
+a brace folds its block), and **code folding** collapses brace regions
+from clickable gutter arrows — folded headers read `{ ⋯ }`, and
+double-clicking the indicator reopens them. **Indentation guides**,
+**expand/shrink selection**, insert-line-above/below, join lines,
+case transforms, sort lines, block comments, word-wise delete,
+whole-line cut/copy on an empty selection, and **navigate back/forward**
+through your caret history round it out. **Rename Symbol** (F2),
+**Find All References**, and **Format Document** ride the same Roslyn
+semantics as Go to Definition. **Quick Open** (Ctrl+P in VS Code
+layout) fuzzy-finds any project file; per-document **bookmarks**
+(Ctrl+Alt+K) mark lines in the gutter with next/previous jumps; and
+selected text **drags and drops** to a new location (Ctrl to copy).
+Optional save cleanups trim trailing whitespace and ensure a final
+newline.
 
 ### 🔧 Respects your files
 Tabs render as spaces at your configured tab size — but on save, files
@@ -131,22 +159,25 @@ and it re-renders on commit. Undo works across both modes. A
 element (headings, bold, italic, strikethrough, code, links, images,
 lists, task lists, quotes, code blocks, tables, rules) that formats
 your selection or the block you're editing, in either mode. Tables,
-task lists (☐/☑), images, and strikethrough render and color in both
-modes, and a settings option picks which view `.md` files open in.
+task lists (☐/☑), and strikethrough render and color in both
+modes — and **local images actually display** in rendered mode (alt
+text as caption, placeholder when missing), and a settings option picks which view `.md` files open in.
 
 ### 🗺 See the whole file
 A **syntax-colorized minimap** runs along the right edge — the shape of
 your whole document at a glance, with a viewport indicator; click or
 drag it to jump anywhere. A **console pane** at the bottom collects
 every ATE message (tool output, update checks, find/replace results,
-status messages) with timestamps — selectable and copyable. Both close away cleanly and come back
+status messages) with timestamps — selectable, copyable, and **resizable** by dragging
+the divider above it (the height sticks). Both close away cleanly and come back
 from the View menu — and both are on by default, along with line
 numbers and word wrap.
 
 ### 🖱 Feels like an application
 A real **menu bar** — File, Edit, View, Tools, Window, Help — rendered
 with your platform's native menus, plus right-click context menus on
-file tabs (Save, Save As, Close, Close Other Tabs). Pick any installed
+file tabs (Save, Save As, Close, Close Other Tabs), and ATE appears in every
+dock's **Add Tab** menu and in the Window menu (with its shortcut). Pick any installed
 **font** and size, zoom with Ctrl+MouseWheel or Ctrl+'+'/'-' (Ctrl+0
 resets), and enjoy **smooth scrolling** (toggleable).
 
@@ -177,8 +208,12 @@ update installs, ATE locks itself (never Unity) so no edits get lost —
 and afterwards, the new version's release notes open in a tab.
 
 ### 🛡 Safe by design
-Unsaved-changes prompts on close, external-change detection with a
-reload offer when a file changes on disk — and if a file is **deleted**
+Nothing here ever blocks Unity: close the window with unsaved
+documents and a small floating notice offers one-click **Save All**
+(the buffers are already safe in your session either way — a banner
+reminds you when they come back). External changes on disk show a
+non-modal reload banner — or reload silently if you enable
+**Auto-Reload Changed Files** and the buffer is clean — and if a file is **deleted**
 out from under you, ATE offers to keep the buffer so one Save brings
 the file back. Close the whole window and your tabs come back when you
 reopen it, even across editor restarts. A Settings tab (the gear button, or Tools → Options…) keeps every
@@ -199,7 +234,7 @@ https://github.com/adkom-games/ADKOM_TextEditor.git#upm
 Prefer a pinned version?
 
 ```
-https://github.com/adkom-games/ADKOM_TextEditor.git#0.9.0
+https://github.com/adkom-games/ADKOM_TextEditor.git#0.10.0
 ```
 
 Semantic Features (compiler-accurate colors + Go to Definition) are
@@ -212,11 +247,9 @@ just right-click a file — or press **Ctrl+Alt+8** (say it out loud).
 
 ## What's next
 
-- Multi-caret editing, bracket auto-closing and matching, word-wise
-  delete, and line-cut/copy without selection
-- Code folding and column selection
 - More languages (JSON, shaders) via the formatter API
 - Custom user themes; Ctrl+Tab most-recently-used tab order
+- GitHub Copilot integration (via the public Copilot Language Server)
 
 See [RELEASE-NOTES.md](RELEASE-NOTES.md) for version history and
 [CHANGELOG.md](CHANGELOG.md) for the details.
