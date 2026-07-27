@@ -31,11 +31,14 @@ All notable changes to this package are documented here. Format follows
   the sides.
 
 ### Added
-- Closing the ATE window with unsaved documents now asks ONCE for all
-  of them (Unity's standard Save/Discard/Cancel dialog): Save runs
-  Save All (untitled documents still get their Save As prompt);
-  Discard keeps the buffers in the persisted session, so they return
-  when the window reopens.
+- Closing the ATE window with unsaved documents now surfaces a single
+  NON-MODAL floating notice (never blocks the editor or background
+  tooling) listing the documents, with one-click "Save All Now" or
+  "Keep in Session" — the buffers are already persisted, so ignoring
+  it is always safe. Re-entrant closes reuse the one open notice. As
+  a safety net, reopening the window with dirty session buffers shows
+  a "N document(s) have unsaved changes from your last session" banner
+  with Save All / Dismiss.
 - Auto-Reload Changed Files (Settings, default off): files that change
   on disk reload automatically when the buffer has no unsaved edits;
   dirty buffers still get the banner so edits are never lost silently.

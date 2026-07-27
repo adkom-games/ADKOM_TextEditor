@@ -589,3 +589,24 @@ msgstr "When a file changes on disk and the buffer has no unsaved edits, reload 
 
 msgid "There are unsaved documents. Save all of them before closing?"
 msgstr "There are unsaved documents. Save all of them before closing?"
+
+msgid "ATE — Unsaved Documents"
+msgstr "ATE — Unsaved Documents"
+
+msgid "The editor closed with {0} unsaved document(s)."
+msgstr "The editor closed with {0} unsaved document(s)."
+
+msgid "Nothing is lost — they are kept in your session and will reopen with the window."
+msgstr "Nothing is lost — they are kept in your session and will reopen with the window."
+
+msgid "Save All Now"
+msgstr "Save All Now"
+
+msgid "Keep in Session"
+msgstr "Keep in Session"
+
+msgid "{0} document(s) have unsaved changes from your last session."
+msgstr "{0} document(s) have unsaved changes from your last session."
+
+msgid "Dismiss"
+msgstr "Dismiss"

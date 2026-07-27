@@ -587,3 +587,24 @@ msgstr "ファイルがディスク上で変更され、バッファに未保存
 
 msgid "There are unsaved documents. Save all of them before closing?"
 msgstr "未保存のドキュメントがあります。閉じる前にすべて保存しますか？"
+
+msgid "ATE — Unsaved Documents"
+msgstr "ATE — 未保存のドキュメント"
+
+msgid "The editor closed with {0} unsaved document(s)."
+msgstr "エディターは {0} 件の未保存ドキュメントを残して閉じられました。"
+
+msgid "Nothing is lost — they are kept in your session and will reopen with the window."
+msgstr "何も失われていません — セッションに保持され、ウィンドウと共に再び開きます。"
+
+msgid "Save All Now"
+msgstr "今すぐすべて保存"
+
+msgid "Keep in Session"
+msgstr "セッションに保持"
+
+msgid "{0} document(s) have unsaved changes from your last session."
+msgstr "前回のセッションから {0} 件のドキュメントに未保存の変更があります。"
+
+msgid "Dismiss"
+msgstr "閉じる"

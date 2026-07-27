@@ -199,6 +199,29 @@ namespace ADKOM.TextEditor
             }
         }
 
+        /// <summary>After a post-close Save All, re-marks the matching stored
+        /// session tabs clean (by path; a doc that just gained a path via
+        /// Save As replaces the remaining untitled dirty entry) so they don't
+        /// reopen dirty. The tab list and order are otherwise untouched.</summary>
+        public static void MergeSessionSaveState(System.Collections.Generic.List<SessionTab> savedState)
+        {
+            var tabs = LoadSession(out int active);
+            foreach (var saved in savedState)
+            {
+                if (saved.dirty || string.IsNullOrEmpty(saved.path)) continue; // still dirty / still untitled
+                var match = tabs.Find(t => !string.IsNullOrEmpty(t.path) &&
+                    string.Equals(System.IO.Path.GetFullPath(t.path), saved.path,
+                        System.StringComparison.OrdinalIgnoreCase));
+                if (match == null)
+                    match = tabs.Find(t => string.IsNullOrEmpty(t.path) && t.dirty); // was untitled, now saved
+                if (match == null) continue;
+                match.path = saved.path;
+                match.dirty = false;
+                match.content = null;
+            }
+            SaveSession(tabs, active);
+        }
+
         public static System.Collections.Generic.List<SessionTab> LoadSession(out int activeIndex)
         {
             activeIndex = 0;
