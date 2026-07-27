@@ -6,6 +6,11 @@ All notable changes to this package are documented here. Format follows
 ## [Unreleased]
 
 ### Added
+- Word-based autocomplete: a popup of prefix-matched words harvested
+  from the current document AND every other open tab. Appears while
+  typing (2+ word chars) or on demand with Ctrl+Space; Up/Down
+  navigate, Enter/Tab accept (one undo step), Escape dismisses,
+  further typing refines. Case-matching candidates rank first.
 - Tab strip upgrades: a dropdown button at the right end of the strip
   lists every open tab (numbered, dirty-starred, active checked) and
   jumps on pick; the document context menu opens with a "Tabs" submenu

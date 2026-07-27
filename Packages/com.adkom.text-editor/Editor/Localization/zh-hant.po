@@ -497,3 +497,6 @@ msgstr "分頁顏色"
 
 msgid "Base color of the tab strip; each tab gets its own stable shade of it."
 msgstr "分頁列的基礎顏色;每個分頁顯示為其固定的色調變化。"
+
+msgid "Autocomplete"
+msgstr "自動完成"
