@@ -275,6 +275,16 @@ namespace ADKOM.TextEditor
             set => EditorPrefs.SetBool(AutoCloseKey, value);
         }
 
+        const string ConsoleHeightKey = "ADKOM.TextEditor.ConsoleHeight";
+
+        /// <summary>Console pane height in px, set by dragging the splitter
+        /// above the console (machine-wide, default 150).</summary>
+        public static float ConsoleHeight
+        {
+            get => EditorPrefs.GetFloat(ConsoleHeightKey, 150f);
+            set => EditorPrefs.SetFloat(ConsoleHeightKey, value);
+        }
+
         const string AutoReloadKey = "ADKOM.TextEditor.AutoReloadFromDisk";
 
         /// <summary>Automatically reload a document when its file changes on
