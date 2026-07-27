@@ -148,6 +148,14 @@ namespace ADKOM.TextEditor
             _ovRefresh.ExecuteLater(0);
         }
 
+        internal void ApiSetFont(TextDocument d, string fontName, int size)
+        {
+            d.FontName = string.IsNullOrEmpty(fontName) ? null : fontName;
+            d.FontSize = size > 0 ? Mathf.Clamp(size, 8, 40) : 0;
+            if (HasDocs && Active == d)
+                _code?.SetFontOverride(d.FontName, d.FontSize);
+        }
+
         internal void ApiPrompt(string prompt, bool digitsOnly,
             System.Action<string> onCommit, System.Action onCancel, string initialValue)
         {

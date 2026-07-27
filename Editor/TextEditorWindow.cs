@@ -340,6 +340,12 @@ namespace ADKOM.TextEditor
                 return texts;
             };
             _code.RegisterCallback<MouseUpEvent>(OnCodeContextMenu);
+            // Zoom on a font-overridden document adjusts the override; the
+            // document remembers it so tab switches round-trip the size.
+            _code.onFontOverrideSizeChanged = s =>
+            {
+                if (HasDocs && Active.FontSize > 0) Active.FontSize = s;
+            };
             _code.minimapVisible = _minimapVisible;
             _code.showIndentGuides = _indentGuides;
             _mainCtx = System.Threading.SynchronizationContext.Current;

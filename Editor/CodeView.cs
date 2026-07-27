@@ -414,13 +414,31 @@ namespace ADKOM.TextEditor
         /// Settings pane can stay in sync.</summary>
         public event Action onFontSizeChanged;
 
-        /// <summary>(Re)applies the configured font family and size, then
+        // Per-document font override (AteApi 1.1, addon-set only — no
+        // menu/settings surface). Name/size fall back to the global config
+        // when unset; swapped on tab switch like the undo world.
+        string _fontOverrideName;
+        int _fontOverrideSize; // 0 = no override
+
+        /// <summary>Window hook: an overridden document's size changed via
+        /// zoom gestures, so the document can remember it.</summary>
+        internal Action<int> onFontOverrideSizeChanged;
+
+        internal void SetFontOverride(string name, int size)
+        {
+            _fontOverrideName = string.IsNullOrEmpty(name) ? null : name;
+            _fontOverrideSize = Mathf.Clamp(size, 0, 40) < 8 ? 0 : Mathf.Clamp(size, 8, 40);
+            ApplyFontConfig();
+        }
+
+        /// <summary>(Re)applies the effective font family and size (document
+        /// override when present, else the configured global), then
         /// invalidates every metric derived from them.</summary>
         public void ApplyFontConfig()
         {
-            style.fontSize = EditorConfig.FontSize;
+            style.fontSize = _fontOverrideSize > 0 ? _fontOverrideSize : EditorConfig.FontSize;
             Font f = null;
-            string name = EditorConfig.FontName;
+            string name = _fontOverrideName ?? EditorConfig.FontName;
             if (!string.IsNullOrEmpty(name) && !_fontCache.TryGetValue(name, out f))
             {
                 try { f = Font.CreateDynamicFontFromOSFont(name, EditorConfig.FontSize); }
@@ -478,6 +496,17 @@ namespace ADKOM.TextEditor
 
         void ZoomBy(int delta)
         {
+            // Zoom always works: on a font-overridden document it adjusts the
+            // override (the doc remembers it), never the global setting.
+            if (_fontOverrideSize > 0)
+            {
+                int s = Mathf.Clamp(delta == 0 ? EditorConfig.DefaultFontSize : _fontOverrideSize + delta, 8, 40);
+                if (s == _fontOverrideSize && delta != 0) return;
+                _fontOverrideSize = s;
+                ApplyFontConfig();
+                onFontOverrideSizeChanged?.Invoke(s);
+                return;
+            }
             int size = Mathf.Clamp(delta == 0 ? EditorConfig.DefaultFontSize : EditorConfig.FontSize + delta, 8, 40);
             if (size == EditorConfig.FontSize && delta != 0) return;
             EditorConfig.FontSize = size;

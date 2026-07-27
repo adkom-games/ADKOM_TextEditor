@@ -50,6 +50,11 @@ namespace ADKOM.TextEditor
         [NonSerialized] internal bool GameMode;
         [NonSerialized] internal CodeView.ColorOverlay Overlay;
 
+        // Per-document font override (AteApi 1.1, addon-set only). Null/0 =
+        // use the global font config. Zoom gestures update FontSize here.
+        [NonSerialized] internal string FontName;
+        [NonSerialized] internal int FontSize;
+
         // Bookmarked line numbers (0-based). Runtime-only, per document.
         [NonSerialized] public HashSet<int> Bookmarks = new HashSet<int>();
 
