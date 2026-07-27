@@ -147,8 +147,8 @@ namespace ADKOM.TextEditor
                 new AteCommand { Id = "toggle-comment", Scope = CmdScope.Editor, VS = comment, VSCode = comment, Rider = comment,
                     Run = _ => True(ToggleComment) },
                 new AteCommand { Id = "goto-definition", Scope = CmdScope.Editor,
-                    VS = All(K(KeyCode.F12, d: "F12", looseShift: true)),
-                    VSCode = All(K(KeyCode.F12, d: "F12", looseShift: true)),
+                    VS = All(K(KeyCode.F12, d: "F12")),
+                    VSCode = All(K(KeyCode.F12, d: "F12")),
                     Rider = All(K(KeyCode.B, ctrl: true, d: "Ctrl+B")),
                     Run = _ => True(() =>
                     {
@@ -246,6 +246,22 @@ namespace ADKOM.TextEditor
                     VSCode = All(K(KeyCode.RightBracket, ctrl: true, shift: true, d: "Ctrl+Shift+]")),
                     Rider = All(K(KeyCode.RightBracket, ctrl: true, shift: true, d: "Ctrl+Shift+]")),
                     Run = _ => True(() => _code.UnfoldAtCaret()) },
+
+                                new AteCommand { Id = "rename-symbol", Scope = CmdScope.Editor,
+                    VS = All(K(KeyCode.F2, d: "F2")),
+                    VSCode = All(K(KeyCode.F2, d: "F2")),
+                    Rider = All(K(KeyCode.F6, shift: true, d: "Shift+F6")),
+                    Run = _ => True(RenameSymbolAtCaret) },
+                new AteCommand { Id = "find-references", Scope = CmdScope.Editor,
+                    VS = All(K(KeyCode.F12, shift: true, d: "Shift+F12")),
+                    VSCode = All(K(KeyCode.F12, shift: true, d: "Shift+F12")),
+                    Rider = All(K(KeyCode.F7, alt: true, d: "Alt+F7")),
+                    Run = _ => True(FindAllReferences) },
+                new AteCommand { Id = "format-document", Scope = CmdScope.Editor,
+                    VS = All(K(KeyCode.F, shift: true, alt: true, d: "Shift+Alt+F")),
+                    VSCode = All(K(KeyCode.F, shift: true, alt: true, d: "Shift+Alt+F")),
+                    Rider = All(K(KeyCode.L, ctrl: true, alt: true, d: "Ctrl+Alt+L")),
+                    Run = _ => True(FormatDocument) },
 
                                 // ---- Display-only (dispatched by CodeView / Tab special-case;
                 //      the table only supplies the menu hint) ----

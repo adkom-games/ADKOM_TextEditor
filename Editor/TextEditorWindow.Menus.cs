@@ -101,6 +101,10 @@ namespace ADKOM.TextEditor
             Item(WithSc("Add Caret Above", Dsp("add-caret-above")), edit, () => _code.AddCaretOnAdjacentLine(-1));
             Item(WithSc("Add Caret Below", Dsp("add-caret-below")), edit, () => _code.AddCaretOnAdjacentLine(1));
             Item(WithSc("Autocomplete", "Ctrl+Space"), edit, () => _code.ShowCompletion(true));
+            m.AddSeparator("");
+            Item(WithSc("Rename Symbol...", Dsp("rename-symbol")), edit, RenameSymbolAtCaret);
+            Item(WithSc("Find All References", Dsp("find-references")), edit, FindAllReferences);
+            Item(WithSc("Format Document", Dsp("format-document")), edit, FormatDocument);
             Item(WithSc("Indent", Dsp("indent")), edit, InsertTab);
             Item(WithSc("Unindent", Dsp("unindent")), edit, UnindentSelection);
             m.AddSeparator("");

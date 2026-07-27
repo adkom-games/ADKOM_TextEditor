@@ -512,3 +512,45 @@ msgstr "展開區域"
 
 msgid "Unfold All"
 msgstr "全部展開"
+
+msgid "Rename Symbol..."
+msgstr "重新命名符號..."
+
+msgid "Find All References"
+msgstr "尋找所有參考"
+
+msgid "Format Document"
+msgstr "格式化文件"
+
+msgid "Rename '{0}' to:"
+msgstr "將 '{0}' 重新命名為:"
+
+msgid "Find All References needs Semantic Features (enable in Settings)."
+msgstr "尋找所有參考需要語意功能(在設定中啟用)。"
+
+msgid "Rename needs Semantic Features (enable in Settings)."
+msgstr "重新命名需要語意功能(在設定中啟用)。"
+
+msgid "No references found."
+msgstr "找不到參考。"
+
+msgid "{0} reference(s):"
+msgstr "{0} 個參考:"
+
+msgid "{0} reference(s) — see the console."
+msgstr "{0} 個參考 — 請查看主控台。"
+
+msgid "This symbol cannot be renamed here."
+msgstr "無法在此處重新命名該符號。"
+
+msgid "Not a valid identifier."
+msgstr "不是有效的識別碼。"
+
+msgid "Renamed {0} occurrence(s) in this document."
+msgstr "已重新命名此文件中的 {0} 處。"
+
+msgid "Document already formatted."
+msgstr "文件已是格式化狀態。"
+
+msgid "Document formatted."
+msgstr "已格式化文件。"
