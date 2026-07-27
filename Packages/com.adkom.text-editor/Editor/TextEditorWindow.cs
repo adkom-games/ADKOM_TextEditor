@@ -280,21 +280,24 @@ namespace ADKOM.TextEditor
             // --- Non-modal notification banner (e.g. file changed on disk).
             // Modal dialogs here would block Unity's main loop — including
             // background tooling — every time the window regains focus. ---
+            // RED, mostly opaque: these are must-see moments (sign-in codes,
+            // file conflicts). COLUMN layout: a wrapping Label inside a flex
+            // ROW measures one line tall and clips when it wraps (classic
+            // UIToolkit trap — "squished" sign-in code, Cary 2026-07-27);
+            // stacking message-over-buttons sidesteps it entirely.
             _notifyBar = new VisualElement { name = "notify-bar" };
             _notifyBar.style.display = DisplayStyle.None;
-            _notifyBar.style.flexDirection = FlexDirection.Row;
-            _notifyBar.style.alignItems = Align.Center;
-            _notifyBar.style.paddingLeft = 8;
-            _notifyBar.style.paddingRight = 8;
-            _notifyBar.style.paddingTop = 6;
-            _notifyBar.style.paddingBottom = 6;
-            // RED, mostly opaque: these are must-see moments (sign-in codes,
-            // file conflicts) — the old dim amber was easy to miss (Cary,
-            // 2026-07-27), and tight padding squished the wrapped text.
+            _notifyBar.style.flexDirection = FlexDirection.Column;
+            // NEVER let the window's column layout compress the banner: the
+            // editor area's tall intrinsic content otherwise squeezes it flat
+            // (this — not text wrapping — was the actual squish).
+            _notifyBar.style.flexShrink = 0;
+            _notifyBar.style.paddingLeft = 10;
+            _notifyBar.style.paddingRight = 10;
+            _notifyBar.style.paddingTop = 8;
+            _notifyBar.style.paddingBottom = 8;
             _notifyBar.style.backgroundColor = new Color(0.72f, 0.13f, 0.13f, 0.92f);
             _notifyLabel = new Label();
-            _notifyLabel.style.flexGrow = 1;
-            _notifyLabel.style.flexShrink = 1;
             _notifyLabel.style.whiteSpace = WhiteSpace.Normal;
             _notifyLabel.style.color = Color.white;
             _notifyLabel.style.fontSize = 13;
@@ -302,6 +305,8 @@ namespace ADKOM.TextEditor
             _notifyBar.Add(_notifyLabel);
             _notifyButtons = new VisualElement();
             _notifyButtons.style.flexDirection = FlexDirection.Row;
+            _notifyButtons.style.justifyContent = Justify.FlexEnd;
+            _notifyButtons.style.marginTop = 6;
             _notifyBar.Add(_notifyButtons);
             root.Add(_notifyBar);
 
