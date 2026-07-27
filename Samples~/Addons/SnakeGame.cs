@@ -83,6 +83,10 @@ public class SnakeGame : IAteAddonLifecycle
         var head = (_snake[0].x + _dx, _snake[0].y + _dy);
         string at = _doc.ReadAt(head.Item2 + 1, head.Item1 + 1, 1);
         bool ate = head == _food;
+        // Cells are strictly ASCII ('#' border, 's' snake, 'o' food) drawn
+        // with foreground == background so they read as solid blocks; the
+        // letters double as collision data for ReadAt. Non-ASCII glyphs
+        // (█ ●) render at fallback width and bow the grid — AteWriteMode docs.
         if (at != " " && !ate) { GameOver(); return; }
 
         // Move: clear the tail (unless growing), shift, draw the new head.
@@ -195,8 +199,9 @@ public class SnakeGame : IAteAddonLifecycle
 
     void DrawCell((int x, int y) c, bool head)
     {
-        _doc.WriteAt(c.y + 1, c.x + 1, "█");
-        _doc.SetColor(c.y + 1, c.x + 1, c.x + 2, head ? Head : Body, head ? Head : (Color?)null);
+        var col = head ? Head : Body;
+        _doc.WriteAt(c.y + 1, c.x + 1, "s");
+        _doc.SetColor(c.y + 1, c.x + 1, c.x + 2, col, col); // fg==bg: solid block
     }
 
     void PlaceFood()
@@ -206,8 +211,8 @@ public class SnakeGame : IAteAddonLifecycle
             var f = (x: 1 + _rng.Next(W - 2), y: 1 + _rng.Next(H - 2));
             if (_doc.ReadAt(f.y + 1, f.x + 1, 1) != " ") continue;
             _food = f;
-            _doc.WriteAt(f.y + 1, f.x + 1, "●");
-            _doc.SetColor(f.y + 1, f.x + 1, f.x + 2, Food);
+            _doc.WriteAt(f.y + 1, f.x + 1, "o");
+            _doc.SetColor(f.y + 1, f.x + 1, f.x + 2, Food, Food); // solid block
             return;
         }
     }
