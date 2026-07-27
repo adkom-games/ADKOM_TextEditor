@@ -413,3 +413,39 @@ msgstr "已復原 {0} 個字元。"
 
 msgid "Redid {0} char(s)."
 msgstr "已重做 {0} 個字元。"
+
+msgid "Join Lines"
+msgstr "合併行"
+
+msgid "Select Line"
+msgstr "選取行"
+
+msgid "Insert Line Above"
+msgstr "在上方插入行"
+
+msgid "Insert Line Below"
+msgstr "在下方插入行"
+
+msgid "Transform"
+msgstr "轉換"
+
+msgid "UPPERCASE"
+msgstr "轉為大寫"
+
+msgid "lowercase"
+msgstr "轉為小寫"
+
+msgid "Sort Selected Lines"
+msgstr "對所選行排序"
+
+msgid "Trim Trailing Whitespace on Save"
+msgstr "儲存時刪除行尾空白"
+
+msgid "Ensure Final Newline on Save"
+msgstr "儲存時確保檔案結尾換行"
+
+msgid "Remove spaces and tabs at line ends when saving (per project)."
+msgstr "儲存時刪除每行結尾的空格和定位字元(依專案)。"
+
+msgid "Guarantee the file ends with exactly one newline when saving (per project)."
+msgstr "儲存時保證檔案以恰好一個換行結尾(依專案)。"

@@ -68,6 +68,8 @@ namespace ADKOM.TextEditor
         Toggle _settingsSmooth;
         Toggle _settingsMdRendered;
         IntegerField _settingsRecentMax;
+        Toggle _settingsTrimSave;
+        Toggle _settingsFinalNewline;
         Toggle _settingsSemantics;
 
         IVisualElementScheduledItem _semanticPending;
@@ -700,6 +702,16 @@ namespace ADKOM.TextEditor
             _settingsMdRendered.tooltip = L10n.Tr("Default view when opening .md files: rendered (WYSIWYG) when on, source when off. The MD/source toggle still switches per tab.");
             _settingsPane.Add(_settingsMdRendered);
 
+            _settingsTrimSave = new Toggle(L10n.Tr("Trim Trailing Whitespace on Save")) { value = EditorConfig.TrimTrailingOnSave };
+            _settingsTrimSave.RegisterValueChangedCallback(e => EditorConfig.TrimTrailingOnSave = e.newValue);
+            _settingsTrimSave.tooltip = L10n.Tr("Remove spaces and tabs at line ends when saving (per project).");
+            _settingsPane.Add(_settingsTrimSave);
+
+            _settingsFinalNewline = new Toggle(L10n.Tr("Ensure Final Newline on Save")) { value = EditorConfig.FinalNewlineOnSave };
+            _settingsFinalNewline.RegisterValueChangedCallback(e => EditorConfig.FinalNewlineOnSave = e.newValue);
+            _settingsFinalNewline.tooltip = L10n.Tr("Guarantee the file ends with exactly one newline when saving (per project).");
+            _settingsPane.Add(_settingsFinalNewline);
+
             _settingsRecentMax = new IntegerField(L10n.Tr("Recent Files Count")) { value = EditorConfig.RecentFilesMax };
             _settingsRecentMax.RegisterValueChangedCallback(e =>
             {
@@ -827,6 +839,8 @@ namespace ADKOM.TextEditor
             _settingsSemantics?.SetValueWithoutNotify(EditorConfig.SemanticsEnabled);
             _settingsMdRendered?.SetValueWithoutNotify(EditorConfig.MdOpenRendered);
             _settingsRecentMax?.SetValueWithoutNotify(EditorConfig.RecentFilesMax);
+            _settingsTrimSave?.SetValueWithoutNotify(EditorConfig.TrimTrailingOnSave);
+            _settingsFinalNewline?.SetValueWithoutNotify(EditorConfig.FinalNewlineOnSave);
         }
 
         // --- Tabs ---
@@ -902,6 +916,8 @@ namespace ADKOM.TextEditor
             bool saved = saveAs ? FileService.SaveAs(Active) : FileService.Save(Active);
             if (saved)
             {
+                // Save transforms (trim/final newline) may have changed the model.
+                _code?.SetValueWithoutNotify(Active.Content);
                 _code?.BreakUndoGroup(); // undo-past-save is a deliberate step
                 if (saveAs && Active.HasFile) EditorConfig.AddRecentFile(Path.GetFullPath(Active.FilePath));
                 RefreshFormatter(); // Save As can change the extension/language

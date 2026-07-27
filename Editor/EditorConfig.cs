@@ -230,6 +230,25 @@ namespace ADKOM.TextEditor
             return tabs;
         }
 
+        const string TrimSaveKey = "ADKOM.TextEditor.TrimTrailingOnSave";
+        const string FinalNewlineKey = "ADKOM.TextEditor.FinalNewlineOnSave";
+
+        /// <summary>Strip trailing spaces/tabs from every line when saving.
+        /// Per project (a formatting convention). Default off.</summary>
+        public static bool TrimTrailingOnSave
+        {
+            get => EditorPrefs.GetBool(ProjectScoped(TrimSaveKey), false);
+            set => EditorPrefs.SetBool(ProjectScoped(TrimSaveKey), value);
+        }
+
+        /// <summary>Guarantee exactly one trailing newline when saving.
+        /// Per project. Default off.</summary>
+        public static bool FinalNewlineOnSave
+        {
+            get => EditorPrefs.GetBool(ProjectScoped(FinalNewlineKey), false);
+            set => EditorPrefs.SetBool(ProjectScoped(FinalNewlineKey), value);
+        }
+
         const string MdOpenRenderedKey = "ADKOM.TextEditor.MdOpenRendered";
 
         /// <summary>Default view for .md files when opened: rendered (WYSIWYG)

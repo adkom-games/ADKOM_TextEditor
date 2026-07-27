@@ -156,6 +156,33 @@ namespace ADKOM.TextEditor
                         NavigateToDefinition(nl, ncol);
                     }) },
 
+                new AteCommand { Id = "insert-line-below", Scope = CmdScope.Editor,
+                    VS = All(K(KeyCode.Return, ctrl: true, shift: true, d: "Ctrl+Shift+Enter"),
+                             K(KeyCode.KeypadEnter, ctrl: true, shift: true)),
+                    VSCode = All(K(KeyCode.Return, ctrl: true, d: "Ctrl+Enter"),
+                                 K(KeyCode.KeypadEnter, ctrl: true)),
+                    Rider = All(K(KeyCode.Return, shift: true, d: "Shift+Enter"),
+                                K(KeyCode.KeypadEnter, shift: true)),
+                    Run = _ => True(() => _code.InsertLineBelow()) },
+                new AteCommand { Id = "insert-line-above", Scope = CmdScope.Editor,
+                    VS = All(K(KeyCode.Return, ctrl: true, d: "Ctrl+Enter"),
+                             K(KeyCode.KeypadEnter, ctrl: true)),
+                    VSCode = All(K(KeyCode.Return, ctrl: true, shift: true, d: "Ctrl+Shift+Enter"),
+                                 K(KeyCode.KeypadEnter, ctrl: true, shift: true)),
+                    Rider = All(K(KeyCode.Return, ctrl: true, alt: true, d: "Ctrl+Alt+Enter"),
+                                K(KeyCode.KeypadEnter, ctrl: true, alt: true)),
+                    Run = _ => True(() => _code.InsertLineAbove()) },
+                new AteCommand { Id = "join-lines", Scope = CmdScope.Editor,
+                    VS = All(K(KeyCode.J, ctrl: true, d: "Ctrl+J")),
+                    VSCode = All(K(KeyCode.J, ctrl: true, d: "Ctrl+J")),
+                    Rider = All(K(KeyCode.J, ctrl: true, d: "Ctrl+J")),
+                    Run = _ => True(() => _code.JoinLines()) },
+                new AteCommand { Id = "select-line", Scope = CmdScope.Editor,
+                    VS = null,
+                    VSCode = All(K(KeyCode.L, ctrl: true, d: "Ctrl+L")),
+                    Rider = null,
+                    Run = _ => True(() => _code.SelectCurrentLine()) },
+
                 // ---- Display-only (dispatched by CodeView / Tab special-case;
                 //      the table only supplies the menu hint) ----
                 Disp("undo", "Ctrl+Z", "Ctrl+Z", "Ctrl+Z"),

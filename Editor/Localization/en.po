@@ -415,3 +415,39 @@ msgstr "Undid {0} char(s)."
 
 msgid "Redid {0} char(s)."
 msgstr "Redid {0} char(s)."
+
+msgid "Join Lines"
+msgstr "Join Lines"
+
+msgid "Select Line"
+msgstr "Select Line"
+
+msgid "Insert Line Above"
+msgstr "Insert Line Above"
+
+msgid "Insert Line Below"
+msgstr "Insert Line Below"
+
+msgid "Transform"
+msgstr "Transform"
+
+msgid "UPPERCASE"
+msgstr "UPPERCASE"
+
+msgid "lowercase"
+msgstr "lowercase"
+
+msgid "Sort Selected Lines"
+msgstr "Sort Selected Lines"
+
+msgid "Trim Trailing Whitespace on Save"
+msgstr "Trim Trailing Whitespace on Save"
+
+msgid "Ensure Final Newline on Save"
+msgstr "Ensure Final Newline on Save"
+
+msgid "Remove spaces and tabs at line ends when saving (per project)."
+msgstr "Remove spaces and tabs at line ends when saving (per project)."
+
+msgid "Guarantee the file ends with exactly one newline when saving (per project)."
+msgstr "Guarantee the file ends with exactly one newline when saving (per project)."

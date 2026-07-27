@@ -6,6 +6,15 @@ All notable changes to this package are documented here. Format follows
 ## [Unreleased]
 
 ### Added
+- Editing must-haves, batch 1: word-wise delete (Ctrl+Backspace /
+  Ctrl+Delete); Cut/Copy with no selection act on the whole current
+  line; Insert Line Above/Below without splitting (per-keymap
+  bindings: VS Ctrl+Enter above / Ctrl+Shift+Enter below, VS Code the
+  reverse, Rider Shift+Enter below / Ctrl+Alt+Enter above); Join
+  Lines (Ctrl+J); Select Line (Ctrl+L in the VS Code layout);
+  Transform UPPERCASE/lowercase and Sort Selected Lines (Edit menu);
+  and per-project save cleanups — "Trim Trailing Whitespace on Save"
+  and "Ensure Final Newline on Save" (Settings, off by default).
 - Scripting API: `ADKOM.TextEditor.Scripting.AteApi` is a stable,
   semver-governed surface for editor scripts — open window/files,
   `NewDocument`, `Documents`/`ActiveDocument` handles (`GetText`,
