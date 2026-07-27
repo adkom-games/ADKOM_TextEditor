@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
@@ -43,6 +44,9 @@ namespace ADKOM.TextEditor
         // code view on tab switch so Ctrl+Z never crosses documents.
         // Runtime-only: undo does not survive domain reloads.
         [NonSerialized] public object UndoWorld;
+
+        // Bookmarked line numbers (0-based). Runtime-only, per document.
+        [NonSerialized] public HashSet<int> Bookmarks = new HashSet<int>();
 
         // "Keep Buffer" was chosen after the backing file vanished — stop
         // re-prompting; the buffer lives on (dirty) until saved or closed.
