@@ -12,6 +12,9 @@ namespace ADKOM.TextEditor
     // Tab strip: rendering, switching, closing, drag-to-reorder, and the tab context menu.
     public partial class TextEditorWindow
     {
+        // The document whose undo world currently lives in the code view.
+        TextDocument _undoWorldDoc;
+
         // #10: skip the rebuild when nothing tab-visible changed (RebuildTabs
         // is called liberally on every state change). The signature captures
         // exactly what the strip renders: order, names, dirty stars, active.
@@ -251,6 +254,15 @@ namespace ADKOM.TextEditor
             }
 
             CheckExternalChange(Active);
+            // Undo history is per document: park the outgoing document's undo
+            // world and attach the incoming one (fixes the latent cross-tab
+            // undo bleed the old full-snapshot model had).
+            if (_code != null && !ReferenceEquals(_undoWorldDoc, Active))
+            {
+                if (_undoWorldDoc != null) _undoWorldDoc.UndoWorld = _code.DetachUndoWorld();
+                _code.AttachUndoWorld(Active.UndoWorld);
+                _undoWorldDoc = Active;
+            }
             _code?.SetValueWithoutNotify(Active.Content);
             RefreshFormatter();
             UpdateMdUi();

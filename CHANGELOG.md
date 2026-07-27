@@ -50,6 +50,13 @@ All notable changes to this package are documented here. Format follows
   the update-check timestamp (a per-machine GitHub rate limiter).
 
 ### Fixed
+- Large-file editing: undo/redo now stores range-based deltas (only
+  the text each edit group inserted and replaced) instead of full
+  document snapshots — undo memory scales with edit size, never file
+  size. Also fixes a latent defect the snapshot model hid: undo
+  history is now scoped per document (swapped on tab switch), so
+  Ctrl+Z in one tab can no longer restore another tab's text. Undo
+  grouping behavior is unchanged.
 - Defect sweep (from the 2026-07-26 code review): dirty buffers now
   autosave to the session every 30s, so an editor crash loses at most
   half a minute of unsaved work (previously only saved on window

@@ -39,6 +39,11 @@ namespace ADKOM.TextEditor
         // Ticks of File.GetLastWriteTimeUtc at load/save time, for external-change detection.
         public long LastKnownWriteTimeUtcTicks;
 
+        // Per-document undo history (CodeView.UndoWorld), swapped into the
+        // code view on tab switch so Ctrl+Z never crosses documents.
+        // Runtime-only: undo does not survive domain reloads.
+        [NonSerialized] public object UndoWorld;
+
         // "Keep Buffer" was chosen after the backing file vanished — stop
         // re-prompting; the buffer lives on (dirty) until saved or closed.
         public bool DeletionNotified;
