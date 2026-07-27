@@ -574,3 +574,15 @@ msgstr "Clear Bookmarks"
 
 msgid "No bookmarks in this document."
 msgstr "No bookmarks in this document."
+
+msgid "Scroll tabs left"
+msgstr "Scroll tabs left"
+
+msgid "Scroll tabs right"
+msgstr "Scroll tabs right"
+
+msgid "Auto-Reload Changed Files"
+msgstr "Auto-Reload Changed Files"
+
+msgid "When a file changes on disk and the buffer has no unsaved edits, reload it automatically instead of asking. Buffers with unsaved edits still ask."
+msgstr "When a file changes on disk and the buffer has no unsaved edits, reload it automatically instead of asking. Buffers with unsaved edits still ask."

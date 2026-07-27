@@ -49,6 +49,11 @@ namespace ADKOM.TextEditor
                 HideBanner();
                 return false;
             }
+            if (EditorConfig.AutoReloadFromDisk && !doc.IsDirty && doc == Active)
+            {
+                ReloadActiveFromDisk();
+                return false;
+            }
             ShowBanner(string.Format(L10n.Tr("'{0}' was modified outside the editor. Reload it? (unsaved changes here would be lost)"), doc.DisplayName),
                 (L10n.Tr("Reload"), ReloadActiveFromDisk), (L10n.Tr("Keep Mine"), KeepMineActive));
             return true;

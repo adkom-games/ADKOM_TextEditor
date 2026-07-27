@@ -252,6 +252,18 @@ namespace ADKOM.TextEditor
             set => EditorPrefs.SetBool(AutoCloseKey, value);
         }
 
+        const string AutoReloadKey = "ADKOM.TextEditor.AutoReloadFromDisk";
+
+        /// <summary>Automatically reload a document when its file changes on
+        /// disk and the buffer has no unsaved edits (machine-wide, default
+        /// off). Dirty buffers still get the banner so edits are never lost
+        /// silently.</summary>
+        public static bool AutoReloadFromDisk
+        {
+            get => EditorPrefs.GetBool(AutoReloadKey, false);
+            set => EditorPrefs.SetBool(AutoReloadKey, value);
+        }
+
         const string TrimSaveKey = "ADKOM.TextEditor.TrimTrailingOnSave";
         const string FinalNewlineKey = "ADKOM.TextEditor.FinalNewlineOnSave";
 
