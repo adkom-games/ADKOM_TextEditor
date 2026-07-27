@@ -25,6 +25,13 @@ All notable changes to this package are documented here. Format follows
   working menu commands.
 
 ### Changed
+- Internal: the main window class is decomposed into partial classes by
+  concern (Commands, Menus, Tabs, Session, Banners, ContextMenus,
+  Semantics, Api) — 2,300 lines down to 1,300 in the core file, pure
+  code motion verified behavior-identical by the full regression
+  battery. The recent-files list is parsed once and cached (was
+  re-read from EditorPrefs on every File-menu open), and the tab strip
+  skips rebuilding when nothing visible changed.
 - Keyboard commands are now defined in a single command table
   (bindings, handlers, and menu shortcut hints in one place per
   keymap), removing the triple definition that let labels drift from
