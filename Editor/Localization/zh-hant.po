@@ -603,12 +603,6 @@ msgstr "1 個參考："
 msgid "{0} references:"
 msgstr "{0} 個參考："
 
-msgid "1 reference — see the console."
-msgstr "1 個參考 — 請查看主控台。"
-
-msgid "{0} references — see the console."
-msgstr "{0} 個參考 — 請查看主控台。"
-
 msgid "Renamed 1 occurrence in this document."
 msgstr "已在此文件中重新命名 1 處。"
 
@@ -713,3 +707,6 @@ msgstr "Unity AI 帳戶：{0}"
 
 msgid "Unity account: signed out"
 msgstr "Unity 帳戶：已登出"
+
+msgid "Unity AI uses the Unity account the Editor is signed into; manage it from the account menu in the Editor's top-right corner."
+msgstr "Unity AI 使用編輯器登入的 Unity 帳戶；請透過編輯器右上角的帳戶選單進行管理。"

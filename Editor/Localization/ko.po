@@ -603,12 +603,6 @@ msgstr "참조 1개:"
 msgid "{0} references:"
 msgstr "참조 {0}개:"
 
-msgid "1 reference — see the console."
-msgstr "참조 1개 — 콘솔을 확인하세요."
-
-msgid "{0} references — see the console."
-msgstr "참조 {0}개 — 콘솔을 확인하세요."
-
 msgid "Renamed 1 occurrence in this document."
 msgstr "이 문서에서 1개 항목의 이름을 변경했습니다."
 
@@ -713,3 +707,6 @@ msgstr "Unity AI 계정: {0}"
 
 msgid "Unity account: signed out"
 msgstr "Unity 계정: 로그아웃됨"
+
+msgid "Unity AI uses the Unity account the Editor is signed into; manage it from the account menu in the Editor's top-right corner."
+msgstr "Unity AI는 에디터가 로그인한 Unity 계정을 사용합니다. 에디터 오른쪽 상단의 계정 메뉴에서 관리하세요."
