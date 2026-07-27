@@ -6,6 +6,15 @@ All notable changes to this package are documented here. Format follows
 ## [Unreleased]
 
 ### Added
+- Multi-caret editing: Alt+Click adds/removes carets; Add Next
+  Occurrence (Ctrl+D VS Code, Alt+J Rider, Shift+Alt+. VS) grows a
+  selection per press; Select All Occurrences (Ctrl+Shift+L VS Code,
+  Ctrl+Alt+Shift+J Rider, Shift+Alt+; VS); Add Caret Above/Below
+  (Ctrl+Alt+Up/Down) for column-style editing. With multiple carets:
+  typing, Backspace/Delete, Enter, and paste apply at every caret as
+  ONE undo step (paste distributes line-per-caret when counts match);
+  Escape or a plain click collapses to the primary caret. Extra
+  carets and their selections render live.
 - Editing must-haves, batch 2: auto-closing brackets/quotes (openers
   insert the pair, closers type over, Backspace removes empty pairs,
   selections get wrapped; "Auto-Close Brackets" setting, on by

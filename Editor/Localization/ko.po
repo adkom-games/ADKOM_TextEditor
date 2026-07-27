@@ -473,3 +473,15 @@ msgstr "괄호 자동 닫기"
 
 msgid "Typing ( [ { \" ' inserts the closing pair, closers type over, Backspace removes empty pairs, selections get wrapped."
 msgstr "( [ { \" ' 입력 시 닫는 짝이 자동 삽입되고, 닫는 기호는 덮어 입력되며, Backspace는 빈 쌍을 제거하고, 선택 영역은 감싸집니다."
+
+msgid "Add Next Occurrence"
+msgstr "다음 일치 항목 추가"
+
+msgid "Select All Occurrences"
+msgstr "모든 일치 항목 선택"
+
+msgid "Add Caret Above"
+msgstr "위에 커서 추가"
+
+msgid "Add Caret Below"
+msgstr "아래에 커서 추가"

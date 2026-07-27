@@ -475,3 +475,15 @@ msgstr "Auto-Close Brackets"
 
 msgid "Typing ( [ { \" ' inserts the closing pair, closers type over, Backspace removes empty pairs, selections get wrapped."
 msgstr "Typing ( [ { \" ' inserts the closing pair, closers type over, Backspace removes empty pairs, selections get wrapped."
+
+msgid "Add Next Occurrence"
+msgstr "Add Next Occurrence"
+
+msgid "Select All Occurrences"
+msgstr "Select All Occurrences"
+
+msgid "Add Caret Above"
+msgstr "Add Caret Above"
+
+msgid "Add Caret Below"
+msgstr "Add Caret Below"
