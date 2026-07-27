@@ -231,6 +231,7 @@ namespace ADKOM.TextEditor
                     if (e.Compatible)
                     {
                         var entry = e;
+                        if (!e.Approved) item += " ⚠"; // consent pending (AddonSecurity)
                         m.AddItem(new GUIContent(item), false,
                             () => Scripting.AteAddonManager.Run(entry));
                     }
