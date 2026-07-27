@@ -9,6 +9,8 @@ All notable changes to this package are documented here. Format follows
 - The notification banner (sign-in codes, file conflicts) is now RED,
   bold, white-on-red and roomier — impossible to miss, no more
   squished text.
+- Copilot works in unsaved and virtual documents too (synced under a
+  pseudo path — nothing is written to disk).
 - Multi-line Copilot suggestions render correctly: the first line
   continues at the caret and the remaining lines start at column 0
   with the suggestion's own indentation (they were all shifted right
