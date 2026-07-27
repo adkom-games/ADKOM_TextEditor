@@ -57,6 +57,7 @@ with the host project.
 | 0.10.0 feature campaign: ALL 19 must-have editor features (7 batches, 2026-07-27) | Done |
 | Release 0.10.0 (published 2026-07-27; tag == CI upm head; fresh-clone verified) | Done |
 | Release 0.10.1 (docs-only: Ko-fi links; published 2026-07-27) | Done |
+| 0.11.0 — the AI release (Copilot + Ask Unity AI + Search Results tab; published 2026-07-27) | Done |
 | More languages; custom themes | Future (roadmap) |
 
 ## Current work area
@@ -123,7 +124,7 @@ is verified live in the editor.
    0.10.0, 30 Editor .cs files, new partials present). GitHub Release
    published — the auto-update channel will surface it.
 4. AI integrations (Cary's go, 2026-07-27):
-   - COPILOT PHASE 1 MERGED: CopilotService (official
+   - COPILOT SHIPPED in 0.11.0 (fully verified incl. live sign-in as cfarrier, real suggestions, persistence across reloads): CopilotService (official
      @github/copilot-language-server via Node/LSP-stdio, npm
      auto-install to Library/ADKOMTextEditor/copilot, device-flow
      sign-in) + CodeView.Ghost (Tab accept / Esc dismiss, 350ms
