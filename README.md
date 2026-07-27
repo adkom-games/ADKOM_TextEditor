@@ -192,8 +192,11 @@ just right-click a file — or press **Ctrl+Alt+8** (say it out loud).
 
 ## What's next
 
+- Multi-caret editing, bracket auto-closing and matching, word-wise
+  delete, and line-cut/copy without selection
+- Code folding and column selection
 - More languages (JSON, shaders) via the formatter API
-- Custom user themes
+- Custom user themes; Ctrl+Tab most-recently-used tab order
 
 See [RELEASE-NOTES.md](RELEASE-NOTES.md) for version history and
 [CHANGELOG.md](CHANGELOG.md) for the details.
