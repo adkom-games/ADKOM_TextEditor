@@ -10,10 +10,49 @@ against it.
 
 1. Put your script in an **Editor** folder (or Editor-only asmdef).
 2. If you use asmdefs, add `ADKOM.TextEditor.Editor` to your asmdef's
-   `references`.
+   `references` (plain Editor-folder scripts need nothing — the
+   assembly is auto-referenced).
 3. `using ADKOM.TextEditor.Scripting;`
 
-All members must be called from the main thread.
+A complete working sample covering **every** API member is available in
+**Package Manager → ADKOM Text Editor → Samples → "Scripting (AteApi)"**
+(menu commands under Tools → ATE Samples after import).
+
+## ⚠ Things you must know
+
+1. **Domain reloads erase your event subscriptions.** Every script
+   recompile and play-mode entry wipes static event handlers. Always
+   subscribe from a `[InitializeOnLoad]` static constructor so they
+   re-attach automatically — never from a one-shot menu command.
+2. **Handles expire.** An `AteDocument` becomes invalid when its tab
+   closes **and after any domain reload**. Check `IsValid` before using
+   a stored handle; members of an invalid handle throw
+   `InvalidOperationException`. Re-query `AteApi.Documents` rather than
+   caching handles long-term.
+3. **Background edits are not undoable.** Edits to the *active*
+   document are one undo step; edits to any other open document bypass
+   the undo system entirely. Call `Activate()` first if the user should
+   be able to Ctrl+Z your change.
+4. **`Close()` on a dirty document is asynchronous.** Without
+   `discardChanges: true` it shows ATE's non-modal banner and returns
+   immediately — the tab is still open, and closes only when the user
+   decides. Don't assume the document is gone when the call returns.
+5. **`Save()` can block.** On an untitled document it opens a modal
+   Save As dialog; it returns false if the user cancels (or the write
+   fails). File-backed documents save silently.
+6. **`textChanged` is debounced (~400 ms) for typing** — you get one
+   event per pause, not per keystroke. Programmatic writes raise it
+   once, immediately. Don't build per-keystroke logic on it.
+7. **Events don't nest.** Anything your handler does to ATE raises no
+   further events, and a handler that throws is caught and logged to
+   the ATE console — it won't break the editor, but your code won't be
+   retried either.
+8. **Main thread only.** No API member is safe from background threads
+   or `Task.Run`.
+9. **`Documents` includes virtual tabs** (release notes, "from
+   metadata" views). They have `Path == null` and `IsUntitled == true`,
+   just like real untitled documents — filter by `DisplayName` if you
+   need to tell them apart. The Settings tab is never listed.
 
 ## API
 
