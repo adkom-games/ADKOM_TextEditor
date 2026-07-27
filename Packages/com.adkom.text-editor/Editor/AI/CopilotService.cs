@@ -203,6 +203,12 @@ namespace ADKOM.TextEditor
             Request("signIn", new JObject(), (res, err) =>
             {
                 if (err != null) { SetStatus(State.Error, err.ToString()); return; }
+                AteConsole.Log("[Copilot] signIn response: " +
+                    (res?.ToString(Newtonsoft.Json.Formatting.None) ?? "null"));
+                // Cached credentials elsewhere can complete instantly.
+                string status = res?["status"]?.ToString();
+                if (status == "AlreadySignedIn" || status == "OK")
+                { CheckAuth(); return; }
                 PendingUserCode = res?["userCode"]?.ToString();
                 string uri = res?["verificationUri"]?.ToString();
                 SetStatus(State.SigningIn, PendingUserCode ?? "");
@@ -210,6 +216,7 @@ namespace ADKOM.TextEditor
                 {
                     EditorGUIUtility.systemCopyBuffer = PendingUserCode ?? "";
                     if (!string.IsNullOrEmpty(uri)) Application.OpenURL(uri);
+                    StartSignInWatchdog();
                 });
                 var cmd = res?["command"];
                 if (cmd != null)
@@ -217,13 +224,49 @@ namespace ADKOM.TextEditor
                     Request("workspace/executeCommand", new JObject
                     {
                         ["command"] = cmd["command"],
-                        ["arguments"] = cmd["arguments"]
+                        ["arguments"] = cmd["arguments"] ?? new JArray()
                     }, (res2, err2) =>
                     {
+                        AteConsole.Log("[Copilot] sign-in finish: " +
+                            (err2 != null ? "error " + err2.ToString()
+                             : res2?.ToString(Newtonsoft.Json.Formatting.None) ?? "null"));
                         PendingUserCode = null;
-                        if (err2 != null) SetStatus(State.NotSignedIn, err2.ToString());
-                        else CheckAuth();
+                        CheckAuth(); // authoritative either way
                     });
+                }
+            });
+        }
+
+        // The finish command SHOULD resolve when GitHub confirms, but a missed
+        // or mis-shaped response must never strand the user in "SigningIn"
+        // (field report 2026-07-27): poll checkStatus while signing in.
+        static double _watchdogUntil;
+
+        static void StartSignInWatchdog()
+        {
+            _watchdogUntil = EditorApplication.timeSinceStartup + 300;
+            EditorApplication.update -= WatchdogTick;
+            EditorApplication.update += WatchdogTick;
+        }
+
+        static double _nextWatchdogPoll;
+
+        static void WatchdogTick()
+        {
+            if (Status != State.SigningIn || EditorApplication.timeSinceStartup > _watchdogUntil)
+            {
+                EditorApplication.update -= WatchdogTick;
+                return;
+            }
+            if (EditorApplication.timeSinceStartup < _nextWatchdogPoll) return;
+            _nextWatchdogPoll = EditorApplication.timeSinceStartup + 3.0;
+            Request("checkStatus", new JObject(), (res, err) =>
+            {
+                string st = res?["status"]?.ToString();
+                if (st == "OK" || st == "MaybeOk")
+                {
+                    PendingUserCode = null;
+                    SetStatus(State.Ready, res?["user"]?.ToString() ?? "");
                 }
             });
         }

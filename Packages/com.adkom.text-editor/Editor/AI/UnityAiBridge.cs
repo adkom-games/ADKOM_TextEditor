@@ -51,29 +51,11 @@ namespace ADKOM.TextEditor
             }
         }
 
-        /// <summary>Signs the WHOLE Unity Editor out of its Unity account
-        /// (Unity AI has no narrower sign-out — it rides the Editor login).
-        /// Internal API via reflection; returns false if unavailable.</summary>
-        public static bool SignOutUnityAccount()
-        {
-            try
-            {
-                var t = typeof(EditorApplication).Assembly.GetType("UnityEditor.Connect.UnityConnect");
-                var inst = t?.GetProperty("instance",
-                    BindingFlags.Public | BindingFlags.Static)?.GetValue(null);
-                var logout = t?.GetMethod("Logout", BindingFlags.Public | BindingFlags.Instance);
-                if (inst == null || logout == null) return false;
-                logout.Invoke(inst, null);
-                return true;
-            }
-            catch (Exception ex)
-            {
-                AteConsole.Warn("[ADKOM Text Editor] Unity account sign-out failed: " + ex.Message);
-                return false;
-            }
-        }
+        // NOTE: an editor-wide Unity-account sign-out button was built and
+        // REMOVED the same day (2026-07-27): logging the whole Editor out is
+        // far beyond ATE's remit. Unity's own account UI owns that lifecycle.
 
-        /// <summary>Opens Assistant's prompt popup anchored to
+        /// <summary>Opens Assistant's prompt popup anchored to</summary>
         /// <paramref name="anchor"/>, with <paramref name="payload"/> attached
         /// as a virtual text document. The prompt is typed by the user; an AI
         /// call (and points) only happens when they submit it.</summary>
