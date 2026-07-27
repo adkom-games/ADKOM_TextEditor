@@ -3,6 +3,11 @@
 **☕ Enjoying ATE? Support development on Ko-fi:**
 [https://ko-fi.com/adkomgames](https://ko-fi.com/adkomgames)
 
+## 0.10.1 — 2026-07-27
+
+- Added the Ko-fi support link (☕ above) to the READMEs and these
+  release notes. No code changes.
+
 ## 0.10.0 — 2026-07-27
 
 The IDE release: every "must-have" editing feature a coder reflexively

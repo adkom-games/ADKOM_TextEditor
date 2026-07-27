@@ -236,7 +236,7 @@ https://github.com/adkom-games/ADKOM_TextEditor.git#upm
 Prefer a pinned version?
 
 ```
-https://github.com/adkom-games/ADKOM_TextEditor.git#0.10.0
+https://github.com/adkom-games/ADKOM_TextEditor.git#0.10.1
 ```
 
 Semantic Features (compiler-accurate colors + Go to Definition) are

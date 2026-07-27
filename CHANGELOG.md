@@ -3,6 +3,13 @@
 All notable changes to this package are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com); versions follow semver.
 
+## [0.10.1] - 2026-07-27
+
+### Added
+- Ko-fi support link: badge at the top of both READMEs and a text link
+  at the top of RELEASE-NOTES (visible in the in-editor release-notes
+  tab after every update).
+
 ## [0.10.0] - 2026-07-27
 
 ### Fixed
