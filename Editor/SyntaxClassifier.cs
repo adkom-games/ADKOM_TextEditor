@@ -34,6 +34,13 @@ namespace ADKOM.TextEditor
         List<SyntaxSpan> Classify(IReadOnlyList<string> lines);
     }
 
+    /// <summary>Optional classifier capability: language keywords offered by
+    /// the autocomplete popup alongside harvested document words.</summary>
+    public interface ICompletionKeywords
+    {
+        IEnumerable<string> CompletionKeywords { get; }
+    }
+
     /// <summary>Maps a file path to its language classifier (null = plain).</summary>
     public static class SyntaxClassifiers
     {
