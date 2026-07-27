@@ -410,12 +410,6 @@ msgstr "Later"
 msgid "Install Now"
 msgstr "Install Now"
 
-msgid "Undid {0} char(s)."
-msgstr "Undid {0} char(s)."
-
-msgid "Redid {0} char(s)."
-msgstr "Redid {0} char(s)."
-
 msgid "Join Lines"
 msgstr "Join Lines"
 
@@ -536,20 +530,11 @@ msgstr "Rename needs Semantic Features (enable in Settings)."
 msgid "No references found."
 msgstr "No references found."
 
-msgid "{0} reference(s):"
-msgstr "{0} reference(s):"
-
-msgid "{0} reference(s) — see the console."
-msgstr "{0} reference(s) — see the console."
-
 msgid "This symbol cannot be renamed here."
 msgstr "This symbol cannot be renamed here."
 
 msgid "Not a valid identifier."
 msgstr "Not a valid identifier."
-
-msgid "Renamed {0} occurrence(s) in this document."
-msgstr "Renamed {0} occurrence(s) in this document."
 
 msgid "Document already formatted."
 msgstr "Document already formatted."
@@ -587,14 +572,8 @@ msgstr "Auto-Reload Changed Files"
 msgid "When a file changes on disk and the buffer has no unsaved edits, reload it automatically instead of asking. Buffers with unsaved edits still ask."
 msgstr "When a file changes on disk and the buffer has no unsaved edits, reload it automatically instead of asking. Buffers with unsaved edits still ask."
 
-msgid "There are unsaved documents. Save all of them before closing?"
-msgstr "There are unsaved documents. Save all of them before closing?"
-
 msgid "ATE — Unsaved Documents"
 msgstr "ATE — Unsaved Documents"
-
-msgid "The editor closed with {0} unsaved document(s)."
-msgstr "The editor closed with {0} unsaved document(s)."
 
 msgid "Nothing is lost — they are kept in your session and will reopen with the window."
 msgstr "Nothing is lost — they are kept in your session and will reopen with the window."
@@ -605,8 +584,47 @@ msgstr "Save All Now"
 msgid "Keep in Session"
 msgstr "Keep in Session"
 
-msgid "{0} document(s) have unsaved changes from your last session."
-msgstr "{0} document(s) have unsaved changes from your last session."
-
 msgid "Dismiss"
 msgstr "Dismiss"
+
+msgid "The editor closed with 1 unsaved document."
+msgstr "The editor closed with 1 unsaved document."
+
+msgid "The editor closed with {0} unsaved documents."
+msgstr "The editor closed with {0} unsaved documents."
+
+msgid "1 document has unsaved changes from your last session."
+msgstr "1 document has unsaved changes from your last session."
+
+msgid "{0} documents have unsaved changes from your last session."
+msgstr "{0} documents have unsaved changes from your last session."
+
+msgid "1 reference:"
+msgstr "1 reference:"
+
+msgid "{0} references:"
+msgstr "{0} references:"
+
+msgid "1 reference — see the console."
+msgstr "1 reference — see the console."
+
+msgid "{0} references — see the console."
+msgstr "{0} references — see the console."
+
+msgid "Renamed 1 occurrence in this document."
+msgstr "Renamed 1 occurrence in this document."
+
+msgid "Renamed {0} occurrences in this document."
+msgstr "Renamed {0} occurrences in this document."
+
+msgid "Undid 1 character."
+msgstr "Undid 1 character."
+
+msgid "Undid {0} characters."
+msgstr "Undid {0} characters."
+
+msgid "Redid 1 character."
+msgstr "Redid 1 character."
+
+msgid "Redid {0} characters."
+msgstr "Redid {0} characters."

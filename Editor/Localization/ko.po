@@ -408,12 +408,6 @@ msgstr "나중에"
 msgid "Install Now"
 msgstr "지금 설치"
 
-msgid "Undid {0} char(s)."
-msgstr "{0}자를 실행 취소했습니다."
-
-msgid "Redid {0} char(s)."
-msgstr "{0}자를 다시 실행했습니다."
-
 msgid "Join Lines"
 msgstr "줄 합치기"
 
@@ -534,20 +528,11 @@ msgstr "이름 바꾸기에는 시맨틱 기능이 필요합니다(설정에서 
 msgid "No references found."
 msgstr "참조를 찾을 수 없습니다."
 
-msgid "{0} reference(s):"
-msgstr "{0}개의 참조:"
-
-msgid "{0} reference(s) — see the console."
-msgstr "{0}개의 참조 — 콘솔을 확인하세요."
-
 msgid "This symbol cannot be renamed here."
 msgstr "이 심볼은 여기에서 이름을 바꿀 수 없습니다."
 
 msgid "Not a valid identifier."
 msgstr "유효한 식별자가 아닙니다."
-
-msgid "Renamed {0} occurrence(s) in this document."
-msgstr "이 문서에서 {0}개 항목의 이름을 바꿨습니다."
 
 msgid "Document already formatted."
 msgstr "문서가 이미 서식 지정되어 있습니다."
@@ -585,14 +570,8 @@ msgstr "변경된 파일 자동 다시 불러오기"
 msgid "When a file changes on disk and the buffer has no unsaved edits, reload it automatically instead of asking. Buffers with unsaved edits still ask."
 msgstr "디스크에서 파일이 변경되고 버퍼에 저장되지 않은 편집이 없으면 묻지 않고 자동으로 다시 불러옵니다. 저장되지 않은 편집이 있는 버퍼는 계속 확인합니다."
 
-msgid "There are unsaved documents. Save all of them before closing?"
-msgstr "저장되지 않은 문서가 있습니다. 닫기 전에 모두 저장하시겠습니까?"
-
 msgid "ATE — Unsaved Documents"
 msgstr "ATE — 저장되지 않은 문서"
-
-msgid "The editor closed with {0} unsaved document(s)."
-msgstr "편집기가 저장되지 않은 문서 {0}개와 함께 닫혔습니다."
 
 msgid "Nothing is lost — they are kept in your session and will reopen with the window."
 msgstr "손실된 것은 없습니다 — 세션에 보관되어 창과 함께 다시 열립니다."
@@ -603,8 +582,47 @@ msgstr "지금 모두 저장"
 msgid "Keep in Session"
 msgstr "세션에 보관"
 
-msgid "{0} document(s) have unsaved changes from your last session."
-msgstr "지난 세션에서 문서 {0}개에 저장되지 않은 변경 사항이 있습니다."
-
 msgid "Dismiss"
 msgstr "닫기"
+
+msgid "The editor closed with 1 unsaved document."
+msgstr "편집기가 저장되지 않은 문서 1개와 함께 닫혔습니다."
+
+msgid "The editor closed with {0} unsaved documents."
+msgstr "편집기가 저장되지 않은 문서 {0}개와 함께 닫혔습니다."
+
+msgid "1 document has unsaved changes from your last session."
+msgstr "지난 세션에서 문서 1개에 저장되지 않은 변경 사항이 있습니다."
+
+msgid "{0} documents have unsaved changes from your last session."
+msgstr "지난 세션에서 문서 {0}개에 저장되지 않은 변경 사항이 있습니다."
+
+msgid "1 reference:"
+msgstr "참조 1개:"
+
+msgid "{0} references:"
+msgstr "참조 {0}개:"
+
+msgid "1 reference — see the console."
+msgstr "참조 1개 — 콘솔을 확인하세요."
+
+msgid "{0} references — see the console."
+msgstr "참조 {0}개 — 콘솔을 확인하세요."
+
+msgid "Renamed 1 occurrence in this document."
+msgstr "이 문서에서 1개 항목의 이름을 변경했습니다."
+
+msgid "Renamed {0} occurrences in this document."
+msgstr "이 문서에서 {0}개 항목의 이름을 변경했습니다."
+
+msgid "Undid 1 character."
+msgstr "1자를 실행 취소했습니다."
+
+msgid "Undid {0} characters."
+msgstr "{0}자를 실행 취소했습니다."
+
+msgid "Redid 1 character."
+msgstr "1자를 다시 실행했습니다."
+
+msgid "Redid {0} characters."
+msgstr "{0}자를 다시 실행했습니다."

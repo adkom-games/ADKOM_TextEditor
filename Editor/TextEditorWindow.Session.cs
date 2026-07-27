@@ -94,8 +94,9 @@ namespace ADKOM.TextEditor
             int restoredDirty = _docs.FindAll(d => d.IsDirty).Count;
             if (restoredDirty > 0)
                 rootVisualElement.schedule.Execute(() =>
-                    ShowBanner(string.Format(
-                        L10n.Tr("{0} document(s) have unsaved changes from your last session."), restoredDirty),
+                    ShowBanner(restoredDirty == 1
+                        ? L10n.Tr("1 document has unsaved changes from your last session.")
+                        : string.Format(L10n.Tr("{0} documents have unsaved changes from your last session."), restoredDirty),
                         (L10n.Tr("Save All"), () => { SaveAll(); HideBanner(); }),
                         (L10n.Tr("Dismiss"), HideBanner))).ExecuteLater(0);
         }

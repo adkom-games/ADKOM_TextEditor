@@ -163,11 +163,13 @@ namespace ADKOM.TextEditor
                         PostStatus(L10n.Tr("No references found."));
                         return;
                     }
-                    AteConsole.Log("── " + string.Format(L10n.Tr("{0} reference(s):"), refs.Count));
+                    AteConsole.Log("── " + (refs.Count == 1 ? L10n.Tr("1 reference:")
+                        : string.Format(L10n.Tr("{0} references:"), refs.Count)));
                     foreach (var r in refs)
                         AteConsole.Log($"  {r.Path}:{r.Line + 1}:{r.Column + 1}: {r.LineText}");
                     SetConsoleVisible(true);
-                    PostStatus(string.Format(L10n.Tr("{0} reference(s) — see the console."), refs.Count));
+                    PostStatus(refs.Count == 1 ? L10n.Tr("1 reference — see the console.")
+                        : string.Format(L10n.Tr("{0} references — see the console."), refs.Count));
                 }, null);
             });
         }
@@ -203,7 +205,8 @@ namespace ADKOM.TextEditor
                 foreach (var (start, length) in spans) regions.Add((start, start + length));
                 _code.MultiReplace(regions, new List<string> { newName });
                 _code.CollapseExtraCarets();
-                PostStatus(string.Format(L10n.Tr("Renamed {0} occurrence(s) in this document."), regions.Count));
+                PostStatus(regions.Count == 1 ? L10n.Tr("Renamed 1 occurrence in this document.")
+                    : string.Format(L10n.Tr("Renamed {0} occurrences in this document."), regions.Count));
             }, initialValue: oldName);
         }
 

@@ -408,12 +408,6 @@ msgstr "稍後"
 msgid "Install Now"
 msgstr "立即安裝"
 
-msgid "Undid {0} char(s)."
-msgstr "已復原 {0} 個字元。"
-
-msgid "Redid {0} char(s)."
-msgstr "已重做 {0} 個字元。"
-
 msgid "Join Lines"
 msgstr "合併行"
 
@@ -534,20 +528,11 @@ msgstr "重新命名需要語意功能(在設定中啟用)。"
 msgid "No references found."
 msgstr "找不到參考。"
 
-msgid "{0} reference(s):"
-msgstr "{0} 個參考:"
-
-msgid "{0} reference(s) — see the console."
-msgstr "{0} 個參考 — 請查看主控台。"
-
 msgid "This symbol cannot be renamed here."
 msgstr "無法在此處重新命名該符號。"
 
 msgid "Not a valid identifier."
 msgstr "不是有效的識別碼。"
-
-msgid "Renamed {0} occurrence(s) in this document."
-msgstr "已重新命名此文件中的 {0} 處。"
 
 msgid "Document already formatted."
 msgstr "文件已是格式化狀態。"
@@ -585,14 +570,8 @@ msgstr "自動重新載入已變更的檔案"
 msgid "When a file changes on disk and the buffer has no unsaved edits, reload it automatically instead of asking. Buffers with unsaved edits still ask."
 msgstr "當檔案在磁碟上發生變更且緩衝區沒有未儲存的編輯時，自動重新載入而不再詢問。有未儲存編輯的緩衝區仍會詢問。"
 
-msgid "There are unsaved documents. Save all of them before closing?"
-msgstr "存在未儲存的文件。關閉前全部儲存嗎？"
-
 msgid "ATE — Unsaved Documents"
 msgstr "ATE — 未儲存的文件"
-
-msgid "The editor closed with {0} unsaved document(s)."
-msgstr "編輯器關閉時有 {0} 個未儲存的文件。"
 
 msgid "Nothing is lost — they are kept in your session and will reopen with the window."
 msgstr "沒有任何遺失 — 它們保存在工作階段中，將隨視窗重新開啟。"
@@ -603,8 +582,47 @@ msgstr "立即全部儲存"
 msgid "Keep in Session"
 msgstr "保留在工作階段中"
 
-msgid "{0} document(s) have unsaved changes from your last session."
-msgstr "上次工作階段中有 {0} 個文件存在未儲存的變更。"
-
 msgid "Dismiss"
 msgstr "關閉"
+
+msgid "The editor closed with 1 unsaved document."
+msgstr "編輯器關閉時有 1 個未儲存的文件。"
+
+msgid "The editor closed with {0} unsaved documents."
+msgstr "編輯器關閉時有 {0} 個未儲存的文件。"
+
+msgid "1 document has unsaved changes from your last session."
+msgstr "上次工作階段中有 1 個文件存在未儲存的變更。"
+
+msgid "{0} documents have unsaved changes from your last session."
+msgstr "上次工作階段中有 {0} 個文件存在未儲存的變更。"
+
+msgid "1 reference:"
+msgstr "1 個參考："
+
+msgid "{0} references:"
+msgstr "{0} 個參考："
+
+msgid "1 reference — see the console."
+msgstr "1 個參考 — 請查看主控台。"
+
+msgid "{0} references — see the console."
+msgstr "{0} 個參考 — 請查看主控台。"
+
+msgid "Renamed 1 occurrence in this document."
+msgstr "已在此文件中重新命名 1 處。"
+
+msgid "Renamed {0} occurrences in this document."
+msgstr "已在此文件中重新命名 {0} 處。"
+
+msgid "Undid 1 character."
+msgstr "已復原 1 個字元。"
+
+msgid "Undid {0} characters."
+msgstr "已復原 {0} 個字元。"
+
+msgid "Redid 1 character."
+msgstr "已重做 1 個字元。"
+
+msgid "Redid {0} characters."
+msgstr "已重做 {0} 個字元。"
