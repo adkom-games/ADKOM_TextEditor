@@ -629,3 +629,60 @@ msgstr "{0}자를 다시 실행했습니다."
 
 msgid "Ctrl+Click to open {0}"
 msgstr "Ctrl+클릭으로 {0} 열기"
+
+msgid "Installing the Copilot Language Server (npm)…"
+msgstr "Copilot Language Server 설치 중 (npm)…"
+
+msgid "npm install failed: "
+msgstr "npm 설치 실패: "
+
+msgid "Could not run npm — is Node.js installed? "
+msgstr "npm을 실행할 수 없습니다 — Node.js가 설치되어 있습니까? "
+
+msgid "Starting the Copilot Language Server…"
+msgstr "Copilot Language Server 시작 중…"
+
+msgid "Could not start Node.js: "
+msgstr "Node.js를 시작할 수 없습니다: "
+
+msgid "Copilot sign-in: your code {0} was copied to the clipboard — paste it on the GitHub page that just opened."
+msgstr "Copilot 로그인: 코드 {0}이(가) 클립보드에 복사되었습니다 — 방금 열린 GitHub 페이지에 붙여넣으세요."
+
+msgid "Copilot is ready."
+msgstr "Copilot이 준비되었습니다."
+
+msgid "Copilot: "
+msgstr "Copilot: "
+
+msgid "off"
+msgstr "꺼짐"
+
+msgid "installing server…"
+msgstr "서버 설치 중…"
+
+msgid "starting…"
+msgstr "시작 중…"
+
+msgid "not signed in"
+msgstr "로그인되지 않음"
+
+msgid "waiting for GitHub confirmation…"
+msgstr "GitHub 확인 대기 중…"
+
+msgid "ready"
+msgstr "준비됨"
+
+msgid "error: "
+msgstr "오류: "
+
+msgid "GitHub Copilot (inline suggestions)"
+msgstr "GitHub Copilot (인라인 제안)"
+
+msgid "Ghost-text code suggestions from GitHub Copilot. Requires Node.js on this machine and your own Copilot subscription; the official Copilot Language Server is installed on first enable. Tab accepts a suggestion, Escape dismisses it."
+msgstr "GitHub Copilot의 고스트 텍스트 코드 제안입니다. 이 컴퓨터에 Node.js와 본인의 Copilot 구독이 필요합니다. 처음 활성화할 때 공식 Copilot Language Server가 설치됩니다. Tab으로 제안을 수락하고 Escape로 닫습니다."
+
+msgid "Sign In"
+msgstr "로그인"
+
+msgid "Sign Out"
+msgstr "로그아웃"
