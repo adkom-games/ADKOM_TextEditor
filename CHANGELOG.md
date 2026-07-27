@@ -3,7 +3,7 @@
 All notable changes to this package are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com); versions follow semver.
 
-## [Unreleased]
+## [0.11.0] - 2026-07-27
 
 ### Added
 - The notification banner (sign-in codes, file conflicts) is now RED,

@@ -3,6 +3,50 @@
 **☕ Enjoying ATE? Support development on Ko-fi:**
 [https://ko-fi.com/adkomgames](https://ko-fi.com/adkomgames)
 
+## 0.11.0 — 2026-07-27
+
+The AI release.
+
+### Features
+- **GitHub Copilot inline suggestions** (Settings → GitHub Copilot,
+  default off; requires Node.js and your own Copilot subscription):
+  ghost-text completions as you type, in file-backed AND unsaved/
+  virtual documents. Tab or Enter accepts (honoring Copilot's replace
+  range — no duplicated text), Escape dismisses, and a ◂ 1/3 ▸ cycler
+  above the ghost switches alternatives (buttons or Alt+[ / Alt+]).
+  The official Copilot Language Server installs itself via npm on
+  first enable (per project, never shipped); sign-in is GitHub's
+  device flow with the code auto-copied to the clipboard, and the
+  login persists across domain reloads, editor restarts, and reboots.
+  The word-autocomplete popup yields whenever a Copilot suggestion
+  arrives. Everything is non-modal.
+- **Ask Unity AI** (when com.unity.ai.assistant is installed): "Ask
+  Unity AI About Selection..." / "...About This File..." in the
+  document right-click and Tools menus open Unity Assistant's prompt
+  popup with your text attached; no AI call (no points) happens until
+  you submit the prompt. Settings shows which Unity account Assistant
+  uses (managed from Unity's own account menu).
+- **Search Results tab** in the console pane (View menu): Find All
+  References lists hits as clickable file:line rows that jump to the
+  location, opening the file if needed — replacing the old console
+  dump.
+- **First-run welcome**: a fresh install opens the README and these
+  release notes as tabs.
+- **Ctrl+Click links everywhere**: bare http(s)/mailto URLs and
+  markdown [label](url) spans open in the browser from source view —
+  and from rendered Markdown mode — with a "Ctrl+Click to open …"
+  hover tooltip.
+- **Console copy**: select console text and Ctrl+C copies it.
+
+### Fixes
+- The notification banner (sign-in codes, file conflicts) is red,
+  bold, and can no longer be compressed to half height by the window
+  layout.
+- Multi-line Copilot ghosts render at full height with continuation
+  lines at column 0 (previously clipped and mis-indented).
+- Copilot status changes log once instead of repeating.
+- CI: actions/checkout bumped to v5 (Node 20 deprecation).
+
 ## 0.10.1 — 2026-07-27
 
 - Added the Ko-fi support link (☕ above) to the READMEs and these
