@@ -280,7 +280,8 @@ namespace ADKOM.TextEditor
         // ---------- Documents & completions ----------
 
         static string UriFor(string path) =>
-            new Uri(path).AbsoluteUri;
+            path.StartsWith("untitled:", StringComparison.Ordinal)
+                ? path : new Uri(path).AbsoluteUri;
 
         static string LanguageIdFor(string path)
         {
@@ -354,6 +355,7 @@ namespace ADKOM.TextEditor
                 { ["tabSize"] = EditorConfig.TabSize, ["insertSpaces"] = true }
             }, (res, err) =>
             {
+                if (err != null) AteConsole.Warn("[Copilot] completion error: " + err.ToString());
                 var result = new List<Suggestion>();
                 try
                 {
