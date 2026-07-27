@@ -8,6 +8,11 @@ All notable changes to this package are documented here. Format follows
 ### Added
 - First-run welcome: the first time ATE opens in a project (nothing to
   restore), the package README and RELEASE-NOTES open as tabs.
+- Clickable links in ANY document: Ctrl+Click a bare http(s)/mailto
+  URL — or anywhere on a markdown [label](url) — to open it in the
+  browser/mail client; hovering shows a "Ctrl+Click to open …"
+  tooltip. Go to Definition still handles everything that isn't a
+  link.
 
 ## [0.10.1] - 2026-07-27
 

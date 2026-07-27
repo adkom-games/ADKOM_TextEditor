@@ -628,3 +628,6 @@ msgstr "Redid 1 character."
 
 msgid "Redid {0} characters."
 msgstr "Redid {0} characters."
+
+msgid "Ctrl+Click to open {0}"
+msgstr "Ctrl+Click to open {0}"

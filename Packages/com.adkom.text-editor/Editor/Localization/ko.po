@@ -626,3 +626,6 @@ msgstr "1자를 다시 실행했습니다."
 
 msgid "Redid {0} characters."
 msgstr "{0}자를 다시 실행했습니다."
+
+msgid "Ctrl+Click to open {0}"
+msgstr "Ctrl+클릭으로 {0} 열기"

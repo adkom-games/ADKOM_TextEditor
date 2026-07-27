@@ -626,3 +626,6 @@ msgstr "已重做 1 个字符。"
 
 msgid "Redid {0} characters."
 msgstr "已重做 {0} 个字符。"
+
+msgid "Ctrl+Click to open {0}"
+msgstr "Ctrl+单击打开 {0}"
