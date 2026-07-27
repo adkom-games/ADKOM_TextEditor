@@ -732,6 +732,10 @@ namespace ADKOM.TextEditor
 
         // ---------- Word wrap layout ----------
 
+
+        static string PluralChars(int n, string one, string many) =>
+            n == 1 ? one : string.Format(many, n);
+
         float CharWidth(char c)
         {
             if (_charW.TryGetValue(c, out float w)) return w;
@@ -1352,8 +1356,7 @@ namespace ADKOM.TextEditor
             selectIndex = Mathf.Clamp(op.SelectBefore, 0, len);
             _redo.Add(op);
             BreakUndoGroup();
-            onUndoStatus?.Invoke(string.Format(L10n.Tr("Undid {0} char(s)."),
-                Mathf.Max(op.Inserted.Length, op.Removed.Length)));
+            onUndoStatus?.Invoke(PluralChars(Mathf.Max(op.Inserted.Length, op.Removed.Length), L10n.Tr("Undid 1 character."), L10n.Tr("Undid {0} characters.")));
             Notify();
             AfterCaretMove();
         }
@@ -1387,8 +1390,7 @@ namespace ADKOM.TextEditor
             selectIndex = Mathf.Clamp(op.SelectAfter, 0, len);
             _undo.Add(op);
             BreakUndoGroup();
-            onUndoStatus?.Invoke(string.Format(L10n.Tr("Redid {0} char(s)."),
-                Mathf.Max(op.Inserted.Length, op.Removed.Length)));
+            onUndoStatus?.Invoke(PluralChars(Mathf.Max(op.Inserted.Length, op.Removed.Length), L10n.Tr("Redid 1 character."), L10n.Tr("Redid {0} characters.")));
             Notify();
             AfterCaretMove();
         }

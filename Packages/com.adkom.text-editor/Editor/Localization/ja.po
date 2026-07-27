@@ -408,12 +408,6 @@ msgstr "後で"
 msgid "Install Now"
 msgstr "今すぐインストール"
 
-msgid "Undid {0} char(s)."
-msgstr "{0} 文字を元に戻しました。"
-
-msgid "Redid {0} char(s)."
-msgstr "{0} 文字をやり直しました。"
-
 msgid "Join Lines"
 msgstr "行を結合"
 
@@ -534,20 +528,11 @@ msgstr "名前の変更にはセマンティック機能が必要です(設定�
 msgid "No references found."
 msgstr "参照が見つかりません。"
 
-msgid "{0} reference(s):"
-msgstr "{0} 件の参照:"
-
-msgid "{0} reference(s) — see the console."
-msgstr "{0} 件の参照 — コンソールを参照。"
-
 msgid "This symbol cannot be renamed here."
 msgstr "このシンボルはここでは名前を変更できません。"
 
 msgid "Not a valid identifier."
 msgstr "有効な識別子ではありません。"
-
-msgid "Renamed {0} occurrence(s) in this document."
-msgstr "このドキュメント内の {0} 箇所の名前を変更しました。"
 
 msgid "Document already formatted."
 msgstr "ドキュメントは既にフォーマット済みです。"
@@ -585,14 +570,8 @@ msgstr "変更されたファイルを自動再読み込み"
 msgid "When a file changes on disk and the buffer has no unsaved edits, reload it automatically instead of asking. Buffers with unsaved edits still ask."
 msgstr "ファイルがディスク上で変更され、バッファに未保存の編集がない場合、確認せずに自動的に再読み込みします。未保存の編集があるバッファは引き続き確認します。"
 
-msgid "There are unsaved documents. Save all of them before closing?"
-msgstr "未保存のドキュメントがあります。閉じる前にすべて保存しますか？"
-
 msgid "ATE — Unsaved Documents"
 msgstr "ATE — 未保存のドキュメント"
-
-msgid "The editor closed with {0} unsaved document(s)."
-msgstr "エディターは {0} 件の未保存ドキュメントを残して閉じられました。"
 
 msgid "Nothing is lost — they are kept in your session and will reopen with the window."
 msgstr "何も失われていません — セッションに保持され、ウィンドウと共に再び開きます。"
@@ -603,8 +582,47 @@ msgstr "今すぐすべて保存"
 msgid "Keep in Session"
 msgstr "セッションに保持"
 
-msgid "{0} document(s) have unsaved changes from your last session."
-msgstr "前回のセッションから {0} 件のドキュメントに未保存の変更があります。"
-
 msgid "Dismiss"
 msgstr "閉じる"
+
+msgid "The editor closed with 1 unsaved document."
+msgstr "エディターは 1 件の未保存ドキュメントを残して閉じられました。"
+
+msgid "The editor closed with {0} unsaved documents."
+msgstr "エディターは {0} 件の未保存ドキュメントを残して閉じられました。"
+
+msgid "1 document has unsaved changes from your last session."
+msgstr "前回のセッションから 1 件のドキュメントに未保存の変更があります。"
+
+msgid "{0} documents have unsaved changes from your last session."
+msgstr "前回のセッションから {0} 件のドキュメントに未保存の変更があります。"
+
+msgid "1 reference:"
+msgstr "1 件の参照:"
+
+msgid "{0} references:"
+msgstr "{0} 件の参照:"
+
+msgid "1 reference — see the console."
+msgstr "1 件の参照 — コンソールを参照してください。"
+
+msgid "{0} references — see the console."
+msgstr "{0} 件の参照 — コンソールを参照してください。"
+
+msgid "Renamed 1 occurrence in this document."
+msgstr "このドキュメント内の 1 件を名前変更しました。"
+
+msgid "Renamed {0} occurrences in this document."
+msgstr "このドキュメント内の {0} 件を名前変更しました。"
+
+msgid "Undid 1 character."
+msgstr "1 文字を元に戻しました。"
+
+msgid "Undid {0} characters."
+msgstr "{0} 文字を元に戻しました。"
+
+msgid "Redid 1 character."
+msgstr "1 文字をやり直しました。"
+
+msgid "Redid {0} characters."
+msgstr "{0} 文字をやり直しました。"

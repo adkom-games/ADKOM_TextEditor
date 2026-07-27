@@ -95,7 +95,7 @@ namespace ADKOM.TextEditor
 
         // Discoverability besides Tools/ADKOM. (This alone does NOT reach the
         // dock's "Add Tab" menu — that list is fixed; see AteAddTabIntegration.)
-        [MenuItem("Window/ADKOM Text Editor")]
+        [MenuItem("Window/ADKOM Text Editor %&8")] // Ctrl+Alt+8 shown here
         static void OpenFromWindowMenu() => Open();
 
         /// <summary>Puts ATE in every dock's tab context / "⋮" menu under
@@ -152,7 +152,7 @@ namespace ADKOM.TextEditor
             }
         }
 
-        [MenuItem("Tools/ADKOM/Text Editor %&8")] // Ctrl+Alt+8 (Cmd+Alt+8 on macOS)
+        [MenuItem("Tools/ADKOM/Text Editor")] // shortcut lives on the Window menu entry
         public static void Open()
         {
             var existing = Resources.FindObjectsOfTypeAll<TextEditorWindow>();
