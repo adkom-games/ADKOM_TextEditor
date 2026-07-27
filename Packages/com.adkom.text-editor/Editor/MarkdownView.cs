@@ -2,8 +2,10 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
+using UnityEngine.UIElements.Experimental; // Pointer*LinkTagEvent
 
 namespace ADKOM.TextEditor
 {
@@ -53,6 +55,24 @@ namespace ADKOM.TextEditor
             _scroll.contentContainer.style.paddingRight = 16;
             _scroll.contentContainer.style.paddingTop = 10;
             Add(_scroll);
+
+            // Rendered-mode links: Ctrl+Click on a <link>-tagged span opens
+            // it; hovering shows the instruction tooltip on the label.
+            RegisterCallback<PointerDownLinkTagEvent>(e =>
+            {
+                if (!(e.ctrlKey || e.commandKey) || string.IsNullOrEmpty(e.linkID)) return;
+                Application.OpenURL(e.linkID);
+                e.StopPropagation();
+            }, TrickleDown.TrickleDown);
+            RegisterCallback<PointerOverLinkTagEvent>(e =>
+            {
+                if (e.target is TextElement te && !string.IsNullOrEmpty(e.linkID))
+                    te.tooltip = string.Format(L10n.Tr("Ctrl+Click to open {0}"), e.linkID);
+            }, TrickleDown.TrickleDown);
+            RegisterCallback<PointerOutLinkTagEvent>(e =>
+            {
+                if (e.target is TextElement te) te.tooltip = null;
+            }, TrickleDown.TrickleDown);
         }
 
         public void SetPalette(HighlightTheme.Palette palette)
@@ -270,9 +290,11 @@ namespace ADKOM.TextEditor
             }
 
             // Click-to-edit: swap the block for an inline source editor.
+            // Ctrl+Click is reserved for links (handled by the link-tag
+            // events) and must not open the editor.
             el.RegisterCallback<PointerDownEvent>(e =>
             {
-                if (e.button != 0) return;
+                if (e.button != 0 || e.ctrlKey || e.commandKey) return;
                 BeginBlockEdit(el, block);
                 e.StopPropagation();
             });
@@ -555,12 +577,37 @@ namespace ADKOM.TextEditor
                         int urlEnd = src.IndexOf(')', close + 2);
                         if (urlEnd > close)
                         {
+                            string target = src.Substring(close + 2, urlEnd - close - 2).Split(' ')[0];
+                            bool openable = IsOpenableUrl(target);
+                            if (openable) sb.Append("<link=\"").Append(target).Append("\">");
                             sb.Append("<color=").Append(linkColor).Append("><u>");
                             AppendEscaped(sb, src.Substring(i + 1, close - i - 1));
                             sb.Append("</u></color>");
+                            if (openable) sb.Append("</link>");
                             i = urlEnd + 1;
                             continue;
                         }
+                    }
+                }
+                if ((c == 'h' || c == 'm') && (i == 0 || !char.IsLetterOrDigit(src[i - 1])))
+                {
+                    // Bare URL: linkify http(s)/mailto runs in plain text.
+                    string rest = src.Substring(i);
+                    if (rest.StartsWith("http://") || rest.StartsWith("https://") ||
+                        rest.StartsWith("mailto:"))
+                    {
+                        int end = i;
+                        while (end < n && !char.IsWhiteSpace(src[end]) &&
+                               src[end] != ')' && src[end] != ']' && src[end] != '>' &&
+                               src[end] != '"' && src[end] != '\'') end++;
+                        while (end > i && ".,;:!?".IndexOf(src[end - 1]) >= 0) end--;
+                        string url = src.Substring(i, end - i);
+                        sb.Append("<link=\"").Append(url).Append("\">")
+                          .Append("<color=").Append(linkColor).Append("><u>");
+                        AppendEscaped(sb, url);
+                        sb.Append("</u></color></link>");
+                        i = end;
+                        continue;
                     }
                 }
                 if (c == '<') sb.Append("<noparse><</noparse>");
@@ -569,6 +616,11 @@ namespace ADKOM.TextEditor
             }
             return sb.ToString();
         }
+
+        static bool IsOpenableUrl(string u) =>
+            u.StartsWith("http://", StringComparison.Ordinal) ||
+            u.StartsWith("https://", StringComparison.Ordinal) ||
+            u.StartsWith("mailto:", StringComparison.Ordinal);
 
         static void AppendEscaped(StringBuilder sb, string s)
         {
