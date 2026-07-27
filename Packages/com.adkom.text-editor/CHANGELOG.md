@@ -15,7 +15,12 @@ All notable changes to this package are documented here. Format follows
   differently (a 1px color mis-registration). Every animation frame
   now snaps to a whole pixel.
 - Folded regions now show the whole collapsed shape — the header line
-  ends with a dimmed "⋯ }" instead of a bare "{".
+  ends with a dimmed "⋯ }" instead of a bare "{". Double-clicking the
+  "⋯ }" indicator reopens the region, and double-clicking any '{' or
+  '}' character folds (or unfolds) the region that brace bounds; the
+  gutter arrows are clickable as well.
+- Occurrence highlighting no longer throws when the selection state is
+  momentarily out of sync with the text (clamped; issue #8).
 
 ### Changed
 - Tabs stay on a SINGLE line: the strip clips at the edges, and scroll
