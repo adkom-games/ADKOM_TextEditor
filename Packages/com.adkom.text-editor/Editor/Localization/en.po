@@ -745,3 +745,9 @@ msgstr "Reload Addons"
 
 msgid "Open Addons Folder..."
 msgstr "Open Addons Folder..."
+
+msgid "Install Sample Addons"
+msgstr "Install Sample Addons"
+
+msgid "{0} sample addon(s) installed."
+msgstr "{0} sample addon(s) installed."

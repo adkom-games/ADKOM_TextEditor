@@ -6,6 +6,10 @@ All notable changes to this package are documented here. Format follows
 ## [Unreleased]
 
 ### Added
+- Tools > Addons > Install Sample Addons: copies three ready-to-run
+  sample addons (Hello Addon — resident event subscriber; Insert
+  Timestamp — document editing; Word Count — document reading) from
+  the package into the shared addons folder and loads them.
 - Addons framework: single-file C# addons in the machine-shared
   %APPDATA%/ADKOM/TextEditor/Addons folder load into EVERY ATE
   instance (compiled in-memory by the bundled Roslyn — no project

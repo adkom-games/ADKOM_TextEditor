@@ -743,3 +743,9 @@ msgstr "重新載入附加元件"
 
 msgid "Open Addons Folder..."
 msgstr "開啟附加元件資料夾..."
+
+msgid "Install Sample Addons"
+msgstr "安裝範例附加元件"
+
+msgid "{0} sample addon(s) installed."
+msgstr "已安裝 {0} 個範例附加元件。"

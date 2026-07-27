@@ -743,3 +743,9 @@ msgstr "重新加载插件"
 
 msgid "Open Addons Folder..."
 msgstr "打开插件文件夹..."
+
+msgid "Install Sample Addons"
+msgstr "安装示例插件"
+
+msgid "{0} sample addon(s) installed."
+msgstr "已安装 {0} 个示例插件。"

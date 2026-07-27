@@ -165,6 +165,10 @@ public class HelloAddon : IAteAddonResident
 }
 ```
 
+**Tools > Addons > Install Sample Addons** copies three working
+samples (resident events, document editing, document reading) into the
+folder — the fastest way to start.
+
 Compatibility is semantic versioning against `AteApi.ApiVersion`
 (currently 1.0.0): your declared MAJOR must match and your MINOR must
 not be newer. Incompatible or broken addons stay visible in the menu,
