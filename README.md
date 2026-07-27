@@ -2,6 +2,7 @@
 
 **A real code editor, living right inside the Unity Editor.**
 
+[![Ko-fi](https://img.shields.io/badge/Ko--fi-Support%20ADKOM%20Games-FF5E5B?logo=ko-fi&logoColor=white)](https://ko-fi.com/adkomgames)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](Packages/com.adkom.text-editor/LICENSE.md)
 [![Unity](https://img.shields.io/badge/Unity-6000.0%2B-black.svg)](https://unity.com)
 
