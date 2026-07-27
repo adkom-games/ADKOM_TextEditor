@@ -413,3 +413,39 @@ msgstr "已撤销 {0} 个字符。"
 
 msgid "Redid {0} char(s)."
 msgstr "已重做 {0} 个字符。"
+
+msgid "Join Lines"
+msgstr "合并行"
+
+msgid "Select Line"
+msgstr "选择行"
+
+msgid "Insert Line Above"
+msgstr "在上方插入行"
+
+msgid "Insert Line Below"
+msgstr "在下方插入行"
+
+msgid "Transform"
+msgstr "转换"
+
+msgid "UPPERCASE"
+msgstr "转为大写"
+
+msgid "lowercase"
+msgstr "转为小写"
+
+msgid "Sort Selected Lines"
+msgstr "对所选行排序"
+
+msgid "Trim Trailing Whitespace on Save"
+msgstr "保存时删除行尾空白"
+
+msgid "Ensure Final Newline on Save"
+msgstr "保存时确保文件末尾换行"
+
+msgid "Remove spaces and tabs at line ends when saving (per project)."
+msgstr "保存时删除每行末尾的空格和制表符(按项目)。"
+
+msgid "Guarantee the file ends with exactly one newline when saving (per project)."
+msgstr "保存时保证文件以恰好一个换行结尾(按项目)。"

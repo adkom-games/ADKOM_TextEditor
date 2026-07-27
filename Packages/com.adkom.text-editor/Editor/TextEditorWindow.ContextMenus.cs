@@ -58,9 +58,9 @@ namespace ADKOM.TextEditor
             m.AddSeparator("");
 
             // --- Clipboard ---
-            bool hasSel = _code.HasSelectionPublic;
-            AddOrDisable(m, WithSc("Cut", Dsp("cut")), hasSel, _code.Cut);
-            AddOrDisable(m, WithSc("Copy", Dsp("copy")), hasSel, _code.Copy);
+            // Empty selection = whole-line cut/copy, so always enabled.
+            AddOrDisable(m, WithSc("Cut", Dsp("cut")), true, _code.Cut);
+            AddOrDisable(m, WithSc("Copy", Dsp("copy")), true, _code.Copy);
             AddOrDisable(m, WithSc("Paste", Dsp("paste")),
                 !string.IsNullOrEmpty(EditorGUIUtility.systemCopyBuffer), _code.Paste);
             m.AddItem(new GUIContent(WithSc("Select All", Dsp("select-all"))), false, _code.SelectAll);
