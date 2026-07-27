@@ -25,6 +25,7 @@ namespace ADKOM.TextEditor
         Label _ghostCount;
         List<GhostItem> _ghostItems;
         int _ghostIndex;
+        internal int _ghostExtraRows; // rows the ghost adds past the doc end
         int _ghostLine = -1, _ghostCol = -1, _ghostDocVersion = -1;
 
         internal bool HasGhost => _ghostItems != null && _ghostItems.Count > 0;
@@ -101,9 +102,24 @@ namespace ADKOM.TextEditor
                 _ghostBar.Add(next);
                 _content.Add(_ghostBar);
             }
+            // _textColor can be an unset (black) palette value for some
+            // documents — black at 45% alpha on a dark theme is INVISIBLE
+            // (field report 2026-07-27). Contrast-check against the actual
+            // background and fall back to a readable gray.
             var c = _textColor;
-            _ghost.style.color = new Color(c.r, c.g, c.b, 0.45f);
+            var bg = resolvedStyle.backgroundColor;
+            bool darkBg = bg.grayscale < 0.5f;
+            if (darkBg == (c.grayscale < 0.5f)) // no contrast with background
+                c = darkBg ? new Color(0.85f, 0.85f, 0.85f) : new Color(0.15f, 0.15f, 0.15f);
+            _ghost.style.color = new Color(c.r, c.g, c.b, 0.55f);
             _ghost.text = display;
+            // Multi-line suggestions extend BELOW the last document row; the
+            // content canvas must grow or those lines are clipped invisible
+            // (field report 2026-07-27: arrows visible, no text).
+            _ghostExtraRows = 0;
+            foreach (char ch in display) if (ch == '\n') _ghostExtraRows++;
+            if (_ghostExtraRows > 0)
+                _content.style.height = (_totalRows + _ghostExtraRows) * _lineHeight;
             float x = MeasureRange(_ghostLine, 0, _ghostCol);
             float y = RowOfLine(_ghostLine) * _lineHeight;
             _ghost.style.left = x;
@@ -119,6 +135,7 @@ namespace ADKOM.TextEditor
         internal void ClearGhost()
         {
             _ghostItems = null;
+            _ghostExtraRows = 0;
             if (_ghost != null) _ghost.style.display = DisplayStyle.None;
             if (_ghostBar != null) _ghostBar.style.display = DisplayStyle.None;
         }
