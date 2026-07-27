@@ -584,3 +584,6 @@ msgstr "変更されたファイルを自動再読み込み"
 
 msgid "When a file changes on disk and the buffer has no unsaved edits, reload it automatically instead of asking. Buffers with unsaved edits still ask."
 msgstr "ファイルがディスク上で変更され、バッファに未保存の編集がない場合、確認せずに自動的に再読み込みします。未保存の編集があるバッファは引き続き確認します。"
+
+msgid "There are unsaved documents. Save all of them before closing?"
+msgstr "未保存のドキュメントがあります。閉じる前にすべて保存しますか？"

@@ -584,3 +584,6 @@ msgstr "변경된 파일 자동 다시 불러오기"
 
 msgid "When a file changes on disk and the buffer has no unsaved edits, reload it automatically instead of asking. Buffers with unsaved edits still ask."
 msgstr "디스크에서 파일이 변경되고 버퍼에 저장되지 않은 편집이 없으면 묻지 않고 자동으로 다시 불러옵니다. 저장되지 않은 편집이 있는 버퍼는 계속 확인합니다."
+
+msgid "There are unsaved documents. Save all of them before closing?"
+msgstr "저장되지 않은 문서가 있습니다. 닫기 전에 모두 저장하시겠습니까?"
