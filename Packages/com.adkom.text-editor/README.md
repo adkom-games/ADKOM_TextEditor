@@ -76,6 +76,7 @@ Choose your keyboard layout — **Visual Studio**, **VS Code**, or
 | Add next occurrence | Shift+Alt+. | Ctrl+D | Alt+J |
 | Select all occurrences | Shift+Alt+; | Ctrl+Shift+L | Ctrl+Alt+Shift+J |
 | Add caret above / below | Ctrl+Alt+Up / Down | Ctrl+Alt+Up / Down | Ctrl+Alt+Up / Down |
+| Autocomplete | Ctrl+Space | Ctrl+Space | Ctrl+Space |
 | Goto Line | Ctrl+G | Ctrl+G | Ctrl+G |
 | Open the ATE window | Ctrl+Alt+8 | Ctrl+Alt+8 | Ctrl+Alt+8 |
 

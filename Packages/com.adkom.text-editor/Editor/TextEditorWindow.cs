@@ -241,6 +241,13 @@ namespace ADKOM.TextEditor
             _code.onFontSizeChanged += SyncSettingsControls; // zoom gestures
             _code.onNavigateRequest += NavigateToDefinition;  // Ctrl+Click
             _code.onUndoStatus += PostStatus; // "Undid 12 char(s)." feedback
+            _code.completionTextSources = () =>
+            {
+                var texts = new List<string>();
+                foreach (var d in _docs)
+                    if (!d.IsSettings && d != Active && d.Content != null) texts.Add(d.Content);
+                return texts;
+            };
             _code.RegisterCallback<MouseUpEvent>(OnCodeContextMenu);
             _code.minimapVisible = _minimapVisible;
             _mainCtx = System.Threading.SynchronizationContext.Current;
@@ -1053,8 +1060,13 @@ namespace ADKOM.TextEditor
             // command table (TextEditorWindow.Commands.cs).
             if (e.keyCode == KeyCode.Tab && !ctrl && !e.altKey)
             {
-                if (e.shiftKey) UnindentSelection(); else InsertTab();
-                handled = true;
+                if (_code != null && _code.CompletionVisible)
+                    handled = false; // the completion popup accepts on Tab
+                else
+                {
+                    if (e.shiftKey) UnindentSelection(); else InsertTab();
+                    handled = true;
+                }
             }
             else handled = DispatchCommands(e, CmdScope.Editor);
 

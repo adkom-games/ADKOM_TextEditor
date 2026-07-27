@@ -499,3 +499,6 @@ msgstr "Tab Color"
 
 msgid "Base color of the tab strip; each tab gets its own stable shade of it."
 msgstr "Base color of the tab strip; each tab gets its own stable shade of it."
+
+msgid "Autocomplete"
+msgstr "Autocomplete"
