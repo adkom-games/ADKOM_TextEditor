@@ -626,3 +626,6 @@ msgstr "1 文字をやり直しました。"
 
 msgid "Redid {0} characters."
 msgstr "{0} 文字をやり直しました。"
+
+msgid "Ctrl+Click to open {0}"
+msgstr "Ctrl+クリックで {0} を開く"
