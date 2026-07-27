@@ -47,6 +47,9 @@ namespace ADKOM.TextEditor
 
         static void SetStatus(State s, string detail = "")
         {
+            // The server re-announces its status liberally; only real
+            // transitions reach listeners (was spamming the console).
+            if (s == Status && (detail ?? string.Empty) == StatusDetail) return;
             Status = s;
             StatusDetail = detail ?? string.Empty;
             Post(() => onStatusChanged?.Invoke());

@@ -20,7 +20,8 @@ namespace ADKOM.TextEditor
             public int StartIdx, EndIdx;
         }
 
-        Label _ghost;
+        Label _ghost;      // first line, anchored at the caret x
+        Label _ghostBlock; // lines 2+, anchored at column 0 of the next row
         VisualElement _ghostBar;
         Label _ghostCount;
         List<GhostItem> _ghostItems;
@@ -74,6 +75,12 @@ namespace ADKOM.TextEditor
                 _ghost.pickingMode = PickingMode.Ignore;
                 _ghost.style.whiteSpace = WhiteSpace.Pre;
                 _content.Add(_ghost);
+                _ghostBlock = new Label();
+                _ghostBlock.AddToClassList("code-line");
+                _ghostBlock.style.position = Position.Absolute;
+                _ghostBlock.pickingMode = PickingMode.Ignore;
+                _ghostBlock.style.whiteSpace = WhiteSpace.Pre;
+                _content.Add(_ghostBlock);
 
                 _ghostBar = new VisualElement();
                 _ghostBar.style.position = Position.Absolute;
@@ -114,8 +121,19 @@ namespace ADKOM.TextEditor
             bool darkBg = bg.grayscale < 0.5f;
             if (darkBg == (c.grayscale < 0.5f)) // no contrast with background
                 c = darkBg ? new Color(0.85f, 0.85f, 0.85f) : new Color(0.15f, 0.15f, 0.15f);
-            _ghost.style.color = new Color(c.r, c.g, c.b, 0.55f);
-            _ghost.text = display;
+            var ghostColor = new Color(c.r, c.g, c.b, 0.55f);
+            _ghost.style.color = ghostColor;
+            _ghostBlock.style.color = ghostColor;
+            // First line rides the caret; lines 2+ start at COLUMN 0 of the
+            // following rows — a single caret-anchored label shifted every
+            // continuation line right by the caret x (field report: 'indented
+            // strangely').
+            int nl = display.IndexOf('\n');
+            string firstLine = nl < 0 ? display : display.Substring(0, nl);
+            string block = nl < 0 ? null : display.Substring(nl + 1);
+            _ghost.text = firstLine;
+            _ghostBlock.text = block ?? string.Empty;
+            _ghostBlock.style.display = block != null ? DisplayStyle.Flex : DisplayStyle.None;
             // Multi-line suggestions extend BELOW the last document row; the
             // content canvas must grow or those lines are clipped invisible
             // (field report 2026-07-27: arrows visible, no text).
@@ -128,6 +146,8 @@ namespace ADKOM.TextEditor
             _ghost.style.left = x;
             _ghost.style.top = y;
             _ghost.style.display = DisplayStyle.Flex;
+            _ghostBlock.style.left = 0;
+            _ghostBlock.style.top = y + _lineHeight;
 
             _ghostCount.text = (_ghostIndex + 1) + "/" + _ghostItems.Count;
             _ghostBar.style.left = x;
@@ -140,6 +160,7 @@ namespace ADKOM.TextEditor
             _ghostItems = null;
             _ghostExtraRows = 0;
             if (_ghost != null) _ghost.style.display = DisplayStyle.None;
+            if (_ghostBlock != null) _ghostBlock.style.display = DisplayStyle.None;
             if (_ghostBar != null) _ghostBar.style.display = DisplayStyle.None;
         }
 
