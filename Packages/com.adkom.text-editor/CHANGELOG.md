@@ -22,8 +22,10 @@ All notable changes to this package are documented here. Format follows
   arrows appear on its left and right whenever tabs overflow (the
   active tab auto-scrolls into view; the tab-list dropdown stays at
   the far right).
-- The active tab now stands out: a clearly brighter, fully opaque
-  shade of its color plus an accent top border.
+- Tabs are colored uniformly with the color chosen in Settings (the
+  per-tab random shade variation was retired as too busy); the active
+  tab stands out as a brighter, fully opaque version with an accent
+  top border.
 - Menu-bar buttons get more side padding; hovering/pressing shows only
   the left and right edges of the selection so buttons look bounded on
   the sides.

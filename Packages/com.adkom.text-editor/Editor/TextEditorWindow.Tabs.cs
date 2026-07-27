@@ -170,21 +170,14 @@ namespace ADKOM.TextEditor
             return m;
         }
 
-        /// <summary>A stable per-document shade of the base tab color:
-        /// saturation/value jittered by the document's identity, hue kept.</summary>
+        /// <summary>The settings tab color, uniform for every tab (per-doc
+        /// shade variation was tried and retired 2026-07-27 — too busy). The
+        /// active tab is brighter and fully opaque so it pops; the accent top
+        /// border comes from the .tab--active USS rule.</summary>
         static Color TabShade(Color baseColor, TextDocument doc, bool active)
         {
-            int hash = doc.HasFile ? doc.FilePath.GetHashCode() : doc.DisplayName.GetHashCode();
-            float r1 = ((hash & 0xFFFF) / 65535f);
-            float r2 = (((hash >> 16) & 0xFFFF) / 65535f);
-            Color.RGBToHSV(baseColor, out float h, out float s, out float v);
-            s = Mathf.Clamp01(s * (0.55f + 0.45f * r1));
-            v = Mathf.Clamp01(v * (0.65f + 0.35f * r2));
-            var c = Color.HSVToRGB(h, s, v);
-            // The active tab gets a clearly BRIGHTER, fully opaque version of
-            // its shade so it pops against its neighbors (item 3); the accent
-            // top border comes from the .tab--active USS rule.
-            if (active) { c = Color.Lerp(c, Color.white, 0.35f); c.a = 1f; }
+            var c = baseColor;
+            if (active) { c = Color.Lerp(c, Color.white, 0.25f); c.a = 1f; }
             else c.a = 0.45f;
             return c;
         }
