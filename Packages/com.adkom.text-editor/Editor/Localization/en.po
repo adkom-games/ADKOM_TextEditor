@@ -605,12 +605,6 @@ msgstr "1 reference:"
 msgid "{0} references:"
 msgstr "{0} references:"
 
-msgid "1 reference — see the console."
-msgstr "1 reference — see the console."
-
-msgid "{0} references — see the console."
-msgstr "{0} references — see the console."
-
 msgid "Renamed 1 occurrence in this document."
 msgstr "Renamed 1 occurrence in this document."
 
@@ -715,3 +709,6 @@ msgstr "Unity AI account: {0}"
 
 msgid "Unity account: signed out"
 msgstr "Unity account: signed out"
+
+msgid "Unity AI uses the Unity account the Editor is signed into; manage it from the account menu in the Editor's top-right corner."
+msgstr "Unity AI uses the Unity account the Editor is signed into; manage it from the account menu in the Editor's top-right corner."
