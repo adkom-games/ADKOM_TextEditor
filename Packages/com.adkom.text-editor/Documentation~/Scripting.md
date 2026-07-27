@@ -214,6 +214,27 @@ public class HelloAddon : IAteAddonResident
 }
 ```
 
+### Addon security
+
+Importing any script is inherently dangerous when you don't know the
+source, so ATE gates execution: when an addon is detected its source is
+scanned against a list of known-dangerous API patterns (process
+execution, file deletion, network, native interop, dynamic code
+loading, registry, secrets, prefs wipes, …) and **nothing runs — not
+even resident `OnLoad` — until you approve that addon once**. Picking
+an unapproved addon (marked ⚠ in the menu) opens a **security report
+document** listing every finding with line, severity, and why it's
+risky, plus a non-modal banner: *Approve and Run* or *Not Now*.
+
+Approval is one-time **per addon content**: consent is keyed to the
+file's SHA-256, so any change to the file means a fresh review. The
+store is machine-shared (`%APPDATA%/ADKOM/TextEditor/AddonConsent.json`)
+like the addons folder itself. The scan is textual and deliberately
+over-warns (a match in a comment still flags) — it is a heads-up, not a
+sandbox: approved addons run with full Unity Editor privileges. This
+gate applies to any source ATE compiles to run — folder addons today,
+and any future script/buffer execution path.
+
 **Tools > Addons > Install Sample Addons** copies three working
 samples (resident events, document editing, document reading) into the
 folder — the fastest way to start.

@@ -104,6 +104,16 @@ namespace ADKOM.TextEditor
             CloseTab(_active);
         }
 
+        /// <summary>Addon security consent (AddonSecurity): the non-modal
+        /// banner asking for the one-time approval. The risk report document
+        /// is already open in a tab when this shows.</summary>
+        internal void ShowAddonConsent(string message, System.Action onApprove)
+        {
+            ShowBanner(message,
+                (L10n.Tr("Approve and Run"), () => { HideBanner(); onApprove?.Invoke(); }),
+                (L10n.Tr("Not Now"), HideBanner));
+        }
+
         void BuildMiniBuffer(VisualElement statusBar)
         {
             _miniBuffer = new VisualElement { name = "mini-buffer" };

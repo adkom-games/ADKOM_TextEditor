@@ -34,6 +34,12 @@ namespace ADKOM.TextEditor.Scripting
             public Type Type;          // entry class (null when not loadable)
             public string Error;       // compile/compat/reflection failure
             public bool Compatible => Error == null && Type != null;
+
+            // Security gate (see AddonSecurity): nothing executes until the
+            // user approves this exact file content once.
+            public bool Approved;
+            internal string Hash;
+            internal List<AddonSecurity.Finding> Findings;
         }
 
         static readonly List<Entry> _entries = new List<Entry>();
@@ -117,6 +123,14 @@ namespace ADKOM.TextEditor.Scripting
             _entries.Add(entry);
             try
             {
+                // Security scan BEFORE anything else: hash the exact content,
+                // record findings, and look up prior consent. Compiling below
+                // is safe (nothing executes); execution is gated on Approved.
+                string source = File.ReadAllText(file);
+                entry.Hash = AddonSecurity.Hash(source);
+                entry.Findings = AddonSecurity.Scan(source);
+                entry.Approved = AddonSecurity.IsApproved(file, entry.Hash);
+
                 if (!_compiler.TryCompile(file, out var asm, out var errors))
                 {
                     entry.Error = string.Join("\n", errors);
@@ -203,16 +217,28 @@ namespace ADKOM.TextEditor.Scripting
             foreach (var e in _entries)
             {
                 if (!e.Compatible || !typeof(IAteAddonResident).IsAssignableFrom(e.Type)) continue;
-                try
+                if (!e.Approved)
                 {
-                    var inst = (IAteAddonResident)Activator.CreateInstance(e.Type);
-                    _residents[e.Type] = inst;
-                    inst.OnLoad();
+                    AteConsole.Log(string.Format(
+                        L10n.Tr("Addon '{0}' is awaiting your one-time approval — run it from Tools > Addons to review."),
+                        e.Name));
+                    continue;
                 }
-                catch (Exception ex)
-                {
-                    AteConsole.Warn("[ADKOM Text Editor] Addon OnLoad failed: " + e.Name + " — " + ex.Message);
-                }
+                StartResident(e);
+            }
+        }
+
+        static void StartResident(Entry e)
+        {
+            try
+            {
+                var inst = (IAteAddonResident)Activator.CreateInstance(e.Type);
+                _residents[e.Type] = inst;
+                inst.OnLoad();
+            }
+            catch (Exception ex)
+            {
+                AteConsole.Warn("[ADKOM Text Editor] Addon OnLoad failed: " + e.Name + " — " + ex.Message);
             }
         }
 
@@ -249,20 +275,75 @@ namespace ADKOM.TextEditor.Scripting
             }
         }
 
-        /// <summary>Menu entry point. Residents Run on their single lifecycle
-        /// instance; plain addons are instantiated per Run, fully isolated.</summary>
+        /// <summary>Menu entry point. Unapproved addons get the consent flow
+        /// (risk report + banner) instead of running. Residents Run on their
+        /// single lifecycle instance; plain addons are instantiated per Run.</summary>
         public static void Run(Entry e)
         {
             if (!e.Compatible) return;
+            if (!e.Approved) { RequestConsent(e); return; }
+            RunApproved(e);
+        }
+
+        static void RunApproved(Entry e)
+        {
             try
             {
                 if (_residents.TryGetValue(e.Type, out var resident)) resident.Run();
+                else if (typeof(IAteAddonResident).IsAssignableFrom(e.Type))
+                {
+                    // First run after an in-session approval: bring the
+                    // resident up properly (OnLoad, single instance), then Run.
+                    StartResident(e);
+                    if (_residents.TryGetValue(e.Type, out var started)) started.Run();
+                }
                 else ((IAteAddon)Activator.CreateInstance(e.Type)).Run();
             }
             catch (Exception ex)
             {
                 AteConsole.Warn("[ADKOM Text Editor] Addon failed: " + e.Name + " — " + ex.Message);
             }
+        }
+
+        /// <summary>The one-time consent flow: writes the risk summary
+        /// document, opens it in ATE, and shows the non-modal approval
+        /// banner. Approval persists (keyed to the file's content hash) and
+        /// the addon then runs.</summary>
+        static void RequestConsent(Entry e)
+        {
+            string report = AddonSecurity.BuildReport(e.Name, e.File, e.Findings, e.Hash);
+            string reportPath = null;
+            try
+            {
+                string dir = Path.Combine(AddonsFolder, ".security-reports");
+                Directory.CreateDirectory(dir);
+                reportPath = Path.Combine(dir,
+                    Path.GetFileNameWithoutExtension(e.File) + ".security.md");
+                File.WriteAllText(reportPath, report);
+            }
+            catch (Exception ex)
+            {
+                AteConsole.Warn("[ADKOM Text Editor] Could not write security report: " + ex.Message);
+            }
+
+            TextEditorWindow.Open();
+            var all = UnityEngine.Resources.FindObjectsOfTypeAll<TextEditorWindow>();
+            var w = all.Length > 0 ? all[0] : null;
+            if (w == null) return;
+            if (reportPath != null) TextEditorWindow.OpenExternal(reportPath, 1, 1);
+            int high = 0;
+            if (e.Findings != null) foreach (var f in e.Findings) if (f.High) high++;
+            string msg = e.Findings != null && e.Findings.Count > 0
+                ? string.Format(L10n.Tr("Addon '{0}' uses {1} potentially dangerous API(s) ({2} high severity) — review the report, then approve to run it. Approval is one-time for this exact file content."),
+                    e.Name, e.Findings.Count, high)
+                : string.Format(L10n.Tr("Addon '{0}': no dangerous APIs detected, but addons run with full editor privileges. Approve to run it (one-time for this exact file content)."),
+                    e.Name);
+            w.ShowAddonConsent(msg, () =>
+            {
+                AddonSecurity.Approve(e.File, e.Hash);
+                e.Approved = true;
+                RunApproved(e);
+            });
         }
 
         /// <summary>Copies the sample addons shipped with the package
