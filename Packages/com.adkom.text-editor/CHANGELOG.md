@@ -9,6 +9,9 @@ All notable changes to this package are documented here. Format follows
 - The notification banner (sign-in codes, file conflicts) is now RED,
   bold, white-on-red and roomier — impossible to miss, no more
   squished text.
+- Copilot suggestions show a small ◂ 1/3 ▸ cycler above the ghost
+  text when alternatives exist — click the arrows or press Alt+[ /
+  Alt+] to cycle; Tab OR Enter accepts, Escape dismisses.
 - Copilot ghost text now honors the suggestion's REPLACE RANGE:
   accepting a suggestion replaces the text Copilot rewrote (e.g. the
   auto-closed paren after the caret) instead of inserting a duplicate;

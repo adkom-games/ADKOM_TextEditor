@@ -1551,6 +1551,7 @@ namespace ADKOM.TextEditor
                 case KeyCode.Return:
                 case KeyCode.KeypadEnter:
                 {
+                    if (HasGhost && AcceptGhost()) break; // Enter accepts Copilot ghost
                     if (HasMultiCarets) { MultiType("\n"); break; }
                     // Auto-indent: copy the current line's leading spaces.
                     string line = _lines[_caretLine];
@@ -1607,6 +1608,12 @@ namespace ADKOM.TextEditor
                     ReplaceRangeInternal(idx, idx + count, string.Empty, idx, EditKind.ForwardDelete);
                     break;
                 }
+                case KeyCode.LeftBracket when e.altKey && HasGhost:
+                    CycleGhost(-1);
+                    break;
+                case KeyCode.RightBracket when e.altKey && HasGhost:
+                    CycleGhost(1);
+                    break;
                 case KeyCode.Escape:
                     if (HasGhost) ClearGhost();
                     else if (HasMultiCarets) CollapseExtraCarets();

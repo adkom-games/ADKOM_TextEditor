@@ -1,48 +1,67 @@
 #if UNITY_EDITOR
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace ADKOM.TextEditor
 {
-    // Ghost text: a gray inline suggestion (Copilot) drawn at the caret.
-    // The suggestion REPLACES a document range (Copilot rewrites text around
-    // the caret, e.g. a "()" the user already typed); the ghost shows only
-    // the part beyond the caret. Tab accepts, Escape dismisses, and any edit
-    // or caret move clears it.
+    // Ghost text: gray inline Copilot suggestions drawn at the caret, with a
+    // small "◂ 1/3 ▸" cycler when there are alternatives. Each suggestion
+    // REPLACES a document range (Copilot rewrites text around the caret);
+    // the ghost shows only the part beyond the caret. Tab OR Enter accepts,
+    // Alt+[ / Alt+] (or the buttons) cycle, Escape dismisses, and any edit
+    // or caret move clears.
     public partial class CodeView
     {
+        internal struct GhostItem
+        {
+            public string Text;
+            public int StartIdx, EndIdx;
+        }
+
         Label _ghost;
-        string _ghostFull;                 // full replacement text
-        int _ghostStartIdx, _ghostEndIdx;  // document range being replaced
+        VisualElement _ghostBar;
+        Label _ghostCount;
+        List<GhostItem> _ghostItems;
+        int _ghostIndex;
         int _ghostLine = -1, _ghostCol = -1, _ghostDocVersion = -1;
 
-        internal bool HasGhost => _ghostFull != null;
+        internal bool HasGhost => _ghostItems != null && _ghostItems.Count > 0;
 
-        /// <summary>Shows a suggestion replacing [startIdx, endIdx); it is
-        /// dropped if the document or caret moved during the round-trip.</summary>
-        internal void ShowGhost(string text, int startIdx, int endIdx,
-            int forLine, int forCol, int forVersion)
+        internal void ShowGhost(List<GhostItem> items, int forLine, int forCol, int forVersion)
         {
-            if (string.IsNullOrEmpty(text) ||
+            if (items == null || items.Count == 0 ||
                 forLine != _caretLine || forCol != _caretCol || forVersion != DocVersion)
             { ClearGhost(); return; }
-            string doc = GetValueInternal();
-            int caretIdx = LineColToIndex(_caretLine, _caretCol);
-            startIdx = Mathf.Clamp(startIdx, 0, doc.Length);
-            endIdx = Mathf.Clamp(endIdx, startIdx, doc.Length);
-            if (caretIdx < startIdx || caretIdx > endIdx) { ClearGhost(); return; }
-            // Display only what the caret does not already show: the part of
-            // the replacement that follows the already-typed prefix.
-            string typedPrefix = doc.Substring(startIdx, caretIdx - startIdx);
-            string display = text.StartsWith(typedPrefix) ? text.Substring(typedPrefix.Length) : text;
-            if (display.Length == 0) { ClearGhost(); return; }
-            _ghostFull = text;
-            _ghostStartIdx = startIdx;
-            _ghostEndIdx = endIdx;
+            _ghostItems = items;
+            _ghostIndex = 0;
             _ghostLine = forLine;
             _ghostCol = forCol;
             _ghostDocVersion = forVersion;
+            PaintGhost();
+        }
+
+        internal void CycleGhost(int dir)
+        {
+            if (!HasGhost || _ghostItems.Count < 2) return;
+            _ghostIndex = (_ghostIndex + dir + _ghostItems.Count) % _ghostItems.Count;
+            PaintGhost();
+        }
+
+        void PaintGhost()
+        {
+            var it = _ghostItems[_ghostIndex];
+            string doc = GetValueInternal();
+            int caretIdx = LineColToIndex(_ghostLine, _ghostCol);
+            int s = Mathf.Clamp(it.StartIdx, 0, doc.Length);
+            int e = Mathf.Clamp(it.EndIdx, s, doc.Length);
+            if (caretIdx < s || caretIdx > e) { ClearGhost(); return; }
+            string typedPrefix = doc.Substring(s, caretIdx - s);
+            string display = it.Text.StartsWith(typedPrefix)
+                ? it.Text.Substring(typedPrefix.Length) : it.Text;
+            if (display.Length == 0) { ClearGhost(); return; }
+
             if (_ghost == null)
             {
                 _ghost = new Label();
@@ -51,32 +70,70 @@ namespace ADKOM.TextEditor
                 _ghost.pickingMode = PickingMode.Ignore;
                 _ghost.style.whiteSpace = WhiteSpace.Pre;
                 _content.Add(_ghost);
+
+                _ghostBar = new VisualElement();
+                _ghostBar.style.position = Position.Absolute;
+                _ghostBar.style.flexDirection = FlexDirection.Row;
+                _ghostBar.style.backgroundColor = new Color(0.14f, 0.14f, 0.15f, 0.95f);
+                var bc = new Color(0.5f, 0.5f, 0.5f, 0.6f);
+                _ghostBar.style.borderLeftWidth = _ghostBar.style.borderRightWidth = 1;
+                _ghostBar.style.borderTopWidth = _ghostBar.style.borderBottomWidth = 1;
+                _ghostBar.style.borderLeftColor = _ghostBar.style.borderRightColor = bc;
+                _ghostBar.style.borderTopColor = _ghostBar.style.borderBottomColor = bc;
+                var prev = new Button(() => CycleGhost(-1)) { text = "◂" };
+                var next = new Button(() => CycleGhost(1)) { text = "▸" };
+                foreach (var b in new[] { prev, next })
+                {
+                    b.style.marginLeft = b.style.marginRight = 0;
+                    b.style.paddingLeft = b.style.paddingRight = 3;
+                    b.style.backgroundColor = Color.clear;
+                    b.style.borderLeftWidth = b.style.borderRightWidth = 0;
+                    b.style.borderTopWidth = b.style.borderBottomWidth = 0;
+                    b.style.fontSize = 9;
+                }
+                _ghostCount = new Label();
+                _ghostCount.style.fontSize = 9;
+                _ghostCount.style.unityTextAlign = TextAnchor.MiddleCenter;
+                _ghostCount.style.paddingLeft = _ghostCount.style.paddingRight = 2;
+                _ghostCount.tooltip = L10n.Tr("Tab or Enter accepts; Alt+[ / Alt+] cycle; Escape dismisses.");
+                _ghostBar.Add(prev);
+                _ghostBar.Add(_ghostCount);
+                _ghostBar.Add(next);
+                _content.Add(_ghostBar);
             }
             var c = _textColor;
             _ghost.style.color = new Color(c.r, c.g, c.b, 0.45f);
             _ghost.text = display;
-            _ghost.style.left = MeasureRange(_ghostLine, 0, _ghostCol);
-            _ghost.style.top = RowOfLine(_ghostLine) * _lineHeight;
+            float x = MeasureRange(_ghostLine, 0, _ghostCol);
+            float y = RowOfLine(_ghostLine) * _lineHeight;
+            _ghost.style.left = x;
+            _ghost.style.top = y;
             _ghost.style.display = DisplayStyle.Flex;
+
+            _ghostCount.text = (_ghostIndex + 1) + "/" + _ghostItems.Count;
+            _ghostBar.style.left = x;
+            _ghostBar.style.top = Mathf.Max(0, y - _lineHeight - 4);
+            _ghostBar.style.display = DisplayStyle.Flex;
         }
 
         internal void ClearGhost()
         {
-            _ghostFull = null;
+            _ghostItems = null;
             if (_ghost != null) _ghost.style.display = DisplayStyle.None;
+            if (_ghostBar != null) _ghostBar.style.display = DisplayStyle.None;
         }
 
-        /// <summary>Accepts the suggestion (Tab): REPLACES the suggestion's
-        /// whole range with its text — one undo step.</summary>
+        /// <summary>Accepts the current suggestion (Tab or Enter): REPLACES
+        /// its whole range with its text — one undo step.</summary>
         internal bool AcceptGhost()
         {
-            if (_ghostFull == null) return false;
+            if (!HasGhost) return false;
             if (_ghostLine != _caretLine || _ghostCol != _caretCol || _ghostDocVersion != DocVersion)
             { ClearGhost(); return false; }
-            string t = _ghostFull;
-            int s = _ghostStartIdx, e = _ghostEndIdx;
+            var it = _ghostItems[_ghostIndex];
             ClearGhost();
-            ReplaceRangeInternal(s, e, t, s + t.Length, EditKind.Paste);
+            ReplaceRangeInternal(it.StartIdx, it.EndIdx, it.Text,
+                it.StartIdx + it.Text.Length, EditKind.Paste);
             return true;
         }
     }
