@@ -485,3 +485,15 @@ msgstr "在上方新增游標"
 
 msgid "Add Caret Below"
 msgstr "在下方新增游標"
+
+msgid "Open Tabs"
+msgstr "開啟的分頁"
+
+msgid "Tabs"
+msgstr "分頁"
+
+msgid "Tab Color"
+msgstr "分頁顏色"
+
+msgid "Base color of the tab strip; each tab gets its own stable shade of it."
+msgstr "分頁列的基礎顏色;每個分頁顯示為其固定的色調變化。"

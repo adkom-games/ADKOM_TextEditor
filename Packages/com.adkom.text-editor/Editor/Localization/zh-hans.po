@@ -485,3 +485,15 @@ msgstr "在上方添加光标"
 
 msgid "Add Caret Below"
 msgstr "在下方添加光标"
+
+msgid "Open Tabs"
+msgstr "打开的标签页"
+
+msgid "Tabs"
+msgstr "标签页"
+
+msgid "Tab Color"
+msgstr "标签页颜色"
+
+msgid "Base color of the tab strip; each tab gets its own stable shade of it."
+msgstr "标签栏的基础颜色;每个标签页显示为其固定的色调变化。"

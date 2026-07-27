@@ -230,6 +230,17 @@ namespace ADKOM.TextEditor
             return tabs;
         }
 
+        const string TabColorKey = "ADKOM.TextEditor.TabColor";
+
+        /// <summary>Base color for the tab strip; each tab renders a stable
+        /// per-document shade of it. Machine-wide preference.</summary>
+        public static Color TabColor
+        {
+            get => ColorUtility.TryParseHtmlString(
+                EditorPrefs.GetString(TabColorKey, "#4A6A8A"), out var c) ? c : new Color(0.29f, 0.42f, 0.54f);
+            set => EditorPrefs.SetString(TabColorKey, "#" + ColorUtility.ToHtmlStringRGB(value));
+        }
+
         const string AutoCloseKey = "ADKOM.TextEditor.AutoCloseBrackets";
 
         /// <summary>Auto-closing pairs while typing (machine-wide preference,

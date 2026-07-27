@@ -485,3 +485,15 @@ msgstr "上にカーソルを追加"
 
 msgid "Add Caret Below"
 msgstr "下にカーソルを追加"
+
+msgid "Open Tabs"
+msgstr "開いているタブ"
+
+msgid "Tabs"
+msgstr "タブ"
+
+msgid "Tab Color"
+msgstr "タブの色"
+
+msgid "Base color of the tab strip; each tab gets its own stable shade of it."
+msgstr "タブバーの基本色。各タブはその色の固有の濃淡で表示されます。"
