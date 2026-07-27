@@ -701,3 +701,15 @@ msgstr "添付した選択範囲について質問…"
 
 msgid "Ask about the attached document…"
 msgstr "添付したドキュメントについて質問…"
+
+msgid "Sign the whole Unity Editor out of {0}? Unity AI (and every other cloud feature) disconnects until you sign in again."
+msgstr "Unity エディター全体を {0} からサインアウトしますか？再サインインまで Unity AI（および他のクラウド機能）は切断されます。"
+
+msgid "Sign Out of Unity Account…"
+msgstr "Unity アカウントからサインアウト…"
+
+msgid "Unity AI account: {0}"
+msgstr "Unity AI アカウント: {0}"
+
+msgid "Unity account: signed out"
+msgstr "Unity アカウント: サインアウト済み"

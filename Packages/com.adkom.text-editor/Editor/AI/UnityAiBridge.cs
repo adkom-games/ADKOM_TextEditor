@@ -40,6 +40,39 @@ namespace ADKOM.TextEditor
             }
         }
 
+        /// <summary>The Unity account the Editor (and thus Unity AI) is
+        /// signed into, or null when signed out.</summary>
+        public static string UnityAccountName
+        {
+            get
+            {
+                string n = CloudProjectSettings.userName;
+                return string.IsNullOrEmpty(n) || n == "anonymous" ? null : n;
+            }
+        }
+
+        /// <summary>Signs the WHOLE Unity Editor out of its Unity account
+        /// (Unity AI has no narrower sign-out — it rides the Editor login).
+        /// Internal API via reflection; returns false if unavailable.</summary>
+        public static bool SignOutUnityAccount()
+        {
+            try
+            {
+                var t = typeof(EditorApplication).Assembly.GetType("UnityEditor.Connect.UnityConnect");
+                var inst = t?.GetProperty("instance",
+                    BindingFlags.Public | BindingFlags.Static)?.GetValue(null);
+                var logout = t?.GetMethod("Logout", BindingFlags.Public | BindingFlags.Instance);
+                if (inst == null || logout == null) return false;
+                logout.Invoke(inst, null);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                AteConsole.Warn("[ADKOM Text Editor] Unity account sign-out failed: " + ex.Message);
+                return false;
+            }
+        }
+
         /// <summary>Opens Assistant's prompt popup anchored to
         /// <paramref name="anchor"/>, with <paramref name="payload"/> attached
         /// as a virtual text document. The prompt is typed by the user; an AI

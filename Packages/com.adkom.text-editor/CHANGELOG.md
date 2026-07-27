@@ -9,6 +9,11 @@ All notable changes to this package are documented here. Format follows
 - The notification banner (sign-in codes, file conflicts) is now RED,
   bold, white-on-red and roomier — impossible to miss, no more
   squished text.
+- AI account controls in Settings: the Copilot row's button flips to
+  Sign Out once signed in, and a Unity AI row shows the Editor's Unity
+  account with a banner-confirmed 'Sign Out of Unity Account…' button
+  (Unity AI has no narrower sign-out — it rides the Editor login, so
+  the confirmation spells out that it signs out the whole Editor).
 - Ask Unity AI (when com.unity.ai.assistant is installed): 'Ask Unity
   AI About Selection...' and '...About This File...' in the document
   right-click menu and the Tools menu open Unity Assistant's prompt
