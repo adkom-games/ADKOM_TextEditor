@@ -225,6 +225,10 @@ namespace ADKOM.TextEditor
 
         void CreateGUI()
         {
+            // Never let Unity's modal close-prompt arm itself (a serialized
+            // leftover from the reverted hasUnsavedChanges approach would
+            // block the main loop + MCP on close).
+            hasUnsavedChanges = false;
             if (_docs.Count == 0) RestoreSession();
             EnsureDocs();
             StartSessionAutosave();
@@ -1422,7 +1426,6 @@ namespace ADKOM.TextEditor
 
         void UpdateTitle()
         {
-            SyncUnsavedChangesFlag();
             if (!HasDocs)
             {
                 titleContent = new GUIContent("ATE", "ADKOM Text Editor");
@@ -1433,27 +1436,11 @@ namespace ADKOM.TextEditor
                 Active.HasFile ? Active.FilePath : "New unsaved document");
         }
 
-        /// <summary>Closing the WINDOW with dirty documents asks ONCE for all
-        /// of them (Unity's built-in Save/Discard/Cancel dialog, driven by
-        /// hasUnsavedChanges). Save runs Save All; untitled documents still
-        /// get their unavoidable Save As prompt. Discard keeps the buffers in
-        /// the persisted session, so nothing is truly lost either way.</summary>
-        void SyncUnsavedChangesFlag()
-        {
-            bool anyDirty = false;
-            for (int i = 0; i < _docs.Count; i++)
-                if (!_docs[i].IsSettings && _docs[i].IsDirty) { anyDirty = true; break; }
-            hasUnsavedChanges = anyDirty;
-            if (anyDirty)
-                saveChangesMessage = L10n.Tr("There are unsaved documents. Save all of them before closing?");
-        }
-
-        public override void SaveChanges()
-        {
-            SaveAll();
-            base.SaveChanges();
-            SyncUnsavedChangesFlag(); // an untitled doc's cancelled Save As stays dirty
-        }
+        // NOTE (2026-07-27): an earlier hasUnsavedChanges/SaveChanges approach
+        // was reverted — it raises a MODAL dialog on close/quit, which blocks
+        // the editor main loop (and the MCP server). The non-modal replacement
+        // is AteUnsavedNotice (popup after close) + the reopen banner; unsaved
+        // content is never at risk because the session persists it.
 
         void UpdateStatus()
         {

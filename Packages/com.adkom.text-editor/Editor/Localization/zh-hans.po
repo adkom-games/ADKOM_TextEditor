@@ -587,3 +587,24 @@ msgstr "当文件在磁盘上发生更改且缓冲区没有未保存的编辑时
 
 msgid "There are unsaved documents. Save all of them before closing?"
 msgstr "存在未保存的文档。关闭前全部保存吗？"
+
+msgid "ATE — Unsaved Documents"
+msgstr "ATE — 未保存的文档"
+
+msgid "The editor closed with {0} unsaved document(s)."
+msgstr "编辑器关闭时有 {0} 个未保存的文档。"
+
+msgid "Nothing is lost — they are kept in your session and will reopen with the window."
+msgstr "没有任何丢失 — 它们保存在会话中，将随窗口重新打开。"
+
+msgid "Save All Now"
+msgstr "立即全部保存"
+
+msgid "Keep in Session"
+msgstr "保留在会话中"
+
+msgid "{0} document(s) have unsaved changes from your last session."
+msgstr "上次会话中有 {0} 个文档存在未保存的更改。"
+
+msgid "Dismiss"
+msgstr "关闭"
