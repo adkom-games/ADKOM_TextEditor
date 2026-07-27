@@ -40,6 +40,9 @@ namespace ADKOM.TextEditor
             _ghostLine = forLine;
             _ghostCol = forCol;
             _ghostDocVersion = forVersion;
+            // Copilot wins the screen: the word-autocomplete popup fights the
+            // ghost for the same space, so it yields when a suggestion lands.
+            HideCompletion();
             PaintGhost();
         }
 
