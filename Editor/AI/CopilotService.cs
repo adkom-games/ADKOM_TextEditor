@@ -339,7 +339,7 @@ namespace ADKOM.TextEditor
         /// REPLACES the given range — Copilot rewrites text around the caret,
         /// e.g. a "()" the user already typed) or null.</summary>
         public static void RequestCompletion(string path, int line, int character,
-            Action<Suggestion?> onResult)
+            Action<List<Suggestion>> onResult)
         {
             if (Status != State.Ready || _openUri == null) { onResult?.Invoke(null); return; }
             Request("textDocument/inlineCompletion", new JObject
@@ -351,16 +351,15 @@ namespace ADKOM.TextEditor
                 { ["tabSize"] = EditorConfig.TabSize, ["insertSpaces"] = true }
             }, (res, err) =>
             {
-                Suggestion? sug = null;
+                var result = new List<Suggestion>();
                 try
                 {
                     var items = res?["items"] as JArray;
-                    if (items != null && items.Count > 0)
-                    {
-                        var it = items[0];
-                        string text = it?["insertText"]?.ToString();
-                        if (!string.IsNullOrEmpty(text))
+                    if (items != null)
+                        foreach (var it in items)
                         {
+                            string text = it?["insertText"]?.ToString();
+                            if (string.IsNullOrEmpty(text)) continue;
                             var sg = new Suggestion { Text = text };
                             var range = it["range"];
                             if (range != null)
@@ -376,12 +375,11 @@ namespace ADKOM.TextEditor
                                 sg.StartLine = sg.EndLine = line;
                                 sg.StartChar = sg.EndChar = character;
                             }
-                            sug = sg;
+                            result.Add(sg);
                         }
-                    }
                 }
                 catch (Exception) { }
-                Post(() => onResult?.Invoke(sug));
+                Post(() => onResult?.Invoke(result.Count > 0 ? result : null));
             });
         }
 
