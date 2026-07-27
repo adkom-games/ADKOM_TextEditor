@@ -21,6 +21,10 @@ namespace ADKOM.TextEditor.Scripting
     /// </summary>
     public static class AteApi
     {
+        /// <summary>The AteApi semantic version. Addons declare the version
+        /// they target; MAJOR must match and their MINOR must not be newer.</summary>
+        public const string ApiVersion = "1.0.0";
+
         // ---- Events (VS Code-shaped) ----
 
         /// <summary>A document tab was opened (file, untitled, or restored).</summary>
