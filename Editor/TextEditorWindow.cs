@@ -1577,6 +1577,7 @@ namespace ADKOM.TextEditor
                         (L10n.Tr("OK"), HideBanner));
                     break;
                 case CopilotService.State.Ready:
+                    HideBanner(); // the sign-in code prompt is done with
                     PostStatus(L10n.Tr("Copilot is ready."));
                     break;
                 case CopilotService.State.Error:
