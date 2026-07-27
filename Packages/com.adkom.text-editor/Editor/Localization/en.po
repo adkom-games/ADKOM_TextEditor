@@ -586,3 +586,6 @@ msgstr "Auto-Reload Changed Files"
 
 msgid "When a file changes on disk and the buffer has no unsaved edits, reload it automatically instead of asking. Buffers with unsaved edits still ask."
 msgstr "When a file changes on disk and the buffer has no unsaved edits, reload it automatically instead of asking. Buffers with unsaved edits still ask."
+
+msgid "There are unsaved documents. Save all of them before closing?"
+msgstr "There are unsaved documents. Save all of them before closing?"

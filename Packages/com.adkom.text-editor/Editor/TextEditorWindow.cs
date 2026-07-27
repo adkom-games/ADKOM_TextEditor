@@ -1422,6 +1422,7 @@ namespace ADKOM.TextEditor
 
         void UpdateTitle()
         {
+            SyncUnsavedChangesFlag();
             if (!HasDocs)
             {
                 titleContent = new GUIContent("ATE", "ADKOM Text Editor");
@@ -1430,6 +1431,28 @@ namespace ADKOM.TextEditor
             EnsureDocs();
             titleContent = new GUIContent("ATE - " + (Active.IsDirty ? "*" : "") + Active.DisplayName,
                 Active.HasFile ? Active.FilePath : "New unsaved document");
+        }
+
+        /// <summary>Closing the WINDOW with dirty documents asks ONCE for all
+        /// of them (Unity's built-in Save/Discard/Cancel dialog, driven by
+        /// hasUnsavedChanges). Save runs Save All; untitled documents still
+        /// get their unavoidable Save As prompt. Discard keeps the buffers in
+        /// the persisted session, so nothing is truly lost either way.</summary>
+        void SyncUnsavedChangesFlag()
+        {
+            bool anyDirty = false;
+            for (int i = 0; i < _docs.Count; i++)
+                if (!_docs[i].IsSettings && _docs[i].IsDirty) { anyDirty = true; break; }
+            hasUnsavedChanges = anyDirty;
+            if (anyDirty)
+                saveChangesMessage = L10n.Tr("There are unsaved documents. Save all of them before closing?");
+        }
+
+        public override void SaveChanges()
+        {
+            SaveAll();
+            base.SaveChanges();
+            SyncUnsavedChangesFlag(); // an untitled doc's cancelled Save As stays dirty
         }
 
         void UpdateStatus()

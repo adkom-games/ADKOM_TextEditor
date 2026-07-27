@@ -584,3 +584,6 @@ msgstr "自动重新加载已更改的文件"
 
 msgid "When a file changes on disk and the buffer has no unsaved edits, reload it automatically instead of asking. Buffers with unsaved edits still ask."
 msgstr "当文件在磁盘上发生更改且缓冲区没有未保存的编辑时，自动重新加载而不再询问。有未保存编辑的缓冲区仍会询问。"
+
+msgid "There are unsaved documents. Save all of them before closing?"
+msgstr "存在未保存的文档。关闭前全部保存吗？"
