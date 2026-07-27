@@ -603,12 +603,6 @@ msgstr "1 件の参照:"
 msgid "{0} references:"
 msgstr "{0} 件の参照:"
 
-msgid "1 reference — see the console."
-msgstr "1 件の参照 — コンソールを参照してください。"
-
-msgid "{0} references — see the console."
-msgstr "{0} 件の参照 — コンソールを参照してください。"
-
 msgid "Renamed 1 occurrence in this document."
 msgstr "このドキュメント内の 1 件を名前変更しました。"
 
@@ -713,3 +707,6 @@ msgstr "Unity AI アカウント: {0}"
 
 msgid "Unity account: signed out"
 msgstr "Unity アカウント: サインアウト済み"
+
+msgid "Unity AI uses the Unity account the Editor is signed into; manage it from the account menu in the Editor's top-right corner."
+msgstr "Unity AI はエディターがサインインしている Unity アカウントを使用します。エディター右上のアカウントメニューから管理してください。"

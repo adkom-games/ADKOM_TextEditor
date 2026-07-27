@@ -163,13 +163,14 @@ namespace ADKOM.TextEditor
                         PostStatus(L10n.Tr("No references found."));
                         return;
                     }
-                    AteConsole.Log("── " + (refs.Count == 1 ? L10n.Tr("1 reference:")
-                        : string.Format(L10n.Tr("{0} references:"), refs.Count)));
+                    // Results picker, not a console dump (Cary, 2026-07-27):
+                    // pick an entry to jump there, opening the file if needed.
+                    var items = new List<PickLocation>(refs.Count);
                     foreach (var r in refs)
-                        AteConsole.Log($"  {r.Path}:{r.Line + 1}:{r.Column + 1}: {r.LineText}");
-                    SetConsoleVisible(true);
-                    PostStatus(refs.Count == 1 ? L10n.Tr("1 reference — see the console.")
-                        : string.Format(L10n.Tr("{0} references — see the console."), refs.Count));
+                        items.Add(new PickLocation
+                        { Path = r.Path, Line = r.Line, Col = r.Column, Preview = r.LineText });
+                    ShowResultsPicker(refs.Count == 1 ? L10n.Tr("1 reference:")
+                        : string.Format(L10n.Tr("{0} references:"), refs.Count), items);
                 }, null);
             });
         }
