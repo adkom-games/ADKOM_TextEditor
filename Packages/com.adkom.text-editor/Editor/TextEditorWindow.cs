@@ -285,12 +285,20 @@ namespace ADKOM.TextEditor
             _notifyBar.style.flexDirection = FlexDirection.Row;
             _notifyBar.style.alignItems = Align.Center;
             _notifyBar.style.paddingLeft = 8;
-            _notifyBar.style.paddingTop = 2;
-            _notifyBar.style.paddingBottom = 2;
-            _notifyBar.style.backgroundColor = new Color(0.55f, 0.45f, 0.15f, 0.25f);
+            _notifyBar.style.paddingRight = 8;
+            _notifyBar.style.paddingTop = 6;
+            _notifyBar.style.paddingBottom = 6;
+            // RED, mostly opaque: these are must-see moments (sign-in codes,
+            // file conflicts) — the old dim amber was easy to miss (Cary,
+            // 2026-07-27), and tight padding squished the wrapped text.
+            _notifyBar.style.backgroundColor = new Color(0.72f, 0.13f, 0.13f, 0.92f);
             _notifyLabel = new Label();
             _notifyLabel.style.flexGrow = 1;
+            _notifyLabel.style.flexShrink = 1;
             _notifyLabel.style.whiteSpace = WhiteSpace.Normal;
+            _notifyLabel.style.color = Color.white;
+            _notifyLabel.style.fontSize = 13;
+            _notifyLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
             _notifyBar.Add(_notifyLabel);
             _notifyButtons = new VisualElement();
             _notifyButtons.style.flexDirection = FlexDirection.Row;
