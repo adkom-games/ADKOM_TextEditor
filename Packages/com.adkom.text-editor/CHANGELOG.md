@@ -9,6 +9,10 @@ All notable changes to this package are documented here. Format follows
 - The notification banner (sign-in codes, file conflicts) is now RED,
   bold, white-on-red and roomier — impossible to miss, no more
   squished text.
+- When a Copilot suggestion arrives, the word-autocomplete popup
+  hides automatically — the two no longer fight for the same screen
+  space (Copilot wins; the popup returns as you keep typing whenever
+  no suggestion is showing).
 - Copilot suggestions show a small ◂ 1/3 ▸ cycler above the ghost
   text when alternatives exist — click the arrows or press Alt+[ /
   Alt+] to cycle; Tab OR Enter accepts, Escape dismisses.
