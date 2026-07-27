@@ -16,7 +16,7 @@ with the host project.
   to main (`git subtree split`).
 - **Install:** `https://github.com/adkom-games/ADKOM_TextEditor.git#upm`
   (pinned: `#0.1.0`).
-- **Last updated:** 2026-07-26
+- **Last updated:** 2026-07-27
 - **Active branch:** main (feature branches merged with --no-ff and kept)
 
 ## Milestones
@@ -54,6 +54,7 @@ with the host project.
 | Release 0.8.0 (published 2026-07-26) | Done |
 | QoL wave: View menu, Recent Files, Goto Line, deleted-file rescue, session persistence, non-modal unsaved, menu shortcuts, doc context menu, drag tabs, word-level undo, localization | Done |
 | Release 0.9.0 (published 2026-07-26) | Done |
+| 0.10.0 feature campaign: ALL 19 must-have editor features (7 batches, 2026-07-27) | Done (unreleased) |
 | More languages; custom themes | Future (roadmap) |
 
 ## Current work area
@@ -112,7 +113,18 @@ is verified live in the editor.
    Open: issue #6 — wrap freeze on single-monster-line files. Window is now partial classes:
    core + Commands/Menus/Tabs/Session/Banners/ContextMenus/Semantics/
    Api — new window code goes in the matching partial.
-3. Roadmap candidates: JSON formatters, custom themes,
+3. CAMPAIGN COMPLETE 2026-07-27: all 19 Features.md must-haves are
+   merged to main as [Unreleased], each batch live-verified (~150
+   assertions total) with both CI gates green. Batches: 1 editing
+   primitives, 2 structural editing, 3 multi-caret, 4 autocomplete
+   (+ language keywords), 5 folding + indent guides, 6 rename/
+   references/format, 7 quick open + bookmarks + drag-drop text;
+   plus Tab UX (dropdown, Tabs context submenu, colorized tabs).
+   New partials: Navigation, QuickOpen; CodeView split adds
+   Completion + Folding. 190 l10n strings across 5 catalogs.
+   AWAITING Cary's explicit "publish 0.10.0" — DO NOT release
+   without it (standing directive 2026-07-27).
+4. Roadmap candidates: JSON formatters, custom themes,
    Ctrl+Tab MRU order. (Drag-to-reorder tabs shipped in [Unreleased].)
 
 ## Release procedure (FORMAL — follow every step when Cary says "publish X.Y.Z")
