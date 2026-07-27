@@ -239,6 +239,8 @@ namespace ADKOM.TextEditor
                 }
                 if (Scripting.AteAddonManager.Entries.Count > 0) m.AddSeparator(root);
             }
+            m.AddItem(new GUIContent(root + L10n.Tr("Install Sample Addons")), false,
+                Scripting.AteAddonManager.InstallSamples);
             m.AddItem(new GUIContent(root + L10n.Tr("Reload Addons")), false,
                 Scripting.AteAddonManager.Reload);
             m.AddItem(new GUIContent(root + L10n.Tr("Open Addons Folder...")), false,
