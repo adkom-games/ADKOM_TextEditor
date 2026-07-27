@@ -512,3 +512,45 @@ msgstr "領域を展開"
 
 msgid "Unfold All"
 msgstr "すべて展開"
+
+msgid "Rename Symbol..."
+msgstr "シンボル名を変更..."
+
+msgid "Find All References"
+msgstr "すべての参照を検索"
+
+msgid "Format Document"
+msgstr "ドキュメントをフォーマット"
+
+msgid "Rename '{0}' to:"
+msgstr "'{0}' の新しい名前:"
+
+msgid "Find All References needs Semantic Features (enable in Settings)."
+msgstr "すべての参照の検索にはセマンティック機能が必要です(設定で有効化)。"
+
+msgid "Rename needs Semantic Features (enable in Settings)."
+msgstr "名前の変更にはセマンティック機能が必要です(設定で有効化)。"
+
+msgid "No references found."
+msgstr "参照が見つかりません。"
+
+msgid "{0} reference(s):"
+msgstr "{0} 件の参照:"
+
+msgid "{0} reference(s) — see the console."
+msgstr "{0} 件の参照 — コンソールを参照。"
+
+msgid "This symbol cannot be renamed here."
+msgstr "このシンボルはここでは名前を変更できません。"
+
+msgid "Not a valid identifier."
+msgstr "有効な識別子ではありません。"
+
+msgid "Renamed {0} occurrence(s) in this document."
+msgstr "このドキュメント内の {0} 箇所の名前を変更しました。"
+
+msgid "Document already formatted."
+msgstr "ドキュメントは既にフォーマット済みです。"
+
+msgid "Document formatted."
+msgstr "ドキュメントをフォーマットしました。"

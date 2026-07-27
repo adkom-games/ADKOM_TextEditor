@@ -78,6 +78,9 @@ Choose your keyboard layout — **Visual Studio**, **VS Code**, or
 | Add caret above / below | Ctrl+Alt+Up / Down | Ctrl+Alt+Up / Down | Ctrl+Alt+Up / Down |
 | Autocomplete | Ctrl+Space | Ctrl+Space | Ctrl+Space |
 | Fold / unfold region | Ctrl+Shift+[ / ] | Ctrl+Shift+[ / ] | Ctrl+Shift+[ / ] |
+| Rename symbol | F2 | F2 | Shift+F6 |
+| Find all references | Shift+F12 | Shift+F12 | Alt+F7 |
+| Format document | Shift+Alt+F | Shift+Alt+F | Ctrl+Alt+L |
 | Goto Line | Ctrl+G | Ctrl+G | Ctrl+G |
 | Open the ATE window | Ctrl+Alt+8 | Ctrl+Alt+8 | Ctrl+Alt+8 |
 

@@ -86,6 +86,29 @@ namespace ADKOM.TextEditor
             out string title, out string source, out int line);
     }
 
+    /// <summary>One reference to a symbol, for the Find All References list.</summary>
+    public struct SymbolReference
+    {
+        public string Path;     // source file (may be the queried document)
+        public int Line;        // 0-based
+        public int Column;      // 0-based
+        public string LineText; // trimmed preview
+    }
+
+    /// <summary>Optional provider capability: reference listing and in-file
+    /// rename spans (workspace-free — scoped to the symbol's assembly).</summary>
+    public interface ISemanticRefactorings
+    {
+        /// <summary>All references to the symbol at offset across the
+        /// document's assembly sources. May run on a background thread.</summary>
+        bool TryFindReferences(string path, string text, int offset, out List<SymbolReference> refs);
+
+        /// <summary>Spans (start, length) of the symbol's occurrences WITHIN
+        /// this document, for rename; also reports the current name.</summary>
+        bool TryGetRenameSpans(string path, string text, int offset,
+            out List<(int start, int length)> spans, out string symbolName);
+    }
+
     public static class SemanticServices
     {
         static ISemanticProvider _provider;

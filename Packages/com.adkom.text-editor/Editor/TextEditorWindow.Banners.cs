@@ -148,13 +148,14 @@ namespace ADKOM.TextEditor
 
         /// <summary>Shows the status-bar prompt; Enter passes the entry to
         /// <paramref name="onCommit"/>, Escape (or focus loss) cancels.</summary>
-        void StartStatusPrompt(string prompt, bool digitsOnly, System.Action<string> onCommit)
+        void StartStatusPrompt(string prompt, bool digitsOnly, System.Action<string> onCommit,
+            string initialValue = "")
         {
             if (_miniBuffer == null) return;
             _miniPrompt.text = prompt;
             _miniDigitsOnly = digitsOnly;
             _miniCommit = onCommit;
-            _miniInput.SetValueWithoutNotify(string.Empty);
+            _miniInput.SetValueWithoutNotify(initialValue ?? string.Empty);
             _statusLeft.style.display = DisplayStyle.None;
             _miniBuffer.style.display = DisplayStyle.Flex;
             _miniInput.schedule.Execute(() => _miniInput.Focus()).ExecuteLater(0);

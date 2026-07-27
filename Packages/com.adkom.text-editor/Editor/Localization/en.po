@@ -514,3 +514,45 @@ msgstr "Unfold Region"
 
 msgid "Unfold All"
 msgstr "Unfold All"
+
+msgid "Rename Symbol..."
+msgstr "Rename Symbol..."
+
+msgid "Find All References"
+msgstr "Find All References"
+
+msgid "Format Document"
+msgstr "Format Document"
+
+msgid "Rename '{0}' to:"
+msgstr "Rename '{0}' to:"
+
+msgid "Find All References needs Semantic Features (enable in Settings)."
+msgstr "Find All References needs Semantic Features (enable in Settings)."
+
+msgid "Rename needs Semantic Features (enable in Settings)."
+msgstr "Rename needs Semantic Features (enable in Settings)."
+
+msgid "No references found."
+msgstr "No references found."
+
+msgid "{0} reference(s):"
+msgstr "{0} reference(s):"
+
+msgid "{0} reference(s) — see the console."
+msgstr "{0} reference(s) — see the console."
+
+msgid "This symbol cannot be renamed here."
+msgstr "This symbol cannot be renamed here."
+
+msgid "Not a valid identifier."
+msgstr "Not a valid identifier."
+
+msgid "Renamed {0} occurrence(s) in this document."
+msgstr "Renamed {0} occurrence(s) in this document."
+
+msgid "Document already formatted."
+msgstr "Document already formatted."
+
+msgid "Document formatted."
+msgstr "Document formatted."

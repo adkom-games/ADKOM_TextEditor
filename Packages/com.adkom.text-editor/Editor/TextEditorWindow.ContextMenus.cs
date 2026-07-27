@@ -56,6 +56,11 @@ namespace ADKOM.TextEditor
             if (isCs)
                 m.AddItem(new GUIContent(WithSc("Go to Definition", Dsp("goto-definition"))), false,
                     () => NavigateToDefinition(line, col));
+            if (isCs)
+            {
+                m.AddItem(new GUIContent(WithSc("Rename Symbol...", Dsp("rename-symbol"))), false, RenameSymbolAtCaret);
+                m.AddItem(new GUIContent(WithSc("Find All References", Dsp("find-references"))), false, FindAllReferences);
+            }
             if (query != null)
             {
                 m.AddItem(new GUIContent(string.Format(L10n.Tr("Find Occurrences of '{0}'"), Truncate(query, 24))), false,
