@@ -25,6 +25,13 @@ All notable changes to this package are documented here. Format follows
   working menu commands.
 
 ### Changed
+- Keyboard commands are now defined in a single command table
+  (bindings, handlers, and menu shortcut hints in one place per
+  keymap), removing the triple definition that let labels drift from
+  behavior. Visible fix: the VS Code and Rider layouts now display
+  Redo's canonical Ctrl+Shift+Z in menus (Ctrl+Y still works in
+  VS Code). Behavior is otherwise unchanged — verified by a
+  54-assertion binding matrix across all three keymaps.
 - Settings scoping audit: settings that describe the project are now
   stored per project instead of machine-wide — Tab Size (indentation
   convention), Semantic Features (consent to install Roslyn into that
