@@ -32,8 +32,11 @@ All notable changes to this package are documented here. Format follows
 - Auto-Reload Changed Files (Settings, default off): files that change
   on disk reload automatically when the buffer has no unsaved edits;
   dirty buffers still get the banner so edits are never lost silently.
-- ADKOM Text Editor appears in Unity's dock "Add Tab" menu (via a new
-  Window menu entry).
+- ADKOM Text Editor appears in every dock's "Add Tab" menu (tab
+  right-click and ⋮): picking it docks ATE as a sibling tab of that
+  pane, or focuses the already-open ATE window. (The Add Tab list is a
+  fixed set of built-in panes, so this hooks the editor's internal
+  menu-population event; a Window menu entry was added as well.)
 - Rendered Markdown now displays standalone images: local paths
   (relative to the document or absolute) load inline with the alt text
   as a caption; missing files show a placeholder. Remote URLs are not
