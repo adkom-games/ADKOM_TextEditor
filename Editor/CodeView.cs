@@ -905,7 +905,7 @@ namespace ADKOM.TextEditor
             int visible = Mathf.Min(_totalRows - firstRow, (int)(viewH / _lineHeight) + 2);
             if (visible < 0) visible = 0;
 
-            _content.style.height = _totalRows * _lineHeight;
+            _content.style.height = (_totalRows + _ghostExtraRows) * _lineHeight;
             _content.style.minWidth = _wordWrap ? 0 : _contentWidth;
             if (_wordWrap) _content.style.width = AvailableWrapWidth();
             else _content.style.width = StyleKeyword.Auto;
