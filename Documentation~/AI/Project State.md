@@ -122,7 +122,27 @@ is verified live in the editor.
    0fa5929e == CI upm head; fresh shallow clone verified (version
    0.10.0, 30 Editor .cs files, new partials present). GitHub Release
    published — the auto-update channel will surface it.
-4. Roadmap candidates: JSON formatters, custom themes,
+4. AI integrations (Cary's go, 2026-07-27):
+   - COPILOT PHASE 1 MERGED: CopilotService (official
+     @github/copilot-language-server via Node/LSP-stdio, npm
+     auto-install to Library/ADKOMTextEditor/copilot, device-flow
+     sign-in) + CodeView.Ghost (Tab accept / Esc dismiss, 350ms
+     debounce). New package dependency com.unity.nuget.newtonsoft-json.
+     Verified live to NotSignedIn; COMPLETIONS UNVERIFIED until Cary
+     signs in (Settings -> GitHub Copilot -> Sign In).
+   - UNITY AI INVESTIGATION COMPLETE (research log): installed
+     com.unity.ai.assistant 2.16.0-pre.1 into the dev project. VERDICT:
+     integrable via a real public API — Unity.AI.Assistant.Editor.Api.
+     AssistantApi (static): Run(prompt, AttachedContext),
+     PromptThenRun(VisualElement/Rect anchor, placeholder, context),
+     RunHeadless(IAgent, prompt, context). AttachedContext accepts
+     UnityEngine.Objects + VirtualAttachments + images. Phase 2 design:
+     reflection-based optional integration (package may be absent for
+     consumers), context-menu 'Ask Unity AI about selection/document'
+     building AttachedContext from the open file, PromptThenRun anchored
+     in ATE. No live AI calls made (no points consumed). Package is
+     PRERELEASE — API may shift.
+5. Roadmap candidates: JSON formatters, custom themes,
    Ctrl+Tab MRU order. (Drag-to-reorder tabs shipped in [Unreleased].)
 
 ## Release procedure (FORMAL — follow every step when Cary says "publish X.Y.Z")
