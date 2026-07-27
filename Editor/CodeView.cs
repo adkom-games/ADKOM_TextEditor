@@ -434,6 +434,10 @@ namespace ADKOM.TextEditor
             float rowH = Mathf.Min(h / _totalRows, 2f);
             int drawRows = Mathf.Min(_totalRows, Mathf.Max(1, (int)(h / Mathf.Max(rowH, 1f))));
             float step = (float)_totalRows / drawRows;
+            // Vertical spacing between SAMPLED rows: each drawn row stands in
+            // for `step` real rows, so samples must spread across the whole
+            // strip (issue #7 — using rowH alone squished big files upward).
+            float ySpacing = rowH * step;
             float charPx = w / 120f; // fit ~120 columns across the strip
 
             // Colorized: segments follow the syntax spans, batched by color
@@ -452,7 +456,7 @@ namespace ADKOM.TextEditor
                 RowToLineSub(row, out int line, out int sub);
                 RowBounds(line, sub, out int rs, out int re);
                 string text = _lines[line];
-                float y = i * rowH;
+                float y = i * ySpacing;
                 float bh = Mathf.Max(1f, rowH * 0.7f);
                 var spans = _lineSpans != null && line < _lineSpans.Length ? _lineSpans[line] : null;
                 int pos = rs;
@@ -497,7 +501,7 @@ namespace ADKOM.TextEditor
             float viewH = _scroll.contentViewport.layout.height;
             if (contentH > 0)
             {
-                float mapContentH = drawRows * rowH;
+                float mapContentH = drawRows * ySpacing;
                 float top = _scroll.verticalScroller.value / contentH * mapContentH;
                 float ih = Mathf.Max(6, viewH / contentH * mapContentH);
                 p.fillColor = new Color(_textColor.r, _textColor.g, _textColor.b, 0.12f);

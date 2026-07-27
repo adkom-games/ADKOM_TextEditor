@@ -5,6 +5,13 @@ All notable changes to this package are documented here. Format follows
 
 ## [Unreleased]
 
+### Fixed
+- Minimap: for documents taller than the minimap strip, the code
+  graphics and viewport rectangle were vertically compressed into the
+  top of the strip (proportionally worse the bigger the file), while
+  click navigation used the full strip (issue #7). Sampled rows now
+  spread across the whole strip.
+
 ### Added
 - Quick Open (Ctrl+, / Ctrl+P VSCode / Ctrl+T Rider): a centered
   overlay that fuzzy-lists open tabs and recent files instantly and
