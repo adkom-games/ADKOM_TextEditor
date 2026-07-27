@@ -6,6 +6,14 @@ All notable changes to this package are documented here. Format follows
 ## [Unreleased]
 
 ### Added
+- Semantic refactoring commands (Semantic Features required for the
+  first two): Rename Symbol (F2 / Shift+F6 Rider) renames every
+  in-document occurrence via the status-bar prompt as one undo step;
+  Find All References (Shift+F12 / Alt+F7 Rider) lists every use
+  across the symbol's assembly in the console with path:line
+  previews; Format Document (Shift+Alt+F / Ctrl+Alt+L Rider)
+  re-indents from brace depth — string/comment-aware, preserving
+  content and blank lines, one undo step.
 - Code folding: brace-delimited regions collapse and expand from
   clickable gutter arrows or Ctrl+Shift+[ / Ctrl+Shift+] (Unfold All
   in the View menu). Folds ride the virtualized row model, shift with

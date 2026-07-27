@@ -129,6 +129,158 @@ namespace ADKOM.TextEditor
 
         /// <summary>Opens (or switches to) a virtual "from metadata" document
         /// and places the caret on the requested symbol's line.</summary>
+        // --- Refactoring clients (Batch 6 must-haves) ---
+
+        /// <summary>Lists every reference to the symbol at the caret in the
+        /// console pane (path:line: text) and reports the count.</summary>
+        internal void FindAllReferences()
+        {
+            var provider = SemanticServices.Provider as ISemanticRefactorings;
+            if (!EditorConfig.SemanticsEnabled || provider == null)
+            {
+                PostStatus(L10n.Tr("Find All References needs Semantic Features (enable in Settings)."));
+                return;
+            }
+            string path = SemanticContextPath;
+            if (path == null) return;
+            string text = _code.value;
+            int offset = _code.cursorIndex;
+            var ctx = _mainCtx;
+            PostStatus(L10n.Tr("Resolving symbol…"));
+            System.Threading.Tasks.Task.Run(() =>
+            {
+                List<SymbolReference> refs = null;
+                try { provider.TryFindReferences(path, text, offset, out refs); }
+                catch (System.Exception ex)
+                {
+                    AteConsole.Warn("[ADKOM Text Editor] Find All References failed: " + ex.Message);
+                }
+                ctx.Post(_ =>
+                {
+                    if (this == null) return;
+                    if (refs == null || refs.Count == 0)
+                    {
+                        PostStatus(L10n.Tr("No references found."));
+                        return;
+                    }
+                    AteConsole.Log("── " + string.Format(L10n.Tr("{0} reference(s):"), refs.Count));
+                    foreach (var r in refs)
+                        AteConsole.Log($"  {r.Path}:{r.Line + 1}:{r.Column + 1}: {r.LineText}");
+                    SetConsoleVisible(true);
+                    PostStatus(string.Format(L10n.Tr("{0} reference(s) — see the console."), refs.Count));
+                }, null);
+            });
+        }
+
+        /// <summary>Renames every in-document occurrence of the symbol at the
+        /// caret via the status-bar prompt; applied as ONE undo step through
+        /// the multi-caret machinery.</summary>
+        internal void RenameSymbolAtCaret()
+        {
+            var provider = SemanticServices.Provider as ISemanticRefactorings;
+            if (!EditorConfig.SemanticsEnabled || provider == null)
+            {
+                PostStatus(L10n.Tr("Rename needs Semantic Features (enable in Settings)."));
+                return;
+            }
+            string path = SemanticContextPath;
+            if (path == null) return;
+            if (!provider.TryGetRenameSpans(path, _code.value, _code.cursorIndex,
+                    out var spans, out string oldName))
+            {
+                PostStatus(L10n.Tr("This symbol cannot be renamed here."));
+                return;
+            }
+            StartStatusPrompt(string.Format(L10n.Tr("Rename '{0}' to:"), oldName), digitsOnly: false, newName =>
+            {
+                if (string.IsNullOrEmpty(newName) || newName == oldName) return;
+                if (!System.Text.RegularExpressions.Regex.IsMatch(newName, @"^[A-Za-z_][A-Za-z0-9_]*$"))
+                {
+                    PostStatus(L10n.Tr("Not a valid identifier."));
+                    return;
+                }
+                var regions = new List<(int s, int e)>();
+                foreach (var (start, length) in spans) regions.Add((start, start + length));
+                _code.MultiReplace(regions, new List<string> { newName });
+                _code.CollapseExtraCarets();
+                PostStatus(string.Format(L10n.Tr("Renamed {0} occurrence(s) in this document."), regions.Count));
+            }, initialValue: oldName);
+        }
+
+        /// <summary>Format Document: re-indents every line from brace depth
+        /// (string/comment-aware), preserving content and blank lines. One
+        /// undo step. C# documents only.</summary>
+        internal void FormatDocument()
+        {
+            if (!CanEditDoc) return;
+            string text = _code.value;
+            var lines = text.Split('\n');
+            var outLines = new string[lines.Length];
+            int depth = 0;
+            bool inBlockComment = false, inVerbatim = false;
+            int tab = EditorConfig.TabSize;
+            for (int i = 0; i < lines.Length; i++)
+            {
+                string body = lines[i].TrimStart();
+                bool lineStartsInCode = !inBlockComment && !inVerbatim;
+                // Closing brace (or case-ish dedent) on the line start dedents it.
+                int lineDepth = depth;
+                if (lineStartsInCode && (body.StartsWith("}") || body.StartsWith(")")))
+                    lineDepth = Mathf.Max(0, depth - 1);
+                outLines[i] = body.Length == 0 || !lineStartsInCode
+                    ? lines[i].TrimEnd()
+                    : new string(' ', lineDepth * tab) + body.TrimEnd();
+                // Scan the line to update depth and string/comment state.
+                bool inString = false, inChar = false, lineComment = false;
+                for (int c = 0; c < body.Length; c++)
+                {
+                    char ch = body[c];
+                    char next = c + 1 < body.Length ? body[c + 1] : '\0';
+                    if (lineComment) break;
+                    if (inBlockComment)
+                    {
+                        if (ch == '*' && next == '/') { inBlockComment = false; c++; }
+                        continue;
+                    }
+                    if (inVerbatim)
+                    {
+                        if (ch == '"') { if (next == '"') c++; else inVerbatim = false; }
+                        continue;
+                    }
+                    if (inString)
+                    {
+                        if (ch == '\\') c++;
+                        else if (ch == '"') inString = false;
+                        continue;
+                    }
+                    if (inChar)
+                    {
+                        if (ch == '\\') c++;
+                        else if (ch == '\'') inChar = false;
+                        continue;
+                    }
+                    switch (ch)
+                    {
+                        case '/': if (next == '/') lineComment = true; else if (next == '*') { inBlockComment = true; c++; } break;
+                        case '@': if (next == '"') { inVerbatim = true; c++; } break;
+                        case '"': inString = true; break;
+                        case '\'': inChar = true; break;
+                        case '{': depth++; break;
+                        case '}': depth = Mathf.Max(0, depth - 1); break;
+                    }
+                }
+            }
+            string formatted = string.Join("\n", outLines);
+            if (formatted == text)
+            {
+                PostStatus(L10n.Tr("Document already formatted."));
+                return;
+            }
+            _code.ReplaceRangeInternal(0, text.Length, formatted,
+                Mathf.Min(_code.cursorIndex, formatted.Length), CodeView.EditKind.LineOp);
+            PostStatus(L10n.Tr("Document formatted."));
+        }
+
         // NOTE: a metadata stub is generated from the compilation at the time
         // it was opened. If sources change afterwards, navigating FROM a stale
         // stub can land on shifted line numbers in the real file (defect #12,

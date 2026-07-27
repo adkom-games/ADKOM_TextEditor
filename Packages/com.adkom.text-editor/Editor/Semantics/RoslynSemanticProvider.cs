@@ -18,7 +18,7 @@ namespace ADKOM.TextEditor.Semantics
     /// CompilationPipeline), caches it, and answers classification and
     /// go-to-definition queries from background threads.
     /// </summary>
-    public sealed class RoslynSemanticProvider : ADKOM.TextEditor.ISemanticProvider
+    public sealed class RoslynSemanticProvider : ADKOM.TextEditor.ISemanticProvider, ADKOM.TextEditor.ISemanticRefactorings
     {
         public string Name => "Roslyn";
 
@@ -262,6 +262,85 @@ namespace ADKOM.TextEditor.Semantics
                 return true;
             }
             metadataOrigin = symbol.ContainingAssembly?.Name ?? "metadata";
+            return true;
+        }
+
+        // --- References & rename (workspace-free: manual symbol matching
+        // over the assembly's compilation) ---
+
+        ISymbol SymbolAt(SemanticModel model, SyntaxTree tree, int offset)
+        {
+            var root = tree.GetRoot();
+            offset = Math.Max(0, Math.Min(offset, root.FullSpan.End - 1));
+            return ResolveSymbol(model, root.FindToken(offset));
+        }
+
+        void CollectMatches(Compilation comp, SyntaxTree tree, ISymbol target,
+            Action<Microsoft.CodeAnalysis.Text.TextSpan, SyntaxTree> onMatch)
+        {
+            var model = comp.GetSemanticModel(tree);
+            foreach (var token in tree.GetRoot().DescendantTokens())
+            {
+                if (!token.IsKind(SyntaxKind.IdentifierToken) || token.ValueText != target.Name)
+                    continue;
+                var node = token.Parent;
+                if (node == null) continue;
+                var sym = model.GetSymbolInfo(node).Symbol ?? model.GetDeclaredSymbol(node);
+                if (sym == null) continue;
+                if (SymbolEqualityComparer.Default.Equals(sym.OriginalDefinition, target.OriginalDefinition))
+                    onMatch(token.Span, tree);
+            }
+        }
+
+        public bool TryFindReferences(string path, string text, int offset,
+            out System.Collections.Generic.List<ADKOM.TextEditor.SymbolReference> refs)
+        {
+            refs = null;
+            var (model, tree) = GetModel(path, text);
+            if (model == null) return false;
+            var target = SymbolAt(model, tree, offset);
+            if (target == null) return false;
+            var result = new System.Collections.Generic.List<ADKOM.TextEditor.SymbolReference>();
+            var comp = model.Compilation;
+            foreach (var t in comp.SyntaxTrees)
+            {
+                var srcText = t.GetText();
+                CollectMatches(comp, t, target, (span, tr) =>
+                {
+                    var pos = tr.GetLineSpan(span);
+                    int line = pos.StartLinePosition.Line;
+                    string lineText = srcText.Lines.Count > line
+                        ? srcText.Lines[line].ToString().Trim() : string.Empty;
+                    result.Add(new ADKOM.TextEditor.SymbolReference
+                    {
+                        Path = tr.FilePath,
+                        Line = line,
+                        Column = pos.StartLinePosition.Character,
+                        LineText = lineText
+                    });
+                });
+            }
+            refs = result;
+            return result.Count > 0;
+        }
+
+        public bool TryGetRenameSpans(string path, string text, int offset,
+            out System.Collections.Generic.List<(int start, int length)> spans, out string symbolName)
+        {
+            spans = null;
+            symbolName = null;
+            var (model, tree) = GetModel(path, text);
+            if (model == null) return false;
+            var target = SymbolAt(model, tree, offset);
+            if (target == null || target.Locations.All(l => !l.IsInSource))
+                return false; // metadata symbols cannot be renamed
+            var result = new System.Collections.Generic.List<(int, int)>();
+            CollectMatches(model.Compilation, tree, target,
+                (span, _) => result.Add((span.Start, span.Length)));
+            if (result.Count == 0) return false;
+            result.Sort((x, y) => x.Item1.CompareTo(y.Item1));
+            spans = result;
+            symbolName = target.Name;
             return true;
         }
 
