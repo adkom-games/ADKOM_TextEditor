@@ -629,3 +629,60 @@ msgstr "{0} 文字をやり直しました。"
 
 msgid "Ctrl+Click to open {0}"
 msgstr "Ctrl+クリックで {0} を開く"
+
+msgid "Installing the Copilot Language Server (npm)…"
+msgstr "Copilot Language Server をインストール中 (npm)…"
+
+msgid "npm install failed: "
+msgstr "npm インストールに失敗しました: "
+
+msgid "Could not run npm — is Node.js installed? "
+msgstr "npm を実行できません — Node.js はインストールされていますか？ "
+
+msgid "Starting the Copilot Language Server…"
+msgstr "Copilot Language Server を起動中…"
+
+msgid "Could not start Node.js: "
+msgstr "Node.js を起動できません: "
+
+msgid "Copilot sign-in: your code {0} was copied to the clipboard — paste it on the GitHub page that just opened."
+msgstr "Copilot サインイン: コード {0} をクリップボードにコピーしました — 開いた GitHub ページに貼り付けてください。"
+
+msgid "Copilot is ready."
+msgstr "Copilot の準備ができました。"
+
+msgid "Copilot: "
+msgstr "Copilot: "
+
+msgid "off"
+msgstr "オフ"
+
+msgid "installing server…"
+msgstr "サーバーをインストール中…"
+
+msgid "starting…"
+msgstr "起動中…"
+
+msgid "not signed in"
+msgstr "サインインしていません"
+
+msgid "waiting for GitHub confirmation…"
+msgstr "GitHub の確認を待っています…"
+
+msgid "ready"
+msgstr "準備完了"
+
+msgid "error: "
+msgstr "エラー: "
+
+msgid "GitHub Copilot (inline suggestions)"
+msgstr "GitHub Copilot（インライン提案）"
+
+msgid "Ghost-text code suggestions from GitHub Copilot. Requires Node.js on this machine and your own Copilot subscription; the official Copilot Language Server is installed on first enable. Tab accepts a suggestion, Escape dismisses it."
+msgstr "GitHub Copilot によるゴーストテキストのコード提案。このマシンに Node.js と、ご自身の Copilot サブスクリプションが必要です。初回有効化時に公式 Copilot Language Server をインストールします。Tab で提案を確定、Escape で破棄します。"
+
+msgid "Sign In"
+msgstr "サインイン"
+
+msgid "Sign Out"
+msgstr "サインアウト"

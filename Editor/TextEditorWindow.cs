@@ -72,6 +72,10 @@ namespace ADKOM.TextEditor
         UnityEditor.UIElements.ColorField _settingsTabColor;
         Toggle _settingsAutoClose;
         Toggle _settingsAutoReload;
+        Toggle _settingsCopilot;
+        VisualElement _settingsCopilotRow;
+        Label _settingsCopilotStatus;
+        Button _settingsCopilotSignIn;
         Toggle _settingsTrimSave;
         Toggle _settingsFinalNewline;
         Toggle _settingsSemantics;
@@ -307,6 +311,10 @@ namespace ADKOM.TextEditor
             _code.onNavigateRequest += NavigateToDefinition;  // Ctrl+Click
             _code.onUndoStatus += PostStatus; // "Undid 12 char(s)." feedback
             _code.isLineBookmarked = line => CanEditDoc && Active.Bookmarks.Contains(line);
+            _copilotPending = rootVisualElement.schedule.Execute(RequestCopilotGhost);
+            _copilotPending.Pause();
+            if (EditorConfig.CopilotEnabled) CopilotService.Start();
+            CopilotService.onStatusChanged += OnCopilotStatus;
             _code.onLineDelta += OnCodeLineDelta;
             _code.completionTextSources = () =>
             {
@@ -419,6 +427,9 @@ namespace ADKOM.TextEditor
                 });
             _apiTextPending.ExecuteLater(400);
             ScheduleSemanticPass();
+            _code.ClearGhost();
+            if (EditorConfig.CopilotEnabled && CopilotService.Status == CopilotService.State.Ready)
+                _copilotPending?.ExecuteLater(350);
             if (!Active.IsDirty)
             {
                 Active.IsDirty = true;
@@ -838,6 +849,29 @@ namespace ADKOM.TextEditor
             _settingsAutoReload.tooltip = L10n.Tr("When a file changes on disk and the buffer has no unsaved edits, reload it automatically instead of asking. Buffers with unsaved edits still ask.");
             _settingsPane.Add(_settingsAutoReload);
 
+            _settingsCopilot = new Toggle(L10n.Tr("GitHub Copilot (inline suggestions)")) { value = EditorConfig.CopilotEnabled };
+            _settingsCopilot.tooltip = L10n.Tr("Ghost-text code suggestions from GitHub Copilot. Requires Node.js on this machine and your own Copilot subscription; the official Copilot Language Server is installed on first enable. Tab accepts a suggestion, Escape dismisses it.");
+            _settingsCopilot.RegisterValueChangedCallback(e =>
+            {
+                EditorConfig.CopilotEnabled = e.newValue;
+                if (e.newValue) CopilotService.Start(); else CopilotService.Stop();
+                SyncSettingsControls();
+            });
+            _settingsPane.Add(_settingsCopilot);
+            _settingsCopilotRow = new VisualElement();
+            _settingsCopilotRow.style.flexDirection = FlexDirection.Row;
+            _settingsCopilotRow.style.marginLeft = 16;
+            _settingsCopilotStatus = new Label();
+            _settingsCopilotStatus.style.unityTextAlign = TextAnchor.MiddleLeft;
+            _settingsCopilotSignIn = new Button(() =>
+            {
+                if (CopilotService.Status == CopilotService.State.Ready) CopilotService.SignOut();
+                else CopilotService.SignIn();
+            });
+            _settingsCopilotRow.Add(_settingsCopilotSignIn);
+            _settingsCopilotRow.Add(_settingsCopilotStatus);
+            _settingsPane.Add(_settingsCopilotRow);
+
             _settingsTrimSave = new Toggle(L10n.Tr("Trim Trailing Whitespace on Save")) { value = EditorConfig.TrimTrailingOnSave };
             _settingsTrimSave.RegisterValueChangedCallback(e => EditorConfig.TrimTrailingOnSave = e.newValue);
             _settingsTrimSave.tooltip = L10n.Tr("Remove spaces and tabs at line ends when saving (per project).");
@@ -978,6 +1012,18 @@ namespace ADKOM.TextEditor
             _settingsTabColor?.SetValueWithoutNotify(EditorConfig.TabColor);
             _settingsAutoClose?.SetValueWithoutNotify(EditorConfig.AutoCloseBrackets);
             _settingsAutoReload?.SetValueWithoutNotify(EditorConfig.AutoReloadFromDisk);
+            _settingsCopilot?.SetValueWithoutNotify(EditorConfig.CopilotEnabled);
+            if (_settingsCopilotRow != null)
+            {
+                bool on = EditorConfig.CopilotEnabled;
+                _settingsCopilotRow.style.display = on ? DisplayStyle.Flex : DisplayStyle.None;
+                _settingsCopilotStatus.text = "  " + CopilotStatusText();
+                _settingsCopilotSignIn.text = CopilotService.Status == CopilotService.State.Ready
+                    ? L10n.Tr("Sign Out") : L10n.Tr("Sign In");
+                _settingsCopilotSignIn.SetEnabled(
+                    CopilotService.Status == CopilotService.State.Ready ||
+                    CopilotService.Status == CopilotService.State.NotSignedIn);
+            }
             _settingsTrimSave?.SetValueWithoutNotify(EditorConfig.TrimTrailingOnSave);
             _settingsFinalNewline?.SetValueWithoutNotify(EditorConfig.FinalNewlineOnSave);
         }
@@ -1100,6 +1146,7 @@ namespace ADKOM.TextEditor
         void OnDisable()
         {
             UpdateChecker.onInstallStateChanged -= SetUpdatingOverlay;
+            CopilotService.onStatusChanged -= OnCopilotStatus;
         }
 
 
@@ -1172,7 +1219,9 @@ namespace ADKOM.TextEditor
             // command table (TextEditorWindow.Commands.cs).
             if (e.keyCode == KeyCode.Tab && !ctrl && !e.altKey)
             {
-                if (_code != null && _code.CompletionVisible)
+                if (_code != null && !e.shiftKey && _code.AcceptGhost())
+                    handled = true; // Copilot ghost text accepts on Tab
+                else if (_code != null && _code.CompletionVisible)
                     handled = false; // the completion popup accepts on Tab
                 else
                 {
@@ -1459,6 +1508,58 @@ namespace ADKOM.TextEditor
         }
 
         // --- Display ---
+
+        UnityEngine.UIElements.IVisualElementScheduledItem _copilotPending;
+
+        void RequestCopilotGhost()
+        {
+            _copilotPending.Pause();
+            if (!EditorConfig.CopilotEnabled || !CanEditDoc || !Active.HasFile) return;
+            if (CopilotService.Status != CopilotService.State.Ready) return;
+            string path = Active.FilePath;
+            CopilotService.SyncDocument(path, _code.value);
+            _code.IndexToLineCol(_code.cursorIndex, out int line, out int col);
+            int version = _code.DocVersion;
+            CopilotService.RequestCompletion(path, line, col, text =>
+            {
+                if (this == null || _code == null) return;
+                _code.ShowGhost(text, line, col, version);
+            });
+        }
+
+        void OnCopilotStatus()
+        {
+            SyncSettingsControls();
+            switch (CopilotService.Status)
+            {
+                case CopilotService.State.SigningIn:
+                    ShowBanner(string.Format(
+                        L10n.Tr("Copilot sign-in: your code {0} was copied to the clipboard — paste it on the GitHub page that just opened."),
+                        CopilotService.PendingUserCode ?? ""),
+                        (L10n.Tr("OK"), HideBanner));
+                    break;
+                case CopilotService.State.Ready:
+                    PostStatus(L10n.Tr("Copilot is ready."));
+                    break;
+                case CopilotService.State.Error:
+                    PostStatus(L10n.Tr("Copilot: ") + CopilotService.StatusDetail);
+                    break;
+            }
+        }
+
+        static string CopilotStatusText()
+        {
+            switch (CopilotService.Status)
+            {
+                case CopilotService.State.Off: return L10n.Tr("off");
+                case CopilotService.State.Installing: return L10n.Tr("installing server…");
+                case CopilotService.State.Starting: return L10n.Tr("starting…");
+                case CopilotService.State.NotSignedIn: return L10n.Tr("not signed in");
+                case CopilotService.State.SigningIn: return L10n.Tr("waiting for GitHub confirmation…");
+                case CopilotService.State.Ready: return L10n.Tr("ready");
+                default: return L10n.Tr("error: ") + CopilotService.StatusDetail;
+            }
+        }
 
         void UpdateTitle()
         {

@@ -285,6 +285,16 @@ namespace ADKOM.TextEditor
             set => EditorPrefs.SetBool(ProjectScoped(WelcomeShownKey), value);
         }
 
+        const string CopilotKey = "ADKOM.TextEditor.CopilotEnabled";
+
+        /// <summary>GitHub Copilot inline completions (machine-wide, default
+        /// off; requires Node.js and the user's own Copilot subscription).</summary>
+        public static bool CopilotEnabled
+        {
+            get => EditorPrefs.GetBool(CopilotKey, false);
+            set => EditorPrefs.SetBool(CopilotKey, value);
+        }
+
         const string ConsoleHeightKey = "ADKOM.TextEditor.ConsoleHeight";
 
         /// <summary>Console pane height in px, set by dragging the splitter
