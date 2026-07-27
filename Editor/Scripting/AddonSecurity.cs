@@ -104,6 +104,19 @@ namespace ADKOM.TextEditor.Scripting
                 Risk = "Erases ALL Unity editor preferences on this machine." },
             new Rule { Pattern = "PlayerPrefs.DeleteAll", Category = "Settings wipe", High = false,
                 Risk = "Erases this project's player preferences." },
+            // Prefs access: EditorPrefs is one flat machine-wide namespace
+            // shared by Unity itself and every tool — nothing scopes an addon
+            // to "its own" keys, so writes can tamper with any of them.
+            new Rule { Pattern = "EditorPrefs.Set", Category = "Settings writes", High = false,
+                Risk = "Writes machine-wide editor preferences shared by Unity and all tools — can alter keys that are not its own." },
+            new Rule { Pattern = "EditorPrefs.DeleteKey", Category = "Settings writes", High = false,
+                Risk = "Deletes machine-wide editor preference keys — can remove keys that are not its own." },
+            new Rule { Pattern = "EditorPrefs.Get", Category = "Settings reads", High = false,
+                Risk = "Reads machine-wide editor preferences, which can hold tokens or private settings of other tools." },
+            new Rule { Pattern = "PlayerPrefs.Set", Category = "Settings writes", High = false,
+                Risk = "Writes this project's player preferences." },
+            new Rule { Pattern = "PlayerPrefs.DeleteKey", Category = "Settings writes", High = false,
+                Risk = "Deletes this project's player preference keys." },
         };
 
         /// <summary>Scans source text; one finding per rule (first hit's line).</summary>
@@ -146,7 +159,12 @@ namespace ADKOM.TextEditor.Scripting
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
             "ADKOM", "TextEditor", "AddonConsent.json");
 
-        [Serializable] class ConsentEntry { public string file; public string hash; }
+        /// <summary>Bump when the rule list grows: prior approvals were made
+        /// from a report the new rules didn't inform, so they re-prompt.
+        /// (v2: prefs read/write/delete-key rules.)</summary>
+        const int ScanVersion = 2;
+
+        [Serializable] class ConsentEntry { public string file; public string hash; public int scan; }
         [Serializable] class ConsentList { public List<ConsentEntry> entries = new List<ConsentEntry>(); }
 
         static ConsentList _consent;
@@ -188,7 +206,8 @@ namespace ADKOM.TextEditor.Scripting
         {
             string key = NormPath(file);
             foreach (var e in Load().entries)
-                if (string.Equals(e.file, key, StringComparison.OrdinalIgnoreCase) && e.hash == hash)
+                if (string.Equals(e.file, key, StringComparison.OrdinalIgnoreCase)
+                    && e.hash == hash && e.scan == ScanVersion)
                     return true;
             return false;
         }
@@ -199,7 +218,7 @@ namespace ADKOM.TextEditor.Scripting
             string key = NormPath(file);
             var list = Load();
             list.entries.RemoveAll(e => string.Equals(e.file, key, StringComparison.OrdinalIgnoreCase));
-            list.entries.Add(new ConsentEntry { file = key, hash = hash });
+            list.entries.Add(new ConsentEntry { file = key, hash = hash, scan = ScanVersion });
             Save();
         }
 
