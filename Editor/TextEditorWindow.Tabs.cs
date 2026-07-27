@@ -51,7 +51,11 @@ namespace ADKOM.TextEditor
             _tabViewport.RegisterCallback<GeometryChangedEvent>(_ => ClampTabScroll());
             _tabStrip.RegisterCallback<GeometryChangedEvent>(_ =>
             {
-                if (_tabEnsureActivePending) { _tabEnsureActivePending = false; EnsureActiveTabVisible(); }
+                // EnsureActiveTabVisible owns the pending flag: it clears it
+                // only once it actually read a resolved layout (issue #9 —
+                // clearing it here lost the retry when children had no
+                // layout yet, leaving the selected tab off-screen).
+                if (_tabEnsureActivePending) EnsureActiveTabVisible();
                 else ClampTabScroll();
             });
             _tabBar.Add(_tabViewport);
@@ -96,10 +100,12 @@ namespace ADKOM.TextEditor
         /// <summary>Scrolls the strip so the active tab is fully in view.</summary>
         void EnsureActiveTabVisible()
         {
-            if (_tabStrip == null || _active < 0 || _active >= _tabStrip.childCount) return;
+            if (_tabStrip == null || _active < 0 || _active >= _tabStrip.childCount)
+            { _tabEnsureActivePending = false; return; } // nothing to scroll to
             var r = _tabStrip[_active].layout;
             float vw = _tabViewport.contentRect.width;
-            // No layout yet: stay pending so the next GeometryChanged retries.
+            // No layout yet: stay pending so the retry ticker / next
+            // GeometryChanged tries again (issue #9).
             if (float.IsNaN(r.x) || float.IsNaN(vw) || vw <= 0) return;
             _tabEnsureActivePending = false;
             if (r.xMax - _tabScrollOffset > vw) _tabScrollOffset = r.xMax - vw;
@@ -151,11 +157,15 @@ namespace ADKOM.TextEditor
 
                 _tabStrip.Add(tab);
             }
-            // The freshly built tabs have no layout yet; the strip's
-            // GeometryChanged callback finishes the job once widths exist,
-            // so a jump to any tab always scrolls it into view.
+            // The freshly built tabs have no layout yet. GeometryChanged only
+            // fires when the strip's SIZE changes — switching the active tab
+            // rebuilds the same doc set at the same width, so it may never
+            // fire (issue #9). A short bounded ticker retries until the new
+            // children have layout and the scroll actually happened.
             _tabEnsureActivePending = true;
-            rootVisualElement.schedule.Execute(EnsureActiveTabVisible).ExecuteLater(0);
+            rootVisualElement.schedule.Execute(EnsureActiveTabVisible)
+                .Every(16)
+                .Until(() => !_tabEnsureActivePending);
         }
 
         bool _tabEnsureActivePending;
