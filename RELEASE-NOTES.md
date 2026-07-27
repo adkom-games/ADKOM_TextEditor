@@ -1,5 +1,76 @@
 # Release Notes — ADKOM Text Editor
 
+## 0.10.0 — 2026-07-27
+
+The IDE release: every "must-have" editing feature a coder reflexively
+reaches for, in one version.
+
+### Features
+- **Multi-caret editing**: Alt+Click adds carets; add next occurrence
+  (Shift+Alt+. / Ctrl+D / Alt+J) and select all occurrences turn every
+  match into a caret; Ctrl+Alt+Up/Down adds carets on adjacent lines
+  (column editing). Typing, paste, Backspace/Delete, and Enter apply at
+  every caret as ONE undo step.
+- **Word-based autocomplete**: prefix-matched popup while typing (2+
+  chars) or Ctrl+Space — candidates harvested from the current
+  document, every other open tab, and the language's keywords.
+- **Code folding**: brace regions collapse/expand from clickable gutter
+  arrows or Ctrl+Shift+[ / ]; folded headers read `{ ⋯ }`;
+  double-click a `{`/`}` to fold its block (view centers the header),
+  double-click the `⋯ }` indicator to reopen.
+- **Indentation guides** (View menu, on by default).
+- **Structural editing**: auto-closing brackets/quotes (type-over,
+  selection wrap, pair Backspace), brace matching with jump, block
+  comments, expand/shrink selection.
+- **Semantic refactoring** (with Semantic Features): Rename Symbol
+  (F2 / Shift+F6), Find All References (Shift+F12 / Alt+F7) listed in
+  the console, Format Document (Shift+Alt+F / Ctrl+Alt+L).
+- **Quick Open** (Ctrl+, / Ctrl+P / Ctrl+T): fuzzy-find open tabs,
+  recent files, and any text file under Assets/ or Packages/.
+- **Bookmarks**: Ctrl+Alt+K toggles an orange gutter mark; Ctrl+Alt+N/P
+  jump next/previous with wrap; bookmarks follow edits.
+- **Drag & drop selected text** to move it (Ctrl to copy) — one undo.
+- **Editing primitives**: word-wise delete, whole-line cut/copy on
+  empty selection, insert line above/below, join lines, UPPER/lower/
+  Title transforms, sort selected lines, select line, navigate
+  back/forward through caret history.
+- **Save cleanups** (Settings, per project): trim trailing whitespace,
+  ensure final newline.
+- **Tab strip overhaul**: single line with overflow scroll arrows (the
+  active tab keeps itself in view), jump-to-tab dropdown at the far
+  right, a Tabs submenu atop the document context menu, and
+  settings-tinted tab colors (active tab brighter with an accent).
+- **Resizable console**: drag the divider above the console; height
+  persists.
+- **Markdown images**: standalone local images display in rendered
+  mode (alt text as caption; placeholder when missing).
+- **Auto-Reload Changed Files** (Settings, default off): clean buffers
+  reload silently on external change; dirty buffers still ask.
+- **Non-modal close-time Save All**: closing with unsaved documents
+  shows a small floating notice (never blocks Unity) with one-click
+  Save All; reopening with dirty session buffers shows a banner.
+- **Add Tab integration**: ATE appears in every dock's Add Tab menu
+  and in the Window menu (which shows the Ctrl+Alt+8 shortcut).
+
+### Fixes
+- Minimap graphics and viewport rectangle were vertically squished for
+  files taller than the strip; clicks were unaffected (issue #7).
+- Indentation guides were invisible: spaces measured 1px wide (the
+  measurer trims trailing whitespace), crushing every guide against
+  the gutter; guides now sit at true indent columns.
+- Smooth scrolling had a 1px color-misregistration shimmer: the ease
+  landed on fractional pixels which rasterized the input field and the
+  color overlay differently; animation now snaps to whole pixels.
+- Gutter fold arrows were unclickable (labels were created with
+  PickingMode.Ignore, so the click handler never fired).
+- Occurrence highlighting could throw ArgumentOutOfRangeException from
+  every repaint when the selection state momentarily disagreed with
+  the text; columns are now clamped (issue #8).
+- Jumped-to tabs could remain scrolled offscreen; the active tab now
+  always scrolls into view once layout exists.
+- Pluralized UI strings ("N document(s)") were replaced with proper
+  singular/plural forms in every language.
+
 ## 0.9.0 — 2026-07-26
 
 ### Features
