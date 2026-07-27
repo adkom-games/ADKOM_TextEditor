@@ -449,3 +449,27 @@ msgstr "저장할 때 각 줄 끝의 공백과 탭을 제거합니다(프로젝�
 
 msgid "Guarantee the file ends with exactly one newline when saving (per project)."
 msgstr "저장할 때 파일이 정확히 하나의 줄 바꿈으로 끝나도록 보장합니다(프로젝트별)."
+
+msgid "Toggle Block Comment"
+msgstr "블록 주석 전환"
+
+msgid "Go to Matching Bracket"
+msgstr "짝 괄호로 이동"
+
+msgid "Expand Selection"
+msgstr "선택 영역 확장"
+
+msgid "Shrink Selection"
+msgstr "선택 영역 축소"
+
+msgid "Navigate Back"
+msgstr "뒤로 이동"
+
+msgid "Navigate Forward"
+msgstr "앞으로 이동"
+
+msgid "Auto-Close Brackets"
+msgstr "괄호 자동 닫기"
+
+msgid "Typing ( [ { \" ' inserts the closing pair, closers type over, Backspace removes empty pairs, selections get wrapped."
+msgstr "( [ { \" ' 입력 시 닫는 짝이 자동 삽입되고, 닫는 기호는 덮어 입력되며, Backspace는 빈 쌍을 제거하고, 선택 영역은 감싸집니다."

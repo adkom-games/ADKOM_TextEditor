@@ -912,6 +912,7 @@ namespace ADKOM.TextEditor
             _minimap?.MarkDirtyRepaint();
             RefreshSelection(firstRow, visible);
             RefreshSelectionMatches(firstRow, visible);
+            RefreshBracketMatch(firstRow, visible);
             RefreshCaret();
         }
 
@@ -1203,6 +1204,7 @@ namespace ADKOM.TextEditor
             start = Mathf.Clamp(start, 0, v.Length);
             end = Mathf.Clamp(end, start, v.Length);
             PushUndo(kind, start, end, replacement);
+            _selHistory.Clear(); // edits invalidate expand/shrink history
             SetValueWithoutNotify(v.Substring(0, start) + replacement + v.Substring(end));
             cursorIndex = Mathf.Clamp(caret, 0, GetValueInternal().Length);
             CollapseAnchor();
@@ -1285,6 +1287,11 @@ namespace ADKOM.TextEditor
                 { e.StopPropagation(); return; } // handled on keyCode events
                 if (!ctrl && c >= ' ')
                 {
+                    if (EditorConfig.AutoCloseBrackets && HandleAutoClose(c))
+                    {
+                        e.StopPropagation();
+                        return;
+                    }
                     InsertText(c.ToString(), typing: true);
                     e.StopPropagation();
                 }
@@ -1333,6 +1340,16 @@ namespace ADKOM.TextEditor
                     if (HasSelection) { InsertText(string.Empty, EditKind.ReplaceSelection); break; }
                     int idx = cursorIndex;
                     if (idx == 0) { handled = true; break; }
+                    // Deleting the opener of an empty auto-closed pair takes
+                    // the closer with it.
+                    string bv = GetValueInternal();
+                    if (!ctrl && EditorConfig.AutoCloseBrackets && idx < bv.Length &&
+                        ((BracketDir(bv[idx - 1]) == 1 && bv[idx] == BracketPartner(bv[idx - 1])) ||
+                         ((bv[idx - 1] == '"' || bv[idx - 1] == '\'') && bv[idx] == bv[idx - 1])))
+                    {
+                        ReplaceRangeInternal(idx - 1, idx + 1, string.Empty, idx - 1, EditKind.Backspace);
+                        break;
+                    }
                     int remove;
                     if (ctrl) // word-wise delete (Ctrl+Backspace)
                         remove = _caretCol > 0 ? _caretCol - PrevWord(_lines[_caretLine], _caretCol) : 1;
@@ -1503,6 +1520,240 @@ namespace ADKOM.TextEditor
             }
             EditorGUIUtility.systemCopyBuffer = SelectedText();
             if (cut) InsertText(string.Empty, EditKind.ReplaceSelection);
+        }
+
+        // ---------- Brackets (Batch 2 must-haves) ----------
+
+        readonly List<VisualElement> _bracketPool = new List<VisualElement>();
+        readonly Color _bracketColor = new Color(0.85f, 0.7f, 0.2f, 0.35f);
+
+        static int BracketDir(char c) =>
+            c == '(' || c == '[' || c == '{' ? 1 :
+            c == ')' || c == ']' || c == '}' ? -1 : 0;
+
+        static char BracketPartner(char c) => c switch
+        {
+            '(' => ')', ')' => '(',
+            '[' => ']', ']' => '[',
+            '{' => '}', '}' => '{',
+            _ => '\0'
+        };
+
+        /// <summary>Bracket adjacent to the caret (preferring the char before
+        /// it, VS-style); -1 when none.</summary>
+        int BracketAtCaret(string v, int caret)
+        {
+            if (caret > 0 && caret <= v.Length && BracketDir(v[caret - 1]) != 0) return caret - 1;
+            if (caret >= 0 && caret < v.Length && BracketDir(v[caret]) != 0) return caret;
+            return -1;
+        }
+
+        /// <summary>Index of the bracket matching the one at
+        /// <paramref name="index"/> (nesting-aware, plain text scan); -1 if
+        /// unbalanced or not a bracket.</summary>
+        internal int FindMatchingBracket(int index)
+        {
+            string v = GetValueInternal();
+            if (index < 0 || index >= v.Length) return -1;
+            char c = v[index];
+            int dir = BracketDir(c);
+            if (dir == 0) return -1;
+            char partner = BracketPartner(c);
+            int depth = 0;
+            for (int i = index; i >= 0 && i < v.Length; i += dir)
+            {
+                if (v[i] == c) depth++;
+                else if (v[i] == partner && --depth == 0) return i;
+            }
+            return -1;
+        }
+
+        /// <summary>Jumps the caret to the bracket matching the caret's one.</summary>
+        internal void GoToMatchingBracket()
+        {
+            string v = GetValueInternal();
+            int at = BracketAtCaret(v, cursorIndex);
+            int m = at >= 0 ? FindMatchingBracket(at) : -1;
+            if (m < 0) return;
+            IndexToLineCol(m + 1, out int l, out int c);
+            GoToLine(l + 1, c + 1);
+        }
+
+        /// <summary>Highlights the caret-adjacent bracket and its match on
+        /// the visible rows (two quads, weaker than selection).</summary>
+        void RefreshBracketMatch(int firstRow, int visible)
+        {
+            int quad = 0;
+            string v = GetValueInternal();
+            int at = HasSelection ? -1 : BracketAtCaret(v, cursorIndex);
+            int match = at >= 0 ? FindMatchingBracket(at) : -1;
+            if (match >= 0)
+            {
+                foreach (int pos in new[] { at, match })
+                {
+                    IndexToLineCol(pos, out int bl, out int bc);
+                    for (int i = 0; i < visible; i++)
+                    {
+                        int row = firstRow + i;
+                        if (row >= _totalRows) break;
+                        RowToLineSub(row, out int line, out int sub);
+                        if (line != bl) continue;
+                        RowBounds(line, sub, out int rs, out int re);
+                        if (bc < rs || bc >= re && re < _lines[line].Length) continue;
+                        if (quad >= _bracketPool.Count)
+                        {
+                            var q = new VisualElement();
+                            q.style.position = Position.Absolute;
+                            q.pickingMode = PickingMode.Ignore;
+                            _content.Insert(0, q);
+                            _bracketPool.Add(q);
+                        }
+                        var b = _bracketPool[quad++];
+                        b.style.display = DisplayStyle.Flex;
+                        b.style.backgroundColor = _bracketColor;
+                        float x0 = MeasureRange(line, rs, bc);
+                        b.style.left = x0;
+                        b.style.top = row * _lineHeight;
+                        b.style.width = Mathf.Max(2, MeasureRange(line, rs, bc + 1) - x0);
+                        b.style.height = _lineHeight;
+                        break;
+                    }
+                }
+            }
+            for (int i = quad; i < _bracketPool.Count; i++)
+                _bracketPool[i].style.display = DisplayStyle.None;
+        }
+
+        /// <summary>Auto-closing pairs: openers insert their closer (caret
+        /// between), typing a closer over the identical next char steps past
+        /// it, selections get wrapped. Returns true when handled.</summary>
+        bool HandleAutoClose(char c)
+        {
+            string v = GetValueInternal();
+            bool isOpen = c == '(' || c == '[' || c == '{';
+            bool isCloser = c == ')' || c == ']' || c == '}';
+            bool isQuote = c == '"' || c == '\'';
+            if (!isOpen && !isCloser && !isQuote) return false;
+            char close = isOpen ? BracketPartner(c) : c;
+
+            // Type-over: the very next char is the closer we'd insert.
+            if ((isCloser || isQuote) && !HasSelection &&
+                cursorIndex < v.Length && v[cursorIndex] == c)
+            {
+                cursorIndex = cursorIndex + 1;
+                CollapseAnchor();
+                AfterCaretMove();
+                return true;
+            }
+            if (isCloser) return false;
+
+            // Wrap the selection in the pair, keeping it selected inside.
+            if (HasSelection)
+            {
+                int s = Mathf.Min(cursorIndex, selectIndex);
+                int e = Mathf.Max(cursorIndex, selectIndex);
+                string sel = v.Substring(s, e - s);
+                ReplaceRangeInternal(s, e, c + sel + close.ToString(),
+                    s + 1 + sel.Length, EditKind.ReplaceSelection);
+                selectIndex = s + 1;
+                cursorIndex = s + 1 + sel.Length;
+                RefreshVisible();
+                return true;
+            }
+
+            // Quotes: never pair right after a word char or the same quote
+            // (apostrophes inside words, adjacent string literals).
+            if (isQuote)
+            {
+                char prev = cursorIndex > 0 ? v[cursorIndex - 1] : ' ';
+                if (char.IsLetterOrDigit(prev) || prev == c) return false;
+            }
+            // Pair only when what follows won't be glued to the closer.
+            char next = cursorIndex < v.Length ? v[cursorIndex] : '\n';
+            if (!(next == '\n' || char.IsWhiteSpace(next) || BracketDir(next) == -1 ||
+                  next == ',' || next == ';'))
+                return false;
+
+            int at = cursorIndex;
+            ReplaceRangeInternal(at, at, c.ToString() + close, at + 1, EditKind.TypeChar);
+            return true;
+        }
+
+        // ---------- Expand / shrink selection (Batch 2) ----------
+
+        readonly List<(int a, int b)> _selHistory = new List<(int, int)>();
+
+        /// <summary>Grows the selection: caret → word → line → enclosing
+        /// bracket block → whole document. Shrink walks back down.</summary>
+        internal void ExpandSelection()
+        {
+            string v = GetValueInternal();
+            int s = Mathf.Min(cursorIndex, selectIndex);
+            int e = Mathf.Max(cursorIndex, selectIndex);
+            int ns = s, ne = e;
+            if (s == e)
+            {
+                WordRangeAt(_caretLine, _caretCol, out int ws, out int we);
+                if (we > ws)
+                {
+                    ns = LineColToIndex(_caretLine, ws);
+                    ne = LineColToIndex(_caretLine, we);
+                }
+                else
+                {
+                    ns = LineColToIndex(_caretLine, 0);
+                    ne = LineColToIndex(_caretLine, _lines[_caretLine].Length);
+                }
+            }
+            else
+            {
+                IndexToLineCol(s, out int sl, out _);
+                IndexToLineCol(e, out int el, out _);
+                int ls = LineColToIndex(sl, 0);
+                int le = LineColToIndex(el, _lines[el].Length);
+                if (s > ls || e < le) { ns = ls; ne = le; }
+                else
+                {
+                    int open = FindEnclosingOpen(v, s, e);
+                    int closeIdx = open >= 0 ? FindMatchingBracket(open) : -1;
+                    if (closeIdx > open && (open < s || closeIdx + 1 > e)) { ns = open; ne = closeIdx + 1; }
+                    else { ns = 0; ne = v.Length; }
+                }
+            }
+            if (ns == s && ne == e) return;
+            _selHistory.Add((s, e));
+            selectIndex = ns;
+            cursorIndex = ne;
+            RefreshVisible();
+            AfterCaretMove();
+        }
+
+        internal void ShrinkSelection()
+        {
+            if (_selHistory.Count == 0) return;
+            var (a, b) = _selHistory[_selHistory.Count - 1];
+            _selHistory.RemoveAt(_selHistory.Count - 1);
+            int len = GetValueInternal().Length;
+            selectIndex = Mathf.Clamp(a, 0, len);
+            cursorIndex = Mathf.Clamp(b, 0, len);
+            RefreshVisible();
+            AfterCaretMove();
+        }
+
+        static int FindEnclosingOpen(string v, int s, int e)
+        {
+            int depth = 0;
+            for (int i = s - 1; i >= 0; i--)
+            {
+                int d = BracketDir(v[i]);
+                if (d == -1) depth++;
+                else if (d == 1)
+                {
+                    if (depth == 0) return i;
+                    depth--;
+                }
+            }
+            return -1;
         }
 
         // ---------- Editing primitives (Batch 1 must-haves) ----------
@@ -1725,6 +1976,7 @@ namespace ADKOM.TextEditor
 
         void OnPointerDown(PointerDownEvent e)
         {
+            _selHistory.Clear();
             if (e.button != 0) return;
             Focus();
             PlaceCaretAt(e.position, e.shiftKey);

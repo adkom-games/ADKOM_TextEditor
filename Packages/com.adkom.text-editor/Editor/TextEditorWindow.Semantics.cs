@@ -82,6 +82,7 @@ namespace ADKOM.TextEditor
             }
             string path = SemanticContextPath; // metadata views navigate too
             if (path == null) return;
+            PushNavLocation();
             string text = _code.value;
             int offset = _code.LineColToIndex(line, col);
             var ctx = _mainCtx;

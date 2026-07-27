@@ -92,6 +92,10 @@ namespace ADKOM.TextEditor
             Item(WithSc("Move Line Up", Dsp("move-line-up")), edit, () => MoveLine(-1));
             Item(WithSc("Move Line Down", Dsp("move-line-down")), edit, () => MoveLine(1));
             Item(WithSc("Toggle Comment", Dsp("toggle-comment")), edit, ToggleComment);
+            Item(WithSc("Toggle Block Comment", Dsp("block-comment")), edit, ToggleBlockComment);
+            Item(WithSc("Go to Matching Bracket", Dsp("goto-bracket")), edit, () => _code.GoToMatchingBracket());
+            Item(WithSc("Expand Selection", Dsp("expand-selection")), edit, () => _code.ExpandSelection());
+            Item(WithSc("Shrink Selection", Dsp("shrink-selection")), edit, () => _code.ShrinkSelection());
             Item(WithSc("Indent", Dsp("indent")), edit, InsertTab);
             Item(WithSc("Unindent", Dsp("unindent")), edit, UnindentSelection);
             m.AddSeparator("");
@@ -112,6 +116,9 @@ namespace ADKOM.TextEditor
             m.AddItem(new GUIContent(WithSc("Replace in Tabs...", Dsp("replace-in-tabs"))), false, () => FindReplaceWindow.Open(this, true, true));
             m.AddItem(new GUIContent(WithSc("Find Next", Dsp("find-next"))), false, () => FindReplaceWindow.FindAgain(this, false));
             m.AddItem(new GUIContent(WithSc("Find Previous", Dsp("find-previous"))), false, () => FindReplaceWindow.FindAgain(this, true));
+            m.AddSeparator("");
+            m.AddItem(new GUIContent(WithSc("Navigate Back", Dsp("nav-back"))), false, NavigateBack);
+            m.AddItem(new GUIContent(WithSc("Navigate Forward", Dsp("nav-forward"))), false, NavigateForward);
         }
 
         void FillViewMenu(GenericMenu m)
