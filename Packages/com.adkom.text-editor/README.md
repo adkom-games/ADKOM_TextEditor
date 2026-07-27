@@ -69,6 +69,10 @@ Choose your keyboard layout — **Visual Studio**, **VS Code**, or
 | Insert line above / below | Ctrl+Enter / Ctrl+Shift+Enter | Ctrl+Shift+Enter / Ctrl+Enter | Ctrl+Alt+Enter / Shift+Enter |
 | Join lines | Ctrl+J | Ctrl+J | Ctrl+J |
 | Select line | — | Ctrl+L | — |
+| Go to matching bracket | Ctrl+] | Ctrl+Shift+\ | Ctrl+Shift+M |
+| Toggle block comment | Ctrl+Shift+/ | Shift+Alt+A | Ctrl+Shift+/ |
+| Expand / shrink selection | Shift+Alt+Right / Left | Shift+Alt+Right / Left | Ctrl+W / Ctrl+Shift+W |
+| Navigate back / forward | Ctrl+- / Ctrl+Shift+- | Alt+Left / Alt+Right | Ctrl+Alt+Left / Right |
 | Goto Line | Ctrl+G | Ctrl+G | Ctrl+G |
 | Open the ATE window | Ctrl+Alt+8 | Ctrl+Alt+8 | Ctrl+Alt+8 |
 

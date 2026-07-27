@@ -449,3 +449,27 @@ msgstr "儲存時刪除每行結尾的空格和定位字元(依專案)。"
 
 msgid "Guarantee the file ends with exactly one newline when saving (per project)."
 msgstr "儲存時保證檔案以恰好一個換行結尾(依專案)。"
+
+msgid "Toggle Block Comment"
+msgstr "切換區塊註解"
+
+msgid "Go to Matching Bracket"
+msgstr "移至配對的括號"
+
+msgid "Expand Selection"
+msgstr "擴大選取範圍"
+
+msgid "Shrink Selection"
+msgstr "縮小選取範圍"
+
+msgid "Navigate Back"
+msgstr "導覽後退"
+
+msgid "Navigate Forward"
+msgstr "導覽前進"
+
+msgid "Auto-Close Brackets"
+msgstr "自動閉合括號"
+
+msgid "Typing ( [ { \" ' inserts the closing pair, closers type over, Backspace removes empty pairs, selections get wrapped."
+msgstr "輸入 ( [ { \" ' 時自動插入閉合符號,閉合符號可直接跳過,Backspace 刪除空對,選取範圍會被包裹。"

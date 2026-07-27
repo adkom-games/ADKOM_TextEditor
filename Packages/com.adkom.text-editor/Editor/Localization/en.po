@@ -451,3 +451,27 @@ msgstr "Remove spaces and tabs at line ends when saving (per project)."
 
 msgid "Guarantee the file ends with exactly one newline when saving (per project)."
 msgstr "Guarantee the file ends with exactly one newline when saving (per project)."
+
+msgid "Toggle Block Comment"
+msgstr "Toggle Block Comment"
+
+msgid "Go to Matching Bracket"
+msgstr "Go to Matching Bracket"
+
+msgid "Expand Selection"
+msgstr "Expand Selection"
+
+msgid "Shrink Selection"
+msgstr "Shrink Selection"
+
+msgid "Navigate Back"
+msgstr "Navigate Back"
+
+msgid "Navigate Forward"
+msgstr "Navigate Forward"
+
+msgid "Auto-Close Brackets"
+msgstr "Auto-Close Brackets"
+
+msgid "Typing ( [ { \" ' inserts the closing pair, closers type over, Backspace removes empty pairs, selections get wrapped."
+msgstr "Typing ( [ { \" ' inserts the closing pair, closers type over, Backspace removes empty pairs, selections get wrapped."

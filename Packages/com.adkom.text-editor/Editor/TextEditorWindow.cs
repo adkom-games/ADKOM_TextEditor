@@ -68,6 +68,7 @@ namespace ADKOM.TextEditor
         Toggle _settingsSmooth;
         Toggle _settingsMdRendered;
         IntegerField _settingsRecentMax;
+        Toggle _settingsAutoClose;
         Toggle _settingsTrimSave;
         Toggle _settingsFinalNewline;
         Toggle _settingsSemantics;
@@ -135,6 +136,7 @@ namespace ADKOM.TextEditor
             var window = windows.Length > 0 ? windows[0] : CreateWindow<TextEditorWindow>();
             window.Show();
             window.Focus();
+            window.PushNavLocation();
             window.OpenPath(Path.GetFullPath(path));
             if (line > 0) window._code?.GoToLine(line, Mathf.Max(1, column));
         }
@@ -702,6 +704,11 @@ namespace ADKOM.TextEditor
             _settingsMdRendered.tooltip = L10n.Tr("Default view when opening .md files: rendered (WYSIWYG) when on, source when off. The MD/source toggle still switches per tab.");
             _settingsPane.Add(_settingsMdRendered);
 
+            _settingsAutoClose = new Toggle(L10n.Tr("Auto-Close Brackets")) { value = EditorConfig.AutoCloseBrackets };
+            _settingsAutoClose.RegisterValueChangedCallback(e => EditorConfig.AutoCloseBrackets = e.newValue);
+            _settingsAutoClose.tooltip = L10n.Tr("Typing ( [ { \" ' inserts the closing pair, closers type over, Backspace removes empty pairs, selections get wrapped.");
+            _settingsPane.Add(_settingsAutoClose);
+
             _settingsTrimSave = new Toggle(L10n.Tr("Trim Trailing Whitespace on Save")) { value = EditorConfig.TrimTrailingOnSave };
             _settingsTrimSave.RegisterValueChangedCallback(e => EditorConfig.TrimTrailingOnSave = e.newValue);
             _settingsTrimSave.tooltip = L10n.Tr("Remove spaces and tabs at line ends when saving (per project).");
@@ -839,6 +846,7 @@ namespace ADKOM.TextEditor
             _settingsSemantics?.SetValueWithoutNotify(EditorConfig.SemanticsEnabled);
             _settingsMdRendered?.SetValueWithoutNotify(EditorConfig.MdOpenRendered);
             _settingsRecentMax?.SetValueWithoutNotify(EditorConfig.RecentFilesMax);
+            _settingsAutoClose?.SetValueWithoutNotify(EditorConfig.AutoCloseBrackets);
             _settingsTrimSave?.SetValueWithoutNotify(EditorConfig.TrimTrailingOnSave);
             _settingsFinalNewline?.SetValueWithoutNotify(EditorConfig.FinalNewlineOnSave);
         }
@@ -1186,6 +1194,36 @@ namespace ADKOM.TextEditor
                 string next = v.Substring(le + 1, nle - le - 1);
                 ReplaceRange(ls, nle, next + "\n" + cur, ls + next.Length + 1 + col);
             }
+        }
+
+        /// <summary>Wraps the selection (or the caret's line) in /* */, or
+        /// removes an existing wrapping pair. One undo step.</summary>
+        void ToggleBlockComment()
+        {
+            if (!CanEditDoc) return;
+            int s = Mathf.Min(_code.cursorIndex, _code.selectIndex);
+            int e = Mathf.Max(_code.cursorIndex, _code.selectIndex);
+            string v = _code.value;
+            if (s == e)
+            {
+                _code.IndexToLineCol(s, out int line, out _);
+                s = _code.LineColToIndex(line, 0);
+                e = s;
+                while (e < v.Length && v[e] != '\n') e++;
+            }
+            string seg = v.Substring(s, e - s);
+            string trimmed = seg.Trim();
+            string repl;
+            if (trimmed.StartsWith("/*") && trimmed.EndsWith("*/") && trimmed.Length >= 4)
+            {
+                int i1 = seg.IndexOf("/*", System.StringComparison.Ordinal);
+                int i2 = seg.LastIndexOf("*/", System.StringComparison.Ordinal);
+                repl = seg.Remove(i2, 2).Remove(i1, 2);
+            }
+            else repl = "/*" + seg + "*/";
+            _code.ReplaceRangeInternal(s, e, repl, s + repl.Length, CodeView.EditKind.LineOp);
+            _code.selectIndex = s;
+            _code.cursorIndex = s + repl.Length;
         }
 
         void ToggleComment()

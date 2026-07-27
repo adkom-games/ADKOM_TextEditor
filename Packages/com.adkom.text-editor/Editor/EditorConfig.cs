@@ -230,6 +230,17 @@ namespace ADKOM.TextEditor
             return tabs;
         }
 
+        const string AutoCloseKey = "ADKOM.TextEditor.AutoCloseBrackets";
+
+        /// <summary>Auto-closing pairs while typing (machine-wide preference,
+        /// default on): openers insert their closer, closers type over,
+        /// selections get wrapped, Backspace removes empty pairs.</summary>
+        public static bool AutoCloseBrackets
+        {
+            get => EditorPrefs.GetBool(AutoCloseKey, true);
+            set => EditorPrefs.SetBool(AutoCloseKey, value);
+        }
+
         const string TrimSaveKey = "ADKOM.TextEditor.TrimTrailingOnSave";
         const string FinalNewlineKey = "ADKOM.TextEditor.FinalNewlineOnSave";
 
