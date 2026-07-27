@@ -71,6 +71,7 @@ namespace ADKOM.TextEditor
         IntegerField _settingsRecentMax;
         UnityEditor.UIElements.ColorField _settingsTabColor;
         Toggle _settingsAutoClose;
+        Toggle _settingsAutoReload;
         Toggle _settingsTrimSave;
         Toggle _settingsFinalNewline;
         Toggle _settingsSemantics;
@@ -91,6 +92,12 @@ namespace ADKOM.TextEditor
         // with HasDocs, this keeps a future unguarded call from throwing).
         TextDocument Active =>
             _docs.Count == 0 ? null : _docs[Mathf.Clamp(_active, 0, _docs.Count - 1)];
+
+        // A Window/* menu entry makes ATE appear in Unity's dock "Add Tab"
+        // menu (it lists EditorWindows reachable from the Window menu) —
+        // Defects round 2026-07-27, item 6.
+        [MenuItem("Window/ADKOM Text Editor")]
+        static void OpenFromWindowMenu() => Open();
 
         [MenuItem("Tools/ADKOM/Text Editor %&8")] // Ctrl+Alt+8 (Cmd+Alt+8 on macOS)
         public static void Open()
@@ -428,6 +435,8 @@ namespace ADKOM.TextEditor
                 if (rendered)
                 {
                     _mdView.SetPalette(CurrentTheme.Current);
+                    _mdView.BaseDir = Active.HasFile
+                        ? System.IO.Path.GetDirectoryName(Active.FilePath) : null;
                     _mdView.Render(_code.value);
                 }
             }
@@ -731,6 +740,11 @@ namespace ADKOM.TextEditor
             _settingsAutoClose.tooltip = L10n.Tr("Typing ( [ { \" ' inserts the closing pair, closers type over, Backspace removes empty pairs, selections get wrapped.");
             _settingsPane.Add(_settingsAutoClose);
 
+            _settingsAutoReload = new Toggle(L10n.Tr("Auto-Reload Changed Files")) { value = EditorConfig.AutoReloadFromDisk };
+            _settingsAutoReload.RegisterValueChangedCallback(e => EditorConfig.AutoReloadFromDisk = e.newValue);
+            _settingsAutoReload.tooltip = L10n.Tr("When a file changes on disk and the buffer has no unsaved edits, reload it automatically instead of asking. Buffers with unsaved edits still ask.");
+            _settingsPane.Add(_settingsAutoReload);
+
             _settingsTrimSave = new Toggle(L10n.Tr("Trim Trailing Whitespace on Save")) { value = EditorConfig.TrimTrailingOnSave };
             _settingsTrimSave.RegisterValueChangedCallback(e => EditorConfig.TrimTrailingOnSave = e.newValue);
             _settingsTrimSave.tooltip = L10n.Tr("Remove spaces and tabs at line ends when saving (per project).");
@@ -870,6 +884,7 @@ namespace ADKOM.TextEditor
             _settingsRecentMax?.SetValueWithoutNotify(EditorConfig.RecentFilesMax);
             _settingsTabColor?.SetValueWithoutNotify(EditorConfig.TabColor);
             _settingsAutoClose?.SetValueWithoutNotify(EditorConfig.AutoCloseBrackets);
+            _settingsAutoReload?.SetValueWithoutNotify(EditorConfig.AutoReloadFromDisk);
             _settingsTrimSave?.SetValueWithoutNotify(EditorConfig.TrimTrailingOnSave);
             _settingsFinalNewline?.SetValueWithoutNotify(EditorConfig.FinalNewlineOnSave);
         }

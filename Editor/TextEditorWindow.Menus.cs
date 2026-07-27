@@ -21,6 +21,7 @@ namespace ADKOM.TextEditor
                 fill(m);
                 m.DropDown(btn.worldBound);
             }) { text = title };
+            btn.AddToClassList("menu-btn");
             return btn;
         }
 
