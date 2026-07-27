@@ -303,6 +303,18 @@ the bottom. See [[Project State]] for the current snapshot.
   + MarkdownTest.md, Auto-Reload Changed Files setting,
   SelectionNeedle clamp (issue #8).
 
+- **0.11.0 — the AI release (2026-07-27)**: GitHub Copilot integration
+  (official copilot-language-server via Node/LSP-stdio; npm
+  auto-install to Library/; device-flow sign-in persisting in the
+  server's own token store; ghost text with replace-range semantics,
+  alternatives cycler, Tab/Enter accept, unsaved-buffer support via
+  pseudo paths; autocomplete popup yields to ghost). Ask Unity AI via
+  AssistantApi (reflection, optional package). Search Results console
+  tab replaces console dumps AND a short-lived popup. First-run
+  welcome tabs, Ctrl+Click links (source + rendered md), console
+  Ctrl+C copy, red non-compressible banner. New dependency:
+  com.unity.nuget.newtonsoft-json.
+
 ## Conventions
 
 - Branch per feature/fix from main; merge with `--no-ff`; branches are kept.

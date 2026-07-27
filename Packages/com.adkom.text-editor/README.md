@@ -91,6 +91,8 @@ Choose your keyboard layout — **Visual Studio**, **VS Code**, or
 | Toggle bookmark | Ctrl+Alt+K | Ctrl+Alt+K | Ctrl+Alt+K |
 | Next / previous bookmark | Ctrl+Alt+N / P | Ctrl+Alt+N / P | Ctrl+Alt+N / P |
 | Goto Line | Ctrl+G | Ctrl+G | Ctrl+G |
+| Accept Copilot suggestion | Tab / Enter | Tab / Enter | Tab / Enter |
+| Cycle Copilot suggestions | Alt+[ / ] | Alt+[ / ] | Alt+[ / ] |
 | Open the ATE window | Ctrl+Alt+8 | Ctrl+Alt+8 | Ctrl+Alt+8 |
 
 Plus **word-level undo/redo** (one undo removes one word, never minutes
@@ -126,6 +128,18 @@ layout) fuzzy-finds any project file; per-document **bookmarks**
 selected text **drags and drops** to a new location (Ctrl to copy).
 Optional save cleanups trim trailing whitespace and ensure a final
 newline.
+
+### 🤖 AI, both flavors
+**GitHub Copilot** (Settings, off by default): real ghost-text inline
+suggestions as you type — in files AND unsaved buffers — with a
+◂ 1/3 ▸ cycler for alternatives (Alt+[ / Alt+]), Tab or Enter to
+accept, Escape to dismiss. Bring your own Copilot subscription and
+Node.js; the official Copilot Language Server installs itself on first
+enable, you sign in once with GitHub's device flow, and the login
+persists across restarts. **Unity AI**: with Unity's Assistant package
+installed, right-click any selection or document and *Ask Unity AI* —
+Assistant's prompt popup opens with your text attached (no AI points
+spent until you submit). Non-modal throughout, like everything else.
 
 ### 🔧 Respects your files
 Tabs render as spaces at your configured tab size — but on save, files
@@ -169,9 +183,10 @@ text as caption, placeholder when missing), and a settings option picks which vi
 A **syntax-colorized minimap** runs along the right edge — the shape of
 your whole document at a glance, with a viewport indicator; click or
 drag it to jump anywhere. A **console pane** at the bottom collects
-every ATE message (tool output, update checks, find/replace results,
-status messages) with timestamps — selectable, copyable, and **resizable** by dragging
-the divider above it (the height sticks). Both close away cleanly and come back
+every ATE message with timestamps — selectable, copyable (Ctrl+C), and
+**resizable** by dragging the divider above it (the height sticks) —
+plus a **Search Results tab**: Find All References lists its hits as
+clickable rows that jump straight to the location. Both close away cleanly and come back
 from the View menu — and both are on by default, along with line
 numbers and word wrap.
 
@@ -236,7 +251,7 @@ https://github.com/adkom-games/ADKOM_TextEditor.git#upm
 Prefer a pinned version?
 
 ```
-https://github.com/adkom-games/ADKOM_TextEditor.git#0.10.1
+https://github.com/adkom-games/ADKOM_TextEditor.git#0.11.0
 ```
 
 Semantic Features (compiler-accurate colors + Go to Definition) are
@@ -251,7 +266,6 @@ just right-click a file — or press **Ctrl+Alt+8** (say it out loud).
 
 - More languages (JSON, shaders) via the formatter API
 - Custom user themes; Ctrl+Tab most-recently-used tab order
-- GitHub Copilot integration (via the public Copilot Language Server)
 
 See [RELEASE-NOTES.md](RELEASE-NOTES.md) for version history and
 [CHANGELOG.md](CHANGELOG.md) for the details.

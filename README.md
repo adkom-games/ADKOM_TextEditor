@@ -53,6 +53,10 @@ feature pitch.
 - Bottom **console pane** collecting all ATE messages, timestamped, selectable and copyable
 - Non-modal by design: ATE's prompts never freeze the Unity editor or background tooling
 
+**AI**
+- **GitHub Copilot inline suggestions** (bring your own subscription + Node.js): ghost text with an alternatives cycler, Tab/Enter accept, works in unsaved buffers, one-time device-flow sign-in that persists
+- **Ask Unity AI** about a selection or document (when Unity's Assistant package is installed) — prompt popup with your text attached, no points spent until you submit
+
 **Integration**
 - Selectable as Unity's **External Script Editor** — scripts and console entries open at the exact line/column, with a configurable fallback editor for solutions and binaries
 - **Localized UI**: Japanese, Korean, Simplified Chinese, Traditional Chinese — follows Unity's Editor Language
@@ -75,7 +79,7 @@ https://github.com/adkom-games/ADKOM_TextEditor.git#upm
 Pinned release:
 
 ```
-https://github.com/adkom-games/ADKOM_TextEditor.git#0.10.1
+https://github.com/adkom-games/ADKOM_TextEditor.git#0.11.0
 ```
 
 The `upm` branch contains only the package, so consumer downloads stay
