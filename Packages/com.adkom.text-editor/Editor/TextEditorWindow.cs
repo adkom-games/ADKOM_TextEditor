@@ -665,13 +665,19 @@ namespace ADKOM.TextEditor
             _consolePane.style.height = Mathf.Max(60f, EditorConfig.ConsoleHeight);
 
             var tabs = new VisualElement { name = "console-tabs" };
-            var tab = new VisualElement();
-            tab.AddToClassList("console-tab");
-            tab.Add(new Label("Console"));
+            _consoleTab = new VisualElement();
+            _consoleTab.AddToClassList("console-tab");
+            _consoleTab.Add(new Label(L10n.Tr("Console")));
+            _consoleTab.RegisterCallback<PointerDownEvent>(e => { SelectConsoleTab(0); e.StopPropagation(); });
             var close = new Button(() => SetConsoleVisible(false)) { text = "×" };
             close.AddToClassList("tab__close");
-            tab.Add(close);
-            tabs.Add(tab);
+            _consoleTab.Add(close);
+            tabs.Add(_consoleTab);
+            _searchTab = new VisualElement();
+            _searchTab.AddToClassList("console-tab");
+            _searchTab.Add(new Label(L10n.Tr("Search Results")));
+            _searchTab.RegisterCallback<PointerDownEvent>(e => { SelectConsoleTab(1); e.StopPropagation(); });
+            tabs.Add(_searchTab);
             _consolePane.Add(tabs);
 
             _consoleScroll = new ScrollView(ScrollViewMode.Vertical) { name = "console-scroll" };
@@ -682,8 +688,35 @@ namespace ADKOM.TextEditor
             _consoleScroll.Add(_consoleOutput);
             _consolePane.Add(_consoleScroll);
 
+            _searchScroll = new ScrollView(ScrollViewMode.Vertical) { name = "search-results-scroll" };
+            _searchScroll.style.display = DisplayStyle.None;
+            _searchHeader = new Label(L10n.Tr("(no search results yet)"));
+            _searchHeader.style.unityFontStyleAndWeight = FontStyle.Bold;
+            _searchHeader.style.paddingLeft = 4;
+            _searchScroll.Add(_searchHeader);
+            _consolePane.Add(_searchScroll);
+            SelectConsoleTab(0);
+
             root.Add(_consolePane);
             SetConsoleVisible(_consoleVisible);
+        }
+
+        VisualElement _consoleTab, _searchTab;
+        int _activeConsoleTab;
+
+        /// <summary>0 = Console, 1 = Search Results.</summary>
+        void SelectConsoleTab(int index)
+        {
+            _activeConsoleTab = index;
+            if (_consoleScroll != null)
+                _consoleScroll.style.display = index == 0 ? DisplayStyle.Flex : DisplayStyle.None;
+            if (_searchScroll != null)
+                _searchScroll.style.display = index == 1 ? DisplayStyle.Flex : DisplayStyle.None;
+            var active = new Color(0.5f, 0.5f, 0.5f, 0.25f);
+            if (_consoleTab != null)
+                _consoleTab.style.backgroundColor = index == 0 ? active : Color.clear;
+            if (_searchTab != null)
+                _searchTab.style.backgroundColor = index == 1 ? active : Color.clear;
         }
 
         void SetConsoleVisible(bool visible)

@@ -141,6 +141,13 @@ namespace ADKOM.TextEditor
         {
             // Alphabetical: Console, Line Numbers, Minimap, Word Wrap.
             m.AddItem(new GUIContent(L10n.Tr("Console")), _consoleVisible, () => SetConsoleVisible(!_consoleVisible));
+            m.AddItem(new GUIContent(L10n.Tr("Search Results")),
+                _consoleVisible && _activeConsoleTab == 1,
+                () =>
+                {
+                    if (_consoleVisible && _activeConsoleTab == 1) SetConsoleVisible(false);
+                    else { SetConsoleVisible(true); SelectConsoleTab(1); }
+                });
             m.AddItem(new GUIContent(L10n.Tr("Line Numbers")), _showLineNumbers, () =>
             {
                 _showLineNumbers = !_showLineNumbers;

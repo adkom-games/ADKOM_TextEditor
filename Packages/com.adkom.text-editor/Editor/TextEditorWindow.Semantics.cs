@@ -163,13 +163,13 @@ namespace ADKOM.TextEditor
                         PostStatus(L10n.Tr("No references found."));
                         return;
                     }
-                    // Results picker, not a console dump (Cary, 2026-07-27):
-                    // pick an entry to jump there, opening the file if needed.
+                    // Search Results tab (Cary, 2026-07-27): click a row to jump
+                    // there, opening the file if needed.
                     var items = new List<PickLocation>(refs.Count);
                     foreach (var r in refs)
                         items.Add(new PickLocation
                         { Path = r.Path, Line = r.Line, Col = r.Column, Preview = r.LineText });
-                    ShowResultsPicker(refs.Count == 1 ? L10n.Tr("1 reference:")
+                    ShowSearchResults(refs.Count == 1 ? L10n.Tr("1 reference:")
                         : string.Format(L10n.Tr("{0} references:"), refs.Count), items);
                 }, null);
             });

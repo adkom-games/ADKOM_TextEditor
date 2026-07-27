@@ -9,10 +9,11 @@ All notable changes to this package are documented here. Format follows
 - The notification banner (sign-in codes, file conflicts) is now RED,
   bold, white-on-red and roomier — impossible to miss, no more
   squished text.
-- Find All References now opens a RESULTS PICKER — a centered overlay
-  listing every reference (file:line + preview); Up/Down + Enter or a
-  click jumps there, opening the file if needed; Escape dismisses.
-  (Previously the list was dumped to the console.)
+- New Search Results tab in the console pane (View menu toggle):
+  multi-result commands (Find All References today) list their hits
+  there as clickable rows — file:line + preview, hover highlight —
+  and clicking jumps to the location, opening the file if needed.
+  (Replaces both the old console dump and a short-lived popup.)
 - AI account controls in Settings: the Copilot row's button flips to
   Sign Out once signed in, and a Unity AI row shows the Editor's Unity
   account with a banner-confirmed 'Sign Out of Unity Account…' button
