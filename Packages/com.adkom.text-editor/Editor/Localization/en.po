@@ -712,3 +712,9 @@ msgstr "Unity account: signed out"
 
 msgid "Unity AI uses the Unity account the Editor is signed into; manage it from the account menu in the Editor's top-right corner."
 msgstr "Unity AI uses the Unity account the Editor is signed into; manage it from the account menu in the Editor's top-right corner."
+
+msgid "Search Results"
+msgstr "Search Results"
+
+msgid "(no search results yet)"
+msgstr "(no search results yet)"
