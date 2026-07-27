@@ -236,7 +236,18 @@ namespace ADKOM.TextEditor
                     Rider = All(K(KeyCode.DownArrow, ctrl: true, alt: true, d: "Ctrl+Alt+Down")),
                     Run = _ => True(() => _code.AddCaretOnAdjacentLine(1)) },
 
-                // ---- Display-only (dispatched by CodeView / Tab special-case;
+                new AteCommand { Id = "fold-region", Scope = CmdScope.Editor,
+                    VS = All(K(KeyCode.LeftBracket, ctrl: true, shift: true, d: "Ctrl+Shift+[")),
+                    VSCode = All(K(KeyCode.LeftBracket, ctrl: true, shift: true, d: "Ctrl+Shift+[")),
+                    Rider = All(K(KeyCode.LeftBracket, ctrl: true, shift: true, d: "Ctrl+Shift+[")),
+                    Run = _ => True(() => _code.FoldAtCaret()) },
+                new AteCommand { Id = "unfold-region", Scope = CmdScope.Editor,
+                    VS = All(K(KeyCode.RightBracket, ctrl: true, shift: true, d: "Ctrl+Shift+]")),
+                    VSCode = All(K(KeyCode.RightBracket, ctrl: true, shift: true, d: "Ctrl+Shift+]")),
+                    Rider = All(K(KeyCode.RightBracket, ctrl: true, shift: true, d: "Ctrl+Shift+]")),
+                    Run = _ => True(() => _code.UnfoldAtCaret()) },
+
+                                // ---- Display-only (dispatched by CodeView / Tab special-case;
                 //      the table only supplies the menu hint) ----
                 Disp("undo", "Ctrl+Z", "Ctrl+Z", "Ctrl+Z"),
                 Disp("redo", "Ctrl+Y", "Ctrl+Shift+Z", "Ctrl+Shift+Z"),

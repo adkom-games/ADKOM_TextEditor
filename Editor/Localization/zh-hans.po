@@ -500,3 +500,15 @@ msgstr "标签栏的基础颜色;每个标签页显示为其固定的色调变�
 
 msgid "Autocomplete"
 msgstr "自动补全"
+
+msgid "Indentation Guides"
+msgstr "缩进参考线"
+
+msgid "Fold Region"
+msgstr "折叠区域"
+
+msgid "Unfold Region"
+msgstr "展开区域"
+
+msgid "Unfold All"
+msgstr "全部展开"

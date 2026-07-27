@@ -500,3 +500,15 @@ msgstr "タブバーの基本色。各タブはその色の固有の濃淡で表
 
 msgid "Autocomplete"
 msgstr "オートコンプリート"
+
+msgid "Indentation Guides"
+msgstr "インデントガイド"
+
+msgid "Fold Region"
+msgstr "領域を折りたたむ"
+
+msgid "Unfold Region"
+msgstr "領域を展開"
+
+msgid "Unfold All"
+msgstr "すべて展開"
