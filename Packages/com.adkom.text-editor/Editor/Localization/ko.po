@@ -701,3 +701,15 @@ msgstr "첨부된 선택 영역에 대해 질문…"
 
 msgid "Ask about the attached document…"
 msgstr "첨부된 문서에 대해 질문…"
+
+msgid "Sign the whole Unity Editor out of {0}? Unity AI (and every other cloud feature) disconnects until you sign in again."
+msgstr "Unity 에디터 전체를 {0}에서 로그아웃하시겠습니까? 다시 로그인할 때까지 Unity AI(및 다른 모든 클라우드 기능)의 연결이 끊어집니다."
+
+msgid "Sign Out of Unity Account…"
+msgstr "Unity 계정에서 로그아웃…"
+
+msgid "Unity AI account: {0}"
+msgstr "Unity AI 계정: {0}"
+
+msgid "Unity account: signed out"
+msgstr "Unity 계정: 로그아웃됨"

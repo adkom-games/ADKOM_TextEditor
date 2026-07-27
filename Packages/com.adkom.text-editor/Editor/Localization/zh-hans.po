@@ -701,3 +701,15 @@ msgstr "询问附加的所选内容…"
 
 msgid "Ask about the attached document…"
 msgstr "询问附加的文档…"
+
+msgid "Sign the whole Unity Editor out of {0}? Unity AI (and every other cloud feature) disconnects until you sign in again."
+msgstr "要将整个 Unity 编辑器从 {0} 登出吗？在重新登录之前，Unity AI（以及所有其他云功能）都会断开连接。"
+
+msgid "Sign Out of Unity Account…"
+msgstr "登出 Unity 帐户…"
+
+msgid "Unity AI account: {0}"
+msgstr "Unity AI 帐户：{0}"
+
+msgid "Unity account: signed out"
+msgstr "Unity 帐户：已登出"
