@@ -45,6 +45,11 @@ namespace ADKOM.TextEditor
         // Runtime-only: undo does not survive domain reloads.
         [NonSerialized] public object UndoWorld;
 
+        // Game-mode state (AteApi 1.1). Runtime-only, like the undo world:
+        // a domain reload drops game mode and overlay colors with the game.
+        [NonSerialized] internal bool GameMode;
+        [NonSerialized] internal CodeView.ColorOverlay Overlay;
+
         // Bookmarked line numbers (0-based). Runtime-only, per document.
         [NonSerialized] public HashSet<int> Bookmarks = new HashSet<int>();
 

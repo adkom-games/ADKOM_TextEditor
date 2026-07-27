@@ -244,6 +244,7 @@ namespace ADKOM.TextEditor
             if (uss != null) root.styleSheets.Add(uss);
 
             root.RegisterCallback<KeyDownEvent>(OnGlobalKeyDown, TrickleDown.TrickleDown);
+            root.RegisterCallback<KeyUpEvent>(OnGlobalKeyUp, TrickleDown.TrickleDown);
 
             // --- Menu bar. GenericMenu.DropDown is Unity's native menu on
             // every platform (Windows/macOS/Linux), and building the menu on
@@ -466,6 +467,12 @@ namespace ADKOM.TextEditor
         void RefreshFormatter()
         {
             string classifierPath = null;
+            if (HasDocs && Active.GameMode)
+            {
+                // Game mode: overlay colors only, no syntax highlighting.
+                _code?.SetClassifier(null);
+                return;
+            }
             if (HasDocs)
             {
                 if (Active.HasFile) classifierPath = Active.FilePath;
@@ -1211,16 +1218,29 @@ namespace ADKOM.TextEditor
         Label _miniPrompt;
         TextField _miniInput;
         System.Action<string> _miniCommit;
+        System.Action _miniCancel;
         bool _miniDigitsOnly;
 
+
+        void OnGlobalKeyUp(KeyUpEvent e)
+        {
+            Scripting.AteApi.NoteKeyUp(e.keyCode);
+            if (!MiniBufferOpen && Scripting.AteApi.RaiseKeyUp(e))
+                e.StopImmediatePropagation();
+        }
+
+        bool MiniBufferOpen =>
+            _miniBuffer != null && _miniBuffer.style.display == DisplayStyle.Flex;
 
         void OnLostFocus()
         {
             _code?.BreakUndoGroup();
+            Scripting.AteApi.NotifyWindowFocus(false);
         }
 
         void OnFocus()
         {
+            Scripting.AteApi.NotifyWindowFocus(true);
             // Inactive tabs are checked when they are activated (SwitchTo).
             if (_docs == null || _docs.Count == 0 || _active >= _docs.Count) return;
             CheckExternalChange(Active); // non-modal banner
@@ -1251,6 +1271,15 @@ namespace ADKOM.TextEditor
         void OnGlobalKeyDown(KeyDownEvent e)
         {
             if (UpdateChecker.InstallInProgress) { e.StopImmediatePropagation(); return; }
+            // Addon input hook (API 1.1): feed the polled key state, then let
+            // addons consume the key BEFORE any editor handling. Suppressed
+            // while the mini-buffer prompt is open so games can use Prompt.
+            Scripting.AteApi.NoteKeyDown(e.keyCode);
+            if (!MiniBufferOpen && Scripting.AteApi.RaiseKeyDown(e))
+            {
+                e.StopImmediatePropagation();
+                return;
+            }
             bool ctrl = e.ctrlKey || e.commandKey;
 
             // All global commands live in the command table (see

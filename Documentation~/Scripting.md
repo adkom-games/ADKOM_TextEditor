@@ -94,6 +94,54 @@ system as one undo step. Edits to a **background** document are applied
 directly to the model and are **not undoable**. Activate the document
 first if the user should be able to undo your edit.
 
+## Game API (1.1)
+
+API 1.1 adds everything needed for text-based in-editor games, shipped
+as addons. The shipped **Snake** sample (`Samples~/Addons/SnakeGame.cs`,
+installed by Tools → Addons → Install Sample Addons) uses every member
+below and is the reference implementation.
+
+### Game mode
+
+`AteDocument.GameMode = true` turns a document into a game screen:
+word wrap and syntax highlighting are off, programmatic writes bypass
+undo history (the stack is cleared on entry — Ctrl+Z is inert), keys
+the game doesn't consume don't edit the buffer, and the right-click
+context menu is suppressed. Set it back to false to return the
+document to normal editing.
+
+### Drawing
+
+| Member | Description |
+|---|---|
+| `LineCount`, `GetLine(line)` | Line-based reads (1-based). |
+| `ReadAt(line, col, length)` | Text at a position, clamped to the line end. |
+| `WriteAt(line, col, text)` | **Overwrites** text at a position (pads short lines, no newlines — draw row by row). Keeps the caret put in game mode. |
+| `TryGetCursor(out line, out col)` | Caret position; false when the doc isn't the active tab. |
+| `SetColor(line, colStart, colEnd, fg, bg = null)` | Colors a column range — foreground and/or background. A **render overlay**, never document text, and positional: repaint colors with the text. Null for both clears the range. |
+| `ClearColors(line)` / `ClearColors()` | Clears one line / everything. |
+
+### Input
+
+| Member | Description |
+|---|---|
+| `AteApi.keyDown` / `keyUp` | Every key over the ATE window, **before** the editor. Set `e.Handled = true` to consume (arrows move your game, not the caret). Not raised while the status-bar prompt is open. |
+| `AteApi.IsKeyDown(key)` | Polled key state for held-key movement. All keys reset to up on window focus loss. |
+| `AteApi.mouseMoved` | Pointer moved to a new **(line, column)** over the code area (text coordinates only). |
+| `AteApi.mouseButtonDown` | Consumable (`Handled`) — a handled press never places the caret. |
+| `AteApi.mouseButtonUp` | Notification only. |
+
+### Loop, prompt, lifecycle
+
+| Member | Description |
+|---|---|
+| `AteApi.StartTick(hz, callback)` | Repeating game tick, clamped to [1, 30] Hz. Pauses while the window is unfocused. Returns an `AteTick` — keep it and `Stop()` it in `OnUnload`. |
+| `AteApi.Prompt(prompt, onCommit, onCancel = null, digitsOnly = false, initialValue = "")` | The status-bar mini-buffer (as used by Goto Line) with your own prompt text. Enter → onCommit, Escape/focus loss → onCancel. |
+| `IAteAddonLifecycle` | `OnLoad` / `OnUnload` / `OnFocusGained` / `OnFocusLost`. Resident addons are **single instances**: the same object gets OnLoad, every menu Run, focus events, and OnUnload — game state lives in instance fields. OnUnload fires on addon reload, before domain reloads, and at editor shutdown: stop ticks and close game documents there. |
+
+Game addons declare `ApiVersion = "1.1"`; they load on this ATE and
+are cleanly refused (with the reason) on older ones.
+
 ## Examples
 
 Log every save:
@@ -170,7 +218,7 @@ samples (resident events, document editing, document reading) into the
 folder — the fastest way to start.
 
 Compatibility is semantic versioning against `AteApi.ApiVersion`
-(currently 1.0.0): your declared MAJOR must match and your MINOR must
+(currently 1.1.0): your declared MAJOR must match and your MINOR must
 not be newer. Incompatible or broken addons stay visible in the menu,
 disabled, with the reason; compile errors are reported in the ATE
 console with file and line. **Tools > Addons > Reload Addons** rescans

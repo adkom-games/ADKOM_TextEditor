@@ -68,6 +68,92 @@ namespace ADKOM.TextEditor
             Scripting.AteApi.NotifyTextChanged(this, d);
         }
 
+        // ---- Game support (AteApi 1.1) ----
+
+        internal void ApiSetGameMode(TextDocument d, bool on)
+        {
+            if (d.GameMode == on) return;
+            d.GameMode = on;
+            if (on && d.UndoWorld is CodeView.UndoWorld uw)
+            {
+                // Background doc entering game mode: parked history would
+                // reference stale offsets once the game repaints — drop it.
+                uw.Undo.Clear();
+                uw.Redo.Clear();
+            }
+            if (HasDocs && Active == d && _code != null)
+            {
+                _code.gameMode = on;
+                _code.wordWrap = on ? false : _wordWrap;
+                RefreshFormatter(); // restores/drops syntax highlighting
+                _code.RefreshVisiblePublic();
+            }
+        }
+
+        internal bool ApiTryGetCursor(TextDocument d, out int line, out int col)
+        {
+            if (HasDocs && Active == d && _code != null)
+            {
+                line = _code.caretLine + 1;
+                col = _code.caretColumn + 1;
+                return true;
+            }
+            line = col = 0;
+            return false;
+        }
+
+        /// <summary>WriteAt's line replacement: [start, end) is the line's
+        /// span in the document; the caret stays where it was (a game
+        /// repainting at 30 Hz must not scroll-chase the write position).</summary>
+        internal void ApiWriteLine(TextDocument d, int start, int end, string newLineText)
+        {
+            if (HasDocs && Active == d && _code != null)
+            {
+                int keep = _code.cursorIndex;
+                _code.ReplaceRangeInternal(start, end, newLineText,
+                    Mathf.Min(keep, _code.value.Length), CodeView.EditKind.Programmatic);
+                return;
+            }
+            ApiReplaceRange(d, start, end, newLineText);
+        }
+
+        internal void ApiSetColor(TextDocument d, int line0, int colStart0, int colEnd0,
+            Color? fg, Color? bg)
+        {
+            var ov = d.Overlay ?? (d.Overlay = new CodeView.ColorOverlay());
+            ov.Set(line0, colStart0, colEnd0, fg, bg);
+            if (HasDocs && Active == d && _code != null)
+            {
+                _code.AttachOverlay(ov); // no-op when already attached
+                ScheduleOverlayRefresh();
+            }
+        }
+
+        internal void ApiClearColors(TextDocument d, int line0)
+        {
+            if (d.Overlay == null) return;
+            if (line0 < 0) d.Overlay.Lines.Clear();
+            else d.Overlay.Lines.Remove(line0);
+            if (HasDocs && Active == d) ScheduleOverlayRefresh();
+        }
+
+        // Color calls arrive per-cell from game addons; one repaint per frame
+        // is enough (and 30 Hz × a grid of quads is not).
+        UnityEngine.UIElements.IVisualElementScheduledItem _ovRefresh;
+
+        void ScheduleOverlayRefresh()
+        {
+            if (_ovRefresh == null)
+                _ovRefresh = rootVisualElement.schedule.Execute(() => _code?.RefreshVisiblePublic());
+            _ovRefresh.ExecuteLater(0);
+        }
+
+        internal void ApiPrompt(string prompt, bool digitsOnly,
+            System.Action<string> onCommit, System.Action onCancel, string initialValue)
+        {
+            StartStatusPrompt(prompt, digitsOnly, onCommit, initialValue, onCancel);
+        }
+
         internal bool ApiSave(TextDocument d)
         {
             bool ok = FileService.Save(d);

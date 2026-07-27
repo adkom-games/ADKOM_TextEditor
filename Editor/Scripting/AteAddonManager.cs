@@ -72,12 +72,20 @@ namespace ADKOM.TextEditor.Scripting
         }
 
         [InitializeOnLoadMethod]
-        static void AutoLoad() => EditorApplication.delayCall += () => { if (!_loaded) Reload(); };
+        static void AutoLoad()
+        {
+            // Lifecycle contract: OnUnload always runs before the assemblies
+            // that hold addon state go away (domain reload / editor quit).
+            AssemblyReloadEvents.beforeAssemblyReload += UnloadResidents;
+            EditorApplication.quitting += UnloadResidents;
+            EditorApplication.delayCall += () => { if (!_loaded) Reload(); };
+        }
 
         /// <summary>Rescans the folder, recompiles everything, and re-runs
         /// resident OnLoad hooks. Safe to call any time.</summary>
         public static void Reload()
         {
+            UnloadResidents();
             _loaded = true;
             _entries.Clear();
             EnsureFolder();
@@ -184,6 +192,12 @@ namespace ADKOM.TextEditor.Scripting
             }
         }
 
+        // Resident addons are SINGLE instances (API 1.1): the same object
+        // gets OnLoad, every menu Run, focus events, and OnUnload — so a game
+        // keeps its state across the whole lifecycle.
+        static readonly Dictionary<Type, IAteAddonResident> _residents =
+            new Dictionary<Type, IAteAddonResident>();
+
         static void RunResidents()
         {
             foreach (var e in _entries)
@@ -191,7 +205,9 @@ namespace ADKOM.TextEditor.Scripting
                 if (!e.Compatible || !typeof(IAteAddonResident).IsAssignableFrom(e.Type)) continue;
                 try
                 {
-                    ((IAteAddonResident)Activator.CreateInstance(e.Type)).OnLoad();
+                    var inst = (IAteAddonResident)Activator.CreateInstance(e.Type);
+                    _residents[e.Type] = inst;
+                    inst.OnLoad();
                 }
                 catch (Exception ex)
                 {
@@ -200,13 +216,48 @@ namespace ADKOM.TextEditor.Scripting
             }
         }
 
-        /// <summary>Menu entry point: instantiate and Run, fully isolated.</summary>
+        /// <summary>Tears down resident addons: OnUnload on every lifecycle
+        /// addon, then drop instances, running ticks, and input event
+        /// subscriptions so stale assemblies never keep acting.</summary>
+        static void UnloadResidents()
+        {
+            foreach (var inst in _residents.Values)
+            {
+                if (!(inst is IAteAddonLifecycle lc)) continue;
+                try { lc.OnUnload(); }
+                catch (Exception ex)
+                {
+                    AteConsole.Warn("[ADKOM Text Editor] Addon OnUnload failed: " + ex.Message);
+                }
+            }
+            _residents.Clear();
+            AteApi.StopAllTicks();
+            AteApi.DropInputSubscribers();
+        }
+
+        /// <summary>The ATE window's focus changed — forward to lifecycle addons.</summary>
+        internal static void NotifyFocus(bool focused)
+        {
+            foreach (var inst in _residents.Values)
+            {
+                if (!(inst is IAteAddonLifecycle lc)) continue;
+                try { if (focused) lc.OnFocusGained(); else lc.OnFocusLost(); }
+                catch (Exception ex)
+                {
+                    AteConsole.Warn("[ADKOM Text Editor] Addon focus handler failed: " + ex.Message);
+                }
+            }
+        }
+
+        /// <summary>Menu entry point. Residents Run on their single lifecycle
+        /// instance; plain addons are instantiated per Run, fully isolated.</summary>
         public static void Run(Entry e)
         {
             if (!e.Compatible) return;
             try
             {
-                ((IAteAddon)Activator.CreateInstance(e.Type)).Run();
+                if (_residents.TryGetValue(e.Type, out var resident)) resident.Run();
+                else ((IAteAddon)Activator.CreateInstance(e.Type)).Run();
             }
             catch (Exception ex)
             {

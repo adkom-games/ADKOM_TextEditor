@@ -99,6 +99,10 @@ is verified live in the editor.
 
 ## Immediate next steps
 
+0. In-editor games via addons: API design agreed 2026-07-27, recorded in
+   [[Game API Design]] (AteApi 1.1 — game-mode flag, fg/bg color overlay,
+   key events + state polling, mouse line/col, 30 Hz tick, full
+   load/unload/focus lifecycle). Not yet implemented.
 1. FIELD-VERIFIED 2026-07-27: bundled-Roslyn install on a Roslyn-less
    system works cleanly (Cary confirmed). No semantics-install watch
    items remain; the second project healed via the update path earlier.
