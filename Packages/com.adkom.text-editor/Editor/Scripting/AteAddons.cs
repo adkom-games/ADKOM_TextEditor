@@ -39,5 +39,19 @@ namespace ADKOM.TextEditor.Scripting
     {
         void OnLoad();
     }
+
+    /// <summary>The full addon lifecycle (API 1.1) — for games and other
+    /// addons that hold running state. Resident instances are SINGLE: the
+    /// same object receives OnLoad, every Run, focus changes, and OnUnload.
+    /// OnUnload fires on addon reload, before domain reloads, and on editor
+    /// shutdown — release ticks, event subscriptions, and documents there.
+    /// Focus events track the ATE window; polled key state (AteApi.IsKeyDown)
+    /// is already reset when OnFocusLost fires.</summary>
+    public interface IAteAddonLifecycle : IAteAddonResident
+    {
+        void OnUnload();
+        void OnFocusGained();
+        void OnFocusLost();
+    }
 }
 #endif

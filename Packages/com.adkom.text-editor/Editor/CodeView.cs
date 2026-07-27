@@ -199,6 +199,179 @@ namespace ADKOM.TextEditor
         internal event Action<int, int> onLineDelta;
         public int TabSize = 4;
 
+        // ---------- Game mode + color overlay (AteApi 1.1) ----------
+
+        /// <summary>One colored run on one line. Columns are 0-based, spans
+        /// per line are kept sorted and non-overlapping by ColorOverlay.Set.</summary>
+        internal struct OvSpan
+        {
+            public int Start, End;
+            public Color Fg, Bg;
+            public bool HasFg, HasBg;
+        }
+
+        /// <summary>Per-document color overlay, owned by the TextDocument and
+        /// attached to the view on tab switch (like the undo world). Purely a
+        /// render attribute layer: never part of the text, positional (does
+        /// not track edits).</summary>
+        internal sealed class ColorOverlay
+        {
+            public readonly Dictionary<int, List<OvSpan>> Lines = new Dictionary<int, List<OvSpan>>();
+
+            public void Set(int line, int colStart, int colEnd, Color? fg, Color? bg)
+            {
+                if (colEnd <= colStart || line < 0) return;
+                if (!Lines.TryGetValue(line, out var spans))
+                {
+                    if (fg == null && bg == null) return;
+                    Lines[line] = spans = new List<OvSpan>(4);
+                }
+                // Clip existing spans against the new range so the list stays
+                // sorted and non-overlapping (last write wins).
+                for (int i = spans.Count - 1; i >= 0; i--)
+                {
+                    var s = spans[i];
+                    if (s.End <= colStart || s.Start >= colEnd) continue;
+                    spans.RemoveAt(i);
+                    if (s.Start < colStart)
+                    {
+                        var left = s; left.End = colStart;
+                        spans.Insert(i, left);
+                        i++; // the right remainder check below may still apply
+                    }
+                    if (s.End > colEnd)
+                    {
+                        var right = s; right.Start = colEnd;
+                        spans.Insert(FindInsert(spans, right.Start), right);
+                    }
+                }
+                if (fg != null || bg != null)
+                {
+                    var ns = new OvSpan
+                    {
+                        Start = colStart,
+                        End = colEnd,
+                        HasFg = fg != null,
+                        HasBg = bg != null,
+                        Fg = fg ?? default,
+                        Bg = bg ?? default
+                    };
+                    spans.Insert(FindInsert(spans, colStart), ns);
+                }
+                if (spans.Count == 0) Lines.Remove(line);
+            }
+
+            static int FindInsert(List<OvSpan> spans, int start)
+            {
+                int i = 0;
+                while (i < spans.Count && spans[i].Start < start) i++;
+                return i;
+            }
+        }
+
+        ColorOverlay _overlay;
+        readonly List<VisualElement> _ovBgPool = new List<VisualElement>();
+        bool _gameMode;
+
+        internal void AttachOverlay(ColorOverlay overlay)
+        {
+            if (ReferenceEquals(_overlay, overlay)) return;
+            _overlay = overlay;
+            RefreshVisible();
+        }
+
+        /// <summary>Game mode: programmatic writes bypass undo (the stack is
+        /// cleared on entry — recorded ops would reference stale offsets),
+        /// Undo/Redo are inert, and syntax spans are dropped in favor of the
+        /// color overlay.</summary>
+        internal bool gameMode
+        {
+            get => _gameMode;
+            set
+            {
+                if (_gameMode == value) return;
+                _gameMode = value;
+                if (value)
+                {
+                    _undo.Clear();
+                    _redo.Clear();
+                    BreakUndoGroup();
+                }
+                Reclassify();
+                RefreshVisible();
+            }
+        }
+
+        List<OvSpan> OverlayFor(int line) =>
+            _overlay != null && _overlay.Lines.TryGetValue(line, out var s) ? s : null;
+
+        /// <summary>Rich-text markup for line columns [fromCol, toCol) from
+        /// the color overlay's foreground runs (the overlay analog of
+        /// MarkupForRange; overlay lines bypass the syntax markup cache).</summary>
+        string OverlayMarkupForRange(int line, int fromCol, int toCol, List<OvSpan> spans)
+        {
+            string text = _lines[line];
+            toCol = Mathf.Min(toCol, text.Length);
+            var sb = new StringBuilder((toCol - fromCol) + 32);
+            int pos = fromCol;
+            foreach (var s in spans)
+            {
+                if (!s.HasFg) continue;
+                int ss = Mathf.Max(s.Start, fromCol);
+                int se = Mathf.Min(s.End, toCol);
+                if (se <= ss) continue;
+                if (ss > pos) AppendEscaped(sb, text, pos, ss, null);
+                AppendEscaped(sb, text, ss, se, "#" + ColorUtility.ToHtmlStringRGBA(s.Fg));
+                pos = se;
+            }
+            if (pos < toCol) AppendEscaped(sb, text, pos, toCol, null);
+            return sb.ToString();
+        }
+
+        /// <summary>Positions one quad per visible background run, beneath the
+        /// text labels (same technique as the selection quads).</summary>
+        void RefreshOverlayBg(int firstRow, int visible)
+        {
+            int quad = 0;
+            if (_overlay != null && _overlay.Lines.Count > 0)
+            {
+                for (int i = 0; i < visible; i++)
+                {
+                    int row = firstRow + i;
+                    if (row >= _totalRows) break;
+                    RowToLineSub(row, out int line, out int sub);
+                    var spans = OverlayFor(line);
+                    if (spans == null) continue;
+                    RowBounds(line, sub, out int rs, out int re);
+                    foreach (var s in spans)
+                    {
+                        if (!s.HasBg) continue;
+                        int cs = Mathf.Max(s.Start, rs);
+                        int ce = Mathf.Min(Mathf.Min(s.End, re), _lines[line].Length);
+                        if (ce <= cs) continue;
+                        if (quad >= _ovBgPool.Count)
+                        {
+                            var q = new VisualElement();
+                            q.style.position = Position.Absolute;
+                            q.pickingMode = PickingMode.Ignore;
+                            _content.Insert(0, q); // beneath selection and text
+                            _ovBgPool.Add(q);
+                        }
+                        var v = _ovBgPool[quad++];
+                        v.style.display = DisplayStyle.Flex;
+                        v.style.backgroundColor = s.Bg;
+                        float x0 = MeasureRange(line, rs, cs);
+                        v.style.left = x0;
+                        v.style.top = row * _lineHeight;
+                        v.style.width = Mathf.Max(1, MeasureRange(line, rs, ce) - x0);
+                        v.style.height = _lineHeight;
+                    }
+                }
+            }
+            for (int i = quad; i < _ovBgPool.Count; i++)
+                _ovBgPool[i].style.display = DisplayStyle.None;
+        }
+
         public bool wordWrap
         {
             get => _wordWrap;
@@ -581,6 +754,10 @@ namespace ADKOM.TextEditor
 
         void Notify() => onValueChanged?.Invoke(GetValueInternal());
 
+        /// <summary>0-based caret position for the API facade's cursor query.</summary>
+        internal int caretLine => _caretLine;
+        internal int caretColumn => _caretCol;
+
         public int cursorIndex
         {
             get => LineColToIndex(_caretLine, _caretCol);
@@ -677,6 +854,7 @@ namespace ADKOM.TextEditor
         void Reclassify()
         {
             _lineMarkup = null;
+            if (_gameMode) { _lineSpans = null; return; } // overlay colors only
             if (_classifier == null || GetValueInternal().Length > 400_000)
             {
                 _lineSpans = null;
@@ -936,9 +1114,12 @@ namespace ADKOM.TextEditor
                 label.style.top = row * _lineHeight;
                 label.style.left = 0;
                 label.style.color = _textColor;
-                bool rich = _lineSpans != null && line < _lineSpans.Length;
+                var ov = OverlayFor(line);
+                bool rich = ov != null || (_lineSpans != null && line < _lineSpans.Length);
                 label.enableRichText = rich;
-                if (rich)
+                if (ov != null)
+                    label.text = OverlayMarkupForRange(line, sc, ec, ov);
+                else if (rich)
                 {
                     var br = _breaks?[line];
                     if (br == null)
@@ -972,6 +1153,7 @@ namespace ADKOM.TextEditor
 
             RefreshGutter(firstRow, visible, scrollY);
             _minimap?.MarkDirtyRepaint();
+            RefreshOverlayBg(firstRow, visible);
             RefreshSelection(firstRow, visible);
             RefreshSelectionMatches(firstRow, visible);
             RefreshBracketMatch(firstRow, visible);
@@ -1384,7 +1566,7 @@ namespace ADKOM.TextEditor
                     onLineDelta(afterLine2, nl);
                 }
             }
-            PushUndo(kind, start, end, replacement);
+            if (!_gameMode) PushUndo(kind, start, end, replacement); // game writes are not history
             _internalReplace = true;
             _selHistory.Clear(); // edits invalidate expand/shrink history
             if (!_inMultiEdit) CollapseExtraCarets(); // single-point edits drop extras
@@ -1417,7 +1599,7 @@ namespace ADKOM.TextEditor
 
         public void Undo()
         {
-            if (_undo.Count == 0) return;
+            if (_gameMode || _undo.Count == 0) return;
             var op = _undo[_undo.Count - 1];
             _undo.RemoveAt(_undo.Count - 1);
             CollapseExtraCarets();
@@ -1450,7 +1632,7 @@ namespace ADKOM.TextEditor
 
         public void Redo()
         {
-            if (_redo.Count == 0) return;
+            if (_gameMode || _redo.Count == 0) return;
             var op = _redo[_redo.Count - 1];
             _redo.RemoveAt(_redo.Count - 1);
             CollapseExtraCarets();
@@ -1486,6 +1668,10 @@ namespace ADKOM.TextEditor
 
         void OnKeyDown(KeyDownEvent e)
         {
+            // Game mode: the game owns the buffer — typing/caret keys that the
+            // game did not consume must not edit it. (Window-level commands
+            // ran before this handler and still work.)
+            if (_gameMode) { e.StopPropagation(); return; }
             bool ctrl = e.ctrlKey || e.commandKey;
 
             if (HandleCompletionKey(e))
@@ -2515,6 +2701,17 @@ namespace ADKOM.TextEditor
 
         void OnPointerDown(PointerDownEvent e)
         {
+            // Addon mouse hook (API 1.1): text-coordinate event first; a
+            // handled button-down never reaches caret/selection handling.
+            if (Scripting.AteApi.HasMouseSubscribers)
+            {
+                HitTest(e.position, out int al, out int ac);
+                if (Scripting.AteApi.RaiseMouseButtonDown(al + 1, ac + 1, e.button))
+                {
+                    e.StopPropagation();
+                    return;
+                }
+            }
             _selHistory.Clear();
             HideCompletion();
             if (e.button == 0 && e.altKey && !e.ctrlKey)
@@ -2586,6 +2783,11 @@ namespace ADKOM.TextEditor
 
         void OnPointerMove(PointerMoveEvent e)
         {
+            if (Scripting.AteApi.HasMouseSubscribers)
+            {
+                HitTest(e.position, out int al, out int ac);
+                Scripting.AteApi.RaiseMouseMove(al + 1, ac + 1);
+            }
             if (_textDragPending)
             {
                 if (!_textDragging &&
@@ -2604,6 +2806,11 @@ namespace ADKOM.TextEditor
 
         void OnPointerUp(PointerUpEvent e)
         {
+            if (Scripting.AteApi.HasMouseSubscribers)
+            {
+                HitTest(e.position, out int al, out int ac);
+                Scripting.AteApi.RaiseMouseButtonUp(al + 1, ac + 1, e.button);
+            }
             if (_textDragPending)
             {
                 bool wasDragging = _textDragging;
