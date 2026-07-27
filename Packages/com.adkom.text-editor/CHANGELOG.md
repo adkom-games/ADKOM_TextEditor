@@ -10,7 +10,10 @@ All notable changes to this package are documented here. Format follows
   from the current document AND every other open tab. Appears while
   typing (2+ word chars) or on demand with Ctrl+Space; Up/Down
   navigate, Enter/Tab accept (one undo step), Escape dismisses,
-  further typing refines. Case-matching candidates rank first.
+  further typing refines. Case-matching candidates rank first, and
+  the active language's keywords (all of C# today) are offered as
+  first-class candidates via the classifier's ICompletionKeywords
+  capability — future languages join automatically.
 - Tab strip upgrades: a dropdown button at the right end of the strip
   lists every open tab (numbered, dirty-starred, active checked) and
   jumps on pick; the document context menu opens with a "Tabs" submenu
