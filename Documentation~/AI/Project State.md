@@ -54,7 +54,8 @@ with the host project.
 | Release 0.8.0 (published 2026-07-26) | Done |
 | QoL wave: View menu, Recent Files, Goto Line, deleted-file rescue, session persistence, non-modal unsaved, menu shortcuts, doc context menu, drag tabs, word-level undo, localization | Done |
 | Release 0.9.0 (published 2026-07-26) | Done |
-| 0.10.0 feature campaign: ALL 19 must-have editor features (7 batches, 2026-07-27) | Done (unreleased) |
+| 0.10.0 feature campaign: ALL 19 must-have editor features (7 batches, 2026-07-27) | Done |
+| Release 0.10.0 (published 2026-07-27; tag == CI upm head; fresh-clone verified) | Done |
 | More languages; custom themes | Future (roadmap) |
 
 ## Current work area
@@ -113,17 +114,13 @@ is verified live in the editor.
    Open: issue #6 — wrap freeze on single-monster-line files. Window is now partial classes:
    core + Commands/Menus/Tabs/Session/Banners/ContextMenus/Semantics/
    Api — new window code goes in the matching partial.
-3. CAMPAIGN COMPLETE 2026-07-27: all 19 Features.md must-haves are
-   merged to main as [Unreleased], each batch live-verified (~150
-   assertions total) with both CI gates green. Batches: 1 editing
-   primitives, 2 structural editing, 3 multi-caret, 4 autocomplete
-   (+ language keywords), 5 folding + indent guides, 6 rename/
-   references/format, 7 quick open + bookmarks + drag-drop text;
-   plus Tab UX (dropdown, Tabs context submenu, colorized tabs).
-   New partials: Navigation, QuickOpen; CodeView split adds
-   Completion + Folding. 190 l10n strings across 5 catalogs.
-   AWAITING Cary's explicit "publish 0.10.0" — DO NOT release
-   without it (standing directive 2026-07-27).
+3. 0.10.0 PUBLISHED 2026-07-27 (Cary's explicit go): all 19 must-have
+   features + Defects.md polish round (issues #7, #8 fixed; non-modal
+   close-time Save All; Add Tab integration; resizable console;
+   Markdown image display; singular/plural l10n — 208 strings). Tag
+   0fa5929e == CI upm head; fresh shallow clone verified (version
+   0.10.0, 30 Editor .cs files, new partials present). GitHub Release
+   published — the auto-update channel will surface it.
 4. Roadmap candidates: JSON formatters, custom themes,
    Ctrl+Tab MRU order. (Drag-to-reorder tabs shipped in [Unreleased].)
 
