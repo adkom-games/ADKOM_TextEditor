@@ -49,7 +49,11 @@ namespace ADKOM.TextEditor
             _tabStrip.style.flexShrink = 0;
             _tabViewport.Add(_tabStrip);
             _tabViewport.RegisterCallback<GeometryChangedEvent>(_ => ClampTabScroll());
-            _tabStrip.RegisterCallback<GeometryChangedEvent>(_ => ClampTabScroll());
+            _tabStrip.RegisterCallback<GeometryChangedEvent>(_ =>
+            {
+                if (_tabEnsureActivePending) { _tabEnsureActivePending = false; EnsureActiveTabVisible(); }
+                else ClampTabScroll();
+            });
             _tabBar.Add(_tabViewport);
 
             _tabRightBtn = new Button(() => ScrollTabsBy(160f)) { text = "\u25B8" };
@@ -95,7 +99,9 @@ namespace ADKOM.TextEditor
             if (_tabStrip == null || _active < 0 || _active >= _tabStrip.childCount) return;
             var r = _tabStrip[_active].layout;
             float vw = _tabViewport.contentRect.width;
+            // No layout yet: stay pending so the next GeometryChanged retries.
             if (float.IsNaN(r.x) || float.IsNaN(vw) || vw <= 0) return;
+            _tabEnsureActivePending = false;
             if (r.xMax - _tabScrollOffset > vw) _tabScrollOffset = r.xMax - vw;
             if (r.x < _tabScrollOffset) _tabScrollOffset = r.x;
             ClampTabScroll();
@@ -145,8 +151,14 @@ namespace ADKOM.TextEditor
 
                 _tabStrip.Add(tab);
             }
+            // The freshly built tabs have no layout yet; the strip's
+            // GeometryChanged callback finishes the job once widths exist,
+            // so a jump to any tab always scrolls it into view.
+            _tabEnsureActivePending = true;
             rootVisualElement.schedule.Execute(EnsureActiveTabVisible).ExecuteLater(0);
         }
+
+        bool _tabEnsureActivePending;
 
         Rect _tabListBtnRect;
 
