@@ -96,6 +96,10 @@ namespace ADKOM.TextEditor
             Item(WithSc("Go to Matching Bracket", Dsp("goto-bracket")), edit, () => _code.GoToMatchingBracket());
             Item(WithSc("Expand Selection", Dsp("expand-selection")), edit, () => _code.ExpandSelection());
             Item(WithSc("Shrink Selection", Dsp("shrink-selection")), edit, () => _code.ShrinkSelection());
+            Item(WithSc("Add Next Occurrence", Dsp("add-next-occurrence")), edit, () => _code.AddNextOccurrence());
+            Item(WithSc("Select All Occurrences", Dsp("select-all-occurrences")), edit, () => _code.SelectAllOccurrences());
+            Item(WithSc("Add Caret Above", Dsp("add-caret-above")), edit, () => _code.AddCaretOnAdjacentLine(-1));
+            Item(WithSc("Add Caret Below", Dsp("add-caret-below")), edit, () => _code.AddCaretOnAdjacentLine(1));
             Item(WithSc("Indent", Dsp("indent")), edit, InsertTab);
             Item(WithSc("Unindent", Dsp("unindent")), edit, UnindentSelection);
             m.AddSeparator("");

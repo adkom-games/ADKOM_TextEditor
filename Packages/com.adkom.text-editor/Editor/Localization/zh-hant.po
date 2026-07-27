@@ -473,3 +473,15 @@ msgstr "自動閉合括號"
 
 msgid "Typing ( [ { \" ' inserts the closing pair, closers type over, Backspace removes empty pairs, selections get wrapped."
 msgstr "輸入 ( [ { \" ' 時自動插入閉合符號,閉合符號可直接跳過,Backspace 刪除空對,選取範圍會被包裹。"
+
+msgid "Add Next Occurrence"
+msgstr "新增下一個相符項"
+
+msgid "Select All Occurrences"
+msgstr "選取所有相符項"
+
+msgid "Add Caret Above"
+msgstr "在上方新增游標"
+
+msgid "Add Caret Below"
+msgstr "在下方新增游標"

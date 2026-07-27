@@ -73,6 +73,9 @@ Choose your keyboard layout — **Visual Studio**, **VS Code**, or
 | Toggle block comment | Ctrl+Shift+/ | Shift+Alt+A | Ctrl+Shift+/ |
 | Expand / shrink selection | Shift+Alt+Right / Left | Shift+Alt+Right / Left | Ctrl+W / Ctrl+Shift+W |
 | Navigate back / forward | Ctrl+- / Ctrl+Shift+- | Alt+Left / Alt+Right | Ctrl+Alt+Left / Right |
+| Add next occurrence | Shift+Alt+. | Ctrl+D | Alt+J |
+| Select all occurrences | Shift+Alt+; | Ctrl+Shift+L | Ctrl+Alt+Shift+J |
+| Add caret above / below | Ctrl+Alt+Up / Down | Ctrl+Alt+Up / Down | Ctrl+Alt+Up / Down |
 | Goto Line | Ctrl+G | Ctrl+G | Ctrl+G |
 | Open the ATE window | Ctrl+Alt+8 | Ctrl+Alt+8 | Ctrl+Alt+8 |
 

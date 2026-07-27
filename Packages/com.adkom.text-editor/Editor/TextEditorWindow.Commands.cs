@@ -215,6 +215,27 @@ namespace ADKOM.TextEditor
                     Rider = All(K(KeyCode.RightArrow, ctrl: true, alt: true, d: "Ctrl+Alt+Right")),
                     Run = _ => True(NavigateForward) },
 
+                new AteCommand { Id = "add-next-occurrence", Scope = CmdScope.Editor,
+                    VS = All(K(KeyCode.Period, shift: true, alt: true, d: "Shift+Alt+.")),
+                    VSCode = All(K(KeyCode.D, ctrl: true, d: "Ctrl+D")),
+                    Rider = All(K(KeyCode.J, alt: true, d: "Alt+J")),
+                    Run = _ => True(() => _code.AddNextOccurrence()) },
+                new AteCommand { Id = "select-all-occurrences", Scope = CmdScope.Editor,
+                    VS = All(K(KeyCode.Semicolon, shift: true, alt: true, d: "Shift+Alt+;")),
+                    VSCode = All(K(KeyCode.L, ctrl: true, shift: true, d: "Ctrl+Shift+L")),
+                    Rider = All(K(KeyCode.J, ctrl: true, shift: true, alt: true, d: "Ctrl+Alt+Shift+J")),
+                    Run = _ => True(() => _code.SelectAllOccurrences()) },
+                new AteCommand { Id = "add-caret-above", Scope = CmdScope.Editor,
+                    VS = All(K(KeyCode.UpArrow, ctrl: true, alt: true, d: "Ctrl+Alt+Up")),
+                    VSCode = All(K(KeyCode.UpArrow, ctrl: true, alt: true, d: "Ctrl+Alt+Up")),
+                    Rider = All(K(KeyCode.UpArrow, ctrl: true, alt: true, d: "Ctrl+Alt+Up")),
+                    Run = _ => True(() => _code.AddCaretOnAdjacentLine(-1)) },
+                new AteCommand { Id = "add-caret-below", Scope = CmdScope.Editor,
+                    VS = All(K(KeyCode.DownArrow, ctrl: true, alt: true, d: "Ctrl+Alt+Down")),
+                    VSCode = All(K(KeyCode.DownArrow, ctrl: true, alt: true, d: "Ctrl+Alt+Down")),
+                    Rider = All(K(KeyCode.DownArrow, ctrl: true, alt: true, d: "Ctrl+Alt+Down")),
+                    Run = _ => True(() => _code.AddCaretOnAdjacentLine(1)) },
+
                 // ---- Display-only (dispatched by CodeView / Tab special-case;
                 //      the table only supplies the menu hint) ----
                 Disp("undo", "Ctrl+Z", "Ctrl+Z", "Ctrl+Z"),

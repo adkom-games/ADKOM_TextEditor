@@ -86,6 +86,17 @@ namespace ADKOM.TextEditor
             public string Removed = string.Empty;   // present BEFORE the group
             public int CursorBefore, SelectBefore;  // caret to restore on undo
             public int CursorAfter, SelectAfter;    // caret to restore on redo
+            public List<UndoSeg> Segments;          // multi-caret op (null = simple)
+        }
+
+        /// <summary>One segment of a multi-caret edit; Start is in PRE-edit
+        /// coordinates. Undo applies inverses ascending (each lands exactly
+        /// at Start), redo applies forward descending.</summary>
+        internal sealed class UndoSeg
+        {
+            public int Start;
+            public string Inserted = string.Empty;
+            public string Removed = string.Empty;
         }
 
         /// <summary>The complete per-document undo world: both stacks plus
@@ -511,6 +522,9 @@ namespace ADKOM.TextEditor
         public void SetValueWithoutNotify(string v)
         {
             v = v ?? string.Empty;
+            // Wholesale content replacement (tab switch, reload) invalidates
+            // extra carets — but not when it's a multi-caret edit itself.
+            if (!_inMultiEdit && _extra.Count > 0) _extra.Clear();
             _lines.Clear();
             int start = 0;
             for (int i = 0; i <= v.Length; i++)
@@ -913,6 +927,7 @@ namespace ADKOM.TextEditor
             RefreshSelection(firstRow, visible);
             RefreshSelectionMatches(firstRow, visible);
             RefreshBracketMatch(firstRow, visible);
+            RefreshExtraCarets(firstRow, visible);
             RefreshCaret();
         }
 
@@ -1205,6 +1220,7 @@ namespace ADKOM.TextEditor
             end = Mathf.Clamp(end, start, v.Length);
             PushUndo(kind, start, end, replacement);
             _selHistory.Clear(); // edits invalidate expand/shrink history
+            if (!_inMultiEdit) CollapseExtraCarets(); // single-point edits drop extras
             SetValueWithoutNotify(v.Substring(0, start) + replacement + v.Substring(end));
             cursorIndex = Mathf.Clamp(caret, 0, GetValueInternal().Length);
             CollapseAnchor();
@@ -1236,12 +1252,24 @@ namespace ADKOM.TextEditor
             if (_undo.Count == 0) return;
             var op = _undo[_undo.Count - 1];
             _undo.RemoveAt(_undo.Count - 1);
+            CollapseExtraCarets();
             string v = GetValueInternal();
+            if (op.Segments != null)
+            {
+                // Multi-caret op: inverses ascending land exactly at Start.
+                var sb = new System.Text.StringBuilder(v);
+                foreach (var seg in op.Segments)
+                    sb.Remove(seg.Start, seg.Inserted.Length).Insert(seg.Start, seg.Removed);
+                SetValueWithoutNotify(sb.ToString());
+            }
+            else
+            {
             // The current text contains op.Inserted at op.Start; put back
             // op.Removed. Clamp defensively — offsets are ours to maintain.
             int start = Mathf.Clamp(op.Start, 0, v.Length);
             int end = Mathf.Clamp(start + op.Inserted.Length, start, v.Length);
             SetValueWithoutNotify(v.Substring(0, start) + op.Removed + v.Substring(end));
+            }
             int len = GetValueInternal().Length;
             cursorIndex = Mathf.Clamp(op.CursorBefore, 0, len);
             selectIndex = Mathf.Clamp(op.SelectBefore, 0, len);
@@ -1258,10 +1286,25 @@ namespace ADKOM.TextEditor
             if (_redo.Count == 0) return;
             var op = _redo[_redo.Count - 1];
             _redo.RemoveAt(_redo.Count - 1);
+            CollapseExtraCarets();
             string v = GetValueInternal();
+            if (op.Segments != null)
+            {
+                // Multi-caret op forward: descending keeps earlier starts valid.
+                var sb = new System.Text.StringBuilder(v);
+                for (int i = op.Segments.Count - 1; i >= 0; i--)
+                {
+                    var seg = op.Segments[i];
+                    sb.Remove(seg.Start, seg.Removed.Length).Insert(seg.Start, seg.Inserted);
+                }
+                SetValueWithoutNotify(sb.ToString());
+            }
+            else
+            {
             int start = Mathf.Clamp(op.Start, 0, v.Length);
             int end = Mathf.Clamp(start + op.Removed.Length, start, v.Length);
             SetValueWithoutNotify(v.Substring(0, start) + op.Inserted + v.Substring(end));
+            }
             int len = GetValueInternal().Length;
             cursorIndex = Mathf.Clamp(op.CursorAfter, 0, len);
             selectIndex = Mathf.Clamp(op.SelectAfter, 0, len);
@@ -1287,6 +1330,12 @@ namespace ADKOM.TextEditor
                 { e.StopPropagation(); return; } // handled on keyCode events
                 if (!ctrl && c >= ' ')
                 {
+                    if (HasMultiCarets)
+                    {
+                        MultiType(c.ToString());
+                        e.StopPropagation();
+                        return;
+                    }
                     if (EditorConfig.AutoCloseBrackets && HandleAutoClose(c))
                     {
                         e.StopPropagation();
@@ -1328,6 +1377,7 @@ namespace ADKOM.TextEditor
                 case KeyCode.Return:
                 case KeyCode.KeypadEnter:
                 {
+                    if (HasMultiCarets) { MultiType("\n"); break; }
                     // Auto-indent: copy the current line's leading spaces.
                     string line = _lines[_caretLine];
                     int indent = 0;
@@ -1337,6 +1387,7 @@ namespace ADKOM.TextEditor
                 }
                 case KeyCode.Backspace:
                 {
+                    if (HasMultiCarets) { MultiDelete(forward: false); break; }
                     if (HasSelection) { InsertText(string.Empty, EditKind.ReplaceSelection); break; }
                     int idx = cursorIndex;
                     if (idx == 0) { handled = true; break; }
@@ -1364,6 +1415,7 @@ namespace ADKOM.TextEditor
                 }
                 case KeyCode.Delete:
                 {
+                    if (HasMultiCarets) { MultiDelete(forward: true); break; }
                     if (HasSelection) { InsertText(string.Empty, EditKind.ReplaceSelection); break; }
                     int idx = cursorIndex;
                     if (idx >= GetValueInternal().Length) break;
@@ -1380,8 +1432,18 @@ namespace ADKOM.TextEditor
                     ReplaceRangeInternal(idx, idx + count, string.Empty, idx, EditKind.ForwardDelete);
                     break;
                 }
-                case KeyCode.LeftArrow: MoveCaretH(-1, e.shiftKey, ctrl); break;
-                case KeyCode.RightArrow: MoveCaretH(1, e.shiftKey, ctrl); break;
+                case KeyCode.Escape:
+                    if (HasMultiCarets) CollapseExtraCarets();
+                    else handled = false;
+                    break;
+                case KeyCode.LeftArrow:
+                    if (HasMultiCarets && !e.shiftKey && !ctrl) MultiMoveH(-1);
+                    MoveCaretH(-1, e.shiftKey, ctrl);
+                    break;
+                case KeyCode.RightArrow:
+                    if (HasMultiCarets && !e.shiftKey && !ctrl) MultiMoveH(1);
+                    MoveCaretH(1, e.shiftKey, ctrl);
+                    break;
                 case KeyCode.UpArrow: MoveCaretV(-1, e.shiftKey); break;
                 case KeyCode.DownArrow: MoveCaretV(1, e.shiftKey); break;
                 case KeyCode.Home:
@@ -1420,8 +1482,10 @@ namespace ADKOM.TextEditor
                 case KeyCode.V when ctrl:
                 {
                     string clip = EditorGUIUtility.systemCopyBuffer;
-                    if (!string.IsNullOrEmpty(clip))
-                        InsertText(clip.Replace("\r\n", "\n").Replace("\r", "\n"), EditKind.Paste);
+                    if (string.IsNullOrEmpty(clip)) break;
+                    clip = clip.Replace("\r\n", "\n").Replace("\r", "\n");
+                    if (HasMultiCarets) MultiPaste(clip);
+                    else InsertText(clip, EditKind.Paste);
                     break;
                 }
                 case KeyCode.Z when ctrl && e.shiftKey: Redo(); break;
@@ -1520,6 +1584,293 @@ namespace ADKOM.TextEditor
             }
             EditorGUIUtility.systemCopyBuffer = SelectedText();
             if (cut) InsertText(string.Empty, EditKind.ReplaceSelection);
+        }
+
+        // ---------- Multi-caret editing (Batch 3 must-haves) ----------
+        // The primary caret stays in line/col space (_caretLine/_caretCol);
+        // EXTRA selections live in document-index space as (anchor, caret)
+        // pairs. While extras exist, typing/backspace/delete/enter/paste
+        // apply at every caret as ONE undo op; Escape or a plain click
+        // collapses back to the primary caret.
+
+        readonly List<(int anchor, int caret)> _extra = new List<(int, int)>();
+        readonly List<VisualElement> _extraCaretPool = new List<VisualElement>();
+        readonly List<VisualElement> _extraSelPool = new List<VisualElement>();
+        bool _inMultiEdit;
+
+        internal bool HasMultiCarets => _extra.Count > 0;
+        internal int CaretCount => 1 + _extra.Count;
+
+        internal void CollapseExtraCarets()
+        {
+            if (_extra.Count == 0) return;
+            _extra.Clear();
+            RefreshVisible();
+        }
+
+        /// <summary>Adds an extra caret at a document index (Alt+Click).</summary>
+        internal void AddCaretAt(int index)
+        {
+            index = Mathf.Clamp(index, 0, GetValueInternal().Length);
+            if (index == cursorIndex && !HasSelection) return;
+            for (int i = 0; i < _extra.Count; i++)
+                if (_extra[i].caret == index)
+                {
+                    _extra.RemoveAt(i); // Alt+Click on an existing caret removes it
+                    RefreshVisible();
+                    return;
+                }
+            _extra.Add((index, index));
+            RefreshVisible();
+        }
+
+        /// <summary>First press selects the word at the caret; subsequent
+        /// presses add the next occurrence of the primary selection as an
+        /// extra selection (VS Code Ctrl+D model).</summary>
+        internal void AddNextOccurrence()
+        {
+            if (!HasSelection)
+            {
+                WordRangeAt(_caretLine, _caretCol, out int ws, out int we);
+                if (we <= ws) return;
+                _anchorLine = _caretLine; _anchorCol = ws;
+                _caretCol = we;
+                RefreshVisible();
+                AfterCaretMove();
+                return;
+            }
+            string v = GetValueInternal();
+            int ps = Mathf.Min(cursorIndex, selectIndex);
+            int pe = Mathf.Max(cursorIndex, selectIndex);
+            string needle = v.Substring(ps, pe - ps);
+            if (needle.Length == 0 || needle.Contains("\n")) return;
+            // Search after the furthest existing caret, wrapping once.
+            int from = pe;
+            foreach (var (a, c) in _extra) from = Mathf.Max(from, Mathf.Max(a, c));
+            int idx = v.IndexOf(needle, from, StringComparison.Ordinal);
+            if (idx < 0) idx = v.IndexOf(needle, 0, StringComparison.Ordinal);
+            if (idx < 0) return;
+            if (idx == ps) return; // wrapped all the way around
+            foreach (var (a, c) in _extra)
+                if (Mathf.Min(a, c) == idx) return; // already covered
+            _extra.Add((idx, idx + needle.Length));
+            RefreshVisible();
+        }
+
+        /// <summary>Selects every occurrence of the selection (or the word at
+        /// the caret): the first stays primary, the rest become extras.</summary>
+        internal void SelectAllOccurrences()
+        {
+            if (!HasSelection) AddNextOccurrence(); // select the word first
+            if (!HasSelection) return;
+            string v = GetValueInternal();
+            int ps = Mathf.Min(cursorIndex, selectIndex);
+            int pe = Mathf.Max(cursorIndex, selectIndex);
+            string needle = v.Substring(ps, pe - ps);
+            if (needle.Length == 0 || needle.Contains("\n")) return;
+            _extra.Clear();
+            int idx = v.IndexOf(needle, 0, StringComparison.Ordinal);
+            while (idx >= 0)
+            {
+                if (idx != ps) _extra.Add((idx, idx + needle.Length));
+                idx = v.IndexOf(needle, idx + needle.Length, StringComparison.Ordinal);
+            }
+            RefreshVisible();
+        }
+
+        /// <summary>Adds a caret one line above/below every current caret at
+        /// the same column (the practical column-selection workflow).</summary>
+        internal void AddCaretOnAdjacentLine(int dir)
+        {
+            var carets = new List<int> { cursorIndex };
+            foreach (var (_, c) in _extra) carets.Add(c);
+            var toAdd = new List<int>();
+            foreach (int idx in carets)
+            {
+                IndexToLineCol(idx, out int line, out int col);
+                int nl = line + dir;
+                if (nl < 0 || nl >= _lines.Count) continue;
+                int nIdx = LineColToIndex(nl, Mathf.Min(col, _lines[nl].Length));
+                bool exists = nIdx == cursorIndex;
+                foreach (var (_, c) in _extra) if (c == nIdx) exists = true;
+                foreach (int t in toAdd) if (t == nIdx) exists = true;
+                if (!exists) toAdd.Add(nIdx);
+            }
+            foreach (int t in toAdd) _extra.Add((t, t));
+            if (toAdd.Count > 0) RefreshVisible();
+        }
+
+        /// <summary>Every selection region, primary first, ascending by start.</summary>
+        List<(int s, int e)> AllRegions()
+        {
+            int len = GetValueInternal().Length;
+            var list = new List<(int, int)>
+            {
+                (Mathf.Min(cursorIndex, selectIndex), Mathf.Max(cursorIndex, selectIndex))
+            };
+            foreach (var (a, c) in _extra)
+                list.Add((Mathf.Clamp(Mathf.Min(a, c), 0, len), Mathf.Clamp(Mathf.Max(a, c), 0, len)));
+            list.Sort((x, y) => x.Item1.CompareTo(y.Item1));
+            // Merge overlaps so one edit never double-applies.
+            for (int i = list.Count - 1; i > 0; i--)
+                if (list[i].Item1 < list[i - 1].Item2)
+                {
+                    list[i - 1] = (list[i - 1].Item1, Mathf.Max(list[i - 1].Item2, list[i].Item2));
+                    list.RemoveAt(i);
+                }
+            return list;
+        }
+
+        /// <summary>Applies one replacement per region as a single undo op;
+        /// carets land after each replacement. texts is either one string
+        /// (same everywhere) or exactly one per region.</summary>
+        internal void MultiReplace(List<(int s, int e)> regions, List<string> texts,
+            int backspace = 0, int forwardDelete = 0)
+        {
+            string v = GetValueInternal();
+            var op = new UndoOp
+            {
+                Segments = new List<UndoSeg>(),
+                CursorBefore = cursorIndex, SelectBefore = selectIndex
+            };
+            var newCarets = new List<int>();
+            var sb = new System.Text.StringBuilder(v);
+            for (int i = regions.Count - 1; i >= 0; i--)
+            {
+                var (s, e) = regions[i];
+                if (s == e && backspace > 0) s = Mathf.Max(0, s - backspace);
+                else if (s == e && forwardDelete > 0) e = Mathf.Min(v.Length, e + forwardDelete);
+                string text = texts.Count == 1 ? texts[0] : texts[i];
+                op.Segments.Insert(0, new UndoSeg
+                {
+                    Start = s, Removed = v.Substring(s, e - s), Inserted = text
+                });
+                sb.Remove(s, e - s).Insert(s, text);
+            }
+            // New caret indices: ascending with cumulative delta.
+            int cum = 0;
+            foreach (var seg in op.Segments)
+            {
+                newCarets.Add(seg.Start + cum + seg.Inserted.Length);
+                cum += seg.Inserted.Length - seg.Removed.Length;
+            }
+            _inMultiEdit = true;
+            SetValueWithoutNotify(sb.ToString());
+            _inMultiEdit = false;
+            _extra.Clear();
+            cursorIndex = newCarets[0];
+            CollapseAnchor();
+            for (int i = 1; i < newCarets.Count; i++) _extra.Add((newCarets[i], newCarets[i]));
+            op.CursorAfter = cursorIndex;
+            op.SelectAfter = selectIndex;
+            _undo.Add(op);
+            if (_undo.Count > UndoCap) _undo.RemoveAt(0);
+            _redo.Clear();
+            BreakUndoGroup(); // multi ops never coalesce
+            Notify();
+            RefreshVisible();
+            AfterCaretMove();
+        }
+
+        void MultiType(string text) =>
+            MultiReplace(AllRegions(), new List<string> { text });
+
+        void MultiDelete(bool forward)
+        {
+            var regions = AllRegions();
+            MultiReplace(regions, new List<string> { string.Empty },
+                backspace: forward ? 0 : 1, forwardDelete: forward ? 1 : 0);
+        }
+
+        void MultiPaste(string clip)
+        {
+            var regions = AllRegions();
+            var lines = clip.TrimEnd('\n').Split('\n');
+            var texts = lines.Length == regions.Count
+                ? new List<string>(lines)              // one line per caret
+                : new List<string> { clip };           // same text everywhere
+            MultiReplace(regions, texts);
+        }
+
+        /// <summary>Moves every extra caret by ±1 (arrows in multi mode).</summary>
+        void MultiMoveH(int dir)
+        {
+            int len = GetValueInternal().Length;
+            for (int i = 0; i < _extra.Count; i++)
+            {
+                int c = Mathf.Clamp(_extra[i].caret + dir, 0, len);
+                _extra[i] = (c, c);
+            }
+        }
+
+        /// <summary>Extra carets and their selections on the visible rows.</summary>
+        void RefreshExtraCarets(int firstRow, int visible)
+        {
+            int caretQuad = 0, selQuad = 0;
+            foreach (var (a, c) in _extra)
+            {
+                // selection region
+                int s = Mathf.Min(a, c), e = Mathf.Max(a, c);
+                if (e > s)
+                {
+                    IndexToLineCol(s, out int sl, out int sc);
+                    IndexToLineCol(e, out int el, out int ec);
+                    for (int i = 0; i < visible; i++)
+                    {
+                        int row = firstRow + i;
+                        if (row >= _totalRows) break;
+                        RowToLineSub(row, out int line, out int sub);
+                        if (line < sl || line > el) continue;
+                        RowBounds(line, sub, out int rs, out int re);
+                        int cs = line == sl ? Mathf.Max(sc, rs) : rs;
+                        int ce = line == el ? Mathf.Min(ec, re) : re;
+                        if (ce <= cs) continue;
+                        if (selQuad >= _extraSelPool.Count)
+                        {
+                            var q = new VisualElement();
+                            q.style.position = Position.Absolute;
+                            q.pickingMode = PickingMode.Ignore;
+                            _content.Insert(0, q);
+                            _extraSelPool.Add(q);
+                        }
+                        var sq = _extraSelPool[selQuad++];
+                        sq.style.display = DisplayStyle.Flex;
+                        sq.style.backgroundColor = _selectionColor;
+                        float sx0 = MeasureRange(line, rs, cs);
+                        sq.style.left = sx0;
+                        sq.style.top = row * _lineHeight;
+                        sq.style.width = Mathf.Max(2, MeasureRange(line, rs, ce) - sx0);
+                        sq.style.height = _lineHeight;
+                    }
+                }
+                // caret bar
+                IndexToLineCol(c, out int cl, out int cc);
+                int subRow = SubRowOfCol(cl, cc);
+                int rowAbs = RowOfLine(cl) + subRow;
+                if (rowAbs >= firstRow && rowAbs < firstRow + visible)
+                {
+                    RowBounds(cl, subRow, out int crs, out _);
+                    if (caretQuad >= _extraCaretPool.Count)
+                    {
+                        var q = new VisualElement();
+                        q.style.position = Position.Absolute;
+                        q.pickingMode = PickingMode.Ignore;
+                        _content.Add(q);
+                        _extraCaretPool.Add(q);
+                    }
+                    var cq = _extraCaretPool[caretQuad++];
+                    cq.style.display = DisplayStyle.Flex;
+                    cq.style.backgroundColor = _textColor;
+                    cq.style.left = MeasureRange(cl, crs, cc);
+                    cq.style.top = rowAbs * _lineHeight;
+                    cq.style.width = 2;
+                    cq.style.height = _lineHeight;
+                }
+            }
+            for (int i = caretQuad; i < _extraCaretPool.Count; i++)
+                _extraCaretPool[i].style.display = DisplayStyle.None;
+            for (int i = selQuad; i < _extraSelPool.Count; i++)
+                _extraSelPool[i].style.display = DisplayStyle.None;
         }
 
         // ---------- Brackets (Batch 2 must-haves) ----------
@@ -1977,6 +2328,15 @@ namespace ADKOM.TextEditor
         void OnPointerDown(PointerDownEvent e)
         {
             _selHistory.Clear();
+            if (e.button == 0 && e.altKey && !e.ctrlKey)
+            {
+                // Alt+Click: add (or remove) an extra caret; the primary stays.
+                HitTest(e.position, out int mcLine, out int mcCol);
+                AddCaretAt(LineColToIndex(mcLine, mcCol));
+                e.StopPropagation();
+                return;
+            }
+            if (e.button == 0 && !e.altKey) CollapseExtraCarets();
             if (e.button != 0) return;
             Focus();
             PlaceCaretAt(e.position, e.shiftKey);

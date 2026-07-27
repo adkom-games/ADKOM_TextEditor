@@ -473,3 +473,15 @@ msgstr "括弧の自動クローズ"
 
 msgid "Typing ( [ { \" ' inserts the closing pair, closers type over, Backspace removes empty pairs, selections get wrapped."
 msgstr "( [ { \" ' を入力すると閉じ記号が自動挿入され、閉じ記号は上書き入力、Backspace で空のペアを削除、選択範囲は囲まれます。"
+
+msgid "Add Next Occurrence"
+msgstr "次の一致を追加"
+
+msgid "Select All Occurrences"
+msgstr "すべての一致を選択"
+
+msgid "Add Caret Above"
+msgstr "上にカーソルを追加"
+
+msgid "Add Caret Below"
+msgstr "下にカーソルを追加"
