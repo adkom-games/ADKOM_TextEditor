@@ -105,8 +105,13 @@ namespace ADKOM.TextEditor
             var r = _tabStrip[_active].layout;
             float vw = _tabViewport.contentRect.width;
             // No layout yet: stay pending so the retry ticker / next
-            // GeometryChanged tries again (issue #9).
-            if (float.IsNaN(r.x) || float.IsNaN(vw) || vw <= 0) return;
+            // GeometryChanged tries again. An un-laid-out tab reports
+            // x = 0 with width = NaN (issue #9): x alone passes the guard,
+            // NaN xMax makes the scroll-right test always false, and the
+            // bogus x=0 drags the strip fully LEFT — so width must be
+            // checked too or the flag clears on garbage.
+            if (float.IsNaN(r.x) || float.IsNaN(r.width) || r.width <= 0 ||
+                float.IsNaN(vw) || vw <= 0) return;
             _tabEnsureActivePending = false;
             if (r.xMax - _tabScrollOffset > vw) _tabScrollOffset = r.xMax - vw;
             if (r.x < _tabScrollOffset) _tabScrollOffset = r.x;
