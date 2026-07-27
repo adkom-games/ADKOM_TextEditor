@@ -188,7 +188,40 @@ namespace ADKOM.TextEditor
 
         void FillToolsMenu(GenericMenu m)
         {
+            if (UnityAiBridge.Available && CanEditDoc)
+            {
+                if (_code != null && _code.HasSelectionPublic)
+                    m.AddItem(new GUIContent(L10n.Tr("Ask Unity AI About Selection...")), false, AskUnityAiSelection);
+                else
+                    m.AddDisabledItem(new GUIContent(L10n.Tr("Ask Unity AI About Selection...")));
+                m.AddItem(new GUIContent(L10n.Tr("Ask Unity AI About This File...")), false, AskUnityAiDocument);
+                m.AddSeparator("");
+            }
             m.AddItem(new GUIContent(WithSc("Options...", Dsp("settings"))), false, OpenSettingsPage);
+        }
+
+        /// <summary>Send-to-AI commands: open Unity Assistant's prompt popup
+        /// with the selection/document attached as a text file. No AI call
+        /// (no points) until the user submits the prompt.</summary>
+        void AskUnityAiSelection()
+        {
+            string sel = _code?.SelectedTextPublic;
+            if (string.IsNullOrEmpty(sel))
+            {
+                PostStatus(L10n.Tr("Select some text first."));
+                return;
+            }
+            UnityAiBridge.Ask(rootVisualElement,
+                L10n.Tr("Ask about the attached selection…"),
+                sel, Active.DisplayName + " (selection)");
+        }
+
+        void AskUnityAiDocument()
+        {
+            if (!CanEditDoc) return;
+            UnityAiBridge.Ask(rootVisualElement,
+                L10n.Tr("Ask about the attached document…"),
+                _code.value, Active.DisplayName);
         }
 
         void FillWindowMenu(GenericMenu m)
