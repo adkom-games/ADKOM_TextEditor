@@ -135,3 +135,39 @@ static void Stamp()
     if (doc != null) doc.ReplaceRange(0, 0, "// (c) ADKOM Games\n");
 }
 ```
+
+
+## Addons
+
+Addons are single-file `.cs` scripts in the machine-shared folder
+`%APPDATA%/ADKOM/TextEditor/Addons/` — every ATE instance on the
+machine compiles them in-memory (bundled Roslyn; Semantic Features must
+be enabled) and lists them under **Tools > Addons > {Category} >
+{Name}**. Categories compare case-insensitively. No project is ever
+modified.
+
+An addon is one class carrying `[AteAddon]` and implementing
+`IAteAddon` (menu-invoked `Run()`) or `IAteAddonResident`
+(additionally `OnLoad()` at every addon load — subscribe to AteApi
+events there):
+
+```csharp
+using ADKOM.TextEditor.Scripting;
+
+[AteAddon(Name = "Hello Addon", Category = "Samples", ApiVersion = "1.0")]
+public class HelloAddon : IAteAddonResident
+{
+    public void OnLoad() =>
+        AteApi.documentSaved += d => UnityEngine.Debug.Log("saved " + d.DisplayName);
+
+    public void Run() =>
+        UnityEngine.Debug.Log("active: " + (AteApi.ActiveDocument?.DisplayName ?? "none"));
+}
+```
+
+Compatibility is semantic versioning against `AteApi.ApiVersion`
+(currently 1.0.0): your declared MAJOR must match and your MINOR must
+not be newer. Incompatible or broken addons stay visible in the menu,
+disabled, with the reason; compile errors are reported in the ATE
+console with file and line. **Tools > Addons > Reload Addons** rescans
+without restarting.
