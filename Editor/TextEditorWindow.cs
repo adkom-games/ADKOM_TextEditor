@@ -1604,9 +1604,14 @@ namespace ADKOM.TextEditor
         void RequestCopilotGhost()
         {
             _copilotPending.Pause();
-            if (!EditorConfig.CopilotEnabled || !CanEditDoc || !Active.HasFile) return;
+            if (!EditorConfig.CopilotEnabled || !CanEditDoc || Active.IsSettings) return;
             if (CopilotService.Status != CopilotService.State.Ready) return;
-            string path = Active.FilePath;
+            // Unsaved/virtual documents complete too: the server ignores
+            // untitled: URIs but happily serves a file-style pseudo path
+            // whose content only ever exists via didOpen (never written).
+            string path = Active.HasFile ? Active.FilePath
+                : System.IO.Path.Combine(System.IO.Path.GetTempPath(), "ATE_Untitled",
+                    Active.DisplayName.Replace(' ', '_').Replace('/', '_'));
             CopilotService.SyncDocument(path, _code.value);
             _code.IndexToLineCol(_code.cursorIndex, out int line, out int col);
             int version = _code.DocVersion;
