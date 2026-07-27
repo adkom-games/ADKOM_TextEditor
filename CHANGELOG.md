@@ -16,6 +16,13 @@ All notable changes to this package are documented here. Format follows
   See `Documentation~/Scripting.md`. Accidental public members on
   internals (CodeView edit/hit-test helpers) are now `internal` — the
   facade is the only supported scripting surface.
+- Scripting docs: a prominent "Things you must know" section (domain
+  reloads erase event subscriptions — subscribe from
+  [InitializeOnLoad]; handles expire; background edits not undoable;
+  async dirty-close; modal Save As on untitled; debounce; no nesting;
+  main thread; virtual tabs), plus an importable Package Manager
+  sample ("Scripting (AteApi)") demonstrating every API member as
+  working menu commands.
 
 ### Changed
 - Settings scoping audit: settings that describe the project are now
