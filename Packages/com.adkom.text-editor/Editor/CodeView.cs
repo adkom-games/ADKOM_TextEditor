@@ -190,6 +190,13 @@ namespace ADKOM.TextEditor
         public event Action<string> onUndoStatus;
 
         public event Action<string> onValueChanged;
+
+        /// <summary>Window hook: is this line bookmarked? Drives the gutter accent.</summary>
+        internal Func<int, bool> isLineBookmarked;
+
+        /// <summary>(afterLine, lineDelta) whenever an edit adds/removes lines
+        /// so the window can shift line-anchored state (bookmarks).</summary>
+        internal event Action<int, int> onLineDelta;
         public int TabSize = 4;
 
         public bool wordWrap
@@ -986,7 +993,8 @@ namespace ADKOM.TextEditor
                 g.style.display = DisplayStyle.Flex;
                 g.style.top = row * _lineHeight - scrollY;
                 g.style.height = _lineHeight;
-                g.style.color = _textColor;
+                g.style.color = isLineBookmarked != null && isLineBookmarked(line)
+                    ? new Color(1f, 0.65f, 0.2f) : _textColor;
                 if (sub == 0)
                 {
                     // Fold indicator: collapsed shows a right arrow, foldable
@@ -1251,6 +1259,18 @@ namespace ADKOM.TextEditor
             start = Mathf.Clamp(start, 0, v.Length);
             end = Mathf.Clamp(end, start, v.Length);
             AdjustFoldsForEdit(start, end, replacement);
+            if (onLineDelta != null)
+            {
+                int nl = 0;
+                string curv = value;
+                for (int i2 = start; i2 < end && i2 < curv.Length; i2++) if (curv[i2] == '\n') nl--;
+                foreach (char ch2 in replacement) if (ch2 == '\n') nl++;
+                if (nl != 0)
+                {
+                    IndexToLineCol(Mathf.Min(end, curv.Length), out int afterLine2, out _);
+                    onLineDelta(afterLine2, nl);
+                }
+            }
             PushUndo(kind, start, end, replacement);
             _internalReplace = true;
             _selHistory.Clear(); // edits invalidate expand/shrink history
@@ -1577,6 +1597,7 @@ namespace ADKOM.TextEditor
         }
 
         public bool HasSelectionPublic => HasSelection;
+        internal void RefreshVisiblePublic() => RefreshVisible();
         public int LineCount => _lines.Count;
 
         /// <summary>Selected text, or null when there is no selection.</summary>
@@ -2388,6 +2409,26 @@ namespace ADKOM.TextEditor
             if (e.button == 0 && !e.altKey) CollapseExtraCarets();
             if (e.button != 0) return;
             Focus();
+            // Pressing INSIDE the selection starts a potential text drag
+            // (must-have #19c): the selection is preserved until we know
+            // whether this is a drag or a plain caret-placing click.
+            if (HasSelection && e.clickCount == 1 && !e.shiftKey && !(e.ctrlKey || e.commandKey))
+            {
+                HitTest(e.position, out int hl, out int hc);
+                int hitIdx = LineColToIndex(hl, hc);
+                int selA = Mathf.Min(cursorIndex, selectIndex);
+                int selB = Mathf.Max(cursorIndex, selectIndex);
+                if (hitIdx > selA && hitIdx < selB)
+                {
+                    _textDragPending = true;
+                    _textDragging = false;
+                    _textDragOrigin = e.position;
+                    _dragging = false;
+                    this.CapturePointer(e.pointerId);
+                    e.StopPropagation();
+                    return;
+                }
+            }
             PlaceCaretAt(e.position, e.shiftKey);
             if (e.ctrlKey || e.commandKey)
             {
@@ -2414,6 +2455,13 @@ namespace ADKOM.TextEditor
 
         void OnPointerMove(PointerMoveEvent e)
         {
+            if (_textDragPending)
+            {
+                if (!_textDragging &&
+                    ((Vector2)e.position - _textDragOrigin).sqrMagnitude > 16f)
+                    _textDragging = true;
+                return;
+            }
             if (!_dragging) return;
             if (_wordDrag) WordSnapSelectTo(e.position);
             else PlaceCaretAt(e.position, true);
@@ -2421,10 +2469,71 @@ namespace ADKOM.TextEditor
 
         void OnPointerUp(PointerUpEvent e)
         {
+            if (_textDragPending)
+            {
+                bool wasDragging = _textDragging;
+                _textDragPending = false;
+                _textDragging = false;
+                this.ReleasePointer(e.pointerId);
+                if (wasDragging) DropSelectionAt(e.position, e.ctrlKey || e.commandKey);
+                else
+                {
+                    // No drag happened: behave like the click it was.
+                    PlaceCaretAt(e.position, false);
+                    RefreshVisible();
+                }
+                return;
+            }
             if (!_dragging) return;
             _dragging = false;
             _wordDrag = false;
             this.ReleasePointer(e.pointerId);
+        }
+
+        // ---------- Drag-and-drop of the selected text (#19c) ----------
+
+        bool _textDragPending, _textDragging;
+        Vector2 _textDragOrigin;
+
+        /// <summary>Moves (or, with Ctrl, copies) the selected text to the
+        /// drop position — one undo step via the multi-edit machinery.</summary>
+        void DropSelectionAt(Vector2 worldPos, bool copy)
+        {
+            HitTest(worldPos, out int tl, out int tc);
+            DropSelectionAtIndex(LineColToIndex(tl, tc), copy);
+        }
+
+        internal void DropSelectionAtIndex(int target, bool copy)
+        {
+            if (!HasSelection) return;
+            int selA = Mathf.Min(cursorIndex, selectIndex);
+            int selB = Mathf.Max(cursorIndex, selectIndex);
+            if (target >= selA && target <= selB) return; // dropped on itself
+            string sel = GetValueInternal().Substring(selA, selB - selA);
+            var regions = new List<(int s, int e)>();
+            var texts = new List<string>();
+            if (copy)
+            {
+                regions.Add((target, target));
+                texts.Add(sel);
+            }
+            else if (target < selA)
+            {
+                regions.Add((target, target)); texts.Add(sel);
+                regions.Add((selA, selB)); texts.Add(string.Empty);
+            }
+            else // target > selB
+            {
+                regions.Add((selA, selB)); texts.Add(string.Empty);
+                regions.Add((target, target)); texts.Add(sel);
+            }
+            MultiReplace(regions, texts);
+            CollapseExtraCarets();
+            // Select the dropped text at its new home.
+            int newStart = copy || target < selA ? target : target - sel.Length;
+            selectIndex = newStart;
+            cursorIndex = newStart + sel.Length;
+            RefreshVisible();
         }
 
         void HitTest(Vector2 worldPos, out int line, out int col)

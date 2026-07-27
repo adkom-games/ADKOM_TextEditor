@@ -81,6 +81,9 @@ Choose your keyboard layout — **Visual Studio**, **VS Code**, or
 | Rename symbol | F2 | F2 | Shift+F6 |
 | Find all references | Shift+F12 | Shift+F12 | Alt+F7 |
 | Format document | Shift+Alt+F | Shift+Alt+F | Ctrl+Alt+L |
+| Quick Open | Ctrl+, | Ctrl+P | Ctrl+T |
+| Toggle bookmark | Ctrl+Alt+K | Ctrl+Alt+K | Ctrl+Alt+K |
+| Next / previous bookmark | Ctrl+Alt+N / P | Ctrl+Alt+N / P | Ctrl+Alt+N / P |
 | Goto Line | Ctrl+G | Ctrl+G | Ctrl+G |
 | Open the ATE window | Ctrl+Alt+8 | Ctrl+Alt+8 | Ctrl+Alt+8 |
 

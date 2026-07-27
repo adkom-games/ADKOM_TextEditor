@@ -554,3 +554,21 @@ msgstr "文件已是格式化狀態。"
 
 msgid "Document formatted."
 msgstr "已格式化文件。"
+
+msgid "Quick Open..."
+msgstr "快速開啟..."
+
+msgid "Toggle Bookmark"
+msgstr "切換書籤"
+
+msgid "Next Bookmark"
+msgstr "下一個書籤"
+
+msgid "Previous Bookmark"
+msgstr "上一個書籤"
+
+msgid "Clear Bookmarks"
+msgstr "清除書籤"
+
+msgid "No bookmarks in this document."
+msgstr "此文件中沒有書籤。"

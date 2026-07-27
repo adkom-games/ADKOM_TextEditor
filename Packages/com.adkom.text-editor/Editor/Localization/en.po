@@ -556,3 +556,21 @@ msgstr "Document already formatted."
 
 msgid "Document formatted."
 msgstr "Document formatted."
+
+msgid "Quick Open..."
+msgstr "Quick Open..."
+
+msgid "Toggle Bookmark"
+msgstr "Toggle Bookmark"
+
+msgid "Next Bookmark"
+msgstr "Next Bookmark"
+
+msgid "Previous Bookmark"
+msgstr "Previous Bookmark"
+
+msgid "Clear Bookmarks"
+msgstr "Clear Bookmarks"
+
+msgid "No bookmarks in this document."
+msgstr "No bookmarks in this document."
