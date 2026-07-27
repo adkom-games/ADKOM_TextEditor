@@ -718,3 +718,6 @@ msgstr "Search Results"
 
 msgid "(no search results yet)"
 msgstr "(no search results yet)"
+
+msgid "Copied."
+msgstr "Copied."

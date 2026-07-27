@@ -684,7 +684,26 @@ namespace ADKOM.TextEditor
             _consoleOutput = new Label { name = "console-output" };
             _consoleOutput.AddToClassList("code-line");
             _consoleOutput.focusable = true;
-            _consoleOutput.selection.isSelectable = true; // select + Ctrl+C
+            _consoleOutput.selection.isSelectable = true;
+            // Explicit Ctrl+C: the window-level key handling must never eat a
+            // copy from the console, and older UIToolkit builds do not copy
+            // selectable-label selections natively.
+            _consoleOutput.RegisterCallback<KeyDownEvent>(e =>
+            {
+                if ((e.ctrlKey || e.commandKey) && e.keyCode == KeyCode.C)
+                {
+                    var sel = _consoleOutput.selection;
+                    int a2 = Mathf.Min(sel.cursorIndex, sel.selectIndex);
+                    int b2 = Mathf.Max(sel.cursorIndex, sel.selectIndex);
+                    string txt = _consoleOutput.text ?? "";
+                    if (b2 > a2 && b2 <= txt.Length)
+                    {
+                        EditorGUIUtility.systemCopyBuffer = txt.Substring(a2, b2 - a2);
+                        PostStatus(L10n.Tr("Copied."));
+                    }
+                    e.StopImmediatePropagation();
+                }
+            }, TrickleDown.TrickleDown);
             _consoleScroll.Add(_consoleOutput);
             _consolePane.Add(_consoleScroll);
 
@@ -1591,10 +1610,14 @@ namespace ADKOM.TextEditor
             CopilotService.SyncDocument(path, _code.value);
             _code.IndexToLineCol(_code.cursorIndex, out int line, out int col);
             int version = _code.DocVersion;
-            CopilotService.RequestCompletion(path, line, col, text =>
+            CopilotService.RequestCompletion(path, line, col, sug =>
             {
                 if (this == null || _code == null) return;
-                _code.ShowGhost(text, line, col, version);
+                if (sug == null) { _code.ClearGhost(); return; }
+                var g = sug.Value;
+                int startIdx = _code.LineColToIndex(g.StartLine, g.StartChar);
+                int endIdx = _code.LineColToIndex(g.EndLine, g.EndChar);
+                _code.ShowGhost(g.Text, startIdx, endIdx, line, col, version);
             });
         }
 

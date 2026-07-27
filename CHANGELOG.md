@@ -9,6 +9,12 @@ All notable changes to this package are documented here. Format follows
 - The notification banner (sign-in codes, file conflicts) is now RED,
   bold, white-on-red and roomier — impossible to miss, no more
   squished text.
+- Copilot ghost text now honors the suggestion's REPLACE RANGE:
+  accepting a suggestion replaces the text Copilot rewrote (e.g. the
+  auto-closed paren after the caret) instead of inserting a duplicate;
+  the ghost shows only the not-yet-typed remainder.
+- Console text selections copy with Ctrl+C (explicit handler; shows
+  'Copied.' in the status bar).
 - New Search Results tab in the console pane (View menu toggle):
   multi-result commands (Find All References today) list their hits
   there as clickable rows — file:line + preview, hover highlight —
