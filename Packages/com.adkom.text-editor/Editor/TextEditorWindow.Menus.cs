@@ -79,8 +79,10 @@ namespace ADKOM.TextEditor
             Item(WithSc("Undo", Dsp("undo")), edit && _code.CanUndo, _code.Undo);
             Item(WithSc("Redo", Dsp("redo")), edit && _code.CanRedo, _code.Redo);
             m.AddSeparator("");
-            Item(WithSc("Cut", Dsp("cut")), edit && _code.HasSelectionPublic, _code.Cut);
-            Item(WithSc("Copy", Dsp("copy")), edit && _code.HasSelectionPublic, _code.Copy);
+            // Enabled without a selection: empty-selection Cut/Copy act on
+            // the whole current line (VS / VS Code / Rider standard).
+            Item(WithSc("Cut", Dsp("cut")), edit, _code.Cut);
+            Item(WithSc("Copy", Dsp("copy")), edit, _code.Copy);
             Item(WithSc("Paste", Dsp("paste")), edit && !string.IsNullOrEmpty(EditorGUIUtility.systemCopyBuffer), _code.Paste);
             Item(WithSc("Select All", Dsp("select-all")), edit, _code.SelectAll);
             Item(WithSc("Goto Line...", Dsp("goto-line")), edit, GotoLineCommand);
@@ -92,6 +94,17 @@ namespace ADKOM.TextEditor
             Item(WithSc("Toggle Comment", Dsp("toggle-comment")), edit, ToggleComment);
             Item(WithSc("Indent", Dsp("indent")), edit, InsertTab);
             Item(WithSc("Unindent", Dsp("unindent")), edit, UnindentSelection);
+            m.AddSeparator("");
+            Item(WithSc("Insert Line Above", Dsp("insert-line-above")), edit, () => _code.InsertLineAbove());
+            Item(WithSc("Insert Line Below", Dsp("insert-line-below")), edit, () => _code.InsertLineBelow());
+            Item(WithSc("Join Lines", Dsp("join-lines")), edit, () => _code.JoinLines());
+            Item(WithSc("Select Line", Dsp("select-line")), edit, () => _code.SelectCurrentLine());
+            bool sel = edit && _code.HasSelectionPublic;
+            Item(L10n.Tr("Transform") + "/" + L10n.Tr("UPPERCASE"), sel,
+                () => _code.TransformSelection(s => s.ToUpperInvariant()));
+            Item(L10n.Tr("Transform") + "/" + L10n.Tr("lowercase"), sel,
+                () => _code.TransformSelection(s => s.ToLowerInvariant()));
+            Item(WithSc("Sort Selected Lines", null), sel, () => _code.SortSelectedLines());
             m.AddSeparator("");
             m.AddItem(new GUIContent(WithSc("Find...", Dsp("find"))), false, () => FindReplaceWindow.Open(this, false, false));
             m.AddItem(new GUIContent(WithSc("Find in Tabs...", Dsp("find-in-tabs"))), false, () => FindReplaceWindow.Open(this, false, true));

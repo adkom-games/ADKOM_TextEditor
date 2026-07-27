@@ -56,6 +56,26 @@ namespace ADKOM.TextEditor
 
         /// <summary>Saves the document to its current path (or prompts if it has none).
         /// Returns true if the file was written.</summary>
+        /// <summary>On-save cleanups (per-project settings): trim trailing
+        /// whitespace and/or ensure a single final newline. Mutates
+        /// doc.Content — the window refreshes the view after saving.</summary>
+        static void ApplySaveTransforms(TextDocument doc)
+        {
+            string c = doc.Content ?? string.Empty;
+            if (EditorConfig.TrimTrailingOnSave)
+            {
+                var lines = c.Split('\n');
+                for (int i = 0; i < lines.Length; i++) lines[i] = lines[i].TrimEnd(' ', '\t');
+                c = string.Join("\n", lines);
+            }
+            if (EditorConfig.FinalNewlineOnSave)
+            {
+                c = c.TrimEnd('\n') + "\n";
+                if (c == "\n") c = string.Empty; // don't turn an empty doc into one newline
+            }
+            doc.Content = c;
+        }
+
         public static bool Save(TextDocument doc)
         {
             string path = doc.FilePath;
@@ -64,6 +84,7 @@ namespace ADKOM.TextEditor
                 path = PromptSaveAs(doc.DisplayName);
                 if (path == null) return false;
             }
+            ApplySaveTransforms(doc);
             doc.SaveTo(path);
             RefreshIfInAssets(path);
             Scripting.AteApi.NotifySaved(doc);
@@ -75,6 +96,7 @@ namespace ADKOM.TextEditor
         {
             string path = PromptSaveAs(doc.DisplayName);
             if (path == null) return false;
+            ApplySaveTransforms(doc);
             doc.SaveTo(path);
             RefreshIfInAssets(path);
             Scripting.AteApi.NotifySaved(doc);

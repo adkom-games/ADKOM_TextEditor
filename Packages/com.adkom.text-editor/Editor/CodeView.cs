@@ -1333,9 +1333,15 @@ namespace ADKOM.TextEditor
                     if (HasSelection) { InsertText(string.Empty, EditKind.ReplaceSelection); break; }
                     int idx = cursorIndex;
                     if (idx == 0) { handled = true; break; }
-                    // Whitespace deletes back to the previous tab stop.
-                    int p = _caretCol > 0 ? PrevTabStopInSpaces(_lines[_caretLine], _caretCol) : -1;
-                    int remove = p >= 0 ? _caretCol - p : 1;
+                    int remove;
+                    if (ctrl) // word-wise delete (Ctrl+Backspace)
+                        remove = _caretCol > 0 ? _caretCol - PrevWord(_lines[_caretLine], _caretCol) : 1;
+                    else
+                    {
+                        // Whitespace deletes back to the previous tab stop.
+                        int p = _caretCol > 0 ? PrevTabStopInSpaces(_lines[_caretLine], _caretCol) : -1;
+                        remove = p >= 0 ? _caretCol - p : 1;
+                    }
                     ReplaceRangeInternal(idx - remove, idx, string.Empty, idx - remove, EditKind.Backspace);
                     break;
                 }
@@ -1344,9 +1350,16 @@ namespace ADKOM.TextEditor
                     if (HasSelection) { InsertText(string.Empty, EditKind.ReplaceSelection); break; }
                     int idx = cursorIndex;
                     if (idx >= GetValueInternal().Length) break;
-                    // Whitespace deletes forward to the next tab stop.
-                    int nx = NextTabStopInSpaces(_lines[_caretLine], _caretCol);
-                    int count = nx >= 0 ? nx - _caretCol : 1;
+                    int count;
+                    if (ctrl) // word-wise delete (Ctrl+Delete)
+                        count = _caretCol < _lines[_caretLine].Length
+                            ? NextWord(_lines[_caretLine], _caretCol) - _caretCol : 1;
+                    else
+                    {
+                        // Whitespace deletes forward to the next tab stop.
+                        int nx = NextTabStopInSpaces(_lines[_caretLine], _caretCol);
+                        count = nx >= 0 ? nx - _caretCol : 1;
+                    }
                     ReplaceRangeInternal(idx, idx + count, string.Empty, idx, EditKind.ForwardDelete);
                     break;
                 }
@@ -1467,9 +1480,126 @@ namespace ADKOM.TextEditor
 
         void CopySelection(bool cut)
         {
-            if (!HasSelection) return;
+            if (!HasSelection)
+            {
+                // Whole-line copy/cut on an empty selection — the VS /
+                // VS Code / Rider standard. The copied text keeps its
+                // trailing newline so a paste inserts a full line.
+                int line = _caretLine;
+                int start = LineColToIndex(line, 0);
+                string v = GetValueInternal();
+                int end = line + 1 < _lines.Count ? LineColToIndex(line + 1, 0) : v.Length;
+                string text = v.Substring(start, end - start);
+                if (!text.EndsWith("\n")) text += "\n";
+                EditorGUIUtility.systemCopyBuffer = text;
+                if (cut)
+                {
+                    int remStart = start, remEnd = end;
+                    if (end == v.Length && start > 0) remStart = start - 1; // last line eats the preceding newline
+                    ReplaceRangeInternal(remStart, remEnd, string.Empty,
+                        Mathf.Min(remStart, v.Length), EditKind.LineOp);
+                }
+                return;
+            }
             EditorGUIUtility.systemCopyBuffer = SelectedText();
             if (cut) InsertText(string.Empty, EditKind.ReplaceSelection);
+        }
+
+        // ---------- Editing primitives (Batch 1 must-haves) ----------
+
+        /// <summary>Selects the caret's whole line including its newline.</summary>
+        internal void SelectCurrentLine()
+        {
+            _anchorLine = _caretLine;
+            _anchorCol = 0;
+            if (_caretLine + 1 < _lines.Count) { _caretLine++; _caretCol = 0; }
+            else _caretCol = _lines[_caretLine].Length;
+            _preferredCol = -1;
+            RefreshVisible();
+            AfterCaretMove();
+        }
+
+        /// <summary>Joins the selected lines (or the caret line with the next)
+        /// into one, separating with a single space, as one undo step.</summary>
+        internal void JoinLines()
+        {
+            int sl = _caretLine, el = _caretLine;
+            if (HasSelection)
+            {
+                NormalizedSelection(out sl, out _, out el, out int ec);
+                if (ec == 0 && el > sl) el--; // selection ending at line start excludes it
+            }
+            int last = Mathf.Max(sl, el);
+            if (last <= sl) last = sl; // caret-only: join with the next line
+            if (sl >= _lines.Count - 1) return;
+            int joinTo = HasSelection && last > sl ? last : sl + 1;
+            joinTo = Mathf.Min(joinTo, _lines.Count - 1);
+            var sb = new System.Text.StringBuilder(_lines[sl].TrimEnd());
+            for (int i = sl + 1; i <= joinTo; i++)
+            {
+                string next = _lines[i].TrimStart();
+                if (sb.Length > 0 && next.Length > 0) sb.Append(' ');
+                sb.Append(next);
+            }
+            int from = LineColToIndex(sl, 0);
+            int to = LineColToIndex(joinTo, _lines[joinTo].Length);
+            string joined = sb.ToString();
+            ReplaceRangeInternal(from, to, joined, from + joined.Length, EditKind.LineOp);
+        }
+
+        /// <summary>Replaces the selection with f(selection), keeping it
+        /// selected (UPPERCASE / lowercase transforms). No-op without one.</summary>
+        internal void TransformSelection(System.Func<string, string> f)
+        {
+            if (!HasSelection) return;
+            int s = Mathf.Min(cursorIndex, selectIndex);
+            int e = Mathf.Max(cursorIndex, selectIndex);
+            string r = f(GetValueInternal().Substring(s, e - s));
+            ReplaceRangeInternal(s, e, r, s + r.Length, EditKind.LineOp);
+            selectIndex = s;
+            cursorIndex = s + r.Length;
+            RefreshVisible();
+        }
+
+        /// <summary>Sorts the full lines covered by the selection (ordinal).</summary>
+        internal void SortSelectedLines()
+        {
+            if (!HasSelection) return;
+            NormalizedSelection(out int sl, out _, out int el, out int ec);
+            if (ec == 0 && el > sl) el--;
+            if (el <= sl) return;
+            int from = LineColToIndex(sl, 0);
+            int to = LineColToIndex(el, _lines[el].Length);
+            var seg = GetValueInternal().Substring(from, to - from).Split('\n');
+            System.Array.Sort(seg, System.StringComparer.Ordinal);
+            string r = string.Join("\n", seg);
+            ReplaceRangeInternal(from, to, r, from + r.Length, EditKind.LineOp);
+            selectIndex = from;
+            cursorIndex = from + r.Length;
+            RefreshVisible();
+        }
+
+        /// <summary>Opens a new auto-indented line below the caret's line
+        /// without splitting it (Ctrl+Enter family).</summary>
+        internal void InsertLineBelow()
+        {
+            string line = _lines[_caretLine];
+            int indent = 0;
+            while (indent < line.Length && line[indent] == ' ') indent++;
+            int idx = LineColToIndex(_caretLine, line.Length);
+            ReplaceRangeInternal(idx, idx, "\n" + new string(' ', indent),
+                idx + 1 + indent, EditKind.TypeNewline);
+        }
+
+        /// <summary>Opens a new auto-indented line above the caret's line.</summary>
+        internal void InsertLineAbove()
+        {
+            string line = _lines[_caretLine];
+            int indent = 0;
+            while (indent < line.Length && line[indent] == ' ') indent++;
+            int idx = LineColToIndex(_caretLine, 0);
+            ReplaceRangeInternal(idx, idx, new string(' ', indent) + "\n",
+                idx + indent, EditKind.TypeNewline);
         }
 
         /// <summary>Previous tab-stop-aligned column within the whitespace run

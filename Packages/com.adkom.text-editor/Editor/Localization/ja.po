@@ -413,3 +413,39 @@ msgstr "{0} 文字を元に戻しました。"
 
 msgid "Redid {0} char(s)."
 msgstr "{0} 文字をやり直しました。"
+
+msgid "Join Lines"
+msgstr "行を結合"
+
+msgid "Select Line"
+msgstr "行を選択"
+
+msgid "Insert Line Above"
+msgstr "上に行を挿入"
+
+msgid "Insert Line Below"
+msgstr "下に行を挿入"
+
+msgid "Transform"
+msgstr "変換"
+
+msgid "UPPERCASE"
+msgstr "大文字に変換"
+
+msgid "lowercase"
+msgstr "小文字に変換"
+
+msgid "Sort Selected Lines"
+msgstr "選択行を並べ替え"
+
+msgid "Trim Trailing Whitespace on Save"
+msgstr "保存時に行末の空白を削除"
+
+msgid "Ensure Final Newline on Save"
+msgstr "保存時に末尾の改行を保証"
+
+msgid "Remove spaces and tabs at line ends when saving (per project)."
+msgstr "保存時に各行末のスペースとタブを削除します(プロジェクトごと)。"
+
+msgid "Guarantee the file ends with exactly one newline when saving (per project)."
+msgstr "保存時にファイル末尾が改行1つで終わることを保証します(プロジェクトごと)。"

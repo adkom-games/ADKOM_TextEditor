@@ -65,6 +65,10 @@ Choose your keyboard layout — **Visual Studio**, **VS Code**, or
 | Indent / unindent | Tab / Shift+Tab | Tab / Shift+Tab | Tab / Shift+Tab |
 | Go to Definition | F12 / Ctrl+Click | F12 / Ctrl+Click | Ctrl+B / Ctrl+Click |
 | Settings | — | Ctrl+, | Ctrl+Alt+S |
+| Word-wise delete | Ctrl+Backspace / Ctrl+Delete | Ctrl+Backspace / Ctrl+Delete | Ctrl+Backspace / Ctrl+Delete |
+| Insert line above / below | Ctrl+Enter / Ctrl+Shift+Enter | Ctrl+Shift+Enter / Ctrl+Enter | Ctrl+Alt+Enter / Shift+Enter |
+| Join lines | Ctrl+J | Ctrl+J | Ctrl+J |
+| Select line | — | Ctrl+L | — |
 | Goto Line | Ctrl+G | Ctrl+G | Ctrl+G |
 | Open the ATE window | Ctrl+Alt+8 | Ctrl+Alt+8 | Ctrl+Alt+8 |
 
@@ -165,6 +169,7 @@ the file back. Close the whole window and your tabs come back when you
 reopen it, even across editor restarts. A Settings tab (the gear button, or Tools → Options…) keeps every
 preference — theme, mode, line numbers, word wrap, font and size,
 smooth scrolling, tab size, keyboard layout, Markdown default view,
+save cleanups (trim trailing whitespace, final newline),
 recent-files count, external fallback editor, automatic updates — one
 click away, persisted across sessions.
 

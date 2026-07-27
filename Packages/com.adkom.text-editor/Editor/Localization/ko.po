@@ -413,3 +413,39 @@ msgstr "{0}자를 실행 취소했습니다."
 
 msgid "Redid {0} char(s)."
 msgstr "{0}자를 다시 실행했습니다."
+
+msgid "Join Lines"
+msgstr "줄 합치기"
+
+msgid "Select Line"
+msgstr "줄 선택"
+
+msgid "Insert Line Above"
+msgstr "위에 줄 삽입"
+
+msgid "Insert Line Below"
+msgstr "아래에 줄 삽입"
+
+msgid "Transform"
+msgstr "변환"
+
+msgid "UPPERCASE"
+msgstr "대문자로"
+
+msgid "lowercase"
+msgstr "소문자로"
+
+msgid "Sort Selected Lines"
+msgstr "선택한 줄 정렬"
+
+msgid "Trim Trailing Whitespace on Save"
+msgstr "저장 시 줄 끝 공백 제거"
+
+msgid "Ensure Final Newline on Save"
+msgstr "저장 시 마지막 줄 바꿈 보장"
+
+msgid "Remove spaces and tabs at line ends when saving (per project)."
+msgstr "저장할 때 각 줄 끝의 공백과 탭을 제거합니다(프로젝트별)."
+
+msgid "Guarantee the file ends with exactly one newline when saving (per project)."
+msgstr "저장할 때 파일이 정확히 하나의 줄 바꿈으로 끝나도록 보장합니다(프로젝트별)."
