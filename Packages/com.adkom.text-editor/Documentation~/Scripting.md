@@ -116,7 +116,7 @@ document to normal editing.
 |---|---|
 | `LineCount`, `GetLine(line)` | Line-based reads (1-based). |
 | `ReadAt(line, col, length)` | Text at a position, clamped to the line end. |
-| `WriteAt(line, col, text)` | **Overwrites** text at a position (pads short lines, no newlines — draw row by row). Keeps the caret put in game mode. |
+| `WriteAt(line, col, text, mode = Overwrite)` | Writes text at a position: `AteWriteMode.Overwrite` (default) replaces in place — the fixed-grid behavior games need; `AteWriteMode.Insert` shifts the rest of the line right. Pads short lines, no newlines — draw row by row. Keeps the caret put in game mode. **Games: draw only ASCII (or glyphs your monospace font has)** — a missing glyph renders at fallback width and visually bows the column grid even though the buffer is rectangular; coloring spaces/letters with fg==bg via SetColor is the alignment-proof way to draw solid blocks. |
 | `TryGetCursor(out line, out col)` | Caret position; false when the doc isn't the active tab. |
 | `SetColor(line, colStart, colEnd, fg, bg = null)` | Colors a column range — foreground and/or background. A **render overlay**, never document text, and positional: repaint colors with the text. Null for both clears the range. |
 | `ClearColors(line)` / `ClearColors()` | Clears one line / everything. |

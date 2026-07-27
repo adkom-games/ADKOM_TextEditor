@@ -44,6 +44,15 @@ namespace ADKOM.TextEditor.Scripting
         { Line = line; Column = column; Button = button; }
     }
 
+    /// <summary>How <see cref="AteDocument.WriteAt"/> places text (API 1.1).
+    /// Games use Overwrite (fixed grid); Insert shifts the rest of the line
+    /// right, for text-tool addons. Note for games: keep drawn characters to
+    /// ASCII (or glyphs your monospace font really has) — a glyph missing
+    /// from the font renders at fallback width and visually misaligns the
+    /// column grid even though the buffer is perfectly rectangular. Coloring
+    /// spaces via SetColor's background is the alignment-proof way to draw.</summary>
+    public enum AteWriteMode { Overwrite, Insert }
+
     /// <summary>Handle to a running game tick started with
     /// <see cref="AteApi.StartTick"/>. Call <see cref="Stop"/> from your
     /// addon's OnUnload (and when the game quits).</summary>
@@ -274,12 +283,14 @@ namespace ADKOM.TextEditor.Scripting
             return to > from ? v.Substring(from, to - from) : string.Empty;
         }
 
-        /// <summary>OVERWRITES text at a 1-based (line, column) — the game
-        /// "draw text" call. The line is padded with spaces when shorter than
-        /// <paramref name="column"/>; text extending past the end of the line
+        /// <summary>Writes text at a 1-based (line, column) — the game "draw
+        /// text" call. Overwrite (default) replaces characters in place, the
+        /// fixed-grid behavior games need; Insert shifts the rest of the line
+        /// right. Either way the line is padded with spaces when shorter than
+        /// <paramref name="column"/>, and text past the end of the line
         /// lengthens it. Text must not contain newlines (draw row by row).
-        /// In game mode the write bypasses undo and keeps the caret put.</summary>
-        public void WriteAt(int line, int column, string text)
+        /// In game mode writes bypass undo and keep the caret put.</summary>
+        public void WriteAt(int line, int column, string text, AteWriteMode mode = AteWriteMode.Overwrite)
         {
             EnsureValid();
             if (string.IsNullOrEmpty(text)) return;
@@ -292,7 +303,7 @@ namespace ADKOM.TextEditor.Scripting
             sb.Append(cur, 0, Mathf.Min(col0, cur.Length));
             if (col0 > cur.Length) sb.Append(' ', col0 - cur.Length);
             sb.Append(text);
-            int tail = col0 + text.Length;
+            int tail = mode == AteWriteMode.Overwrite ? col0 + text.Length : col0;
             if (tail < cur.Length) sb.Append(cur, tail, cur.Length - tail);
             _window.ApiWriteLine(_doc, start, end, sb.ToString());
         }
