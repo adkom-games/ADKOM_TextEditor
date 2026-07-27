@@ -449,3 +449,27 @@ msgstr "保存時に各行末のスペースとタブを削除します(プロ�
 
 msgid "Guarantee the file ends with exactly one newline when saving (per project)."
 msgstr "保存時にファイル末尾が改行1つで終わることを保証します(プロジェクトごと)。"
+
+msgid "Toggle Block Comment"
+msgstr "ブロックコメントの切り替え"
+
+msgid "Go to Matching Bracket"
+msgstr "対応する括弧へ移動"
+
+msgid "Expand Selection"
+msgstr "選択範囲を拡大"
+
+msgid "Shrink Selection"
+msgstr "選択範囲を縮小"
+
+msgid "Navigate Back"
+msgstr "戻る"
+
+msgid "Navigate Forward"
+msgstr "進む"
+
+msgid "Auto-Close Brackets"
+msgstr "括弧の自動クローズ"
+
+msgid "Typing ( [ { \" ' inserts the closing pair, closers type over, Backspace removes empty pairs, selections get wrapped."
+msgstr "( [ { \" ' を入力すると閉じ記号が自動挿入され、閉じ記号は上書き入力、Backspace で空のペアを削除、選択範囲は囲まれます。"

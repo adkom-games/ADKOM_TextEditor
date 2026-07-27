@@ -6,6 +6,17 @@ All notable changes to this package are documented here. Format follows
 ## [Unreleased]
 
 ### Added
+- Editing must-haves, batch 2: auto-closing brackets/quotes (openers
+  insert the pair, closers type over, Backspace removes empty pairs,
+  selections get wrapped; "Auto-Close Brackets" setting, on by
+  default); brace matching (caret-adjacent bracket and its match
+  highlighted; Go to Matching Bracket — Ctrl+] VS, Ctrl+Shift+  VS Code, Ctrl+Shift+M Rider); Toggle Block Comment /* */
+  (Ctrl+Shift+/ or Shift+Alt+A); Expand/Shrink Selection
+  (caret → word → line → bracket block → document; Shift+Alt+Right/
+  Left, Rider Ctrl+W / Ctrl+Shift+W); and Navigate Back/Forward
+  through caret history across tabs (Ctrl+- / Ctrl+Shift+- VS,
+  Alt+Left/Right VS Code, Ctrl+Alt+Left/Right Rider), recorded on
+  Goto Line, Go to Definition, and external opens.
 - Editing must-haves, batch 1: word-wise delete (Ctrl+Backspace /
   Ctrl+Delete); Cut/Copy with no selection act on the whole current
   line; Insert Line Above/Below without splitting (per-keymap

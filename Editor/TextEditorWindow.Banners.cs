@@ -177,6 +177,7 @@ namespace ADKOM.TextEditor
             {
                 if (!int.TryParse(s, out int line)) return;
                 int clamped = Mathf.Clamp(line, 1, _code.LineCount);
+                PushNavLocation();
                 _code.GoToLine(clamped, 1);
                 PostStatus(clamped == line
                     ? string.Format(L10n.Tr("Line {0}."), clamped)
