@@ -275,6 +275,16 @@ namespace ADKOM.TextEditor
             set => EditorPrefs.SetBool(AutoCloseKey, value);
         }
 
+        const string WelcomeShownKey = "ADKOM.TextEditor.WelcomeShown";
+
+        /// <summary>Set once the first-run welcome tabs (README +
+        /// RELEASE-NOTES) have been opened in this project.</summary>
+        public static bool WelcomeShown
+        {
+            get => EditorPrefs.GetBool(ProjectScoped(WelcomeShownKey), false);
+            set => EditorPrefs.SetBool(ProjectScoped(WelcomeShownKey), value);
+        }
+
         const string ConsoleHeightKey = "ADKOM.TextEditor.ConsoleHeight";
 
         /// <summary>Console pane height in px, set by dragging the splitter

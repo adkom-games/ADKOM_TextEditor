@@ -3,6 +3,12 @@
 All notable changes to this package are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com); versions follow semver.
 
+## [Unreleased]
+
+### Added
+- First-run welcome: the first time ATE opens in a project (nothing to
+  restore), the package README and RELEASE-NOTES open as tabs.
+
 ## [0.10.1] - 2026-07-27
 
 ### Added
