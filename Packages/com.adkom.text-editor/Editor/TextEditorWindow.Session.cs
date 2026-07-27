@@ -15,9 +15,12 @@ namespace ADKOM.TextEditor
         void OnDestroy()
         {
             // NO dialogs here — the window is being torn down, so a modal
-            // would block Unity. Instead dirty tabs persist their unsaved
-            // CONTENT into the session and come back dirty on reopen.
+            // would block Unity (and the MCP server). Dirty tabs persist
+            // their unsaved CONTENT into the session and come back dirty on
+            // reopen; a NON-MODAL floating notice offers one-click Save All.
             SaveSessionNow();
+            var dirty = _docs?.FindAll(d => !d.IsSettings && d.IsDirty);
+            if (dirty != null && dirty.Count > 0) AteUnsavedNotice.ShowFor(dirty);
         }
 
         /// <summary>Writes the current tab session (including dirty tabs'
@@ -85,6 +88,16 @@ namespace ADKOM.TextEditor
                 _docs.Add(doc);
             }
             if (HasDocs) _active = Mathf.Clamp(activeIndex, 0, _docs.Count - 1);
+
+            // Safety net for the close-time notice: if dirty buffers came back
+            // from the session, say so (banner is built by then — deferred).
+            int restoredDirty = _docs.FindAll(d => d.IsDirty).Count;
+            if (restoredDirty > 0)
+                rootVisualElement.schedule.Execute(() =>
+                    ShowBanner(string.Format(
+                        L10n.Tr("{0} document(s) have unsaved changes from your last session."), restoredDirty),
+                        (L10n.Tr("Save All"), () => { SaveAll(); HideBanner(); }),
+                        (L10n.Tr("Dismiss"), HideBanner))).ExecuteLater(0);
         }
     }
 }

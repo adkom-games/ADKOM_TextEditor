@@ -587,3 +587,24 @@ msgstr "當檔案在磁碟上發生變更且緩衝區沒有未儲存的編輯時
 
 msgid "There are unsaved documents. Save all of them before closing?"
 msgstr "存在未儲存的文件。關閉前全部儲存嗎？"
+
+msgid "ATE — Unsaved Documents"
+msgstr "ATE — 未儲存的文件"
+
+msgid "The editor closed with {0} unsaved document(s)."
+msgstr "編輯器關閉時有 {0} 個未儲存的文件。"
+
+msgid "Nothing is lost — they are kept in your session and will reopen with the window."
+msgstr "沒有任何遺失 — 它們保存在工作階段中，將隨視窗重新開啟。"
+
+msgid "Save All Now"
+msgstr "立即全部儲存"
+
+msgid "Keep in Session"
+msgstr "保留在工作階段中"
+
+msgid "{0} document(s) have unsaved changes from your last session."
+msgstr "上次工作階段中有 {0} 個文件存在未儲存的變更。"
+
+msgid "Dismiss"
+msgstr "關閉"

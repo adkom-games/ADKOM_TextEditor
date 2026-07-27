@@ -587,3 +587,24 @@ msgstr "디스크에서 파일이 변경되고 버퍼에 저장되지 않은 편
 
 msgid "There are unsaved documents. Save all of them before closing?"
 msgstr "저장되지 않은 문서가 있습니다. 닫기 전에 모두 저장하시겠습니까?"
+
+msgid "ATE — Unsaved Documents"
+msgstr "ATE — 저장되지 않은 문서"
+
+msgid "The editor closed with {0} unsaved document(s)."
+msgstr "편집기가 저장되지 않은 문서 {0}개와 함께 닫혔습니다."
+
+msgid "Nothing is lost — they are kept in your session and will reopen with the window."
+msgstr "손실된 것은 없습니다 — 세션에 보관되어 창과 함께 다시 열립니다."
+
+msgid "Save All Now"
+msgstr "지금 모두 저장"
+
+msgid "Keep in Session"
+msgstr "세션에 보관"
+
+msgid "{0} document(s) have unsaved changes from your last session."
+msgstr "지난 세션에서 문서 {0}개에 저장되지 않은 변경 사항이 있습니다."
+
+msgid "Dismiss"
+msgstr "닫기"
