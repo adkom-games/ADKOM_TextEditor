@@ -89,6 +89,35 @@ namespace ADKOM.TextEditor
             }
             if (HasDocs) _active = Mathf.Clamp(activeIndex, 0, _docs.Count - 1);
 
+            // First run in this project (fresh install, nothing to restore):
+            // open the package README and release notes as a welcome. The
+            // flag is set either way so the welcome never reappears.
+            if (!EditorConfig.WelcomeShown)
+            {
+                EditorConfig.WelcomeShown = true;
+                if (!HasDocs)
+                {
+                    foreach (var name in new[] { "RELEASE-NOTES.md", "README.md" })
+                    {
+                        try
+                        {
+                            string p = Path.GetFullPath("Packages/com.adkom.text-editor/" + name);
+                            if (File.Exists(p))
+                            {
+                                var doc = new TextDocument();
+                                doc.LoadFrom(p);
+                                _docs.Insert(0, doc);
+                            }
+                        }
+                        catch (System.Exception ex)
+                        {
+                            AteConsole.Warn("[ADKOM Text Editor] Welcome tab failed to open: " + ex.Message);
+                        }
+                    }
+                    if (HasDocs) _active = 0; // README in front
+                }
+            }
+
             // Safety net for the close-time notice: if dirty buffers came back
             // from the session, say so (banner is built by then — deferred).
             int restoredDirty = _docs.FindAll(d => d.IsDirty).Count;
