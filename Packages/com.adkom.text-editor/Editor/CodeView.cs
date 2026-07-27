@@ -1191,6 +1191,9 @@ namespace ADKOM.TextEditor
         void AfterCaretMove()
         {
             _blinkOn = true;
+            // A stale ghost anchored elsewhere is just noise — drop it.
+            if (HasGhost && (_ghostLine != _caretLine || _ghostCol != _caretCol))
+                ClearGhost();
             EnsureCaretVisible();
             RefreshVisible();
         }
@@ -1605,7 +1608,8 @@ namespace ADKOM.TextEditor
                     break;
                 }
                 case KeyCode.Escape:
-                    if (HasMultiCarets) CollapseExtraCarets();
+                    if (HasGhost) ClearGhost();
+                    else if (HasMultiCarets) CollapseExtraCarets();
                     else handled = false;
                     break;
                 case KeyCode.LeftArrow:

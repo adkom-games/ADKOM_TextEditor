@@ -629,3 +629,60 @@ msgstr "已重做 {0} 個字元。"
 
 msgid "Ctrl+Click to open {0}"
 msgstr "Ctrl+點擊開啟 {0}"
+
+msgid "Installing the Copilot Language Server (npm)…"
+msgstr "正在安裝 Copilot Language Server (npm)…"
+
+msgid "npm install failed: "
+msgstr "npm 安裝失敗："
+
+msgid "Could not run npm — is Node.js installed? "
+msgstr "無法執行 npm — 是否已安裝 Node.js？"
+
+msgid "Starting the Copilot Language Server…"
+msgstr "正在啟動 Copilot Language Server…"
+
+msgid "Could not start Node.js: "
+msgstr "無法啟動 Node.js："
+
+msgid "Copilot sign-in: your code {0} was copied to the clipboard — paste it on the GitHub page that just opened."
+msgstr "Copilot 登入：代碼 {0} 已複製到剪貼簿 — 請貼到剛開啟的 GitHub 頁面。"
+
+msgid "Copilot is ready."
+msgstr "Copilot 已就緒。"
+
+msgid "Copilot: "
+msgstr "Copilot："
+
+msgid "off"
+msgstr "關閉"
+
+msgid "installing server…"
+msgstr "正在安裝伺服器…"
+
+msgid "starting…"
+msgstr "正在啟動…"
+
+msgid "not signed in"
+msgstr "未登入"
+
+msgid "waiting for GitHub confirmation…"
+msgstr "等待 GitHub 確認…"
+
+msgid "ready"
+msgstr "就緒"
+
+msgid "error: "
+msgstr "錯誤："
+
+msgid "GitHub Copilot (inline suggestions)"
+msgstr "GitHub Copilot（內嵌建議）"
+
+msgid "Ghost-text code suggestions from GitHub Copilot. Requires Node.js on this machine and your own Copilot subscription; the official Copilot Language Server is installed on first enable. Tab accepts a suggestion, Escape dismisses it."
+msgstr "來自 GitHub Copilot 的幽靈文字程式碼建議。需要本機安裝 Node.js 以及您自己的 Copilot 訂閱；首次啟用時會安裝官方 Copilot Language Server。Tab 接受建議，Escape 關閉。"
+
+msgid "Sign In"
+msgstr "登入"
+
+msgid "Sign Out"
+msgstr "登出"

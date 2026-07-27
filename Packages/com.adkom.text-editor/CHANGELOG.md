@@ -6,6 +6,13 @@ All notable changes to this package are documented here. Format follows
 ## [Unreleased]
 
 ### Added
+- GitHub Copilot inline suggestions (Settings, default off; requires
+  Node.js and your own Copilot subscription): ghost-text completions
+  appear as you type in file-backed documents — Tab accepts, Escape
+  dismisses. The official Copilot Language Server installs itself
+  (npm, per project, never shipped) on first enable; sign-in is
+  GitHub's device flow (the code is auto-copied to the clipboard).
+  Non-modal throughout.
 - First-run welcome: the first time ATE opens in a project (nothing to
   restore), the package README and RELEASE-NOTES open as tabs.
 - Clickable links in ANY document: Ctrl+Click a bare http(s)/mailto

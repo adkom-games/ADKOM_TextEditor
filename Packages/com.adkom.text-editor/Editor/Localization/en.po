@@ -631,3 +631,60 @@ msgstr "Redid {0} characters."
 
 msgid "Ctrl+Click to open {0}"
 msgstr "Ctrl+Click to open {0}"
+
+msgid "Installing the Copilot Language Server (npm)…"
+msgstr "Installing the Copilot Language Server (npm)…"
+
+msgid "npm install failed: "
+msgstr "npm install failed: "
+
+msgid "Could not run npm — is Node.js installed? "
+msgstr "Could not run npm — is Node.js installed? "
+
+msgid "Starting the Copilot Language Server…"
+msgstr "Starting the Copilot Language Server…"
+
+msgid "Could not start Node.js: "
+msgstr "Could not start Node.js: "
+
+msgid "Copilot sign-in: your code {0} was copied to the clipboard — paste it on the GitHub page that just opened."
+msgstr "Copilot sign-in: your code {0} was copied to the clipboard — paste it on the GitHub page that just opened."
+
+msgid "Copilot is ready."
+msgstr "Copilot is ready."
+
+msgid "Copilot: "
+msgstr "Copilot: "
+
+msgid "off"
+msgstr "off"
+
+msgid "installing server…"
+msgstr "installing server…"
+
+msgid "starting…"
+msgstr "starting…"
+
+msgid "not signed in"
+msgstr "not signed in"
+
+msgid "waiting for GitHub confirmation…"
+msgstr "waiting for GitHub confirmation…"
+
+msgid "ready"
+msgstr "ready"
+
+msgid "error: "
+msgstr "error: "
+
+msgid "GitHub Copilot (inline suggestions)"
+msgstr "GitHub Copilot (inline suggestions)"
+
+msgid "Ghost-text code suggestions from GitHub Copilot. Requires Node.js on this machine and your own Copilot subscription; the official Copilot Language Server is installed on first enable. Tab accepts a suggestion, Escape dismisses it."
+msgstr "Ghost-text code suggestions from GitHub Copilot. Requires Node.js on this machine and your own Copilot subscription; the official Copilot Language Server is installed on first enable. Tab accepts a suggestion, Escape dismisses it."
+
+msgid "Sign In"
+msgstr "Sign In"
+
+msgid "Sign Out"
+msgstr "Sign Out"
