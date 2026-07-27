@@ -103,17 +103,30 @@ namespace ADKOM.TextEditor
             }
         }
 
+        // Parsed once and invalidated on write (defect #10: the File menu
+        // re-read and re-split EditorPrefs on every open).
+        static System.Collections.Generic.List<string> _recentCache;
+
         /// <summary>Most-recent-first absolute paths, at most RecentFilesMax.</summary>
         public static System.Collections.Generic.List<string> RecentFiles
         {
             get
             {
-                var list = new System.Collections.Generic.List<string>();
-                string raw = EditorPrefs.GetString(RecentListKey, string.Empty);
-                foreach (var p in raw.Split('\n'))
-                    if (!string.IsNullOrEmpty(p)) list.Add(p);
-                return list;
+                if (_recentCache == null)
+                {
+                    _recentCache = new System.Collections.Generic.List<string>();
+                    string raw = EditorPrefs.GetString(RecentListKey, string.Empty);
+                    foreach (var p in raw.Split('\n'))
+                        if (!string.IsNullOrEmpty(p)) _recentCache.Add(p);
+                }
+                return new System.Collections.Generic.List<string>(_recentCache);
             }
+        }
+
+        static void WriteRecent(System.Collections.Generic.List<string> list)
+        {
+            _recentCache = list;
+            EditorPrefs.SetString(RecentListKey, string.Join("\n", list));
         }
 
         public static void AddRecentFile(string path)
@@ -123,17 +136,17 @@ namespace ADKOM.TextEditor
             list.RemoveAll(p => FileService.PathsEqual(p, path));
             list.Insert(0, path);
             if (list.Count > RecentFilesMax) list.RemoveRange(RecentFilesMax, list.Count - RecentFilesMax);
-            EditorPrefs.SetString(RecentListKey, string.Join("\n", list));
+            WriteRecent(list);
         }
 
         public static void RemoveRecentFile(string path)
         {
             var list = RecentFiles;
             list.RemoveAll(p => FileService.PathsEqual(p, path));
-            EditorPrefs.SetString(RecentListKey, string.Join("\n", list));
+            WriteRecent(list);
         }
 
-        public static void ClearRecentFiles() => EditorPrefs.SetString(RecentListKey, string.Empty);
+        public static void ClearRecentFiles() => WriteRecent(new System.Collections.Generic.List<string>());
 
         static void TrimRecentFiles()
         {
@@ -142,7 +155,7 @@ namespace ADKOM.TextEditor
             if (list.Count > max)
             {
                 list.RemoveRange(max, list.Count - max);
-                EditorPrefs.SetString(RecentListKey, string.Join("\n", list));
+                WriteRecent(list);
             }
         }
 
