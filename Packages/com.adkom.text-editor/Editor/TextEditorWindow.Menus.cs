@@ -136,7 +136,12 @@ namespace ADKOM.TextEditor
                 _code.showLineNumbers = _showLineNumbers;
                 SyncSettingsControls();
             });
-            m.AddItem(new GUIContent(L10n.Tr("Minimap")), _minimapVisible, () =>
+            m.AddItem(new GUIContent(L10n.Tr("Indentation Guides")), _indentGuides, () =>
+            {
+                _indentGuides = !_indentGuides;
+                _code.showIndentGuides = _indentGuides;
+            });
+                        m.AddItem(new GUIContent(L10n.Tr("Minimap")), _minimapVisible, () =>
             {
                 _minimapVisible = !_minimapVisible;
                 _code.minimapVisible = _minimapVisible;
@@ -147,6 +152,14 @@ namespace ADKOM.TextEditor
                 _code.wordWrap = _wordWrap;
                 SyncSettingsControls();
             });
+            m.AddSeparator("");
+            bool canFold = CanEditDoc;
+            if (canFold) m.AddItem(new GUIContent(WithSc("Fold Region", Dsp("fold-region"))), false, () => _code.FoldAtCaret());
+            else m.AddDisabledItem(new GUIContent(WithSc("Fold Region", Dsp("fold-region"))));
+            if (canFold) m.AddItem(new GUIContent(WithSc("Unfold Region", Dsp("unfold-region"))), false, () => _code.UnfoldAtCaret());
+            else m.AddDisabledItem(new GUIContent(WithSc("Unfold Region", Dsp("unfold-region"))));
+            if (canFold) m.AddItem(new GUIContent(L10n.Tr("Unfold All")), false, () => _code.UnfoldAll());
+            else m.AddDisabledItem(new GUIContent(L10n.Tr("Unfold All")));
             m.AddSeparator("");
             foreach (var theme in HighlightTheme.All)
             {

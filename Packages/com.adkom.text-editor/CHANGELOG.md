@@ -6,6 +6,14 @@ All notable changes to this package are documented here. Format follows
 ## [Unreleased]
 
 ### Added
+- Code folding: brace-delimited regions collapse and expand from
+  clickable gutter arrows or Ctrl+Shift+[ / Ctrl+Shift+] (Unfold All
+  in the View menu). Folds ride the virtualized row model, shift with
+  edits made above them, survive typing on their header line, reveal
+  when an edit touches the hidden body, and unfold automatically when
+  the caret lands inside (search, Goto Line, Go to Definition).
+- Indentation guides: a faint vertical bar per indent level, spanning
+  blank lines; toggle in the View menu (on by default).
 - Word-based autocomplete: a popup of prefix-matched words harvested
   from the current document AND every other open tab. Appears while
   typing (2+ word chars) or on demand with Ctrl+Space; Up/Down

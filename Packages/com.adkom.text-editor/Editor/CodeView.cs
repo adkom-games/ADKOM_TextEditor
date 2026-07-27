@@ -525,6 +525,7 @@ namespace ADKOM.TextEditor
             // Wholesale content replacement (tab switch, reload) invalidates
             // extra carets — but not when it's a multi-caret edit itself.
             if (!_inMultiEdit && _extra.Count > 0) _extra.Clear();
+            if (!_inMultiEdit && !_internalReplace && _folds.Count > 0) _folds.Clear();
             _lines.Clear();
             int start = 0;
             for (int i = 0; i <= v.Length; i++)
@@ -735,8 +736,14 @@ namespace ADKOM.TextEditor
             if (!_wordWrap)
             {
                 _breaks = null;
-                for (int i = 0; i <= n; i++) _rowStarts[i] = i;
-                _totalRows = n;
+                int r = 0;
+                for (int i = 0; i < n; i++)
+                {
+                    _rowStarts[i] = r;
+                    r += VisualRowsOfLine(i, 1);
+                }
+                _rowStarts[n] = r;
+                _totalRows = r;
                 return;
             }
 
@@ -750,7 +757,7 @@ namespace ADKOM.TextEditor
             {
                 _rowStarts[i] = row;
                 _breaks[i] = ComputeBreaks(_lines[i], width);
-                row += 1 + (_breaks[i]?.Count ?? 0);
+                row += VisualRowsOfLine(i, 1 + (_breaks[i]?.Count ?? 0));
             }
             _rowStarts[n] = row;
             _totalRows = row;
@@ -813,7 +820,11 @@ namespace ADKOM.TextEditor
             sub = row - _rowStarts[lo];
         }
 
-        int CaretRow() => RowOfLine(_caretLine) + SubRowOfCol(_caretLine, _caretCol);
+        int CaretRow()
+        {
+            if (_folds.Count > 0 && IsLineHidden(_caretLine)) UnfoldContaining(_caretLine);
+            return RowOfLine(_caretLine) + SubRowOfCol(_caretLine, _caretCol);
+        }
 
         // ---------- Rendering ----------
 
@@ -928,6 +939,7 @@ namespace ADKOM.TextEditor
             RefreshSelectionMatches(firstRow, visible);
             RefreshBracketMatch(firstRow, visible);
             RefreshExtraCarets(firstRow, visible);
+            RefreshIndentGuides(firstRow, visible);
             RefreshCaret();
         }
 
@@ -948,6 +960,17 @@ namespace ADKOM.TextEditor
                 g.style.opacity = 0.55f;
                 g.pickingMode = PickingMode.Ignore;
                 _gutterCol.Add(g);
+                g.RegisterCallback<PointerDownEvent>(evt =>
+                {
+                    if (evt.button != 0) return;
+                    var lbl = (Label)evt.currentTarget;
+                    string t = lbl.text;
+                    if (string.IsNullOrEmpty(t)) return;
+                    bool marker = t[0] == '▸' || t[0] == '▾';
+                    if (!marker) return;
+                    if (int.TryParse(t.Substring(1), out int ln1)) ToggleFoldAt(ln1 - 1);
+                    evt.StopPropagation();
+                });
                 _gutterPool.Add(g);
             }
             for (int i = 0; i < _gutterPool.Count; i++)
@@ -964,7 +987,16 @@ namespace ADKOM.TextEditor
                 g.style.top = row * _lineHeight - scrollY;
                 g.style.height = _lineHeight;
                 g.style.color = _textColor;
-                g.text = sub == 0 ? (line + 1).ToString() : string.Empty;
+                if (sub == 0)
+                {
+                    // Fold indicator: collapsed shows a right arrow, foldable
+                    // shows a down arrow; clicking the gutter toggles it.
+                    string num = (line + 1).ToString();
+                    if (IsFoldedHeader(line)) g.text = "▸" + num;
+                    else if (FoldEndLine(line) >= 0) g.text = "▾" + num;
+                    else g.text = num;
+                }
+                else g.text = string.Empty;
             }
             int digits = Mathf.Max(3, (_lines.Count + 1).ToString().Length);
             _gutterCol.style.minWidth = 14 + digits * 8;
@@ -1218,10 +1250,13 @@ namespace ADKOM.TextEditor
             string v = GetValueInternal();
             start = Mathf.Clamp(start, 0, v.Length);
             end = Mathf.Clamp(end, start, v.Length);
+            AdjustFoldsForEdit(start, end, replacement);
             PushUndo(kind, start, end, replacement);
+            _internalReplace = true;
             _selHistory.Clear(); // edits invalidate expand/shrink history
             if (!_inMultiEdit) CollapseExtraCarets(); // single-point edits drop extras
             SetValueWithoutNotify(v.Substring(0, start) + replacement + v.Substring(end));
+            _internalReplace = false;
             cursorIndex = Mathf.Clamp(caret, 0, GetValueInternal().Length);
             CollapseAnchor();
             // Keep the group's redo caret current across coalesced edits.
@@ -1609,6 +1644,7 @@ namespace ADKOM.TextEditor
         readonly List<VisualElement> _extraCaretPool = new List<VisualElement>();
         readonly List<VisualElement> _extraSelPool = new List<VisualElement>();
         bool _inMultiEdit;
+        bool _internalReplace;
 
         internal bool HasMultiCarets => _extra.Count > 0;
         internal int CaretCount => 1 + _extra.Count;
