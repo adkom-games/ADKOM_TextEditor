@@ -6,6 +6,9 @@ All notable changes to this package are documented here. Format follows
 ## [Unreleased]
 
 ### Added
+- The notification banner (sign-in codes, file conflicts) is now RED,
+  bold, white-on-red and roomier — impossible to miss, no more
+  squished text.
 - GitHub Copilot inline suggestions (Settings, default off; requires
   Node.js and your own Copilot subscription): ghost-text completions
   appear as you type in file-backed documents — Tab accepts, Escape
