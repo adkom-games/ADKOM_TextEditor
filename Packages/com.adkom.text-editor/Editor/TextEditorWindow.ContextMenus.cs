@@ -42,6 +42,16 @@ namespace ADKOM.TextEditor
                 (Active.VirtualCSharp || Active.FilePath.EndsWith(".cs", System.StringComparison.OrdinalIgnoreCase));
             var m = new GenericMenu();
 
+            // --- Tabs submenu (very top): jump to any open tab ---
+            for (int i = 0; i < _docs.Count; i++)
+            {
+                int idx = i;
+                string name = (_docs[i].IsDirty ? "*" : "") + _docs[i].DisplayName.Replace('/', '∕');
+                m.AddItem(new GUIContent(L10n.Tr("Tabs") + $"/{i + 1}  {name}"),
+                    i == _active, () => SwitchTo(idx));
+            }
+            m.AddSeparator("");
+
             // --- Selection / symbol commands ---
             if (isCs)
                 m.AddItem(new GUIContent(WithSc("Go to Definition", Dsp("goto-definition"))), false,

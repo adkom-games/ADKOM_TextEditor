@@ -25,10 +25,11 @@ namespace ADKOM.TextEditor
         void RebuildTabs()
         {
             if (_tabBar == null) return;
+            Color baseColor = EditorConfig.TabColor;
             var sigB = new System.Text.StringBuilder();
             for (int i = 0; i < _docs.Count; i++)
                 sigB.Append(_docs[i].IsDirty ? '*' : ' ').Append(_docs[i].DisplayName).Append(char.MinValue);
-            sigB.Append(_active);
+            sigB.Append(_active).Append('#').Append(ColorUtility.ToHtmlStringRGB(baseColor));
             string sig = sigB.ToString();
             if (sig == _tabSignature) return;
             _tabSignature = sig;
@@ -41,6 +42,7 @@ namespace ADKOM.TextEditor
                 var tab = new VisualElement();
                 tab.AddToClassList("tab");
                 if (i == _active) tab.AddToClassList("tab--active");
+                tab.style.backgroundColor = TabShade(baseColor, doc, i == _active);
                 tab.RegisterCallback<MouseDownEvent>(e =>
                 {
                     // Button 0 (switch) is handled in the pointer-drag handler:
@@ -63,6 +65,56 @@ namespace ADKOM.TextEditor
 
                 _tabBar.Add(tab);
             }
+
+            // Right side of the strip: a tab-list dropdown (jump to any tab).
+            var spacer = new VisualElement();
+            spacer.style.flexGrow = 1;
+            _tabBar.Add(spacer);
+            var listBtn = new Button(() => BuildTabListMenu().DropDown(_tabListBtnRect))
+            {
+                text = "▾",
+                tooltip = L10n.Tr("Open Tabs")
+            };
+            listBtn.AddToClassList("tab-list-btn");
+            listBtn.RegisterCallback<GeometryChangedEvent>(_ => _tabListBtnRect = listBtn.worldBound);
+            _tabBar.Add(listBtn);
+        }
+
+        Rect _tabListBtnRect;
+
+        /// <summary>Every open tab, dirty-starred, active checked; picking
+        /// one jumps to it. Used by the strip's dropdown button.</summary>
+        internal GenericMenu BuildTabListMenu()
+        {
+            var m = new GenericMenu();
+            if (_docs.Count == 0)
+            {
+                m.AddDisabledItem(new GUIContent(L10n.Tr("(no open tabs)")));
+                return m;
+            }
+            for (int i = 0; i < _docs.Count; i++)
+            {
+                int idx = i;
+                string name = (_docs[i].IsDirty ? "*" : "") +
+                              _docs[i].DisplayName.Replace('/', '∕');
+                m.AddItem(new GUIContent($"{i + 1}  {name}"), i == _active, () => SwitchTo(idx));
+            }
+            return m;
+        }
+
+        /// <summary>A stable per-document shade of the base tab color:
+        /// saturation/value jittered by the document's identity, hue kept.</summary>
+        static Color TabShade(Color baseColor, TextDocument doc, bool active)
+        {
+            int hash = doc.HasFile ? doc.FilePath.GetHashCode() : doc.DisplayName.GetHashCode();
+            float r1 = ((hash & 0xFFFF) / 65535f);
+            float r2 = (((hash >> 16) & 0xFFFF) / 65535f);
+            Color.RGBToHSV(baseColor, out float h, out float s, out float v);
+            s = Mathf.Clamp01(s * (0.55f + 0.45f * r1));
+            v = Mathf.Clamp01(v * (0.65f + 0.35f * r2));
+            var c = Color.HSVToRGB(h, s, v);
+            c.a = active ? 0.85f : 0.45f;
+            return c;
         }
 
         void RegisterTabDrag(VisualElement tab, TextDocument doc)
@@ -129,7 +181,8 @@ namespace ADKOM.TextEditor
         /// otherwise the tab stays at <paramref name="current"/>.</summary>
         int TabIndexAt(float worldX, int current)
         {
-            for (int i = 0; i < _tabBar.childCount; i++)
+            int n = Mathf.Min(_tabBar.childCount, _docs.Count); // exclude spacer/list button
+            for (int i = 0; i < n; i++)
             {
                 if (i == current) continue;
                 var r = _tabBar[i].worldBound;
