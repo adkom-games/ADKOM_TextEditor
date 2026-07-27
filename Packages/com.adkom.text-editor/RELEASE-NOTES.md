@@ -1,5 +1,8 @@
 # Release Notes — ADKOM Text Editor
 
+**☕ Enjoying ATE? Support development on Ko-fi:**
+[https://ko-fi.com/adkomgames](https://ko-fi.com/adkomgames)
+
 ## 0.10.0 — 2026-07-27
 
 The IDE release: every "must-have" editing feature a coder reflexively
