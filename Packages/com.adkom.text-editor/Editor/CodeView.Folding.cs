@@ -81,7 +81,30 @@ namespace ADKOM.TextEditor
             int closeLine = t[bcol] == '{' ? otherLine : line;
             if (closeLine <= openLine) return false; // same-line pair: nothing to fold
             ToggleFoldAt(openLine);
+            // Folding from the CLOSING brace hides the caret's line and the
+            // view is left staring at unrelated code — put the caret on the
+            // header and center it vertically so the block is never lost.
+            if (IsFoldedHeader(openLine))
+            {
+                _caretLine = openLine;
+                _caretCol = _lines[openLine].Length;
+                _preferredCol = -1;
+                CollapseAnchor();
+                CenterOnLine(openLine);
+            }
             return true;
+        }
+
+        /// <summary>Scrolls so the given line's row sits in the vertical
+        /// middle of the viewport.</summary>
+        internal void CenterOnLine(int line)
+        {
+            float viewH = _scroll.contentViewport.layout.height;
+            if (float.IsNaN(viewH) || viewH <= 0) { RefreshVisible(); return; }
+            float target = RowOfLine(line) * _lineHeight - (viewH - _lineHeight) * 0.5f;
+            _scroll.verticalScroller.value = Mathf.Clamp(target,
+                _scroll.verticalScroller.lowValue, _scroll.verticalScroller.highValue);
+            RefreshVisible();
         }
 
         /// <summary>Folds or unfolds the region opened on (or containing)
