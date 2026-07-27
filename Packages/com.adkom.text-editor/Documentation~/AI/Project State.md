@@ -103,8 +103,15 @@ is verified live in the editor.
    branch feature/game-api (commit 1ac757e), per [[Game API Design]].
    Compile verified + API smoke-tested via MCP script-execute (WriteAt
    overwrite/pad, ReadAt clamp, colors, cursor, game-mode gating).
-   Ships Samples~/Addons/SnakeGame.cs. REMAINING before merge: Cary
-   play-tests Snake interactively (keys, colors, tick, prompt, focus).
+   Ships Samples~/Addons/SnakeGame.cs. Also on the branch: per-document
+   font override SetFont/ClearFont (49f6783, addon-only, zoom adjusts
+   the override) and the addon SECURITY GATE (01c5b9d, AddonSecurity:
+   dangerous-API scan, markdown risk report, one-time consent keyed to
+   content SHA-256, nothing — incl. resident OnLoad — runs unapproved;
+   the gate is the choke point for any future buffer-script execution).
+   REMAINING before merge: Cary play-tests Snake interactively (now
+   including the first-run consent flow: menu shows Snake ⚠, report
+   opens, Approve and Run).
 1. FIELD-VERIFIED 2026-07-27: bundled-Roslyn install on a Roslyn-less
    system works cleanly (Cary confirmed). No semantics-install watch
    items remain; the second project healed via the update path earlier.
