@@ -369,6 +369,10 @@ namespace ADKOM.TextEditor
             RegisterCallback<PointerDownEvent>(OnPointerDown);
             RegisterCallback<PointerMoveEvent>(OnPointerMove);
             RegisterCallback<PointerUpEvent>(OnPointerUp);
+            RegisterCallback<PointerLeaveEvent>(_ =>
+            {
+                if (_linkTip != null) _linkTip.style.display = DisplayStyle.None;
+            });
             RegisterCallback<FocusInEvent>(_ => StartBlink());
             RegisterCallback<FocusOutEvent>(_ => StopBlink());
             RegisterCallback<GeometryChangedEvent>(_ => OnViewportChanged());
@@ -1218,6 +1222,78 @@ namespace ADKOM.TextEditor
             if (!HasSelection) return string.Empty;
             int s = Mathf.Min(cursorIndex, selectIndex), e = Mathf.Max(cursorIndex, selectIndex);
             return GetValueInternal().Substring(s, e - s);
+        }
+
+        // ---------- Clickable links (Ctrl+Click opens; hover tooltip) ----------
+
+        static readonly System.Text.RegularExpressions.Regex LinkRx =
+            new System.Text.RegularExpressions.Regex(
+                @"\[[^\]]*\]\((?<t>[^)\s]+)[^)]*\)|(?<u>(?:https?://|mailto:)[^\s\)\]>""']+)");
+
+        /// <summary>URL under (line, col): a bare http(s)/mailto URL, or a
+        /// markdown [label](target) whose target has such a scheme — the
+        /// whole [label](target) is the clickable span.</summary>
+        internal bool TryGetLinkAt(int line, int col, out string url)
+        {
+            url = null;
+            if (line < 0 || line >= _lines.Count) return false;
+            foreach (System.Text.RegularExpressions.Match m in LinkRx.Matches(_lines[line]))
+            {
+                if (col < m.Index || col > m.Index + m.Length) continue;
+                string u = m.Groups["u"].Success ? m.Groups["u"].Value
+                    : m.Groups["t"].Success ? m.Groups["t"].Value : null;
+                if (u == null) continue;
+                u = u.TrimEnd('.', ',', ';', ':', '!', '?');
+                if (!u.StartsWith("http://") && !u.StartsWith("https://") && !u.StartsWith("mailto:"))
+                    continue;
+                url = u;
+                return true;
+            }
+            return false;
+        }
+
+        Label _linkTip;
+
+        void UpdateLinkHover(Vector2 worldPos)
+        {
+            HitTest(worldPos, out int line, out int col);
+            if (TryGetLinkAt(line, col, out string url))
+            {
+                if (_linkTip == null)
+                {
+                    _linkTip = new Label();
+                    _linkTip.style.position = Position.Absolute;
+                    _linkTip.pickingMode = PickingMode.Ignore;
+                    _linkTip.style.backgroundColor = new Color(0.14f, 0.14f, 0.15f, 0.97f);
+                    _linkTip.style.color = new Color(0.85f, 0.85f, 0.85f);
+                    _linkTip.style.paddingLeft = _linkTip.style.paddingRight = 6;
+                    _linkTip.style.paddingTop = _linkTip.style.paddingBottom = 3;
+                    _linkTip.style.borderTopWidth = _linkTip.style.borderBottomWidth = 1;
+                    _linkTip.style.borderLeftWidth = _linkTip.style.borderRightWidth = 1;
+                    var bc = new Color(0.5f, 0.5f, 0.5f, 0.6f);
+                    _linkTip.style.borderTopColor = _linkTip.style.borderBottomColor = bc;
+                    _linkTip.style.borderLeftColor = _linkTip.style.borderRightColor = bc;
+                    _linkTip.style.fontSize = 10;
+                    Add(_linkTip);
+                }
+                string shown = url.Length > 60 ? url.Substring(0, 57) + "..." : url;
+                _linkTip.text = string.Format(L10n.Tr("Ctrl+Click to open {0}"), shown);
+                var local = this.WorldToLocal(worldPos);
+                _linkTip.style.left = Mathf.Max(0, local.x + 12);
+                _linkTip.style.top = Mathf.Max(0, local.y - 26);
+                _linkTip.style.display = DisplayStyle.Flex;
+            }
+            else if (_linkTip != null)
+                _linkTip.style.display = DisplayStyle.None;
+        }
+
+        /// <summary>Ctrl+Click handler: opens the link under the caret in the
+        /// system browser/mail client. Returns true when handled.</summary>
+        bool TryOpenLinkAtCaret()
+        {
+            if (!TryGetLinkAt(_caretLine, _caretCol, out string url)) return false;
+            Application.OpenURL(url);
+            return true;
         }
 
         // ---------- Editing ----------
@@ -2464,7 +2540,10 @@ namespace ADKOM.TextEditor
             PlaceCaretAt(e.position, e.shiftKey);
             if (e.ctrlKey || e.commandKey)
             {
-                onNavigateRequest?.Invoke(_caretLine, _caretCol);
+                // Links win over Go to Definition: a URL (or markdown link)
+                // under the click opens in the browser/mail client.
+                if (!TryOpenLinkAtCaret())
+                    onNavigateRequest?.Invoke(_caretLine, _caretCol);
                 e.StopPropagation();
                 return; // no drag-select from a navigate gesture
             }
@@ -2503,7 +2582,11 @@ namespace ADKOM.TextEditor
                     _textDragging = true;
                 return;
             }
-            if (!_dragging) return;
+            if (!_dragging)
+            {
+                UpdateLinkHover(e.position); // plain hover: link tooltip
+                return;
+            }
             if (_wordDrag) WordSnapSelectTo(e.position);
             else PlaceCaretAt(e.position, true);
         }
