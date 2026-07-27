@@ -70,6 +70,16 @@ namespace ADKOM.TextEditor
             }
             else if (!isCs)
                 m.AddDisabledItem(new GUIContent(L10n.Tr("Find Occurrences")));
+
+            // --- Send to AI (only when Unity AI Assistant is installed) ---
+            if (UnityAiBridge.Available)
+            {
+                m.AddSeparator("");
+                AddOrDisable(m, L10n.Tr("Ask Unity AI About Selection..."),
+                    _code.HasSelectionPublic, AskUnityAiSelection);
+                m.AddItem(new GUIContent(L10n.Tr("Ask Unity AI About This File...")),
+                    false, AskUnityAiDocument);
+            }
             m.AddSeparator("");
 
             // --- Clipboard ---

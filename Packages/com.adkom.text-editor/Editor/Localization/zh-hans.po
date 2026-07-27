@@ -686,3 +686,18 @@ msgstr "登录"
 
 msgid "Sign Out"
 msgstr "登出"
+
+msgid "Ask Unity AI About Selection..."
+msgstr "就所选内容询问 Unity AI..."
+
+msgid "Ask Unity AI About This File..."
+msgstr "就此文件询问 Unity AI..."
+
+msgid "Select some text first."
+msgstr "请先选择一些文本。"
+
+msgid "Ask about the attached selection…"
+msgstr "询问附加的所选内容…"
+
+msgid "Ask about the attached document…"
+msgstr "询问附加的文档…"
