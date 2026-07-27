@@ -55,6 +55,35 @@ namespace ADKOM.TextEditor
             return endLine > line ? endLine : -1;
         }
 
+        /// <summary>Double-click folding gestures. On a folded header's
+        /// collapsed indicator ("⋯ }", drawn past the line's real text) the
+        /// region reopens; on a '{' or '}' character the region that brace
+        /// bounds folds (or unfolds if already folded). Returns true when the
+        /// double-click was consumed.</summary>
+        bool HandleFoldDoubleClick()
+        {
+            int line = _caretLine, col = _caretCol;
+            if (line < 0 || line >= _lines.Count) return false;
+            string t = _lines[line];
+            if (IsFoldedHeader(line) && col >= t.Length)
+            {
+                ToggleFoldAt(line); // reopen from the "⋯ }" indicator
+                return true;
+            }
+            // A brace on either side of the placed caret counts as clicked.
+            int bcol = col < t.Length && (t[col] == '{' || t[col] == '}') ? col
+                : col > 0 && (t[col - 1] == '{' || t[col - 1] == '}') ? col - 1 : -1;
+            if (bcol < 0) return false;
+            int match = FindMatchingBracket(LineColToIndex(line, bcol));
+            if (match < 0) return false;
+            IndexToLineCol(match, out int otherLine, out _);
+            int openLine = t[bcol] == '{' ? line : otherLine;
+            int closeLine = t[bcol] == '{' ? otherLine : line;
+            if (closeLine <= openLine) return false; // same-line pair: nothing to fold
+            ToggleFoldAt(openLine);
+            return true;
+        }
+
         /// <summary>Folds or unfolds the region opened on (or containing)
         /// <paramref name="line"/>.</summary>
         internal void ToggleFoldAt(int line)

@@ -1045,6 +1045,12 @@ namespace ADKOM.TextEditor
             NormalizedSelection(out int sl, out int sc, out int el, out int ec);
             selLine = sl; selStart = sc;
             if (sl != el || ec <= sc || ec - sc > 200) return null;
+            // Clamp: a selection column can momentarily exceed the line (state
+            // mutated between refreshes, e.g. folding) — never throw (issue #8).
+            int len = _lines[sl].Length;
+            if (sc >= len) return null;
+            ec = Mathf.Min(ec, len);
+            if (ec <= sc) return null;
             string s = _lines[sl].Substring(sc, ec - sc);
             return s.Trim().Length == 0 ? null : s;
         }
@@ -2464,6 +2470,15 @@ namespace ADKOM.TextEditor
             }
             if (e.clickCount >= 2)
             {
+                // Double-click folding gestures (before word selection):
+                // - on a folded header's "⋯ }" indicator (past the real end of
+                //   the line) → reopen the region;
+                // - on a lone '{' or '}' → fold the region that brace bounds.
+                if (HandleFoldDoubleClick())
+                {
+                    e.StopPropagation();
+                    return;
+                }
                 // Double-click: select the word under the cursor; dragging from
                 // here extends the selection a whole word at a time.
                 WordRangeAt(_caretLine, _caretCol, out _wordDragStart, out _wordDragEnd);
