@@ -721,3 +721,6 @@ msgstr "(no search results yet)"
 
 msgid "Copied."
 msgstr "Copied."
+
+msgid "Tab or Enter accepts; Alt+[ / Alt+] cycle; Escape dismisses."
+msgstr "Tab or Enter accepts; Alt+[ / Alt+] cycle; Escape dismisses."

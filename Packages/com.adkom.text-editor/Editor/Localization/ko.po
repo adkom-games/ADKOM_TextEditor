@@ -719,3 +719,6 @@ msgstr "(아직 검색 결과 없음)"
 
 msgid "Copied."
 msgstr "복사했습니다."
+
+msgid "Tab or Enter accepts; Alt+[ / Alt+] cycle; Escape dismisses."
+msgstr "Tab 또는 Enter로 수락, Alt+[ / Alt+]로 전환, Escape로 닫기."

@@ -719,3 +719,6 @@ msgstr "（検索結果はまだありません）"
 
 msgid "Copied."
 msgstr "コピーしました。"
+
+msgid "Tab or Enter accepts; Alt+[ / Alt+] cycle; Escape dismisses."
+msgstr "Tab または Enter で確定、Alt+[ / Alt+] で切り替え、Escape で破棄。"

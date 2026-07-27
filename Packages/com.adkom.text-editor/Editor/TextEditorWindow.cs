@@ -1610,14 +1610,19 @@ namespace ADKOM.TextEditor
             CopilotService.SyncDocument(path, _code.value);
             _code.IndexToLineCol(_code.cursorIndex, out int line, out int col);
             int version = _code.DocVersion;
-            CopilotService.RequestCompletion(path, line, col, sug =>
+            CopilotService.RequestCompletion(path, line, col, sugs =>
             {
                 if (this == null || _code == null) return;
-                if (sug == null) { _code.ClearGhost(); return; }
-                var g = sug.Value;
-                int startIdx = _code.LineColToIndex(g.StartLine, g.StartChar);
-                int endIdx = _code.LineColToIndex(g.EndLine, g.EndChar);
-                _code.ShowGhost(g.Text, startIdx, endIdx, line, col, version);
+                if (sugs == null) { _code.ClearGhost(); return; }
+                var items = new System.Collections.Generic.List<CodeView.GhostItem>(sugs.Count);
+                foreach (var g in sugs)
+                    items.Add(new CodeView.GhostItem
+                    {
+                        Text = g.Text,
+                        StartIdx = _code.LineColToIndex(g.StartLine, g.StartChar),
+                        EndIdx = _code.LineColToIndex(g.EndLine, g.EndChar)
+                    });
+                _code.ShowGhost(items, line, col, version);
             });
         }
 

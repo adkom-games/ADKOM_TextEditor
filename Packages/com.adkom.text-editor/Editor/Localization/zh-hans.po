@@ -719,3 +719,6 @@ msgstr "（尚无搜索结果）"
 
 msgid "Copied."
 msgstr "已复制。"
+
+msgid "Tab or Enter accepts; Alt+[ / Alt+] cycle; Escape dismisses."
+msgstr "Tab 或 Enter 接受；Alt+[ / Alt+] 切换；Escape 关闭。"
