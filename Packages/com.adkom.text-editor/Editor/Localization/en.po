@@ -502,3 +502,15 @@ msgstr "Base color of the tab strip; each tab gets its own stable shade of it."
 
 msgid "Autocomplete"
 msgstr "Autocomplete"
+
+msgid "Indentation Guides"
+msgstr "Indentation Guides"
+
+msgid "Fold Region"
+msgstr "Fold Region"
+
+msgid "Unfold Region"
+msgstr "Unfold Region"
+
+msgid "Unfold All"
+msgstr "Unfold All"

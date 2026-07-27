@@ -41,6 +41,7 @@ namespace ADKOM.TextEditor
         [SerializeField] bool _wordWrap = true;
         [SerializeField] bool _consoleVisible = true;
         [SerializeField] bool _minimapVisible = true;
+        [SerializeField] bool _indentGuides = true;
 
         CodeView _code;
         VisualElement _tabBar;
@@ -250,6 +251,7 @@ namespace ADKOM.TextEditor
             };
             _code.RegisterCallback<MouseUpEvent>(OnCodeContextMenu);
             _code.minimapVisible = _minimapVisible;
+            _code.showIndentGuides = _indentGuides;
             _mainCtx = System.Threading.SynchronizationContext.Current;
             _editorArea.Add(_code);
 

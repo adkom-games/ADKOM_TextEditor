@@ -500,3 +500,15 @@ msgstr "分頁列的基礎顏色;每個分頁顯示為其固定的色調變化�
 
 msgid "Autocomplete"
 msgstr "自動完成"
+
+msgid "Indentation Guides"
+msgstr "縮排參考線"
+
+msgid "Fold Region"
+msgstr "摺疊區域"
+
+msgid "Unfold Region"
+msgstr "展開區域"
+
+msgid "Unfold All"
+msgstr "全部展開"

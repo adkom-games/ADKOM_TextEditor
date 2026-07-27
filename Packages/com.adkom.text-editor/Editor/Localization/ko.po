@@ -500,3 +500,15 @@ msgstr "탭 표시줄의 기본 색상입니다. 각 탭은 고유한 음영으�
 
 msgid "Autocomplete"
 msgstr "자동 완성"
+
+msgid "Indentation Guides"
+msgstr "들여쓰기 가이드"
+
+msgid "Fold Region"
+msgstr "영역 접기"
+
+msgid "Unfold Region"
+msgstr "영역 펼치기"
+
+msgid "Unfold All"
+msgstr "모두 펼치기"
