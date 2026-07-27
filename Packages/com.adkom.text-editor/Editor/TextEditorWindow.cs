@@ -600,9 +600,43 @@ namespace ADKOM.TextEditor
         // tab for now). Closing the tab hides the whole pane; the Window
         // menu shows it again. Visible by default. ---
 
+        VisualElement _consoleSplitter;
+
         void BuildConsolePane(VisualElement root)
         {
+            // Drag handle above the console: resizes the pane (persisted).
+            _consoleSplitter = new VisualElement { name = "console-splitter" };
+            _consoleSplitter.style.height = 5;
+            _consoleSplitter.style.flexShrink = 0;
+            float dragStartY = 0, dragStartH = 0;
+            bool dragging = false;
+            _consoleSplitter.RegisterCallback<PointerDownEvent>(e =>
+            {
+                if (e.button != 0) return;
+                dragging = true;
+                dragStartY = e.position.y;
+                dragStartH = _consolePane.resolvedStyle.height;
+                _consoleSplitter.CapturePointer(e.pointerId);
+                e.StopPropagation();
+            });
+            _consoleSplitter.RegisterCallback<PointerMoveEvent>(e =>
+            {
+                if (!dragging) return;
+                float maxH = Mathf.Max(80f, rootVisualElement.contentRect.height - 160f);
+                float h = Mathf.Clamp(dragStartH + (dragStartY - e.position.y), 60f, maxH);
+                _consolePane.style.height = h;
+            });
+            _consoleSplitter.RegisterCallback<PointerUpEvent>(e =>
+            {
+                if (!dragging) return;
+                dragging = false;
+                _consoleSplitter.ReleasePointer(e.pointerId);
+                EditorConfig.ConsoleHeight = _consolePane.resolvedStyle.height;
+            });
+            root.Add(_consoleSplitter);
+
             _consolePane = new VisualElement { name = "console-pane" };
+            _consolePane.style.height = Mathf.Max(60f, EditorConfig.ConsoleHeight);
 
             var tabs = new VisualElement { name = "console-tabs" };
             var tab = new VisualElement();
@@ -631,6 +665,8 @@ namespace ADKOM.TextEditor
             _consoleVisible = visible;
             if (_consolePane != null)
                 _consolePane.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
+            if (_consoleSplitter != null)
+                _consoleSplitter.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
             if (visible) _consoleVersionShown = -1; // force refresh
         }
 

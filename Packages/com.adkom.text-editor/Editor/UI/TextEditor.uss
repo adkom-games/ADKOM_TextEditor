@@ -171,6 +171,14 @@
     opacity: 0.8;
 }
 
+#console-splitter {
+    cursor: split-resize-up-down;
+}
+
+#console-splitter:hover {
+    background-color: rgba(90, 150, 255, 0.35);
+}
+
 #console-pane {
     height: 150px;
     flex-shrink: 0;
