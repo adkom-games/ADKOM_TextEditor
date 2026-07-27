@@ -15,7 +15,7 @@ namespace ADKOM.TextEditor
     /// cost is independent of file size). Holds any number of open documents,
     /// presented as tabs; Settings opens as a special tab.
     /// </summary>
-    public class TextEditorWindow : EditorWindow
+    public partial class TextEditorWindow : EditorWindow
     {
         const string UssPath = "Packages/com.adkom.text-editor/Editor/UI/TextEditor.uss";
         const string ThemePrefKey = "ADKOM.TextEditor.Theme";
@@ -322,24 +322,15 @@ namespace ADKOM.TextEditor
             return btn;
         }
 
-        /// <summary>Shortcut hint for the active keymap; null = no shortcut
-        /// there. Rendered after '\t' so native menus right-align it.</summary>
-        string Sc(string vs, string vscode, string rider) => EditorConfig.Keymap switch
-        {
-            KeymapLayout.VSCode => vscode,
-            KeymapLayout.Rider => rider,
-            _ => vs
-        };
-
         static string WithSc(string label, string sc) =>
             string.IsNullOrEmpty(sc) ? L10n.Tr(label) : L10n.Tr(label) + "\t" + sc;
 
         void FillFileMenu(GenericMenu m)
         {
-            m.AddItem(new GUIContent(WithSc("New", Sc("Ctrl+N", "Ctrl+N", null))), false, NewFile);
-            m.AddItem(new GUIContent(WithSc("Open...", Sc("Ctrl+O", "Ctrl+O", null))), false, OpenFile);
+            m.AddItem(new GUIContent(WithSc("New", Dsp("new-file"))), false, NewFile);
+            m.AddItem(new GUIContent(WithSc("Open...", Dsp("open-file"))), false, OpenFile);
             m.AddSeparator("");
-            string save = WithSc("Save", Sc("Ctrl+S", "Ctrl+S", null));
+            string save = WithSc("Save", Dsp("save"));
             if (CanEditDoc)
             {
                 m.AddItem(new GUIContent(save), false, () => SaveFile(false));
@@ -350,9 +341,9 @@ namespace ADKOM.TextEditor
                 m.AddDisabledItem(new GUIContent(save));
                 m.AddDisabledItem(new GUIContent(L10n.Tr("Save As...")));
             }
-            m.AddItem(new GUIContent(WithSc("Save All", Sc("Ctrl+Shift+S", null, "Ctrl+S"))), false, SaveAll);
+            m.AddItem(new GUIContent(WithSc("Save All", Dsp("save-all"))), false, SaveAll);
             m.AddSeparator("");
-            string closeTab = WithSc("Close Tab", Sc("Ctrl+F4", "Ctrl+W", "Ctrl+F4"));
+            string closeTab = WithSc("Close Tab", Dsp("close-tab"));
             if (HasDocs) m.AddItem(new GUIContent(closeTab), false, () => CloseTab(_active));
             else m.AddDisabledItem(new GUIContent(closeTab));
             m.AddSeparator("");
@@ -386,29 +377,29 @@ namespace ADKOM.TextEditor
                 if (enabled) m.AddItem(new GUIContent(label), false, () => a());
                 else m.AddDisabledItem(new GUIContent(label));
             }
-            Item(WithSc("Undo", "Ctrl+Z"), edit && _code.CanUndo, _code.Undo);
-            Item(WithSc("Redo", Sc("Ctrl+Y", "Ctrl+Y", "Ctrl+Shift+Z")), edit && _code.CanRedo, _code.Redo);
+            Item(WithSc("Undo", Dsp("undo")), edit && _code.CanUndo, _code.Undo);
+            Item(WithSc("Redo", Dsp("redo")), edit && _code.CanRedo, _code.Redo);
             m.AddSeparator("");
-            Item(WithSc("Cut", "Ctrl+X"), edit && _code.HasSelectionPublic, _code.Cut);
-            Item(WithSc("Copy", "Ctrl+C"), edit && _code.HasSelectionPublic, _code.Copy);
-            Item(WithSc("Paste", "Ctrl+V"), edit && !string.IsNullOrEmpty(EditorGUIUtility.systemCopyBuffer), _code.Paste);
-            Item(WithSc("Select All", "Ctrl+A"), edit, _code.SelectAll);
-            Item(WithSc("Goto Line...", "Ctrl+G"), edit, GotoLineCommand);
+            Item(WithSc("Cut", Dsp("cut")), edit && _code.HasSelectionPublic, _code.Cut);
+            Item(WithSc("Copy", Dsp("copy")), edit && _code.HasSelectionPublic, _code.Copy);
+            Item(WithSc("Paste", Dsp("paste")), edit && !string.IsNullOrEmpty(EditorGUIUtility.systemCopyBuffer), _code.Paste);
+            Item(WithSc("Select All", Dsp("select-all")), edit, _code.SelectAll);
+            Item(WithSc("Goto Line...", Dsp("goto-line")), edit, GotoLineCommand);
             m.AddSeparator("");
-            Item(WithSc("Duplicate Line", Sc("Ctrl+D", "Shift+Alt+Down", "Ctrl+D")), edit, DuplicateLine);
-            Item(WithSc("Delete Line", Sc("Ctrl+L", "Ctrl+Shift+K", "Ctrl+Y")), edit, DeleteLine);
-            Item(WithSc("Move Line Up", Sc("Alt+Up", "Alt+Up", "Alt+Shift+Up")), edit, () => MoveLine(-1));
-            Item(WithSc("Move Line Down", Sc("Alt+Down", "Alt+Down", "Alt+Shift+Down")), edit, () => MoveLine(1));
-            Item(WithSc("Toggle Comment", "Ctrl+/"), edit, ToggleComment);
-            Item(WithSc("Indent", "Tab"), edit, InsertTab);
-            Item(WithSc("Unindent", "Shift+Tab"), edit, UnindentSelection);
+            Item(WithSc("Duplicate Line", Dsp("duplicate-line")), edit, DuplicateLine);
+            Item(WithSc("Delete Line", Dsp("delete-line")), edit, DeleteLine);
+            Item(WithSc("Move Line Up", Dsp("move-line-up")), edit, () => MoveLine(-1));
+            Item(WithSc("Move Line Down", Dsp("move-line-down")), edit, () => MoveLine(1));
+            Item(WithSc("Toggle Comment", Dsp("toggle-comment")), edit, ToggleComment);
+            Item(WithSc("Indent", Dsp("indent")), edit, InsertTab);
+            Item(WithSc("Unindent", Dsp("unindent")), edit, UnindentSelection);
             m.AddSeparator("");
-            m.AddItem(new GUIContent(WithSc("Find...", "Ctrl+F")), false, () => FindReplaceWindow.Open(this, false, false));
-            m.AddItem(new GUIContent(WithSc("Find in Tabs...", "Ctrl+Shift+F")), false, () => FindReplaceWindow.Open(this, false, true));
-            m.AddItem(new GUIContent(WithSc("Replace...", Sc("Ctrl+H", "Ctrl+H", "Ctrl+R"))), false, () => FindReplaceWindow.Open(this, true, false));
-            m.AddItem(new GUIContent(WithSc("Replace in Tabs...", Sc("Ctrl+Shift+H", "Ctrl+Shift+H", "Ctrl+Shift+R"))), false, () => FindReplaceWindow.Open(this, true, true));
-            m.AddItem(new GUIContent(WithSc("Find Next", "F3")), false, () => FindReplaceWindow.FindAgain(this, false));
-            m.AddItem(new GUIContent(WithSc("Find Previous", "Shift+F3")), false, () => FindReplaceWindow.FindAgain(this, true));
+            m.AddItem(new GUIContent(WithSc("Find...", Dsp("find"))), false, () => FindReplaceWindow.Open(this, false, false));
+            m.AddItem(new GUIContent(WithSc("Find in Tabs...", Dsp("find-in-tabs"))), false, () => FindReplaceWindow.Open(this, false, true));
+            m.AddItem(new GUIContent(WithSc("Replace...", Dsp("replace"))), false, () => FindReplaceWindow.Open(this, true, false));
+            m.AddItem(new GUIContent(WithSc("Replace in Tabs...", Dsp("replace-in-tabs"))), false, () => FindReplaceWindow.Open(this, true, true));
+            m.AddItem(new GUIContent(WithSc("Find Next", Dsp("find-next"))), false, () => FindReplaceWindow.FindAgain(this, false));
+            m.AddItem(new GUIContent(WithSc("Find Previous", Dsp("find-previous"))), false, () => FindReplaceWindow.FindAgain(this, true));
         }
 
         void FillViewMenu(GenericMenu m)
@@ -449,14 +440,14 @@ namespace ADKOM.TextEditor
 
         void FillToolsMenu(GenericMenu m)
         {
-            m.AddItem(new GUIContent(WithSc("Options...", Sc(null, "Ctrl+,", "Ctrl+Alt+S"))), false, OpenSettingsPage);
+            m.AddItem(new GUIContent(WithSc("Options...", Dsp("settings"))), false, OpenSettingsPage);
         }
 
         void FillWindowMenu(GenericMenu m)
         {
             bool multi = _docs.Count > 1;
-            string next = WithSc("Next Tab", Sc("Ctrl+Tab", "Ctrl+PgDn", "Alt+Right"));
-            string prev = WithSc("Previous Tab", Sc("Ctrl+Shift+Tab", "Ctrl+PgUp", "Alt+Left"));
+            string next = WithSc("Next Tab", Dsp("next-tab"));
+            string prev = WithSc("Previous Tab", Dsp("prev-tab"));
             if (multi)
             {
                 m.AddItem(new GUIContent(next), false, () => StepTab(1));
@@ -1692,7 +1683,7 @@ namespace ADKOM.TextEditor
 
             // --- Selection / symbol commands ---
             if (isCs)
-                m.AddItem(new GUIContent(WithSc("Go to Definition", Sc("F12", "F12", "Ctrl+B"))), false,
+                m.AddItem(new GUIContent(WithSc("Go to Definition", Dsp("goto-definition"))), false,
                     () => NavigateToDefinition(line, col));
             if (query != null)
             {
@@ -1707,32 +1698,32 @@ namespace ADKOM.TextEditor
 
             // --- Clipboard ---
             bool hasSel = _code.HasSelectionPublic;
-            AddOrDisable(m, WithSc("Cut", "Ctrl+X"), hasSel, _code.Cut);
-            AddOrDisable(m, WithSc("Copy", "Ctrl+C"), hasSel, _code.Copy);
-            AddOrDisable(m, WithSc("Paste", "Ctrl+V"),
+            AddOrDisable(m, WithSc("Cut", Dsp("cut")), hasSel, _code.Cut);
+            AddOrDisable(m, WithSc("Copy", Dsp("copy")), hasSel, _code.Copy);
+            AddOrDisable(m, WithSc("Paste", Dsp("paste")),
                 !string.IsNullOrEmpty(EditorGUIUtility.systemCopyBuffer), _code.Paste);
-            m.AddItem(new GUIContent(WithSc("Select All", "Ctrl+A")), false, _code.SelectAll);
+            m.AddItem(new GUIContent(WithSc("Select All", Dsp("select-all"))), false, _code.SelectAll);
             m.AddSeparator("");
-            AddOrDisable(m, WithSc("Undo", "Ctrl+Z"), _code.CanUndo, _code.Undo);
-            AddOrDisable(m, WithSc("Redo", Sc("Ctrl+Y", "Ctrl+Y", "Ctrl+Shift+Z")), _code.CanRedo, _code.Redo);
+            AddOrDisable(m, WithSc("Undo", Dsp("undo")), _code.CanUndo, _code.Undo);
+            AddOrDisable(m, WithSc("Redo", Dsp("redo")), _code.CanRedo, _code.Redo);
             m.AddSeparator("");
 
             // --- File ---
-            m.AddItem(new GUIContent(WithSc("Save", Sc("Ctrl+S", "Ctrl+S", null))), false, () => SaveFile(false));
+            m.AddItem(new GUIContent(WithSc("Save", Dsp("save"))), false, () => SaveFile(false));
             m.AddItem(new GUIContent(L10n.Tr("Save As...")), false, () => SaveFile(true));
-            m.AddItem(new GUIContent(WithSc("Close Tab", Sc("Ctrl+F4", "Ctrl+W", "Ctrl+F4"))), false, () => CloseTab(_active));
+            m.AddItem(new GUIContent(WithSc("Close Tab", Dsp("close-tab"))), false, () => CloseTab(_active));
             AddOrDisable(m, L10n.Tr("Show in File Explorer"), Active.HasFile,
                 () => EditorUtility.RevealInFinder(Path.GetFullPath(Active.FilePath)));
             m.AddSeparator("");
-            m.AddItem(new GUIContent(WithSc("Find...", "Ctrl+F")), false, () => FindReplaceWindow.Open(this, false, false));
-            m.AddItem(new GUIContent(WithSc("Replace...", Sc("Ctrl+H", "Ctrl+H", "Ctrl+R"))), false, () => FindReplaceWindow.Open(this, true, false));
-            m.AddItem(new GUIContent(WithSc("Goto Line...", "Ctrl+G")), false, GotoLineCommand);
+            m.AddItem(new GUIContent(WithSc("Find...", Dsp("find"))), false, () => FindReplaceWindow.Open(this, false, false));
+            m.AddItem(new GUIContent(WithSc("Replace...", Dsp("replace"))), false, () => FindReplaceWindow.Open(this, true, false));
+            m.AddItem(new GUIContent(WithSc("Goto Line...", Dsp("goto-line"))), false, GotoLineCommand);
 
             // --- Language-specific ---
             if (isCs)
             {
                 m.AddSeparator("");
-                m.AddItem(new GUIContent(WithSc("Toggle Comment", "Ctrl+/")), false, ToggleComment);
+                m.AddItem(new GUIContent(WithSc("Toggle Comment", Dsp("toggle-comment"))), false, ToggleComment);
             }
             if (ActiveIsMarkdown)
             {
@@ -1879,76 +1870,11 @@ namespace ADKOM.TextEditor
         {
             if (UpdateChecker.InstallInProgress) { e.StopImmediatePropagation(); return; }
             bool ctrl = e.ctrlKey || e.commandKey;
-            bool handled = false;
 
-            // Find/Replace — common across layouts (Rider uses Ctrl+R for replace).
-            bool rider = EditorConfig.Keymap == KeymapLayout.Rider;
-            if (ctrl && !e.altKey && e.keyCode == KeyCode.F)
-            {
-                FindReplaceWindow.Open(this, replaceFocus: false, allTabs: e.shiftKey);
-                handled = true;
-            }
-            else if (!rider && ctrl && !e.altKey && e.keyCode == KeyCode.H)
-            {
-                FindReplaceWindow.Open(this, replaceFocus: true, allTabs: e.shiftKey);
-                handled = true;
-            }
-            else if (rider && ctrl && !e.altKey && e.keyCode == KeyCode.R)
-            {
-                FindReplaceWindow.Open(this, replaceFocus: true, allTabs: e.shiftKey);
-                handled = true;
-            }
-            else if (ctrl && !e.altKey && !e.shiftKey && e.keyCode == KeyCode.G)
-            {
-                GotoLineCommand();
-                handled = true;
-            }
-            else if (e.keyCode == KeyCode.F3 && !ctrl && !e.altKey)
-            {
-                handled = FindReplaceWindow.FindAgain(this, reverse: e.shiftKey);
-            }
-
-            if (handled)
-            {
-                e.StopImmediatePropagation();
-                return;
-            }
-
-            if (EditorConfig.Keymap == KeymapLayout.VisualStudio)
-            {
-                if (ctrl && !e.altKey && e.keyCode == KeyCode.S)
-                {
-                    if (e.shiftKey) SaveAll(); else SaveFile(false);
-                    handled = true;
-                }
-                else if (ctrl && e.keyCode == KeyCode.N && !e.shiftKey) { NewFile(); handled = true; }
-                else if (ctrl && e.keyCode == KeyCode.O && !e.shiftKey) { OpenFile(); handled = true; }
-                else if (ctrl && e.keyCode == KeyCode.F4) { CloseTab(_active); handled = true; }
-                else if (ctrl && e.keyCode == KeyCode.Tab)
-                {
-                    StepTab(e.shiftKey ? -1 : 1);
-                    handled = true;
-                }
-            }
-            else if (EditorConfig.Keymap == KeymapLayout.Rider)
-            {
-                if (ctrl && !e.altKey && !e.shiftKey && e.keyCode == KeyCode.S) { SaveAll(); handled = true; }
-                else if (ctrl && e.altKey && e.keyCode == KeyCode.S) { OpenSettings(); handled = true; }
-                else if (ctrl && e.keyCode == KeyCode.F4) { CloseTab(_active); handled = true; }
-                else if (e.altKey && !ctrl && e.keyCode == KeyCode.RightArrow) { StepTab(1); handled = true; }
-                else if (e.altKey && !ctrl && e.keyCode == KeyCode.LeftArrow) { StepTab(-1); handled = true; }
-            }
-            else // VS Code
-            {
-                if (ctrl && !e.altKey && !e.shiftKey && e.keyCode == KeyCode.S) { SaveFile(false); handled = true; }
-                else if (ctrl && e.keyCode == KeyCode.N && !e.shiftKey) { NewFile(); handled = true; }
-                else if (ctrl && e.keyCode == KeyCode.O && !e.shiftKey) { OpenFile(); handled = true; }
-                else if (ctrl && (e.keyCode == KeyCode.W || e.keyCode == KeyCode.F4)) { CloseTab(_active); handled = true; }
-                else if (ctrl && e.keyCode == KeyCode.PageDown) { StepTab(1); handled = true; }
-                else if (ctrl && e.keyCode == KeyCode.PageUp) { StepTab(-1); handled = true; }
-                else if (ctrl && e.keyCode == KeyCode.Tab) { StepTab(e.shiftKey ? -1 : 1); handled = true; }
-                else if (ctrl && e.keyCode == KeyCode.Comma) { OpenSettings(); handled = true; }
-            }
+            // All global commands live in the command table (see
+            // TextEditorWindow.Commands.cs — bindings, handlers, and menu
+            // hints defined in one place).
+            bool handled = DispatchCommands(e, CmdScope.Global);
 
             // Clipboard/selection anywhere in the window (menu bar, tab bar,
             // gutter...) — but never steal from real text inputs (settings
@@ -1994,48 +1920,17 @@ namespace ADKOM.TextEditor
             if (!CanEditDoc) return;
 
             bool ctrl = e.ctrlKey || e.commandKey;
-            var layout = EditorConfig.Keymap;
-            bool vs = layout == KeymapLayout.VisualStudio;
-            bool rider = layout == KeymapLayout.Rider;
-            bool vscode = layout == KeymapLayout.VSCode;
-            bool handled = false;
+            bool handled;
 
+            // Tab/Shift+Tab must run before CodeView's own handling, so they
+            // stay a special case; every other editing command comes from the
+            // command table (TextEditorWindow.Commands.cs).
             if (e.keyCode == KeyCode.Tab && !ctrl && !e.altKey)
             {
                 if (e.shiftKey) UnindentSelection(); else InsertTab();
                 handled = true;
             }
-            else if ((vs || rider) && ctrl && !e.altKey && !e.shiftKey && e.keyCode == KeyCode.D)
-            {
-                DuplicateLine();
-                handled = true;
-            }
-            else if (vscode && e.altKey && e.shiftKey && !ctrl &&
-                     (e.keyCode == KeyCode.DownArrow || e.keyCode == KeyCode.UpArrow))
-            {
-                DuplicateLine(); // VS Code: Copy Line Down/Up
-                handled = true;
-            }
-            else if (vs && ctrl && !e.shiftKey && e.keyCode == KeyCode.L) { DeleteLine(); handled = true; }
-            else if (rider && ctrl && !e.shiftKey && e.keyCode == KeyCode.Y) { DeleteLine(); handled = true; }
-            else if (vscode && ctrl && e.shiftKey && e.keyCode == KeyCode.K) { DeleteLine(); handled = true; }
-            else if ((vs || vscode) && e.altKey && !ctrl && !e.shiftKey && e.keyCode == KeyCode.UpArrow) { MoveLine(-1); handled = true; }
-            else if ((vs || vscode) && e.altKey && !ctrl && !e.shiftKey && e.keyCode == KeyCode.DownArrow) { MoveLine(1); handled = true; }
-            else if (rider && e.altKey && e.shiftKey && !ctrl && e.keyCode == KeyCode.UpArrow) { MoveLine(-1); handled = true; }
-            else if (rider && e.altKey && e.shiftKey && !ctrl && e.keyCode == KeyCode.DownArrow) { MoveLine(1); handled = true; }
-            else if (ctrl && !e.shiftKey && !e.altKey && e.keyCode == KeyCode.Slash) { ToggleComment(); handled = true; }
-            else if ((vs || vscode) && !ctrl && !e.altKey && e.keyCode == KeyCode.F12)
-            {
-                _code.IndexToLineCol(_code.cursorIndex, out int nl, out int ncol);
-                NavigateToDefinition(nl, ncol);
-                handled = true;
-            }
-            else if (rider && ctrl && !e.shiftKey && !e.altKey && e.keyCode == KeyCode.B)
-            {
-                _code.IndexToLineCol(_code.cursorIndex, out int nl, out int ncol);
-                NavigateToDefinition(nl, ncol);
-                handled = true;
-            }
+            else handled = DispatchCommands(e, CmdScope.Editor);
 
             if (handled)
             {
