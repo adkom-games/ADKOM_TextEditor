@@ -95,11 +95,9 @@ is verified live in the editor.
 
 ## Immediate next steps
 
-1. 0.6.1 published 2026-07-26 (upgrade-path fixes from the first real
-   update field test). Still pending in the wild: bundled-Roslyn copy
-   on a Roslyn-less project; confirm Cary's second project heals via
-   0.6.1 or manual module removal. Plan next milestone (roadmap:
-   languages, custom themes; backlog: MRU tab order, tab reorder).
+1. FIELD-VERIFIED 2026-07-27: bundled-Roslyn install on a Roslyn-less
+   system works cleanly (Cary confirmed). No semantics-install watch
+   items remain; the second project healed via the update path earlier.
 2. 0.9.0 published 2026-07-26 (tag == CI upm head; fresh-clone
    verified). Backlogs on record: Markdown gaps (image display,
    clickable links, table alignment, nesting, escapes, wiki-links);
