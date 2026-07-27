@@ -107,6 +107,10 @@ is verified live in the editor.
    2026-07-26 (undo snapshot memory, crash-safe session autosave,
    FindAgain probe-window hack, silent catches, god-class split,
    command table unification, l10n completeness check, AteApi facade).
+   DEBT STATUS 2026-07-27: everything above is FIXED (#2-#14) except
+   #1 undo deltas, deferred by design. Window is now partial classes:
+   core + Commands/Menus/Tabs/Session/Banners/ContextMenus/Semantics/
+   Api — new window code goes in the matching partial.
 3. Roadmap candidates: JSON formatters, custom themes,
    Ctrl+Tab MRU order. (Drag-to-reorder tabs shipped in [Unreleased].)
 
