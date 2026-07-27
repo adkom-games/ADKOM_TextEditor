@@ -100,6 +100,7 @@ namespace ADKOM.TextEditor
             Item(WithSc("Select All Occurrences", Dsp("select-all-occurrences")), edit, () => _code.SelectAllOccurrences());
             Item(WithSc("Add Caret Above", Dsp("add-caret-above")), edit, () => _code.AddCaretOnAdjacentLine(-1));
             Item(WithSc("Add Caret Below", Dsp("add-caret-below")), edit, () => _code.AddCaretOnAdjacentLine(1));
+            Item(WithSc("Autocomplete", "Ctrl+Space"), edit, () => _code.ShowCompletion(true));
             Item(WithSc("Indent", Dsp("indent")), edit, InsertTab);
             Item(WithSc("Unindent", Dsp("unindent")), edit, UnindentSelection);
             m.AddSeparator("");

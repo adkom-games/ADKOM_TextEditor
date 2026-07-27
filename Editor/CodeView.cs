@@ -18,7 +18,7 @@ namespace ADKOM.TextEditor
     /// Word wrap splits lines into visual rows at self-computed break points
     /// (per-character width table), so rendering and caret math always agree.
     /// </summary>
-    public class CodeView : VisualElement
+    public partial class CodeView : VisualElement
     {
         const float CaretWidth = 1.5f;
         const int UndoCap = 100;
@@ -1322,6 +1322,12 @@ namespace ADKOM.TextEditor
         {
             bool ctrl = e.ctrlKey || e.commandKey;
 
+            if (HandleCompletionKey(e))
+            {
+                e.StopImmediatePropagation();
+                return;
+            }
+
             // Character-only events (second event of each key press)
             if (e.keyCode == KeyCode.None && e.character != '\0')
             {
@@ -1338,10 +1344,12 @@ namespace ADKOM.TextEditor
                     }
                     if (EditorConfig.AutoCloseBrackets && HandleAutoClose(c))
                     {
+                        if (IsWordCharUndo(c)) ShowCompletion(manual: false); else HideCompletion();
                         e.StopPropagation();
                         return;
                     }
                     InsertText(c.ToString(), typing: true);
+                    if (IsWordCharUndo(c)) ShowCompletion(manual: false); else HideCompletion();
                     e.StopPropagation();
                 }
                 return;
@@ -1411,6 +1419,7 @@ namespace ADKOM.TextEditor
                         remove = p >= 0 ? _caretCol - p : 1;
                     }
                     ReplaceRangeInternal(idx - remove, idx, string.Empty, idx - remove, EditKind.Backspace);
+                    if (CompletionVisible) ShowCompletion(manual: false);
                     break;
                 }
                 case KeyCode.Delete:
@@ -1472,6 +1481,9 @@ namespace ADKOM.TextEditor
                 }
                 case KeyCode.PageUp: PageMove(-1, e.shiftKey); break;
                 case KeyCode.PageDown: PageMove(1, e.shiftKey); break;
+                case KeyCode.Space when ctrl && !e.altKey && !e.shiftKey:
+                    ShowCompletion(manual: true);
+                    break;
                 case KeyCode.A when ctrl:
                     _anchorLine = 0; _anchorCol = 0;
                     _caretLine = _lines.Count - 1; _caretCol = _lines[_caretLine].Length;
@@ -2328,6 +2340,7 @@ namespace ADKOM.TextEditor
         void OnPointerDown(PointerDownEvent e)
         {
             _selHistory.Clear();
+            HideCompletion();
             if (e.button == 0 && e.altKey && !e.ctrlKey)
             {
                 // Alt+Click: add (or remove) an extra caret; the primary stays.

@@ -497,3 +497,6 @@ msgstr "탭 색상"
 
 msgid "Base color of the tab strip; each tab gets its own stable shade of it."
 msgstr "탭 표시줄의 기본 색상입니다. 각 탭은 고유한 음영으로 표시됩니다."
+
+msgid "Autocomplete"
+msgstr "자동 완성"

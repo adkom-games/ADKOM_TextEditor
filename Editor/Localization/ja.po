@@ -497,3 +497,6 @@ msgstr "タブの色"
 
 msgid "Base color of the tab strip; each tab gets its own stable shade of it."
 msgstr "タブバーの基本色。各タブはその色の固有の濃淡で表示されます。"
+
+msgid "Autocomplete"
+msgstr "オートコンプリート"
