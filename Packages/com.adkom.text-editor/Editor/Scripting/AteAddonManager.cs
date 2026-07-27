@@ -214,6 +214,42 @@ namespace ADKOM.TextEditor.Scripting
             }
         }
 
+        /// <summary>Copies the sample addons shipped with the package
+        /// (Samples~/Addons) into the shared folder and reloads. Existing
+        /// files with the same names are overwritten (they are samples).</summary>
+        public static void InstallSamples()
+        {
+            EnsureFolder();
+            string src;
+            try { src = Path.GetFullPath("Packages/com.adkom.text-editor/Samples~/Addons"); }
+            catch (Exception ex)
+            {
+                AteConsole.Warn("[ADKOM Text Editor] Sample addons not found: " + ex.Message);
+                return;
+            }
+            if (!Directory.Exists(src))
+            {
+                AteConsole.Warn("[ADKOM Text Editor] Sample addons folder missing: " + src);
+                return;
+            }
+            int copied = 0;
+            foreach (var f in Directory.GetFiles(src, "*.cs"))
+            {
+                try
+                {
+                    File.Copy(f, Path.Combine(AddonsFolder, Path.GetFileName(f)), overwrite: true);
+                    copied++;
+                }
+                catch (Exception ex)
+                {
+                    AteConsole.Warn("[ADKOM Text Editor] Could not copy sample " +
+                        Path.GetFileName(f) + ": " + ex.Message);
+                }
+            }
+            AteConsole.Log(string.Format(L10n.Tr("{0} sample addon(s) installed."), copied));
+            Reload();
+        }
+
         public static void OpenFolder()
         {
             EnsureFolder();

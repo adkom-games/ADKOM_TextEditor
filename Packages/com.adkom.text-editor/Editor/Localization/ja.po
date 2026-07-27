@@ -743,3 +743,9 @@ msgstr "アドオンを再読み込み"
 
 msgid "Open Addons Folder..."
 msgstr "アドオンフォルダーを開く..."
+
+msgid "Install Sample Addons"
+msgstr "サンプルアドオンをインストール"
+
+msgid "{0} sample addon(s) installed."
+msgstr "{0} 個のサンプルアドオンをインストールしました。"
