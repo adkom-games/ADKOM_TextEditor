@@ -75,9 +75,74 @@ namespace ADKOM.TextEditor
         Color _matchColor = new Color(0.7f, 0.7f, 0.7f, 0.18f);
         readonly List<VisualElement> _matchPool = new List<VisualElement>();
 
-        struct Snapshot { public string text; public int cursor, select; }
-        readonly List<Snapshot> _undo = new List<Snapshot>();
-        readonly List<Snapshot> _redo = new List<Snapshot>();
+        // Range-based undo (defect #1): each entry stores only the DELTA of
+        // its group — the text the group inserted and the text it replaced —
+        // not a full document snapshot, so undo memory scales with edit size,
+        // never with file size. Coalescing extends the top op in place.
+        internal sealed class UndoOp
+        {
+            public int Start;                       // group's change origin
+            public string Inserted = string.Empty;  // present AFTER the group
+            public string Removed = string.Empty;   // present BEFORE the group
+            public int CursorBefore, SelectBefore;  // caret to restore on undo
+            public int CursorAfter, SelectAfter;    // caret to restore on redo
+        }
+
+        /// <summary>The complete per-document undo world: both stacks plus
+        /// the coalescing state, swapped by the window on tab switches so
+        /// undo history is scoped to its document.</summary>
+        internal sealed class UndoWorld
+        {
+            public readonly List<UndoOp> Undo = new List<UndoOp>();
+            public readonly List<UndoOp> Redo = new List<UndoOp>();
+            public EditKind LastKind = EditKind.Programmatic;
+            public double LastEditTime, GroupStartTime;
+            public int LastEditEnd = -1;
+            public int GroupChars;
+            public char LastTypedChar = '\0';
+        }
+
+        UndoWorld _world = new UndoWorld();
+        List<UndoOp> _undo => _world.Undo;
+        List<UndoOp> _redo => _world.Redo;
+
+        /// <summary>Detaches the current undo world (the caller stores it on
+        /// the document) — used when the window swaps documents.</summary>
+        internal object DetachUndoWorld()
+        {
+            SyncGroupStateIntoWorld();
+            var w = _world;
+            _world = new UndoWorld();
+            AttachGroupStateFromWorld();
+            return w;
+        }
+
+        /// <summary>Attaches a document's undo world (null = fresh).</summary>
+        internal void AttachUndoWorld(object world)
+        {
+            _world = world as UndoWorld ?? new UndoWorld();
+            AttachGroupStateFromWorld();
+        }
+
+        void SyncGroupStateIntoWorld()
+        {
+            _world.LastKind = _lastKind;
+            _world.LastEditTime = _lastEditTime;
+            _world.GroupStartTime = _groupStartTime;
+            _world.LastEditEnd = _lastEditEnd;
+            _world.GroupChars = _groupChars;
+            _world.LastTypedChar = _lastTypedChar;
+        }
+
+        void AttachGroupStateFromWorld()
+        {
+            _lastKind = _world.LastKind;
+            _lastEditTime = _world.LastEditTime;
+            _groupStartTime = _world.GroupStartTime;
+            _lastEditEnd = _world.LastEditEnd;
+            _groupChars = _world.GroupChars;
+            _lastTypedChar = _world.LastTypedChar;
+        }
 
         /// <summary>What kind of edit an undoable change is. Only TypeChar,
         /// Backspace, and ForwardDelete ever coalesce — each strictly with its
@@ -1070,10 +1135,11 @@ namespace ADKOM.TextEditor
         void PushUndo(EditKind kind, int start, int end, string replacement)
         {
             double now = EditorApplication.timeSinceStartup;
+            string removed = GetValueInternal().Substring(start, end - start);
 
             // Coalesce only same-kind, contiguous, recent edits within caps.
             bool coalesce = false;
-            if (kind == _lastKind &&
+            if (kind == _lastKind && _undo.Count > 0 &&
                 now - _lastEditTime < CoalesceGapSeconds &&
                 now - _groupStartTime < MaxGroupSeconds &&
                 _groupChars < MaxGroupChars)
@@ -1094,10 +1160,25 @@ namespace ADKOM.TextEditor
 
             if (!coalesce)
             {
-                _undo.Add(new Snapshot { text = GetValueInternal(), cursor = cursorIndex, select = selectIndex });
+                _undo.Add(new UndoOp
+                {
+                    Start = start, Removed = removed, Inserted = replacement,
+                    CursorBefore = cursorIndex, SelectBefore = selectIndex
+                });
                 if (_undo.Count > UndoCap) _undo.RemoveAt(0);
                 _groupStartTime = now;
                 _groupChars = 0;
+            }
+            else
+            {
+                // Extend the group's delta in place.
+                var op = _undo[_undo.Count - 1];
+                switch (kind)
+                {
+                    case EditKind.TypeChar: op.Inserted += replacement; break;
+                    case EditKind.Backspace: op.Removed = removed + op.Removed; op.Start = start; break;
+                    case EditKind.ForwardDelete: op.Removed += removed; break;
+                }
             }
             _redo.Clear();
             _lastEditTime = now;
@@ -1125,6 +1206,13 @@ namespace ADKOM.TextEditor
             SetValueWithoutNotify(v.Substring(0, start) + replacement + v.Substring(end));
             cursorIndex = Mathf.Clamp(caret, 0, GetValueInternal().Length);
             CollapseAnchor();
+            // Keep the group's redo caret current across coalesced edits.
+            if (_undo.Count > 0)
+            {
+                var op = _undo[_undo.Count - 1];
+                op.CursorAfter = cursorIndex;
+                op.SelectAfter = selectIndex;
+            }
             Notify();
             AfterCaretMove();
         }
@@ -1144,15 +1232,21 @@ namespace ADKOM.TextEditor
         public void Undo()
         {
             if (_undo.Count == 0) return;
-            var snap = _undo[_undo.Count - 1];
+            var op = _undo[_undo.Count - 1];
             _undo.RemoveAt(_undo.Count - 1);
-            string cur = GetValueInternal();
-            _redo.Add(new Snapshot { text = cur, cursor = cursorIndex, select = selectIndex });
-            SetValueWithoutNotify(snap.text);
-            cursorIndex = snap.cursor;
-            selectIndex = snap.select;
+            string v = GetValueInternal();
+            // The current text contains op.Inserted at op.Start; put back
+            // op.Removed. Clamp defensively — offsets are ours to maintain.
+            int start = Mathf.Clamp(op.Start, 0, v.Length);
+            int end = Mathf.Clamp(start + op.Inserted.Length, start, v.Length);
+            SetValueWithoutNotify(v.Substring(0, start) + op.Removed + v.Substring(end));
+            int len = GetValueInternal().Length;
+            cursorIndex = Mathf.Clamp(op.CursorBefore, 0, len);
+            selectIndex = Mathf.Clamp(op.SelectBefore, 0, len);
+            _redo.Add(op);
             BreakUndoGroup();
-            onUndoStatus?.Invoke(string.Format(L10n.Tr("Undid {0} char(s)."), Mathf.Abs(cur.Length - snap.text.Length)));
+            onUndoStatus?.Invoke(string.Format(L10n.Tr("Undid {0} char(s)."),
+                Mathf.Max(op.Inserted.Length, op.Removed.Length)));
             Notify();
             AfterCaretMove();
         }
@@ -1160,15 +1254,19 @@ namespace ADKOM.TextEditor
         public void Redo()
         {
             if (_redo.Count == 0) return;
-            var snap = _redo[_redo.Count - 1];
+            var op = _redo[_redo.Count - 1];
             _redo.RemoveAt(_redo.Count - 1);
-            string cur = GetValueInternal();
-            _undo.Add(new Snapshot { text = cur, cursor = cursorIndex, select = selectIndex });
-            SetValueWithoutNotify(snap.text);
-            cursorIndex = snap.cursor;
-            selectIndex = snap.select;
+            string v = GetValueInternal();
+            int start = Mathf.Clamp(op.Start, 0, v.Length);
+            int end = Mathf.Clamp(start + op.Removed.Length, start, v.Length);
+            SetValueWithoutNotify(v.Substring(0, start) + op.Inserted + v.Substring(end));
+            int len = GetValueInternal().Length;
+            cursorIndex = Mathf.Clamp(op.CursorAfter, 0, len);
+            selectIndex = Mathf.Clamp(op.SelectAfter, 0, len);
+            _undo.Add(op);
             BreakUndoGroup();
-            onUndoStatus?.Invoke(string.Format(L10n.Tr("Redid {0} char(s)."), Mathf.Abs(cur.Length - snap.text.Length)));
+            onUndoStatus?.Invoke(string.Format(L10n.Tr("Redid {0} char(s)."),
+                Mathf.Max(op.Inserted.Length, op.Removed.Length)));
             Notify();
             AfterCaretMove();
         }
