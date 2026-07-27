@@ -56,6 +56,7 @@ with the host project.
 | Release 0.9.0 (published 2026-07-26) | Done |
 | 0.10.0 feature campaign: ALL 19 must-have editor features (7 batches, 2026-07-27) | Done |
 | Release 0.10.0 (published 2026-07-27; tag == CI upm head; fresh-clone verified) | Done |
+| Release 0.10.1 (docs-only: Ko-fi links; published 2026-07-27) | Done |
 | More languages; custom themes | Future (roadmap) |
 
 ## Current work area
