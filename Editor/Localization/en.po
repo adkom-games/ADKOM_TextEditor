@@ -703,3 +703,15 @@ msgstr "Ask about the attached selection…"
 
 msgid "Ask about the attached document…"
 msgstr "Ask about the attached document…"
+
+msgid "Sign the whole Unity Editor out of {0}? Unity AI (and every other cloud feature) disconnects until you sign in again."
+msgstr "Sign the whole Unity Editor out of {0}? Unity AI (and every other cloud feature) disconnects until you sign in again."
+
+msgid "Sign Out of Unity Account…"
+msgstr "Sign Out of Unity Account…"
+
+msgid "Unity AI account: {0}"
+msgstr "Unity AI account: {0}"
+
+msgid "Unity account: signed out"
+msgstr "Unity account: signed out"
