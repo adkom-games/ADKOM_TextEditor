@@ -710,3 +710,9 @@ msgstr "Unity 帐户：已登出"
 
 msgid "Unity AI uses the Unity account the Editor is signed into; manage it from the account menu in the Editor's top-right corner."
 msgstr "Unity AI 使用编辑器登录的 Unity 帐户；请通过编辑器右上角的帐户菜单进行管理。"
+
+msgid "Search Results"
+msgstr "搜索结果"
+
+msgid "(no search results yet)"
+msgstr "（尚无搜索结果）"

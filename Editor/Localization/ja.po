@@ -710,3 +710,9 @@ msgstr "Unity アカウント: サインアウト済み"
 
 msgid "Unity AI uses the Unity account the Editor is signed into; manage it from the account menu in the Editor's top-right corner."
 msgstr "Unity AI はエディターがサインインしている Unity アカウントを使用します。エディター右上のアカウントメニューから管理してください。"
+
+msgid "Search Results"
+msgstr "検索結果"
+
+msgid "(no search results yet)"
+msgstr "（検索結果はまだありません）"

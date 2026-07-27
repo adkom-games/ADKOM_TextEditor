@@ -710,3 +710,9 @@ msgstr "Unity 계정: 로그아웃됨"
 
 msgid "Unity AI uses the Unity account the Editor is signed into; manage it from the account menu in the Editor's top-right corner."
 msgstr "Unity AI는 에디터가 로그인한 Unity 계정을 사용합니다. 에디터 오른쪽 상단의 계정 메뉴에서 관리하세요."
+
+msgid "Search Results"
+msgstr "검색 결과"
+
+msgid "(no search results yet)"
+msgstr "(아직 검색 결과 없음)"
