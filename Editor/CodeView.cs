@@ -991,7 +991,9 @@ namespace ADKOM.TextEditor
                 g.style.right = 6;
                 g.style.unityTextAlign = TextAnchor.UpperRight;
                 g.style.opacity = 0.55f;
-                g.pickingMode = PickingMode.Ignore;
+                // MUST be pickable: the fold-arrow click handler below never
+                // fired with PickingMode.Ignore (Defects follow-up 2026-07-27).
+                g.pickingMode = PickingMode.Position;
                 _gutterCol.Add(g);
                 g.RegisterCallback<PointerDownEvent>(evt =>
                 {
