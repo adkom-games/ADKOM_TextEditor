@@ -120,6 +120,7 @@ document to normal editing.
 | `TryGetCursor(out line, out col)` | Caret position; false when the doc isn't the active tab. |
 | `SetColor(line, colStart, colEnd, fg, bg = null)` | Colors a column range — foreground and/or background. A **render overlay**, never document text, and positional: repaint colors with the text. Null for both clears the range. |
 | `ClearColors(line)` / `ClearColors()` | Clears one line / everything. |
+| `SetFont(fontName, size = 0)` / `ClearFont()` | Per-document font override (OS family name + optional 8–40 pt size; 0 keeps the current size). Addon-only — no menu/Settings surface; runtime-only; unloadable fonts fall back to the default. Zoom gestures adjust the override, not the global size. Use monospace to keep the grid aligned. |
 
 ### Input
 

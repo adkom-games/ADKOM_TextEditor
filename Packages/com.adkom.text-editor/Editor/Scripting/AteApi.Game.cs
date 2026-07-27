@@ -297,6 +297,29 @@ namespace ADKOM.TextEditor.Scripting
             _window.ApiWriteLine(_doc, start, end, sb.ToString());
         }
 
+        // ---- Per-document font (1.1) ----
+
+        /// <summary>Sets this document's font: an OS font family name (e.g.
+        /// "Consolas") and an optional point size (clamped to [8, 40]; 0
+        /// keeps the editor's current size). A missing/unloadable font falls
+        /// back to the editor default. The override is per document, never
+        /// shown in menus or Settings, and runtime-only (a domain reload
+        /// drops it). User zoom gestures still work — they adjust this
+        /// document's override, not the global font size. Games: monospace
+        /// fonts keep the character grid aligned.</summary>
+        public void SetFont(string fontName, int size = 0)
+        {
+            EnsureValid();
+            _window.ApiSetFont(_doc, fontName, size);
+        }
+
+        /// <summary>Removes the font override — back to the global font.</summary>
+        public void ClearFont()
+        {
+            EnsureValid();
+            _window.ApiSetFont(_doc, null, 0);
+        }
+
         // ---- Color overlay (1.1) ----
 
         /// <summary>Colors a 1-based column range [colStart, colEnd) on a line

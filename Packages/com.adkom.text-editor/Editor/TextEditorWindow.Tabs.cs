@@ -399,6 +399,7 @@ namespace ADKOM.TextEditor
                 _code.gameMode = Active.GameMode;
                 _code.wordWrap = Active.GameMode ? false : _wordWrap;
                 _code.AttachOverlay(Active.Overlay);
+                _code.SetFontOverride(Active.FontName, Active.FontSize);
             }
             _code?.SetValueWithoutNotify(Active.Content);
             RefreshFormatter();
