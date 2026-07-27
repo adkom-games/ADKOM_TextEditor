@@ -572,3 +572,15 @@ msgstr "清除書籤"
 
 msgid "No bookmarks in this document."
 msgstr "此文件中沒有書籤。"
+
+msgid "Scroll tabs left"
+msgstr "向左捲動標籤頁"
+
+msgid "Scroll tabs right"
+msgstr "向右捲動標籤頁"
+
+msgid "Auto-Reload Changed Files"
+msgstr "自動重新載入已變更的檔案"
+
+msgid "When a file changes on disk and the buffer has no unsaved edits, reload it automatically instead of asking. Buffers with unsaved edits still ask."
+msgstr "當檔案在磁碟上發生變更且緩衝區沒有未儲存的編輯時，自動重新載入而不再詢問。有未儲存編輯的緩衝區仍會詢問。"

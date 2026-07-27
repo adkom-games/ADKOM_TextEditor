@@ -572,3 +572,15 @@ msgstr "ブックマークをクリア"
 
 msgid "No bookmarks in this document."
 msgstr "このドキュメントにブックマークはありません。"
+
+msgid "Scroll tabs left"
+msgstr "タブを左へスクロール"
+
+msgid "Scroll tabs right"
+msgstr "タブを右へスクロール"
+
+msgid "Auto-Reload Changed Files"
+msgstr "変更されたファイルを自動再読み込み"
+
+msgid "When a file changes on disk and the buffer has no unsaved edits, reload it automatically instead of asking. Buffers with unsaved edits still ask."
+msgstr "ファイルがディスク上で変更され、バッファに未保存の編集がない場合、確認せずに自動的に再読み込みします。未保存の編集があるバッファは引き続き確認します。"

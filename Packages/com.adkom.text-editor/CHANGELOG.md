@@ -6,6 +6,38 @@ All notable changes to this package are documented here. Format follows
 ## [Unreleased]
 
 ### Fixed
+- Indentation guides were invisible: character-width measurement
+  returned 1px for spaces (the measurer trims trailing whitespace), so
+  every guide was crushed against the gutter. Guides now sit at true
+  indent columns and are slightly more visible.
+- Smooth scrolling shimmer: the ease landed on fractional pixel
+  offsets, which rasterized the input field and the color overlay
+  differently (a 1px color mis-registration). Every animation frame
+  now snaps to a whole pixel.
+- Folded regions now show the whole collapsed shape — the header line
+  ends with a dimmed "⋯ }" instead of a bare "{".
+
+### Changed
+- Tabs stay on a SINGLE line: the strip clips at the edges, and scroll
+  arrows appear on its left and right whenever tabs overflow (the
+  active tab auto-scrolls into view; the tab-list dropdown stays at
+  the far right).
+- The active tab now stands out: a clearly brighter, fully opaque
+  shade of its color plus an accent top border.
+- Menu-bar buttons get more side padding; hovering/pressing shows only
+  the left and right edges of the selection so buttons look bounded on
+  the sides.
+
+### Added
+- Auto-Reload Changed Files (Settings, default off): files that change
+  on disk reload automatically when the buffer has no unsaved edits;
+  dirty buffers still get the banner so edits are never lost silently.
+- ADKOM Text Editor appears in Unity's dock "Add Tab" menu (via a new
+  Window menu entry).
+- Rendered Markdown now displays standalone images: local paths
+  (relative to the document or absolute) load inline with the alt text
+  as a caption; missing files show a placeholder. Remote URLs are not
+  fetched.
 - Minimap: for documents taller than the minimap strip, the code
   graphics and viewport rectangle were vertically compressed into the
   top of the strip (proportionally worse the bigger the file), while

@@ -177,7 +177,7 @@ namespace ADKOM.TextEditor
             if (_indentGuides)
             {
                 float spaceW = CharWidth(' ');
-                var guideColor = new Color(_textColor.r, _textColor.g, _textColor.b, 0.09f);
+                var guideColor = new Color(_textColor.r, _textColor.g, _textColor.b, 0.15f);
                 for (int i = 0; i < visible; i++)
                 {
                     int row = firstRow + i;

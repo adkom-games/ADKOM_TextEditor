@@ -37,6 +37,10 @@ namespace ADKOM.TextEditor
         /// edited: the window appends the given source as a new block.</summary>
         public event Action<string> onInsertBlock;
 
+        /// <summary>Directory of the rendered document; resolves relative
+        /// image paths. Null for unsaved buffers.</summary>
+        public string BaseDir;
+
         TextField _activeEditor;
         public bool HasActiveEditor => _activeEditor != null;
 
@@ -114,6 +118,11 @@ namespace ADKOM.TextEditor
                     kind = "table";
                     while (li < lines.Length && lines[li].TrimStart().StartsWith("|")) li++;
                 }
+                else if (t.StartsWith("![") && t.Contains("]("))
+                {
+                    kind = "image";
+                    li++;
+                }
                 else if (MarkdownClassifier.IsListMarker(t, out _))
                 {
                     kind = "list";
@@ -129,6 +138,7 @@ namespace ADKOM.TextEditor
                            !lines[li].TrimStart().StartsWith(">") &&
                            !lines[li].TrimStart().StartsWith("|") &&
                            !MarkdownClassifier.IsListMarker(lines[li].TrimStart(), out _) &&
+                           !lines[li].TrimStart().StartsWith("![") &&
                            !MarkdownClassifier.IsHorizontalRule(lines[li].TrimStart()))
                         li++;
                 }
@@ -147,6 +157,57 @@ namespace ADKOM.TextEditor
 
         // ---------- Rendering ----------
 
+        /// <summary>Renders a standalone image line "![alt](path)". Local
+        /// paths (absolute, or relative to <see cref="BaseDir"/>) load into a
+        /// real Image; anything unresolvable falls back to an "alt — path"
+        /// placeholder label. Remote URLs are not fetched.</summary>
+        VisualElement BuildImageElement(Block block, Color text)
+        {
+            string src = block.Source.Trim();
+            var m = System.Text.RegularExpressions.Regex.Match(src, @"^!\[(?<alt>[^\]]*)\]\((?<path>[^)\s]+)[^)]*\)");
+            string alt = m.Success ? m.Groups["alt"].Value : string.Empty;
+            string path = m.Success ? m.Groups["path"].Value : null;
+            Texture2D tex = null;
+            if (path != null && !path.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+            {
+                try
+                {
+                    string full = System.IO.Path.IsPathRooted(path) ? path
+                        : BaseDir != null ? System.IO.Path.Combine(BaseDir, path) : path;
+                    if (System.IO.File.Exists(full))
+                    {
+                        tex = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+                        if (!tex.LoadImage(System.IO.File.ReadAllBytes(full))) tex = null;
+                    }
+                }
+                catch (Exception) { tex = null; }
+            }
+            if (tex == null)
+            {
+                var ph = new Label("🖼 " + (alt.Length > 0 ? alt + " — " : "") + (path ?? src));
+                ph.style.unityFontStyleAndWeight = FontStyle.Italic;
+                ph.style.color = new Color(text.r, text.g, text.b, 0.6f);
+                ph.style.marginBottom = 8;
+                return ph;
+            }
+            var box = new VisualElement();
+            box.style.marginBottom = 8;
+            var img = new Image { image = tex, scaleMode = ScaleMode.ScaleToFit };
+            img.style.width = tex.width;
+            img.style.height = tex.height;
+            img.style.maxWidth = Length.Percent(100);
+            img.style.alignSelf = Align.FlexStart;
+            box.Add(img);
+            if (alt.Length > 0)
+            {
+                var cap = new Label(alt);
+                cap.style.color = new Color(text.r, text.g, text.b, 0.55f);
+                cap.style.fontSize = 10;
+                box.Add(cap);
+            }
+            return box;
+        }
+
         VisualElement BuildBlockElement(Block block)
         {
             VisualElement el;
@@ -159,6 +220,10 @@ namespace ADKOM.TextEditor
                 el.style.backgroundColor = new Color(text.r, text.g, text.b, 0.35f);
                 el.style.marginTop = 8;
                 el.style.marginBottom = 8;
+            }
+            else if (block.Kind == "image")
+            {
+                el = BuildImageElement(block, text);
             }
             else if (block.Kind == "code")
             {

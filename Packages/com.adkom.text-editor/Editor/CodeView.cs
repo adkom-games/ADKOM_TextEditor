@@ -294,7 +294,13 @@ namespace ADKOM.TextEditor
                 _smoothAnim.Pause();
                 return;
             }
-            sc.value += diff * (1f - Mathf.Exp(-dt * 14f));
+            // Snap every animation frame to a WHOLE pixel: fractional scroll
+            // offsets rasterize the transparent input field and the colored
+            // overlay label differently, producing a 1px color-misalignment
+            // shimmer during the ease (Defects round 2026-07-27, item 2).
+            float next = Mathf.Round(sc.value + diff * (1f - Mathf.Exp(-dt * 14f)));
+            if (Mathf.Approximately(next, sc.value)) next += Mathf.Sign(diff); // don't stall short of target
+            sc.value = next;
         }
 
         void ZoomBy(int delta)
@@ -729,10 +735,17 @@ namespace ADKOM.TextEditor
         float CharWidth(char c)
         {
             if (_charW.TryGetValue(c, out float w)) return w;
-            // Measure pairwise so space widths register correctly.
-            float two = _measure.MeasureTextSize("|" + c, 0, MeasureMode.Undefined, 0, MeasureMode.Undefined).x;
-            float one = _measure.MeasureTextSize("|", 0, MeasureMode.Undefined, 0, MeasureMode.Undefined).x;
-            w = Mathf.Max(1f, two - one);
+            // Bracket the char on BOTH sides: measurers trim trailing
+            // whitespace, so "|" + ' ' measured the same as "|" and every
+            // space came back 1px — which crushed the indent guides against
+            // the gutter (Defects round 2026-07-27, item 7).
+            float three = _measure.MeasureTextSize("|" + c + "|", 0, MeasureMode.Undefined, 0, MeasureMode.Undefined).x;
+            float two = _measure.MeasureTextSize("||", 0, MeasureMode.Undefined, 0, MeasureMode.Undefined).x;
+            w = Mathf.Max(1f, three - two);
+            // Before the first layout pass the measurer reports NaN; return a
+            // font-derived estimate WITHOUT caching so the real width is
+            // measured (and cached) once layout exists.
+            if (float.IsNaN(w)) return Mathf.Max(1f, resolvedStyle.fontSize * 0.6f);
             _charW[c] = w;
             return w;
         }
@@ -931,6 +944,11 @@ namespace ADKOM.TextEditor
                     else label.text = MarkupForRange(line, sc, ec);
                 }
                 else label.text = _lines[line].Substring(sc, ec - sc);
+
+                // Folded header: show the whole collapsed shape "{ ⋯ }" so the
+                // region reads as closed (Defects round 2026-07-27, item 4).
+                if (ec == _lines[line].Length && IsFoldedHeader(line))
+                    label.text += rich ? " <color=#9A9A9A>⋯ }</color>" : " ⋯ }";
 
                 if (!_wordWrap)
                 {

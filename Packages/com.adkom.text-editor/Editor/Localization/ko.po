@@ -572,3 +572,15 @@ msgstr "북마크 지우기"
 
 msgid "No bookmarks in this document."
 msgstr "이 문서에는 북마크가 없습니다."
+
+msgid "Scroll tabs left"
+msgstr "탭을 왼쪽으로 스크롤"
+
+msgid "Scroll tabs right"
+msgstr "탭을 오른쪽으로 스크롤"
+
+msgid "Auto-Reload Changed Files"
+msgstr "변경된 파일 자동 다시 불러오기"
+
+msgid "When a file changes on disk and the buffer has no unsaved edits, reload it automatically instead of asking. Buffers with unsaved edits still ask."
+msgstr "디스크에서 파일이 변경되고 버퍼에 저장되지 않은 편집이 없으면 묻지 않고 자동으로 다시 불러옵니다. 저장되지 않은 편집이 있는 버퍼는 계속 확인합니다."

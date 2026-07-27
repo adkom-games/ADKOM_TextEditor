@@ -22,6 +22,85 @@ namespace ADKOM.TextEditor
 
         void InvalidateTabs() => _tabSignature = null;
 
+        // Single-line tab strip (Defects round 2026-07-27, item 1): tabs live
+        // in a clipped viewport; arrows scroll it when tabs overflow, and the
+        // tab-list dropdown stays pinned at the far right.
+        VisualElement _tabViewport, _tabStrip;
+        Button _tabLeftBtn, _tabRightBtn;
+        float _tabScrollOffset;
+
+        void EnsureTabChrome()
+        {
+            if (_tabViewport != null && _tabBar.Contains(_tabViewport)) return;
+            _tabBar.Clear();
+
+            _tabLeftBtn = new Button(() => ScrollTabsBy(-160f)) { text = "\u25C2" };
+            _tabLeftBtn.AddToClassList("tab-scroll-btn");
+            _tabLeftBtn.tooltip = L10n.Tr("Scroll tabs left");
+            _tabBar.Add(_tabLeftBtn);
+
+            _tabViewport = new VisualElement { name = "tab-viewport" };
+            _tabViewport.style.flexGrow = 1;
+            _tabViewport.style.flexShrink = 1;
+            _tabViewport.style.flexDirection = FlexDirection.Row;
+            _tabViewport.style.overflow = Overflow.Hidden;
+            _tabStrip = new VisualElement { name = "tab-strip" };
+            _tabStrip.style.flexDirection = FlexDirection.Row;
+            _tabStrip.style.flexShrink = 0;
+            _tabViewport.Add(_tabStrip);
+            _tabViewport.RegisterCallback<GeometryChangedEvent>(_ => ClampTabScroll());
+            _tabStrip.RegisterCallback<GeometryChangedEvent>(_ => ClampTabScroll());
+            _tabBar.Add(_tabViewport);
+
+            _tabRightBtn = new Button(() => ScrollTabsBy(160f)) { text = "\u25B8" };
+            _tabRightBtn.AddToClassList("tab-scroll-btn");
+            _tabRightBtn.tooltip = L10n.Tr("Scroll tabs right");
+            _tabBar.Add(_tabRightBtn);
+
+            var listBtn = new Button(() => BuildTabListMenu().DropDown(_tabListBtnRect))
+            {
+                text = "\u25BE",
+                tooltip = L10n.Tr("Open Tabs")
+            };
+            listBtn.AddToClassList("tab-list-btn");
+            listBtn.RegisterCallback<GeometryChangedEvent>(_ => _tabListBtnRect = listBtn.worldBound);
+            _tabBar.Add(listBtn);
+        }
+
+        void ScrollTabsBy(float delta)
+        {
+            _tabScrollOffset += delta;
+            ClampTabScroll();
+        }
+
+        void ClampTabScroll()
+        {
+            if (_tabViewport == null || _tabStrip == null) return;
+            float vw = _tabViewport.contentRect.width;
+            float cw = _tabStrip.contentRect.width;
+            if (float.IsNaN(vw) || float.IsNaN(cw)) return;
+            float max = Mathf.Max(0f, cw - vw);
+            _tabScrollOffset = Mathf.Clamp(_tabScrollOffset, 0f, max);
+            _tabStrip.style.translate = new Translate(-_tabScrollOffset, 0f);
+            bool overflow = max > 0.5f;
+            _tabLeftBtn.style.display = _tabRightBtn.style.display =
+                overflow ? DisplayStyle.Flex : DisplayStyle.None;
+            _tabLeftBtn.SetEnabled(_tabScrollOffset > 0.5f);
+            _tabRightBtn.SetEnabled(_tabScrollOffset < max - 0.5f);
+        }
+
+        /// <summary>Scrolls the strip so the active tab is fully in view.</summary>
+        void EnsureActiveTabVisible()
+        {
+            if (_tabStrip == null || _active < 0 || _active >= _tabStrip.childCount) return;
+            var r = _tabStrip[_active].layout;
+            float vw = _tabViewport.contentRect.width;
+            if (float.IsNaN(r.x) || float.IsNaN(vw) || vw <= 0) return;
+            if (r.xMax - _tabScrollOffset > vw) _tabScrollOffset = r.xMax - vw;
+            if (r.x < _tabScrollOffset) _tabScrollOffset = r.x;
+            ClampTabScroll();
+        }
+
         void RebuildTabs()
         {
             if (_tabBar == null) return;
@@ -33,7 +112,8 @@ namespace ADKOM.TextEditor
             string sig = sigB.ToString();
             if (sig == _tabSignature) return;
             _tabSignature = sig;
-            _tabBar.Clear();
+            EnsureTabChrome();
+            _tabStrip.Clear();
             for (int i = 0; i < _docs.Count; i++)
             {
                 int index = i;
@@ -63,21 +143,9 @@ namespace ADKOM.TextEditor
                 close.AddToClassList("tab__close");
                 tab.Add(close);
 
-                _tabBar.Add(tab);
+                _tabStrip.Add(tab);
             }
-
-            // Right side of the strip: a tab-list dropdown (jump to any tab).
-            var spacer = new VisualElement();
-            spacer.style.flexGrow = 1;
-            _tabBar.Add(spacer);
-            var listBtn = new Button(() => BuildTabListMenu().DropDown(_tabListBtnRect))
-            {
-                text = "▾",
-                tooltip = L10n.Tr("Open Tabs")
-            };
-            listBtn.AddToClassList("tab-list-btn");
-            listBtn.RegisterCallback<GeometryChangedEvent>(_ => _tabListBtnRect = listBtn.worldBound);
-            _tabBar.Add(listBtn);
+            rootVisualElement.schedule.Execute(EnsureActiveTabVisible).ExecuteLater(0);
         }
 
         Rect _tabListBtnRect;
@@ -113,7 +181,11 @@ namespace ADKOM.TextEditor
             s = Mathf.Clamp01(s * (0.55f + 0.45f * r1));
             v = Mathf.Clamp01(v * (0.65f + 0.35f * r2));
             var c = Color.HSVToRGB(h, s, v);
-            c.a = active ? 0.85f : 0.45f;
+            // The active tab gets a clearly BRIGHTER, fully opaque version of
+            // its shade so it pops against its neighbors (item 3); the accent
+            // top border comes from the .tab--active USS rule.
+            if (active) { c = Color.Lerp(c, Color.white, 0.35f); c.a = 1f; }
+            else c.a = 0.45f;
             return c;
         }
 
@@ -127,8 +199,8 @@ namespace ADKOM.TextEditor
                 // useless once RebuildTabs removes it from the hierarchy.
                 SwitchTo(_docs.IndexOf(doc));
                 int now = _docs.IndexOf(doc);
-                if (now < 0 || now >= _tabBar.childCount) return;
-                var liveTab = _tabBar[now];
+                if (now < 0 || now >= _tabStrip.childCount) return;
+                var liveTab = _tabStrip[now];
                 _dragDoc = doc;
                 _dragActive = false;
                 _dragStart = e.position;
@@ -156,7 +228,7 @@ namespace ADKOM.TextEditor
                     _active = to;
                     RebuildTabs();
                     // The rebuilt tab under the pointer continues the drag.
-                    var newTab = _tabBar[to];
+                    var newTab = _tabStrip[to];
                     newTab.CapturePointer(e.pointerId);
                     newTab.AddToClassList("tab--dragging");
                 }
@@ -181,11 +253,11 @@ namespace ADKOM.TextEditor
         /// otherwise the tab stays at <paramref name="current"/>.</summary>
         int TabIndexAt(float worldX, int current)
         {
-            int n = Mathf.Min(_tabBar.childCount, _docs.Count); // exclude spacer/list button
+            int n = Mathf.Min(_tabStrip.childCount, _docs.Count);
             for (int i = 0; i < n; i++)
             {
                 if (i == current) continue;
-                var r = _tabBar[i].worldBound;
+                var r = _tabStrip[i].worldBound;
                 if (worldX < r.xMin || worldX > r.xMax) continue;
                 bool pastMidpoint = i < current ? worldX < r.center.x : worldX > r.center.x;
                 if (pastMidpoint) return i;
