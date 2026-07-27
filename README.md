@@ -17,18 +17,37 @@ feature pitch.
 
 ## Features
 
-- Dockable text/code editor window inside Unity (**Tools → ADKOM → Text Editor**), or right-click any text asset → *Open in ADKOM Text Editor*
-- Fully virtualized rendering — fast typing even in 5,000+ line files
-- Multiple tabs that survive domain reloads and editor restarts
-- C# syntax highlighting incl. types/methods/variables; opt-in Semantic Features add compiler-accurate colors and Go to Definition (Ctrl+Click / F12 / Ctrl+B) with automatic dependency install
-- Themes and keyboard layouts matching Visual Studio, VS Code, and JetBrains Rider
-- Respects your files: tab/space indentation, line endings, and UTF-8 BOMs round-trip untouched
-- Native menu bar (File/Edit/View/Tools/Window/Help), tab context menus, syntax-colorized minimap, and a bottom console pane
-- Selectable as Unity's External Script Editor, with a configurable fallback for solutions and binaries
-- Find/replace (regex, whole-word, case, backwards, wrap-around) across the current file or all open tabs
-- Configurable font and size with browser-style zoom; smooth scrolling; automatic update checks
-- Word wrap, line numbers, and configurable tab handling
-- Unsaved-change guards and external file-change detection
+**Editor core**
+- Dockable text/code editor window inside Unity (**Tools → ADKOM → Text Editor**, **Ctrl+Alt+8**), or right-click any text asset → *Open in ADKOM Text Editor*
+- Fully virtualized rendering — typing lands in under 15 ms even in 5,000+ line files
+- Word-level, deterministic **undo/redo** (one undo removes one word, never minutes of typing), with status-bar feedback
+- Word wrap, line numbers, syntax-colorized **minimap**, smooth scrolling, browser-style zoom (Ctrl+wheel / Ctrl+±/0), configurable font and size
+- Double-click word selection with whole-word drag; automatic highlighting of every other occurrence of the selection
+- **Goto Line** (Ctrl+G) via an emacs-style status-bar prompt
+
+**Tabs & files**
+- Multiple tabs: drag-to-reorder, middle-click close, context menus, dirty markers
+- **Sessions**: open tabs — including *unsaved buffer content* — survive closing the window, domain reloads, editor restarts, and (via 30-second autosave) even editor crashes
+- **Recent Files** menu (per project, configurable length)
+- External change detection with a non-modal reload banner; **deleted-file rescue** (keep the buffer, one Save restores the file)
+- Respects your files: tab/space indentation, line endings (CRLF/LF/CR), and UTF-8 BOMs round-trip untouched; tab-stop-aware navigation and editing
+
+**Languages**
+- **C# syntax highlighting** incl. types/methods/variables out of the box; opt-in **Semantic Features** add compiler-accurate colors, **Go to Definition** (Ctrl+Click / F12 / Ctrl+B) across files and assemblies, and generated "from metadata" views for engine/BCL symbols — dependencies (bundled MIT Roslyn) install themselves on consent
+- **Markdown**: full source-mode coloring plus a rendered **WYSIWYG mode** with click-to-edit blocks, a 16-button formatting toolbar (headings, emphasis, lists, task lists, tables, links, images, code, quotes, rules), and a per-file mode toggle
+
+**IDE comfort**
+- Native menu bar (File/Edit/View/Tools/Window/Help) with **per-layout shortcut hints** on every item; right-click context menu inside the document (Go to Definition, Find Occurrences, clipboard, file ops, Show in File Explorer, language commands)
+- **Keyboard layouts** and **color themes** (dark + light) matching Visual Studio, VS Code, and JetBrains Rider; follows the Unity Editor skin or forced Dark/Light
+- Find/replace (regex with $1 groups, whole-word, case, backwards, wrap-around) across the current file or **all open tabs**, in a modeless dialog
+- Bottom **console pane** collecting all ATE messages, timestamped, selectable and copyable
+- Non-modal by design: ATE's prompts never freeze the Unity editor or background tooling
+
+**Integration**
+- Selectable as Unity's **External Script Editor** — scripts and console entries open at the exact line/column, with a configurable fallback editor for solutions and binaries
+- **Localized UI**: Japanese, Korean, Simplified Chinese, Traditional Chinese — follows Unity's Editor Language
+- **Automatic updates** from GitHub Releases (configurable cadence, one-click install, release notes shown after updating)
+- **Stable scripting API** (`AteApi`): open/edit/save/close documents and subscribe to editor events from your own editor scripts, with an importable every-member sample ([docs](Packages/com.adkom.text-editor/Documentation~/Scripting.md))
 - **100% Editor-only** — nothing ships in player builds
 
 ## Installation
@@ -58,7 +77,8 @@ lean.
 |---|---|
 | `Packages/com.adkom.text-editor/` | The package source (embedded package — this is the code that ships) |
 | `Assets/` | Host Unity project used to develop and test the package |
-| `.github/workflows/upm-branch.yml` | Regenerates the package-only `upm` branch via `git subtree split` on every package change |
+| `Tools/` | Release-gate scripts (editor-only guard audit, localization completeness) run locally and in CI |
+| `.github/workflows/upm-branch.yml` | Runs the gates, then regenerates the package-only `upm` branch via `git subtree split` on every package change |
 | `upm` branch | Distribution branch consumed by Unity Package Manager |
 
 ## Development
@@ -74,9 +94,10 @@ Version history: [RELEASE-NOTES.md](Packages/com.adkom.text-editor/RELEASE-NOTES
 
 ## Contributing
 
-Issues and pull requests are welcome. If you hit a bug or want a feature
-(find/replace, more languages, custom themes are already on the
-roadmap), please open an issue.
+Issues and pull requests are welcome. If you hit a bug or want a
+feature (multi-caret editing, bracket auto-closing, code folding, more
+languages, and custom themes are already on the roadmap), please open
+an issue.
 
 ## License
 
