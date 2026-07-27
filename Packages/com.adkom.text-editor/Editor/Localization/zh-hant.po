@@ -722,3 +722,24 @@ msgstr "已複製。"
 
 msgid "Tab or Enter accepts; Alt+[ / Alt+] cycle; Escape dismisses."
 msgstr "Tab 或 Enter 接受；Alt+[ / Alt+] 切換；Escape 關閉。"
+
+msgid "{0} addon(s) loaded."
+msgstr "已載入 {0} 個附加元件。"
+
+msgid "no [AteAddon] class implementing IAteAddon found"
+msgstr "未找到實作 IAteAddon 的 [AteAddon] 類別"
+
+msgid "bad ApiVersion '{0}'"
+msgstr "無效的 ApiVersion '{0}'"
+
+msgid "needs API {0}, this ATE has {1}"
+msgstr "需要 API {0}，此 ATE 為 {1}"
+
+msgid "Addons need Semantic Features (enable in Settings)"
+msgstr "附加元件需要語意功能（在設定中啟用）"
+
+msgid "Reload Addons"
+msgstr "重新載入附加元件"
+
+msgid "Open Addons Folder..."
+msgstr "開啟附加元件資料夾..."

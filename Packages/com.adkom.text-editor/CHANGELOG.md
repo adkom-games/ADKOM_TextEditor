@@ -3,6 +3,20 @@
 All notable changes to this package are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com); versions follow semver.
 
+## [Unreleased]
+
+### Added
+- Addons framework: single-file C# addons in the machine-shared
+  %APPDATA%/ADKOM/TextEditor/Addons folder load into EVERY ATE
+  instance (compiled in-memory by the bundled Roslyn — no project
+  changes). [AteAddon(Name, Category, ApiVersion)] + IAteAddon
+  (menu-invoked) or IAteAddonResident (OnLoad at startup for AteApi
+  event subscriptions); Tools > Addons > Category > Name with
+  case-insensitive category merging; semver gate against
+  AteApi.ApiVersion (1.0.0) with incompatible addons shown disabled
+  and the reason; Reload Addons / Open Addons Folder items; compile
+  errors and addon exceptions isolated to the ATE console.
+
 ## [0.11.0] - 2026-07-27
 
 ### Added

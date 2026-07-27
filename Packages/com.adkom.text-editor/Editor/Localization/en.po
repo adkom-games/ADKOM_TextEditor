@@ -724,3 +724,24 @@ msgstr "Copied."
 
 msgid "Tab or Enter accepts; Alt+[ / Alt+] cycle; Escape dismisses."
 msgstr "Tab or Enter accepts; Alt+[ / Alt+] cycle; Escape dismisses."
+
+msgid "{0} addon(s) loaded."
+msgstr "{0} addon(s) loaded."
+
+msgid "no [AteAddon] class implementing IAteAddon found"
+msgstr "no [AteAddon] class implementing IAteAddon found"
+
+msgid "bad ApiVersion '{0}'"
+msgstr "bad ApiVersion '{0}'"
+
+msgid "needs API {0}, this ATE has {1}"
+msgstr "needs API {0}, this ATE has {1}"
+
+msgid "Addons need Semantic Features (enable in Settings)"
+msgstr "Addons need Semantic Features (enable in Settings)"
+
+msgid "Reload Addons"
+msgstr "Reload Addons"
+
+msgid "Open Addons Folder..."
+msgstr "Open Addons Folder..."

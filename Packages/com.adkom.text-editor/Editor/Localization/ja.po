@@ -722,3 +722,24 @@ msgstr "コピーしました。"
 
 msgid "Tab or Enter accepts; Alt+[ / Alt+] cycle; Escape dismisses."
 msgstr "Tab または Enter で確定、Alt+[ / Alt+] で切り替え、Escape で破棄。"
+
+msgid "{0} addon(s) loaded."
+msgstr "{0} 個のアドオンを読み込みました。"
+
+msgid "no [AteAddon] class implementing IAteAddon found"
+msgstr "IAteAddon を実装した [AteAddon] クラスが見つかりません"
+
+msgid "bad ApiVersion '{0}'"
+msgstr "ApiVersion '{0}' が不正です"
+
+msgid "needs API {0}, this ATE has {1}"
+msgstr "API {0} が必要です（この ATE は {1}）"
+
+msgid "Addons need Semantic Features (enable in Settings)"
+msgstr "アドオンにはセマンティック機能が必要です（設定で有効化）"
+
+msgid "Reload Addons"
+msgstr "アドオンを再読み込み"
+
+msgid "Open Addons Folder..."
+msgstr "アドオンフォルダーを開く..."

@@ -722,3 +722,24 @@ msgstr "已复制。"
 
 msgid "Tab or Enter accepts; Alt+[ / Alt+] cycle; Escape dismisses."
 msgstr "Tab 或 Enter 接受；Alt+[ / Alt+] 切换；Escape 关闭。"
+
+msgid "{0} addon(s) loaded."
+msgstr "已加载 {0} 个插件。"
+
+msgid "no [AteAddon] class implementing IAteAddon found"
+msgstr "未找到实现 IAteAddon 的 [AteAddon] 类"
+
+msgid "bad ApiVersion '{0}'"
+msgstr "无效的 ApiVersion '{0}'"
+
+msgid "needs API {0}, this ATE has {1}"
+msgstr "需要 API {0}，此 ATE 为 {1}"
+
+msgid "Addons need Semantic Features (enable in Settings)"
+msgstr "插件需要语义功能（在设置中启用）"
+
+msgid "Reload Addons"
+msgstr "重新加载插件"
+
+msgid "Open Addons Folder..."
+msgstr "打开插件文件夹..."

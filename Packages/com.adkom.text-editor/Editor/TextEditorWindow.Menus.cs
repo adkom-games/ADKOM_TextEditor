@@ -195,6 +195,7 @@ namespace ADKOM.TextEditor
 
         void FillToolsMenu(GenericMenu m)
         {
+            FillAddonsMenu(m);
             if (UnityAiBridge.Available && CanEditDoc)
             {
                 if (_code != null && _code.HasSelectionPublic)
@@ -205,6 +206,51 @@ namespace ADKOM.TextEditor
                 m.AddSeparator("");
             }
             m.AddItem(new GUIContent(WithSc("Options...", Dsp("settings"))), false, OpenSettingsPage);
+        }
+
+        /// <summary>Tools → Addons: entries from the shared addons folder,
+        /// grouped by case-insensitive category. Incompatible or broken
+        /// addons stay visible but disabled, with the reason.</summary>
+        void FillAddonsMenu(GenericMenu m)
+        {
+            const string root = "Addons/";
+            if (!Scripting.AteAddonManager.CompilerAvailable)
+            {
+                m.AddDisabledItem(new GUIContent(root + L10n.Tr("Addons need Semantic Features (enable in Settings)")));
+            }
+            else
+            {
+                // Case-insensitive categories: first-seen casing wins.
+                var canon = new System.Collections.Generic.Dictionary<string, string>(
+                    System.StringComparer.OrdinalIgnoreCase);
+                foreach (var e in Scripting.AteAddonManager.Entries)
+                {
+                    if (!canon.TryGetValue(e.Category, out string cat))
+                        canon[e.Category] = cat = e.Category;
+                    string item = root + cat.Replace('/', '∕') + "/" + e.Name.Replace('/', '∕');
+                    if (e.Compatible)
+                    {
+                        var entry = e;
+                        m.AddItem(new GUIContent(item), false,
+                            () => Scripting.AteAddonManager.Run(entry));
+                    }
+                    else
+                        m.AddDisabledItem(new GUIContent(item + " — " + FirstLine(e.Error)));
+                }
+                if (Scripting.AteAddonManager.Entries.Count > 0) m.AddSeparator(root);
+            }
+            m.AddItem(new GUIContent(root + L10n.Tr("Reload Addons")), false,
+                Scripting.AteAddonManager.Reload);
+            m.AddItem(new GUIContent(root + L10n.Tr("Open Addons Folder...")), false,
+                Scripting.AteAddonManager.OpenFolder);
+            m.AddSeparator("");
+        }
+
+        static string FirstLine(string s)
+        {
+            if (string.IsNullOrEmpty(s)) return "";
+            int i = s.IndexOf('\n');
+            return i < 0 ? s : s.Substring(0, i);
         }
 
         /// <summary>Send-to-AI commands: open Unity Assistant's prompt popup
