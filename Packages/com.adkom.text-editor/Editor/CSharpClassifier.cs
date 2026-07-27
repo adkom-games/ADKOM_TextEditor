@@ -10,9 +10,11 @@ namespace ADKOM.TextEditor
     /// access, declarations. Fast enough for every keystroke; the semantic
     /// module replaces these spans with compiler truth when installed.
     /// </summary>
-    public sealed class CSharpClassifier : ISyntaxClassifier
+    public sealed class CSharpClassifier : ISyntaxClassifier, ICompletionKeywords
     {
         public string Name => "C#";
+
+        public System.Collections.Generic.IEnumerable<string> CompletionKeywords => Keywords;
 
         static readonly HashSet<string> Keywords = new HashSet<string>
         {

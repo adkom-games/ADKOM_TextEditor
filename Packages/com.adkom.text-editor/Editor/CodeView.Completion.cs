@@ -82,6 +82,15 @@ namespace ADKOM.TextEditor
                     }
                 }
             }
+            // Language keywords of the ACTIVE classifier rank as first-class
+            // candidates (C# today; any future language that implements
+            // ICompletionKeywords joins automatically).
+            if (_classifier is ICompletionKeywords kw)
+                foreach (var k in kw.CompletionKeywords)
+                    if (k.Length >= prefix.Length &&
+                        k.StartsWith(prefix, StringComparison.OrdinalIgnoreCase) &&
+                        !string.Equals(k, prefix, StringComparison.Ordinal) && seen.Add(k))
+                        matches.Add(k);
             Harvest(GetValueInternal());
             if (completionTextSources != null)
                 foreach (var t in completionTextSources())
