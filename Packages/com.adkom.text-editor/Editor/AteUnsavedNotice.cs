@@ -61,8 +61,9 @@ namespace ADKOM.TextEditor
             root.style.paddingLeft = root.style.paddingRight = 12;
             root.style.paddingTop = 10;
 
-            var head = new Label(string.Format(
-                L10n.Tr("The editor closed with {0} unsaved document(s)."), _dirtyDocs.Count));
+            var head = new Label(_dirtyDocs.Count == 1
+                ? L10n.Tr("The editor closed with 1 unsaved document.")
+                : string.Format(L10n.Tr("The editor closed with {0} unsaved documents."), _dirtyDocs.Count));
             head.style.unityFontStyleAndWeight = FontStyle.Bold;
             head.style.whiteSpace = WhiteSpace.Normal;
             root.Add(head);
