@@ -716,3 +716,6 @@ msgstr "검색 결과"
 
 msgid "(no search results yet)"
 msgstr "(아직 검색 결과 없음)"
+
+msgid "Copied."
+msgstr "복사했습니다."

@@ -327,11 +327,19 @@ namespace ADKOM.TextEditor
             }
         }
 
+        public struct Suggestion
+        {
+            public string Text;
+            public int StartLine, StartChar, EndLine, EndChar; // replace range
+            public bool HasRange;
+        }
+
         /// <summary>Requests an inline completion at (line, character); the
-        /// callback runs on the MAIN thread with the suggestion text (insert
-        /// text relative to the caret) or null.</summary>
+        /// callback runs on the MAIN thread with the suggestion (whose Text
+        /// REPLACES the given range — Copilot rewrites text around the caret,
+        /// e.g. a "()" the user already typed) or null.</summary>
         public static void RequestCompletion(string path, int line, int character,
-            Action<string> onResult)
+            Action<Suggestion?> onResult)
         {
             if (Status != State.Ready || _openUri == null) { onResult?.Invoke(null); return; }
             Request("textDocument/inlineCompletion", new JObject
@@ -343,15 +351,37 @@ namespace ADKOM.TextEditor
                 { ["tabSize"] = EditorConfig.TabSize, ["insertSpaces"] = true }
             }, (res, err) =>
             {
-                string text = null;
+                Suggestion? sug = null;
                 try
                 {
                     var items = res?["items"] as JArray;
                     if (items != null && items.Count > 0)
-                        text = items[0]?["insertText"]?.ToString();
+                    {
+                        var it = items[0];
+                        string text = it?["insertText"]?.ToString();
+                        if (!string.IsNullOrEmpty(text))
+                        {
+                            var sg = new Suggestion { Text = text };
+                            var range = it["range"];
+                            if (range != null)
+                            {
+                                sg.HasRange = true;
+                                sg.StartLine = (int)(range["start"]?["line"] ?? line);
+                                sg.StartChar = (int)(range["start"]?["character"] ?? character);
+                                sg.EndLine = (int)(range["end"]?["line"] ?? line);
+                                sg.EndChar = (int)(range["end"]?["character"] ?? character);
+                            }
+                            else
+                            {
+                                sg.StartLine = sg.EndLine = line;
+                                sg.StartChar = sg.EndChar = character;
+                            }
+                            sug = sg;
+                        }
+                    }
                 }
                 catch (Exception) { }
-                Post(() => onResult?.Invoke(string.IsNullOrEmpty(text) ? null : text));
+                Post(() => onResult?.Invoke(sug));
             });
         }
 
