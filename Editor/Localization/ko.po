@@ -485,3 +485,15 @@ msgstr "위에 커서 추가"
 
 msgid "Add Caret Below"
 msgstr "아래에 커서 추가"
+
+msgid "Open Tabs"
+msgstr "열린 탭"
+
+msgid "Tabs"
+msgstr "탭"
+
+msgid "Tab Color"
+msgstr "탭 색상"
+
+msgid "Base color of the tab strip; each tab gets its own stable shade of it."
+msgstr "탭 표시줄의 기본 색상입니다. 각 탭은 고유한 음영으로 표시됩니다."

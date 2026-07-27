@@ -487,3 +487,15 @@ msgstr "Add Caret Above"
 
 msgid "Add Caret Below"
 msgstr "Add Caret Below"
+
+msgid "Open Tabs"
+msgstr "Open Tabs"
+
+msgid "Tabs"
+msgstr "Tabs"
+
+msgid "Tab Color"
+msgstr "Tab Color"
+
+msgid "Base color of the tab strip; each tab gets its own stable shade of it."
+msgstr "Base color of the tab strip; each tab gets its own stable shade of it."

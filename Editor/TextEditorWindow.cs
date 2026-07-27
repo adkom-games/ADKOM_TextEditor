@@ -68,6 +68,7 @@ namespace ADKOM.TextEditor
         Toggle _settingsSmooth;
         Toggle _settingsMdRendered;
         IntegerField _settingsRecentMax;
+        UnityEditor.UIElements.ColorField _settingsTabColor;
         Toggle _settingsAutoClose;
         Toggle _settingsTrimSave;
         Toggle _settingsFinalNewline;
@@ -704,6 +705,16 @@ namespace ADKOM.TextEditor
             _settingsMdRendered.tooltip = L10n.Tr("Default view when opening .md files: rendered (WYSIWYG) when on, source when off. The MD/source toggle still switches per tab.");
             _settingsPane.Add(_settingsMdRendered);
 
+            _settingsTabColor = new UnityEditor.UIElements.ColorField(L10n.Tr("Tab Color")) { value = EditorConfig.TabColor, showAlpha = false, hdr = false };
+            _settingsTabColor.RegisterValueChangedCallback(e =>
+            {
+                EditorConfig.TabColor = e.newValue;
+                InvalidateTabs();
+                RebuildTabs();
+            });
+            _settingsTabColor.tooltip = L10n.Tr("Base color of the tab strip; each tab gets its own stable shade of it.");
+            _settingsPane.Add(_settingsTabColor);
+
             _settingsAutoClose = new Toggle(L10n.Tr("Auto-Close Brackets")) { value = EditorConfig.AutoCloseBrackets };
             _settingsAutoClose.RegisterValueChangedCallback(e => EditorConfig.AutoCloseBrackets = e.newValue);
             _settingsAutoClose.tooltip = L10n.Tr("Typing ( [ { \" ' inserts the closing pair, closers type over, Backspace removes empty pairs, selections get wrapped.");
@@ -846,6 +857,7 @@ namespace ADKOM.TextEditor
             _settingsSemantics?.SetValueWithoutNotify(EditorConfig.SemanticsEnabled);
             _settingsMdRendered?.SetValueWithoutNotify(EditorConfig.MdOpenRendered);
             _settingsRecentMax?.SetValueWithoutNotify(EditorConfig.RecentFilesMax);
+            _settingsTabColor?.SetValueWithoutNotify(EditorConfig.TabColor);
             _settingsAutoClose?.SetValueWithoutNotify(EditorConfig.AutoCloseBrackets);
             _settingsTrimSave?.SetValueWithoutNotify(EditorConfig.TrimTrailingOnSave);
             _settingsFinalNewline?.SetValueWithoutNotify(EditorConfig.FinalNewlineOnSave);

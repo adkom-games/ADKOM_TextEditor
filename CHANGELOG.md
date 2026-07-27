@@ -6,6 +6,12 @@ All notable changes to this package are documented here. Format follows
 ## [Unreleased]
 
 ### Added
+- Tab strip upgrades: a dropdown button at the right end of the strip
+  lists every open tab (numbered, dirty-starred, active checked) and
+  jumps on pick; the document context menu opens with a "Tabs" submenu
+  doing the same; and tabs are colorized — each tab renders a stable
+  per-document shade of a base color chosen with the new "Tab Color"
+  RGB selector in Settings.
 - Multi-caret editing: Alt+Click adds/removes carets; Add Next
   Occurrence (Ctrl+D VS Code, Alt+J Rider, Shift+Alt+. VS) grows a
   selection per press; Select All Occurrences (Ctrl+Shift+L VS Code,
