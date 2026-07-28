@@ -64,6 +64,12 @@ feature pitch.
 - **Stable scripting API** (`AteApi`): open/edit/save/close documents and subscribe to editor events from your own editor scripts, with an importable every-member sample ([docs](Packages/com.adkom.text-editor/Documentation~/Scripting.md))
 - **100% Editor-only** — nothing ships in player builds
 
+**Addons & games** (new in 0.12.0)
+- **Addons**: single-file or **multi-file folder** `.cs` addons in a machine-shared folder, Roslyn-compiled in-memory, with a full load/unload/focus lifecycle and a Tools → Addons menu
+- **Addon security**: source scanned against known-dangerous API patterns; a risk report + clickable Scanner Results console tab; **nothing runs until one-time approval** keyed to the exact file content
+- **Game API** (AteApi 1.1): per-document game mode (chrome hidden, block cursor, undo-bypassing overwrite writes), per-cell fg/bg colors, consumable key events + key polling, text-coordinate mouse, 30 Hz tick, per-document font and tab title, status-bar prompt
+- **Two shipped games**: Snake, and a faithful port of **Rogue 5.4.4** (the 1980 BSD classic) as the first folder addon
+
 ## Installation
 
 Requires **Unity 6000.0+**.
@@ -79,7 +85,7 @@ https://github.com/adkom-games/ADKOM_TextEditor.git#upm
 Pinned release:
 
 ```
-https://github.com/adkom-games/ADKOM_TextEditor.git#0.11.0
+https://github.com/adkom-games/ADKOM_TextEditor.git#0.12.0
 ```
 
 The `upm` branch contains only the package, so consumer downloads stay

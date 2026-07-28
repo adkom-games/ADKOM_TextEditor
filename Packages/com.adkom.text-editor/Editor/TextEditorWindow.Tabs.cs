@@ -408,6 +408,15 @@ namespace ADKOM.TextEditor
                 _code.AttachUndoWorld(Active.UndoWorld);
                 _undoWorldDoc = Active;
             }
+            // Game state is per document, like the undo world (AteApi 1.1).
+            if (_code != null)
+            {
+                _code.gameMode = Active.GameMode;
+                _code.wordWrap = Active.GameMode ? false : _wordWrap;
+                _code.AttachOverlay(Active.Overlay);
+                _code.SetFontOverride(Active.FontName, Active.FontSize);
+                ApplyViewChrome();
+            }
             _code?.SetValueWithoutNotify(Active.Content);
             RefreshFormatter();
             UpdateMdUi();

@@ -15,6 +15,8 @@ namespace ADKOM.TextEditor.Scripting
     public interface IAddonCompiler
     {
         bool TryCompile(string path, out Assembly assembly, out string[] errors);
+        /// <summary>Folder addon: every file compiles into ONE assembly.</summary>
+        bool TryCompileMany(string[] paths, out Assembly assembly, out string[] errors);
     }
 
     /// <summary>
@@ -34,6 +36,12 @@ namespace ADKOM.TextEditor.Scripting
             public Type Type;          // entry class (null when not loadable)
             public string Error;       // compile/compat/reflection failure
             public bool Compatible => Error == null && Type != null;
+
+            // Security gate (see AddonSecurity): nothing executes until the
+            // user approves this exact file content once.
+            public bool Approved;
+            internal string Hash;
+            internal List<AddonSecurity.Finding> Findings;
         }
 
         static readonly List<Entry> _entries = new List<Entry>();
@@ -72,48 +80,85 @@ namespace ADKOM.TextEditor.Scripting
         }
 
         [InitializeOnLoadMethod]
-        static void AutoLoad() => EditorApplication.delayCall += () => { if (!_loaded) Reload(); };
+        static void AutoLoad()
+        {
+            // Lifecycle contract: OnUnload always runs before the assemblies
+            // that hold addon state go away (domain reload / editor quit).
+            AssemblyReloadEvents.beforeAssemblyReload += UnloadResidents;
+            EditorApplication.quitting += UnloadResidents;
+            EditorApplication.delayCall += () => { if (!_loaded) Reload(); };
+        }
 
         /// <summary>Rescans the folder, recompiles everything, and re-runs
         /// resident OnLoad hooks. Safe to call any time.</summary>
         public static void Reload()
         {
+            UnloadResidents();
             _loaded = true;
             _entries.Clear();
             EnsureFolder();
             if (!CompilerAvailable) return; // menu explains the requirement
-            string[] files;
-            try { files = Directory.GetFiles(AddonsFolder, "*.cs", SearchOption.AllDirectories); }
+            // Top-level .cs files are single-file addons; each first-level
+            // subfolder (not starting with '.') is ONE folder addon whose
+            // .cs files (recursive) compile together (Multi-File Addons spec).
+            try
+            {
+                foreach (var file in Directory.GetFiles(AddonsFolder, "*.cs", SearchOption.TopDirectoryOnly))
+                    LoadOne(new[] { file }, file);
+                foreach (var dir in Directory.GetDirectories(AddonsFolder))
+                {
+                    if (Path.GetFileName(dir).StartsWith(".", StringComparison.Ordinal)) continue;
+                    var files = Directory.GetFiles(dir, "*.cs", SearchOption.AllDirectories);
+                    if (files.Length == 0) continue;
+                    Array.Sort(files, StringComparer.OrdinalIgnoreCase);
+                    LoadOne(files, dir);
+                }
+            }
             catch (Exception ex)
             {
                 AteConsole.Warn("[ADKOM Text Editor] Addons folder unreadable: " + ex.Message);
                 return;
             }
-            foreach (var file in files)
-                LoadOne(file);
             DisambiguateNames();
             RunResidents();
             if (_entries.Count > 0)
                 AteConsole.Log(string.Format(L10n.Tr("{0} addon(s) loaded."), _entries.Count));
         }
 
-        static void LoadOne(string file)
+        /// <summary>Loads one addon: a single top-level file, or a folder
+        /// whose files compile together. <paramref name="key"/> is the file
+        /// path (single) or folder path — the identity consent binds to.</summary>
+        static void LoadOne(string[] files, string key)
         {
             var entry = new Entry
             {
-                File = file,
-                Name = Path.GetFileNameWithoutExtension(file),
+                File = key,
+                Name = Path.GetFileNameWithoutExtension(key),
                 Category = "General",
                 ApiVersion = "?"
             };
             _entries.Add(entry);
             try
             {
-                if (!_compiler.TryCompile(file, out var asm, out var errors))
+                // Security scan BEFORE anything else: hash the exact content
+                // set, record per-file findings, and look up prior consent.
+                // Compiling below is safe (nothing executes); execution is
+                // gated on Approved.
+                entry.Hash = AddonSecurity.HashFiles(files, key);
+                entry.Findings = new List<AddonSecurity.Finding>();
+                foreach (var f in files)
+                {
+                    var fs = AddonSecurity.Scan(File.ReadAllText(f));
+                    foreach (var fd in fs) fd.File = f;
+                    entry.Findings.AddRange(fs);
+                }
+                entry.Approved = AddonSecurity.IsApproved(key, entry.Hash);
+
+                if (!_compiler.TryCompileMany(files, out var asm, out var errors))
                 {
                     entry.Error = string.Join("\n", errors);
                     AteConsole.Warn("[ADKOM Text Editor] Addon failed to compile: " +
-                        Path.GetFileName(file) + "\n" + entry.Error);
+                        Path.GetFileName(key) + "\n" + entry.Error);
                     return;
                 }
                 foreach (var t in asm.GetTypes())
@@ -121,20 +166,26 @@ namespace ADKOM.TextEditor.Scripting
                     var attr = t.GetCustomAttribute<AteAddonAttribute>();
                     if (attr == null || !typeof(IAteAddon).IsAssignableFrom(t) || t.IsAbstract)
                         continue;
+                    if (entry.Type != null)
+                    {
+                        entry.Error = L10n.Tr("more than one [AteAddon] class in the addon");
+                        entry.Type = null;
+                        return;
+                    }
                     entry.Type = t;
                     entry.Name = string.IsNullOrEmpty(attr.Name) ? t.Name : attr.Name;
                     entry.Category = string.IsNullOrEmpty(attr.Category) ? "General" : attr.Category;
                     entry.ApiVersion = attr.ApiVersion ?? "1.0";
-                    if (!IsCompatible(entry.ApiVersion, out string why)) entry.Error = why;
-                    return; // one addon class per file
+                    if (!IsCompatible(entry.ApiVersion, out string why)) { entry.Error = why; return; }
                 }
-                entry.Error = L10n.Tr("no [AteAddon] class implementing IAteAddon found");
+                if (entry.Type == null)
+                    entry.Error = L10n.Tr("no [AteAddon] class implementing IAteAddon found");
             }
             catch (Exception ex)
             {
                 entry.Error = ex.Message;
                 AteConsole.Warn("[ADKOM Text Editor] Addon failed to load: " +
-                    Path.GetFileName(file) + " — " + ex.Message);
+                    Path.GetFileName(key) + " — " + ex.Message);
             }
         }
 
@@ -184,34 +235,166 @@ namespace ADKOM.TextEditor.Scripting
             }
         }
 
+        // Resident addons are SINGLE instances (API 1.1): the same object
+        // gets OnLoad, every menu Run, focus events, and OnUnload — so a game
+        // keeps its state across the whole lifecycle.
+        static readonly Dictionary<Type, IAteAddonResident> _residents =
+            new Dictionary<Type, IAteAddonResident>();
+
         static void RunResidents()
         {
             foreach (var e in _entries)
             {
                 if (!e.Compatible || !typeof(IAteAddonResident).IsAssignableFrom(e.Type)) continue;
-                try
+                if (!e.Approved)
                 {
-                    ((IAteAddonResident)Activator.CreateInstance(e.Type)).OnLoad();
+                    AteConsole.Log(string.Format(
+                        L10n.Tr("Addon '{0}' is awaiting your one-time approval — run it from Tools > Addons to review."),
+                        e.Name));
+                    continue;
                 }
+                StartResident(e);
+            }
+        }
+
+        static void StartResident(Entry e)
+        {
+            try
+            {
+                var inst = (IAteAddonResident)Activator.CreateInstance(e.Type);
+                _residents[e.Type] = inst;
+                inst.OnLoad();
+            }
+            catch (Exception ex)
+            {
+                AteConsole.Warn("[ADKOM Text Editor] Addon OnLoad failed: " + e.Name + " — " + ex.Message);
+            }
+        }
+
+        /// <summary>Tears down resident addons: OnUnload on every lifecycle
+        /// addon, then drop instances, running ticks, and input event
+        /// subscriptions so stale assemblies never keep acting.</summary>
+        static void UnloadResidents()
+        {
+            foreach (var inst in _residents.Values)
+            {
+                if (!(inst is IAteAddonLifecycle lc)) continue;
+                try { lc.OnUnload(); }
                 catch (Exception ex)
                 {
-                    AteConsole.Warn("[ADKOM Text Editor] Addon OnLoad failed: " + e.Name + " — " + ex.Message);
+                    AteConsole.Warn("[ADKOM Text Editor] Addon OnUnload failed: " + ex.Message);
+                }
+            }
+            _residents.Clear();
+            AteApi.StopAllTicks();
+            AteApi.DropInputSubscribers();
+        }
+
+        /// <summary>The ATE window's focus changed — forward to lifecycle addons.</summary>
+        internal static void NotifyFocus(bool focused)
+        {
+            foreach (var inst in _residents.Values)
+            {
+                if (!(inst is IAteAddonLifecycle lc)) continue;
+                try { if (focused) lc.OnFocusGained(); else lc.OnFocusLost(); }
+                catch (Exception ex)
+                {
+                    AteConsole.Warn("[ADKOM Text Editor] Addon focus handler failed: " + ex.Message);
                 }
             }
         }
 
-        /// <summary>Menu entry point: instantiate and Run, fully isolated.</summary>
+        /// <summary>Menu entry point. Unapproved addons get the consent flow
+        /// (risk report + banner) instead of running. Residents Run on their
+        /// single lifecycle instance; plain addons are instantiated per Run.</summary>
         public static void Run(Entry e)
         {
             if (!e.Compatible) return;
+            if (!e.Approved) { RequestConsent(e); return; }
+            RunApproved(e);
+        }
+
+        static void RunApproved(Entry e)
+        {
             try
             {
-                ((IAteAddon)Activator.CreateInstance(e.Type)).Run();
+                if (_residents.TryGetValue(e.Type, out var resident)) resident.Run();
+                else if (typeof(IAteAddonResident).IsAssignableFrom(e.Type))
+                {
+                    // First run after an in-session approval: bring the
+                    // resident up properly (OnLoad, single instance), then Run.
+                    StartResident(e);
+                    if (_residents.TryGetValue(e.Type, out var started)) started.Run();
+                }
+                else ((IAteAddon)Activator.CreateInstance(e.Type)).Run();
             }
             catch (Exception ex)
             {
                 AteConsole.Warn("[ADKOM Text Editor] Addon failed: " + e.Name + " — " + ex.Message);
             }
+        }
+
+        /// <summary>The one-time consent flow: writes the risk summary
+        /// document, opens it in ATE, and shows the non-modal approval
+        /// banner. Approval persists (keyed to the file's content hash) and
+        /// the addon then runs.</summary>
+        static void RequestConsent(Entry e)
+        {
+            string report = AddonSecurity.BuildReport(e.Name, e.File, e.Findings, e.Hash);
+            string reportPath = null;
+            try
+            {
+                string dir = Path.Combine(AddonsFolder, ".security-reports");
+                Directory.CreateDirectory(dir);
+                reportPath = Path.Combine(dir,
+                    Path.GetFileNameWithoutExtension(e.File) + ".security.md");
+                File.WriteAllText(reportPath, report);
+            }
+            catch (Exception ex)
+            {
+                AteConsole.Warn("[ADKOM Text Editor] Could not write security report: " + ex.Message);
+            }
+
+            TextEditorWindow.Open();
+            var all = UnityEngine.Resources.FindObjectsOfTypeAll<TextEditorWindow>();
+            var w = all.Length > 0 ? all[0] : null;
+            if (w == null) return;
+            if (reportPath != null)
+            {
+                // The report file may already be open from an earlier consent
+                // round — its tab would show the STALE report (the reload
+                // prompt gets stomped by the consent banner below).
+                w.ApiReloadFromDiskIfOpen(reportPath);
+                TextEditorWindow.OpenExternal(reportPath, 1, 1);
+            }
+            int high = 0;
+            if (e.Findings != null) foreach (var f in e.Findings) if (f.High) high++;
+            // Findings also land in the "<script> Scanner Results" console
+            // tab: one clickable row per finding jumping to file:line.
+            if (e.Findings != null && e.Findings.Count > 0)
+            {
+                var items = new List<TextEditorWindow.PickLocation>();
+                foreach (var f in e.Findings)
+                    items.Add(new TextEditorWindow.PickLocation
+                    {
+                        Path = f.File ?? e.File,
+                        Line = f.Line - 1,
+                        Col = 0,
+                        Preview = (f.High ? "HIGH      " : "moderate  ") + f.Api + " — " + f.Risk
+                    });
+                w.ShowScannerResults(e.Name, items);
+            }
+            string msg = e.Findings != null && e.Findings.Count > 0
+                ? string.Format(L10n.Tr("Addon '{0}' uses {1} potentially dangerous API(s) ({2} high severity) — review the report, then approve to run it. Approval is one-time for this exact file content."),
+                    e.Name, e.Findings.Count, high)
+                : string.Format(L10n.Tr("Addon '{0}': no dangerous APIs detected, but addons run with full editor privileges. Approve to run it (one-time for this exact file content)."),
+                    e.Name);
+            w.ShowAddonConsent(msg, () =>
+            {
+                AddonSecurity.Approve(e.File, e.Hash);
+                e.Approved = true;
+                RunApproved(e);
+            });
         }
 
         /// <summary>Copies the sample addons shipped with the package
@@ -244,6 +427,27 @@ namespace ADKOM.TextEditor.Scripting
                 {
                     AteConsole.Warn("[ADKOM Text Editor] Could not copy sample " +
                         Path.GetFileName(f) + ": " + ex.Message);
+                }
+            }
+            // Folder addons ship as sample subfolders (Multi-File Addons spec).
+            foreach (var dir in Directory.GetDirectories(src))
+            {
+                try
+                {
+                    string dst = Path.Combine(AddonsFolder, Path.GetFileName(dir));
+                    foreach (var f in Directory.GetFiles(dir, "*.cs", SearchOption.AllDirectories))
+                    {
+                        string rel = Path.GetFullPath(f).Substring(Path.GetFullPath(dir).Length).TrimStart('\\', '/');
+                        string target = Path.Combine(dst, rel);
+                        Directory.CreateDirectory(Path.GetDirectoryName(target));
+                        File.Copy(f, target, overwrite: true);
+                    }
+                    copied++;
+                }
+                catch (Exception ex)
+                {
+                    AteConsole.Warn("[ADKOM Text Editor] Could not copy sample folder " +
+                        Path.GetFileName(dir) + ": " + ex.Message);
                 }
             }
             AteConsole.Log(string.Format(L10n.Tr("{0} sample addon(s) installed."), copied));

@@ -749,3 +749,33 @@ msgstr "샘플 애드온 설치"
 
 msgid "{0} sample addon(s) installed."
 msgstr "샘플 애드온 {0}개를 설치했습니다."
+
+msgid "{0} Scanner Results"
+msgstr "{0} 스캐너 결과"
+
+msgid "{0}: {1} potentially dangerous API"
+msgstr "{0}: 잠재적으로 위험한 API {1}개"
+
+msgid "{0}: {1} potentially dangerous APIs"
+msgstr "{0}: 잠재적으로 위험한 API {1}개"
+
+msgid "Addon '{0}' is awaiting your one-time approval — run it from Tools > Addons to review."
+msgstr "애드온 '{0}'이(가) 일회성 승인을 기다리고 있습니다 — Tools > Addons에서 실행하여 검토하세요."
+
+msgid "Addon '{0}' uses {1} potentially dangerous API(s) ({2} high severity) — review the report, then approve to run it. Approval is one-time for this exact file content."
+msgstr "애드온 '{0}'이(가) 잠재적으로 위험한 API {1}개를 사용합니다(높은 심각도 {2}개) — 보고서를 검토한 후 승인하여 실행하세요. 승인은 이 파일 내용에 대해 한 번만 적용됩니다."
+
+msgid "Addon '{0}': no dangerous APIs detected, but addons run with full editor privileges. Approve to run it (one-time for this exact file content)."
+msgstr "애드온 '{0}': 위험한 API가 감지되지 않았지만 애드온은 에디터의 전체 권한으로 실행됩니다. 승인하여 실행하세요(이 파일 내용에 대해 한 번만)."
+
+msgid "Approve and Run"
+msgstr "승인 후 실행"
+
+msgid "more than one [AteAddon] class in the addon"
+msgstr "애드온에 [AteAddon] 클래스가 두 개 이상 있습니다"
+
+msgid "Not Now"
+msgstr "나중에"
+
+msgid "Scanner Results"
+msgstr "스캐너 결과"

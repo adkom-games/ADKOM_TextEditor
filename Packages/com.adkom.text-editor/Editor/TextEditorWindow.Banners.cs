@@ -104,6 +104,16 @@ namespace ADKOM.TextEditor
             CloseTab(_active);
         }
 
+        /// <summary>Addon security consent (AddonSecurity): the non-modal
+        /// banner asking for the one-time approval. The risk report document
+        /// is already open in a tab when this shows.</summary>
+        internal void ShowAddonConsent(string message, System.Action onApprove)
+        {
+            ShowBanner(message,
+                (L10n.Tr("Approve and Run"), () => { HideBanner(); onApprove?.Invoke(); }),
+                (L10n.Tr("Not Now"), HideBanner));
+        }
+
         void BuildMiniBuffer(VisualElement statusBar)
         {
             _miniBuffer = new VisualElement { name = "mini-buffer" };
@@ -131,6 +141,7 @@ namespace ADKOM.TextEditor
                 {
                     var commit = _miniCommit;
                     string val = _miniInput.value;
+                    _miniCancel = null; // committing is not a cancel
                     CloseMiniBuffer();
                     commit?.Invoke(val);
                     e.StopPropagation();
@@ -152,14 +163,18 @@ namespace ADKOM.TextEditor
         }
 
         /// <summary>Shows the status-bar prompt; Enter passes the entry to
-        /// <paramref name="onCommit"/>, Escape (or focus loss) cancels.</summary>
+        /// <paramref name="onCommit"/>, Escape (or focus loss) cancels —
+        /// invoking <paramref name="onCancel"/> when one is given. Opening a
+        /// prompt while one is showing cancels the first.</summary>
         void StartStatusPrompt(string prompt, bool digitsOnly, System.Action<string> onCommit,
-            string initialValue = "")
+            string initialValue = "", System.Action onCancel = null)
         {
             if (_miniBuffer == null) return;
+            if (_miniBuffer.style.display == DisplayStyle.Flex) CloseMiniBuffer();
             _miniPrompt.text = prompt;
             _miniDigitsOnly = digitsOnly;
             _miniCommit = onCommit;
+            _miniCancel = onCancel;
             _miniInput.SetValueWithoutNotify(initialValue ?? string.Empty);
             _statusLeft.style.display = DisplayStyle.None;
             _miniBuffer.style.display = DisplayStyle.Flex;
@@ -168,10 +183,13 @@ namespace ADKOM.TextEditor
 
         void CloseMiniBuffer()
         {
+            var cancel = _miniCancel;
             _miniCommit = null;
+            _miniCancel = null;
             _miniBuffer.style.display = DisplayStyle.None;
             _statusLeft.style.display = DisplayStyle.Flex;
             _code?.schedule.Execute(() => _code.Focus()).ExecuteLater(0);
+            cancel?.Invoke(); // after teardown: the handler may open a new prompt
         }
 
         /// <summary>Goto Line (Ctrl+G): status-bar prompt, numeric only,

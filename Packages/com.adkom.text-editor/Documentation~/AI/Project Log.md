@@ -315,6 +315,22 @@ the bottom. See [[Project State]] for the current snapshot.
   Ctrl+C copy, red non-compressible banner. New dependency:
   com.unity.nuget.newtonsoft-json.
 
+- **0.12.0 — the games release (2026-07-28)**: Addons framework
+  matured — single-file AND multi-file folder addons (one assembly per
+  folder), full IAteAddonLifecycle with single resident instances,
+  addon SECURITY (dangerous-API scan, markdown risk report, Scanner
+  Results console tab, one-time consent keyed to content SHA-256 +
+  scanner version). Game API 1.1: GameMode (chrome hidden, block
+  cursor, click guard, undo bypass), WriteAt Overwrite/Insert,
+  fg/bg color overlay, key events + polling, text-coordinate mouse,
+  30 Hz tick, Prompt, SetFont, SetTitle. Games shipped: Snake and a
+  faithful Rogue 5.4.4 port (13 files, ~4.5k lines, specs extracted
+  from the BSD source by agents). Fixes: tab-dropdown scroll (issue
+  #9), stale consent report, scanner first-hit-only + prefs coverage,
+  Snake glyph bow, Rogue death-freeze/overlay/shift-run/double-turn.
+  Editor-guard gate now excludes Samples~ (not compiled by Unity;
+  guards would break the addon compiler).
+
 ## Conventions
 
 - Branch per feature/fix from main; merge with `--no-ff`; branches are kept.

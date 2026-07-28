@@ -19,11 +19,11 @@ namespace ADKOM.TextEditor.Scripting
     /// Events are not raised re-entrantly: anything an event handler does to
     /// ATE will not fire nested events.
     /// </summary>
-    public static class AteApi
+    public static partial class AteApi
     {
         /// <summary>The AteApi semantic version. Addons declare the version
         /// they target; MAJOR must match and their MINOR must not be newer.</summary>
-        public const string ApiVersion = "1.0.0";
+        public const string ApiVersion = "1.1.0";
 
         // ---- Events (VS Code-shaped) ----
 
@@ -136,7 +136,7 @@ namespace ADKOM.TextEditor.Scripting
     /// their tab closes (check <see cref="IsValid"/> after holding one across
     /// frames). Two handles to the same tab compare equal.
     /// </summary>
-    public sealed class AteDocument
+    public sealed partial class AteDocument
     {
         readonly TextEditorWindow _window;
         readonly TextDocument _doc;

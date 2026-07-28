@@ -13,6 +13,11 @@ if (-not (Test-Path $pkg)) { Write-Error "Package folder not found: $pkg"; exit 
 $failures = @()
 
 foreach ($f in Get-ChildItem $pkg -Recurse -Filter *.cs -File) {
+    # Samples~ is invisible to Unity's asset pipeline (the ~ suffix), so it
+    # can never compile into a build — and sample ADDONS must NOT be guarded:
+    # ATE's Roslyn addon compiler defines no UNITY_EDITOR symbol, so a guard
+    # would compile them to nothing.
+    if ($f.FullName -match '\\Samples~\\') { continue }
     $lines = Get-Content $f.FullName | Where-Object { $_.Trim().Length -gt 0 }
     if ($lines.Count -eq 0) { $failures += "EMPTY: $($f.FullName)"; continue }
     $first = @($lines)[0].Trim()

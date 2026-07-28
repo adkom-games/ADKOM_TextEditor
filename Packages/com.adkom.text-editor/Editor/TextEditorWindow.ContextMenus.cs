@@ -18,6 +18,7 @@ namespace ADKOM.TextEditor
         void OnCodeContextMenu(MouseUpEvent e)
         {
             if (e.button != 1 || !CanEditDoc) return;
+            if (HasDocs && Active.GameMode) { e.StopPropagation(); return; } // games own the mouse
             e.StopPropagation();
 
             // UITK mouse events report panel-space positions, which is what

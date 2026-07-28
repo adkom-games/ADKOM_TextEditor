@@ -749,3 +749,33 @@ msgstr "サンプルアドオンをインストール"
 
 msgid "{0} sample addon(s) installed."
 msgstr "{0} 個のサンプルアドオンをインストールしました。"
+
+msgid "{0} Scanner Results"
+msgstr "{0} スキャナー結果"
+
+msgid "{0}: {1} potentially dangerous API"
+msgstr "{0}: 危険な可能性のある API {1} 件"
+
+msgid "{0}: {1} potentially dangerous APIs"
+msgstr "{0}: 危険な可能性のある API {1} 件"
+
+msgid "Addon '{0}' is awaiting your one-time approval — run it from Tools > Addons to review."
+msgstr "アドオン '{0}' は初回承認待ちです — Tools > Addons から実行して確認してください。"
+
+msgid "Addon '{0}' uses {1} potentially dangerous API(s) ({2} high severity) — review the report, then approve to run it. Approval is one-time for this exact file content."
+msgstr "アドオン '{0}' は危険な可能性のある API を {1} 件使用しています（高危険度 {2} 件）— レポートを確認してから承認して実行してください。承認はこのファイル内容に対して一度だけです。"
+
+msgid "Addon '{0}': no dangerous APIs detected, but addons run with full editor privileges. Approve to run it (one-time for this exact file content)."
+msgstr "アドオン '{0}': 危険な API は検出されませんでしたが、アドオンはエディターの全権限で実行されます。承認して実行してください（このファイル内容に対して一度だけ）。"
+
+msgid "Approve and Run"
+msgstr "承認して実行"
+
+msgid "more than one [AteAddon] class in the addon"
+msgstr "アドオン内に [AteAddon] クラスが複数あります"
+
+msgid "Not Now"
+msgstr "今はしない"
+
+msgid "Scanner Results"
+msgstr "スキャナー結果"

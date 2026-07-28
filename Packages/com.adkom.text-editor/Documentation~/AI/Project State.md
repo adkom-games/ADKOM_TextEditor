@@ -99,6 +99,25 @@ is verified live in the editor.
 
 ## Immediate next steps
 
+0. In-editor games via addons: AteApi 1.1 IMPLEMENTED 2026-07-27 on
+   branch feature/game-api (commit 1ac757e), per [[Game API Design]].
+   Compile verified + API smoke-tested via MCP script-execute (WriteAt
+   overwrite/pad, ReadAt clamp, colors, cursor, game-mode gating).
+   Ships Samples~/Addons/SnakeGame.cs. Also on the branch: per-document
+   font override SetFont/ClearFont (49f6783, addon-only, zoom adjusts
+   the override) and the addon SECURITY GATE (01c5b9d, AddonSecurity:
+   dangerous-API scan, markdown risk report, one-time consent keyed to
+   content SHA-256, nothing — incl. resident OnLoad — runs unapproved;
+   the gate is the choke point for any future buffer-script execution).
+   Multi-file (folder) addons implemented 2026-07-27 (016b6d8, spec in
+   [[Multi-File Addons Spec]]), and ROGUE 5.4.4 PORTED (6a4c95c):
+   Samples~/Addons/RogueGame/, 13 files ~4.5k lines, full tables/
+   formulas/AI/effects from the BSD source (extracted specs via 3
+   agents), input-mode state machine replacing curses blocking reads;
+   headless-verified (compile, render, 300-cmd fuzz, descents, combat).
+   No save/restore in v1. REMAINING before merge: Cary play-tests
+   Snake AND Rogue interactively (consent flow shows the security
+   report + Scanner Results on first run of each).
 1. FIELD-VERIFIED 2026-07-27: bundled-Roslyn install on a Roslyn-less
    system works cleanly (Cary confirmed). No semantics-install watch
    items remain; the second project healed via the update path earlier.

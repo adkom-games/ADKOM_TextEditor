@@ -20,15 +20,22 @@ namespace ADKOM.TextEditor.Semantics
         static List<MetadataReference> _refs;
 
         public bool TryCompile(string path, out Assembly assembly, out string[] errors)
+            => TryCompileMany(new[] { path }, out assembly, out errors);
+
+        /// <summary>Folder addon: all files compile together into ONE
+        /// assembly (Multi-File Addons spec). Error lines keep file:line.</summary>
+        public bool TryCompileMany(string[] paths, out Assembly assembly, out string[] errors)
         {
             assembly = null;
             try
             {
-                var tree = CSharpSyntaxTree.ParseText(File.ReadAllText(path),
-                    new CSharpParseOptions(LanguageVersion.Latest), path);
+                var trees = new List<SyntaxTree>(paths.Length);
+                foreach (var p in paths)
+                    trees.Add(CSharpSyntaxTree.ParseText(File.ReadAllText(p),
+                        new CSharpParseOptions(LanguageVersion.Latest), p));
                 var compilation = CSharpCompilation.Create(
-                    "AteAddon_" + Path.GetFileNameWithoutExtension(path) + "_" + Guid.NewGuid().ToString("N"),
-                    new[] { tree }, References,
+                    "AteAddon_" + Path.GetFileNameWithoutExtension(paths[0]) + "_" + Guid.NewGuid().ToString("N"),
+                    trees, References,
                     new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
                 using (var ms = new MemoryStream())
                 {
@@ -40,8 +47,8 @@ namespace ADKOM.TextEditor.Semantics
                             if (d.Severity == DiagnosticSeverity.Error)
                             {
                                 var pos = d.Location.GetLineSpan();
-                                errs.Add(Path.GetFileName(path) + ":" + (pos.StartLinePosition.Line + 1) +
-                                    ": " + d.GetMessage());
+                                errs.Add(Path.GetFileName(pos.Path ?? paths[0]) + ":" +
+                                    (pos.StartLinePosition.Line + 1) + ": " + d.GetMessage());
                             }
                         errors = errs.ToArray();
                         return false;

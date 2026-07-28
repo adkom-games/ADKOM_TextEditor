@@ -208,7 +208,25 @@ and status messages all translate — shortcuts stay universal.
 A **stable scripting API** (`ADKOM.TextEditor.Scripting.AteApi`) lets
 your editor scripts open files, read and edit documents, save, close,
 and subscribe to events (opened/closed/saved/changed) — VS Code-shaped
-and semver-stable. See `Documentation~/Scripting.md`.
+and semver-stable. **Addons** — single `.cs` files or multi-file
+folders in a machine-shared folder — are compiled in-memory and appear
+under Tools → Addons, with a full lifecycle (load/unload/focus). And
+addons are **security-gated**: their source is scanned against
+known-dangerous API patterns, a risk report opens (with a clickable
+findings tab in the console pane), and nothing runs until you approve
+that exact file content once. See `Documentation~/Scripting.md`.
+
+### 🎮 Plays games
+API 1.1 turns a document into a **game screen**: game mode (no wrap,
+no undo churn, editor chrome hidden, block cursor), overwrite-style
+`WriteAt`, per-cell **foreground/background colors**, consumable
+keyboard events plus key-state polling, mouse in text coordinates, a
+30 Hz tick, per-document fonts and tab titles, and the status-bar
+prompt. Two complete games ship as installable samples: **Snake** —
+and **Rogue**, a faithful port of the 1980 BSD classic (26 monsters,
+the real dungeon generator, potions/scrolls/wands/rings, the
+tombstone). Tools → Addons → Install Sample Addons, then
+Tools → Addons → Games.
 
 ### 🔌 Unity's External Script Editor
 Select ATE in **Preferences → External Tools** and double-clicked
@@ -251,7 +269,7 @@ https://github.com/adkom-games/ADKOM_TextEditor.git#upm
 Prefer a pinned version?
 
 ```
-https://github.com/adkom-games/ADKOM_TextEditor.git#0.11.0
+https://github.com/adkom-games/ADKOM_TextEditor.git#0.12.0
 ```
 
 Semantic Features (compiler-accurate colors + Go to Definition) are

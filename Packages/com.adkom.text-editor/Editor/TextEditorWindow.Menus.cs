@@ -151,18 +151,18 @@ namespace ADKOM.TextEditor
             m.AddItem(new GUIContent(L10n.Tr("Line Numbers")), _showLineNumbers, () =>
             {
                 _showLineNumbers = !_showLineNumbers;
-                _code.showLineNumbers = _showLineNumbers;
+                ApplyViewChrome();
                 SyncSettingsControls();
             });
             m.AddItem(new GUIContent(L10n.Tr("Indentation Guides")), _indentGuides, () =>
             {
                 _indentGuides = !_indentGuides;
-                _code.showIndentGuides = _indentGuides;
+                ApplyViewChrome();
             });
                         m.AddItem(new GUIContent(L10n.Tr("Minimap")), _minimapVisible, () =>
             {
                 _minimapVisible = !_minimapVisible;
-                _code.minimapVisible = _minimapVisible;
+                ApplyViewChrome();
             });
             m.AddItem(new GUIContent(L10n.Tr("Word Wrap")), _wordWrap, () =>
             {
@@ -231,6 +231,7 @@ namespace ADKOM.TextEditor
                     if (e.Compatible)
                     {
                         var entry = e;
+                        if (!e.Approved) item += " ⚠"; // consent pending (AddonSecurity)
                         m.AddItem(new GUIContent(item), false,
                             () => Scripting.AteAddonManager.Run(entry));
                     }
