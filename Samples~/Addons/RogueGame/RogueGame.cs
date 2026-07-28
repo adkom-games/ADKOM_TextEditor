@@ -242,7 +242,10 @@ namespace AteRogue
             }
             if (Mode == InputMode.More) _pendingTurns =
                 Running || CountRepeat > 0 || NoCommand > 0;
-            Redraw();
+            // Overlay/prompt modes own the screen — repainting the map here
+            // instantly wiped the help/inventory screens ('?' flashed blank).
+            if (Mode == InputMode.Play) Redraw();
+            else Term.Flush();
         }
 
         int _count; char _countCh;
