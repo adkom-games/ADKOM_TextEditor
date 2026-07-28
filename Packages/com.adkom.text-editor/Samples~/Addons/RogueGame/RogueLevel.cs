@@ -595,6 +595,7 @@ namespace AteRogue
 
         public void Redraw()
         {
+            if (GameOver) { Term.Flush(); return; } // end screens own the display
             RedrawMap();
             Term.Flush();
             Term.CursorAt(Hero.y, Hero.x);
@@ -602,6 +603,7 @@ namespace AteRogue
 
         public void RedrawAll()
         {
+            if (GameOver) { Term.Flush(); return; }
             Term.Clear();
             Term.ClearToEol(0, 0);
             if (_shownMsg.Length > 0) Term.PutStr(0, 0, _shownMsg);
@@ -612,6 +614,7 @@ namespace AteRogue
 
         public void RedrawMap()
         {
+            if (GameOver) return;
             for (int y = 1; y < Const.STATLINE; y++)
                 for (int x = 0; x < Const.NUMCOLS; x++)
                 {
