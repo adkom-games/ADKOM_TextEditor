@@ -920,3 +920,15 @@ msgstr "为示例签名失败："
 
 msgid "Verify Shipped Samples"
 msgstr "验证随附示例签名"
+
+msgid "{0} installed sample addon(s) are older than the copies shipped with this ATE: {1}."
+msgstr "已安装的 {0} 个示例插件比此 ATE 随附的版本旧：{1}。"
+
+msgid "Reinstall Samples"
+msgstr "重新安装示例"
+
+msgid "This is an OLDER copy of a sample shipped with this ATE, so its signature no longer matches its code — reinstalling the samples is the fix. "
+msgstr "这是此 ATE 随附示例的旧副本，因此其签名与代码不匹配 — 重新安装示例即可解决。 "
+
+msgid "Your installed sample addon(s) — {0} — are older than the copies shipped with this ATE, so their signatures no longer match their code. Reinstall them?"
+msgstr "已安装的示例插件（{0}）比此 ATE 随附的版本旧，因此签名与代码不匹配。要重新安装吗？"

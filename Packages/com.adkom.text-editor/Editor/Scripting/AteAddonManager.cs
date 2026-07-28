@@ -44,6 +44,10 @@ namespace ADKOM.TextEditor.Scripting
             internal List<AddonSecurity.Finding> Findings;
             // Signing/endorsements (AddonSigning, issue #27).
             internal AddonSigning.SigningInfo Signing;
+            /// <summary>This addon is an installed COPY of a sample shipped
+            /// with the package, and the shipped one has changed since —
+            /// the common cause of a "signature invalid" on a sample.</summary>
+            public bool OutdatedSample;
         }
 
         static readonly List<Entry> _entries = new List<Entry>();
@@ -121,10 +125,12 @@ namespace ADKOM.TextEditor.Scripting
                 AteConsole.Warn("[ADKOM Text Editor] Addons folder unreadable: " + ex.Message);
                 return;
             }
+            FlagOutdatedSamples();
             DisambiguateNames();
             RunResidents();
             if (_entries.Count > 0)
                 AteConsole.Log(string.Format(L10n.Tr("{0} addon(s) loaded."), _entries.Count));
+            OfferSampleReinstall();
         }
 
         /// <summary>Loads one addon: a single top-level file, or a folder
@@ -394,7 +400,12 @@ namespace ADKOM.TextEditor.Scripting
                     e.Name, e.Findings.Count, high)
                 : string.Format(L10n.Tr("Addon '{0}': no dangerous APIs detected, but addons run with full editor privileges. Approve to run it (one-time for this exact file content)."),
                     e.Name);
-            msg = signLine + "  " + msg;
+            // A stale sample install explains an invalid signature far better
+            // than a tamper warning does — say so, and offer the real fix.
+            if (e.OutdatedSample)
+                msg = string.Format(L10n.Tr("This is an OLDER copy of a sample shipped with this ATE, so its signature no longer matches its code — reinstalling the samples is the fix. "))
+                    + signLine + "  " + msg;
+            else msg = signLine + "  " + msg;
             var sig = e.Signing;
             System.Action approve = () =>
             {
@@ -419,6 +430,47 @@ namespace ADKOM.TextEditor.Scripting
                 w.ShowAddonConsentTyped(msg, e.Name, approve, distrust);
             else
                 w.ShowAddonConsent(msg, approve, distrust);
+        }
+
+        /// <summary>Marks installed addons whose shipped counterpart in this
+        /// ATE version has different content. A stale install is the usual
+        /// cause of "SIGNATURE INVALID" on a sample — the code and its
+        /// signature come from different releases.</summary>
+        static void FlagOutdatedSamples()
+        {
+            var shipped = AddonSigning.ShippedSampleKeys(out string err);
+            if (err != null || shipped.Count == 0) return;
+            foreach (var e in _entries)
+            {
+                string mine = Path.GetFileName(e.File);
+                foreach (var key in shipped)
+                {
+                    if (!string.Equals(Path.GetFileName(key), mine, StringComparison.OrdinalIgnoreCase)) continue;
+                    try { e.OutdatedSample = AddonSigning.HashOfAddonAt(key) != e.Hash; }
+                    catch { }
+                    break;
+                }
+            }
+        }
+
+        /// <summary>Non-modal offer to refresh installed samples that this
+        /// ATE ships a newer copy of.</summary>
+        static void OfferSampleReinstall()
+        {
+            var stale = new List<Entry>();
+            foreach (var e in _entries) if (e.OutdatedSample) stale.Add(e);
+            if (stale.Count == 0) return;
+            var names = new List<string>();
+            foreach (var e in stale) names.Add(e.Name);
+            string list = string.Join(", ", names.ToArray());
+            AteConsole.Log(string.Format(
+                L10n.Tr("{0} installed sample addon(s) are older than the copies shipped with this ATE: {1}."),
+                stale.Count, list));
+            var all = UnityEngine.Resources.FindObjectsOfTypeAll<TextEditorWindow>();
+            if (all.Length == 0) return; // console message is enough until a window exists
+            all[0].ShowSampleReinstallOffer(string.Format(
+                L10n.Tr("Your installed sample addon(s) — {0} — are older than the copies shipped with this ATE, so their signatures no longer match their code. Reinstall them?"),
+                list));
         }
 
         /// <summary>Accessors for the signing menu (the hash and author

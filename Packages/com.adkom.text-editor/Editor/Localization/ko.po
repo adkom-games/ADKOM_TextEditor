@@ -920,3 +920,15 @@ msgstr "샘플 서명 실패: "
 
 msgid "Verify Shipped Samples"
 msgstr "동봉 샘플 서명 검증"
+
+msgid "{0} installed sample addon(s) are older than the copies shipped with this ATE: {1}."
+msgstr "설치된 샘플 애드온 {0}개가 이 ATE에 포함된 사본보다 오래되었습니다: {1}."
+
+msgid "Reinstall Samples"
+msgstr "샘플 다시 설치"
+
+msgid "This is an OLDER copy of a sample shipped with this ATE, so its signature no longer matches its code — reinstalling the samples is the fix. "
+msgstr "이것은 이 ATE에 포함된 샘플의 예전 사본이므로 서명이 코드와 일치하지 않습니다 — 샘플을 다시 설치하면 해결됩니다. "
+
+msgid "Your installed sample addon(s) — {0} — are older than the copies shipped with this ATE, so their signatures no longer match their code. Reinstall them?"
+msgstr "설치된 샘플 애드온({0})이 이 ATE에 포함된 사본보다 오래되어 서명이 코드와 일치하지 않습니다. 다시 설치할까요?"
