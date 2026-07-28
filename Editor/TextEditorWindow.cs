@@ -691,6 +691,15 @@ namespace ADKOM.TextEditor
             _searchTab.Add(new Label(L10n.Tr("Search Results")));
             _searchTab.RegisterCallback<PointerDownEvent>(e => { SelectConsoleTab(1); e.StopPropagation(); });
             tabs.Add(_searchTab);
+            // Scanner Results: appears only when the addon security scanner
+            // has findings to show; its label carries the script's name.
+            _scannerTab = new VisualElement();
+            _scannerTab.AddToClassList("console-tab");
+            _scannerTabLabel = new Label(L10n.Tr("Scanner Results"));
+            _scannerTab.Add(_scannerTabLabel);
+            _scannerTab.RegisterCallback<PointerDownEvent>(e => { SelectConsoleTab(2); e.StopPropagation(); });
+            _scannerTab.style.display = DisplayStyle.None;
+            tabs.Add(_scannerTab);
             _consolePane.Add(tabs);
 
             _consoleScroll = new ScrollView(ScrollViewMode.Vertical) { name = "console-scroll" };
@@ -727,16 +736,25 @@ namespace ADKOM.TextEditor
             _searchHeader.style.paddingLeft = 4;
             _searchScroll.Add(_searchHeader);
             _consolePane.Add(_searchScroll);
+
+            _scannerScroll = new ScrollView(ScrollViewMode.Vertical) { name = "scanner-results-scroll" };
+            _scannerScroll.style.display = DisplayStyle.None;
+            _scannerHeader = new Label();
+            _scannerHeader.style.unityFontStyleAndWeight = FontStyle.Bold;
+            _scannerHeader.style.paddingLeft = 4;
+            _scannerScroll.Add(_scannerHeader);
+            _consolePane.Add(_scannerScroll);
             SelectConsoleTab(0);
 
             root.Add(_consolePane);
             SetConsoleVisible(_consoleVisible);
         }
 
-        VisualElement _consoleTab, _searchTab;
+        VisualElement _consoleTab, _searchTab, _scannerTab;
+        Label _scannerTabLabel;
         int _activeConsoleTab;
 
-        /// <summary>0 = Console, 1 = Search Results.</summary>
+        /// <summary>0 = Console, 1 = Search Results, 2 = Scanner Results.</summary>
         void SelectConsoleTab(int index)
         {
             _activeConsoleTab = index;
@@ -744,11 +762,15 @@ namespace ADKOM.TextEditor
                 _consoleScroll.style.display = index == 0 ? DisplayStyle.Flex : DisplayStyle.None;
             if (_searchScroll != null)
                 _searchScroll.style.display = index == 1 ? DisplayStyle.Flex : DisplayStyle.None;
+            if (_scannerScroll != null)
+                _scannerScroll.style.display = index == 2 ? DisplayStyle.Flex : DisplayStyle.None;
             var active = new Color(0.5f, 0.5f, 0.5f, 0.25f);
             if (_consoleTab != null)
                 _consoleTab.style.backgroundColor = index == 0 ? active : Color.clear;
             if (_searchTab != null)
                 _searchTab.style.backgroundColor = index == 1 ? active : Color.clear;
+            if (_scannerTab != null)
+                _scannerTab.style.backgroundColor = index == 2 ? active : Color.clear;
         }
 
         void SetConsoleVisible(bool visible)

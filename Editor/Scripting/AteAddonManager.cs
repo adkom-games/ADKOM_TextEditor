@@ -333,6 +333,21 @@ namespace ADKOM.TextEditor.Scripting
             if (reportPath != null) TextEditorWindow.OpenExternal(reportPath, 1, 1);
             int high = 0;
             if (e.Findings != null) foreach (var f in e.Findings) if (f.High) high++;
+            // Findings also land in the "<script> Scanner Results" console
+            // tab: one clickable row per finding jumping to file:line.
+            if (e.Findings != null && e.Findings.Count > 0)
+            {
+                var items = new List<TextEditorWindow.PickLocation>();
+                foreach (var f in e.Findings)
+                    items.Add(new TextEditorWindow.PickLocation
+                    {
+                        Path = e.File,
+                        Line = f.Line - 1,
+                        Col = 0,
+                        Preview = (f.High ? "HIGH      " : "moderate  ") + f.Api + " — " + f.Risk
+                    });
+                w.ShowScannerResults(e.Name, items);
+            }
             string msg = e.Findings != null && e.Findings.Count > 0
                 ? string.Format(L10n.Tr("Addon '{0}' uses {1} potentially dangerous API(s) ({2} high severity) — review the report, then approve to run it. Approval is one-time for this exact file content."),
                     e.Name, e.Findings.Count, high)
