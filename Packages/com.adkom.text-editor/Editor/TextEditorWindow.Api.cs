@@ -99,6 +99,18 @@ namespace ADKOM.TextEditor
 
         // ---- Game support (AteApi 1.1) ----
 
+        /// <summary>View chrome respects game mode: a game screen shows no
+        /// line-number gutter, indent guides, or minimap. User settings are
+        /// preserved and reapply the moment a non-game tab is active.</summary>
+        internal void ApplyViewChrome()
+        {
+            if (_code == null) return;
+            bool game = HasDocs && Active != null && Active.GameMode;
+            _code.showLineNumbers = !game && _showLineNumbers;
+            _code.showIndentGuides = !game && _indentGuides;
+            _code.minimapVisible = !game && _minimapVisible;
+        }
+
         internal void ApiSetGameMode(TextDocument d, bool on)
         {
             if (d.GameMode == on) return;
@@ -114,6 +126,7 @@ namespace ADKOM.TextEditor
             {
                 _code.gameMode = on;
                 _code.wordWrap = on ? false : _wordWrap;
+                ApplyViewChrome();
                 RefreshFormatter(); // restores/drops syntax highlighting
                 _code.RefreshVisiblePublic();
             }
