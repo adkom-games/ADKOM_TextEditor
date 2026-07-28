@@ -781,3 +781,90 @@ msgstr "Not Now"
 
 msgid "Scanner Results"
 msgstr "Scanner Results"
+
+msgid "'{0}' has no valid author signature to vouch for."
+msgstr "'{0}' has no valid author signature to vouch for."
+
+msgid "✓ known since {0}, {1} approval(s)"
+msgstr "✓ known since {0}, {1} approval(s)"
+
+msgid "⚠ KEY MARKED DISTRUSTED"
+msgstr "⚠ KEY MARKED DISTRUSTED"
+
+msgid "⚠ NAME KNOWN WITH A DIFFERENT KEY — possible impersonation!"
+msgstr "⚠ NAME KNOWN WITH A DIFFERENT KEY — possible impersonation!"
+
+msgid "⚠ SIGNATURE INVALID — content does not match the author's signature."
+msgstr "⚠ SIGNATURE INVALID — content does not match the author's signature."
+
+msgid "Approve Anyway…"
+msgstr "Approve Anyway…"
+
+msgid "Copy My Public Identity"
+msgstr "Copy My Public Identity"
+
+msgid "Create Identity..."
+msgstr "Create Identity..."
+
+msgid "Distrust This Key"
+msgstr "Distrust This Key"
+
+msgid "Endorse This Version"
+msgstr "Endorse This Version"
+
+msgid "Endorsed '{0}' (this exact version). The endorsement is on the clipboard — post it anywhere; it stays valid for every copy with this content."
+msgstr "Endorsed '{0}' (this exact version). The endorsement is on the clipboard — post it anywhere; it stays valid for every copy with this content."
+
+msgid "Endorsed: {0} for this version, {1} vouch for the author."
+msgstr "Endorsed: {0} for this version, {1} vouch for the author."
+
+msgid "first sight — verify the fingerprint out-of-band if it matters"
+msgstr "first sight — verify the fingerprint out-of-band if it matters"
+
+msgid "Identity: {0} ({1})"
+msgstr "Identity: {0} ({1})"
+
+msgid "Identity: none"
+msgstr "Identity: none"
+
+msgid "Name did not match — not approved."
+msgstr "Name did not match — not approved."
+
+msgid "Public identity copied to the clipboard."
+msgstr "Public identity copied to the clipboard."
+
+msgid "Replace signing identity?"
+msgstr "Replace signing identity?"
+
+msgid "Sign as Author"
+msgstr "Sign as Author"
+
+msgid "Signed '{0}' as author. Re-sign after any change to its files."
+msgstr "Signed '{0}' as author. Re-sign after any change to its files."
+
+msgid "Signed: {0} — {1}."
+msgstr "Signed: {0} — {1}."
+
+msgid "Signing"
+msgstr "Signing"
+
+msgid "Signing identity created: {0} ({1}). Publish that fingerprint where people can check it."
+msgstr "Signing identity created: {0} ({1}). Publish that fingerprint where people can check it."
+
+msgid "Type the addon name '{0}' to approve:"
+msgstr "Type the addon name '{0}' to approve:"
+
+msgid "UNSIGNED — author unknown."
+msgstr "UNSIGNED — author unknown."
+
+msgid "Vouch for the Author's Key"
+msgstr "Vouch for the Author's Key"
+
+msgid "Vouched for the author key {0}. This endorsement survives new versions and applies to any addon signed with that key."
+msgstr "Vouched for the author key {0}. This endorsement survives new versions and applies to any addon signed with that key."
+
+msgid "You already have a signing identity. Creating a new one REPLACES it — anything signed with the old key keeps its old signature, and people who pinned your old key will see an impersonation warning."
+msgstr "You already have a signing identity. Creating a new one REPLACES it — anything signed with the old key keeps its old signature, and people who pinned your old key will see an impersonation warning."
+
+msgid "Your signing name:"
+msgstr "Your signing name:"

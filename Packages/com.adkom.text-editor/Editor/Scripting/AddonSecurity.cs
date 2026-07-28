@@ -299,12 +299,60 @@ namespace ADKOM.TextEditor.Scripting
                 sb.Append("actual use before approving.\n");
             }
             sb.Append("\n## What approving means\n\n");
+            sb.Append("Approving also PINS the signer keys you see below, so an ");
+            sb.Append("addon later claiming the same name with a different key is ");
+            sb.Append("flagged as possible impersonation.\n\n");
             sb.Append("Approved addons run with FULL Unity Editor privileges — the same ");
             sb.Append("power as any editor script: your files, your network, your machine. ");
             sb.Append("Approval is **one-time per addon content**: if the file changes in ");
             sb.Append("any way, ATE asks again. Never approve an addon whose source you ");
             sb.Append("have not read or whose origin you do not trust.\n");
             return sb.ToString();
+        }
+
+        /// <summary>The Signatures section appended to the risk report
+        /// (AddonSigning, issue #27).</summary>
+        internal static string BuildSignatureSection(AddonSigning.SigningInfo s, string verdict)
+        {
+            var sb = new StringBuilder();
+            sb.Append("\n## Signatures\n\n");
+            sb.Append(verdict).Append("\n\n");
+            if (s == null || s.Status == AddonSigning.SigStatus.Unsigned)
+            {
+                sb.Append("This addon carries no author signature. Anyone can ");
+                sb.Append("distribute an unsigned addon anonymously — judge it by ");
+                sb.Append("its source, not by a name.\n");
+                return sb.ToString();
+            }
+            sb.Append("| Role | Name | Fingerprint | Status | Date |\n|---|---|---|---|---|\n");
+            sb.Append("| author | ").Append(s.AuthorName ?? "?")
+              .Append(" | `").Append(s.AuthorFingerprint ?? "?")
+              .Append("` | ").Append(PinText(s.AuthorPin))
+              .Append(" | ").Append(s.AuthorDate ?? "").Append(" |\n");
+            foreach (var en in s.Endorsements)
+                sb.Append("| ").Append(en.Publisher ? "vouches for author" : "endorses this version")
+                  .Append(" | ").Append(en.Name)
+                  .Append(" | `").Append(en.Fingerprint)
+                  .Append("` | ").Append(PinText(en.Pin))
+                  .Append(" | ").Append(en.Date).Append(" |\n");
+            sb.Append("\nA signature proves the content came from the holder of that ");
+            sb.Append("KEY — never that the name is truthful or that the code is safe. ");
+            sb.Append("Names become meaningful through the fingerprint (published ");
+            sb.Append("out-of-band by reputable signers) and through continuity: once ");
+            sb.Append("you approve a key, the same name arriving with a different key ");
+            sb.Append("is flagged as possible impersonation.\n");
+            return sb.ToString();
+        }
+
+        static string PinText(AddonSigning.PinState p)
+        {
+            switch (p)
+            {
+                case AddonSigning.PinState.Known: return "known";
+                case AddonSigning.PinState.Impersonation: return "**NAME REUSES A DIFFERENT KEY**";
+                case AddonSigning.PinState.Distrusted: return "**DISTRUSTED**";
+                default: return "first sight";
+            }
         }
     }
 }

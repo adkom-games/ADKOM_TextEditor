@@ -114,4 +114,22 @@ Results tab is unchanged (scan is orthogonal to signing).
 
 ## Status
 
-- Spec agreed 2026-07-28; NOT implemented. Tracking: issue #27.
+- Spec agreed 2026-07-28; IMPLEMENTED same day (issue #27) in
+  `Editor/Scripting/AddonSigning.cs` + `AddonSigningMenu.cs`, wired into
+  AteAddonManager (Entry.Signing, consent banner line, TOFU pinning on
+  approval, distrust action, typed confirmation for tampered/
+  impersonating addons) and AddonSecurity.BuildSignatureSection.
+- **Crypto deviation:** RSA-2048/SHA-256 PKCS#1 instead of ECDSA P-256.
+  Unity's Mono throws NotImplementedException on EC key generation, and
+  `RSA.Create(size)` silently ignores the size (yields 1024) — only
+  `new RSACryptoServiceProvider(2048)` produces a real key here. Public
+  key wire form is `base64(modulus).base64(exponent)`; the fingerprint
+  is SHA-256 over that string.
+- Private keys: DPAPI-wrapped via reflection when available (Windows),
+  plaintext-at-rest otherwise, recorded per identity.
+- Verified live: identity creation, sign/verify, tamper rejection,
+  TOFU New→Known, same-name-different-key → Impersonation, and the
+  full addon lifecycle (unsigned → signed → endorsed ×2 → tampered,
+  endorsements dropping when content changes).
+- NOT done (deferred): endorsement drop-box / network fetch (v1 is
+  sidecar-only, by design); revocation propagation.

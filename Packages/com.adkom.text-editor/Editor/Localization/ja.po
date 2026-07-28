@@ -779,3 +779,90 @@ msgstr "今はしない"
 
 msgid "Scanner Results"
 msgstr "スキャナー結果"
+
+msgid "'{0}' has no valid author signature to vouch for."
+msgstr "'{0}' には保証できる有効な作者署名がありません。"
+
+msgid "✓ known since {0}, {1} approval(s)"
+msgstr "✓ {0} から既知、承認 {1} 回"
+
+msgid "⚠ KEY MARKED DISTRUSTED"
+msgstr "⚠ このキーは信頼しないと設定されています"
+
+msgid "⚠ NAME KNOWN WITH A DIFFERENT KEY — possible impersonation!"
+msgstr "⚠ 既知の名前が異なるキーで署名されています — なりすましの可能性！"
+
+msgid "⚠ SIGNATURE INVALID — content does not match the author's signature."
+msgstr "⚠ 署名が無効 — 内容が作者の署名と一致しません。"
+
+msgid "Approve Anyway…"
+msgstr "それでも承認…"
+
+msgid "Copy My Public Identity"
+msgstr "自分の公開 ID をコピー"
+
+msgid "Create Identity..."
+msgstr "ID を作成..."
+
+msgid "Distrust This Key"
+msgstr "このキーを信頼しない"
+
+msgid "Endorse This Version"
+msgstr "このバージョンを推薦"
+
+msgid "Endorsed '{0}' (this exact version). The endorsement is on the clipboard — post it anywhere; it stays valid for every copy with this content."
+msgstr "'{0}'（このバージョン）を推薦しました。推薦はクリップボードにあります — どこにでも投稿でき、同じ内容のすべてのコピーで有効です。"
+
+msgid "Endorsed: {0} for this version, {1} vouch for the author."
+msgstr "推薦: このバージョンに {0} 件、作者への保証 {1} 件。"
+
+msgid "first sight — verify the fingerprint out-of-band if it matters"
+msgstr "初見 — 重要な場合は指紋を別経路で確認してください"
+
+msgid "Identity: {0} ({1})"
+msgstr "ID: {0} ({1})"
+
+msgid "Identity: none"
+msgstr "ID: なし"
+
+msgid "Name did not match — not approved."
+msgstr "名前が一致しません — 承認されませんでした。"
+
+msgid "Public identity copied to the clipboard."
+msgstr "公開 ID をクリップボードにコピーしました。"
+
+msgid "Replace signing identity?"
+msgstr "署名 ID を置き換えますか？"
+
+msgid "Sign as Author"
+msgstr "作者として署名"
+
+msgid "Signed '{0}' as author. Re-sign after any change to its files."
+msgstr "'{0}' に作者として署名しました。ファイルを変更したら再署名してください。"
+
+msgid "Signed: {0} — {1}."
+msgstr "署名: {0} — {1}。"
+
+msgid "Signing"
+msgstr "署名"
+
+msgid "Signing identity created: {0} ({1}). Publish that fingerprint where people can check it."
+msgstr "署名 ID を作成しました: {0} ({1})。その指紋を確認できる場所に公開してください。"
+
+msgid "Type the addon name '{0}' to approve:"
+msgstr "承認するにはアドオン名 '{0}' を入力してください:"
+
+msgid "UNSIGNED — author unknown."
+msgstr "未署名 — 作者不明。"
+
+msgid "Vouch for the Author's Key"
+msgstr "作者のキーを保証"
+
+msgid "Vouched for the author key {0}. This endorsement survives new versions and applies to any addon signed with that key."
+msgstr "作者キー {0} を保証しました。この推薦は新しいバージョンでも有効で、そのキーで署名されたすべてのアドオンに適用されます。"
+
+msgid "You already have a signing identity. Creating a new one REPLACES it — anything signed with the old key keeps its old signature, and people who pinned your old key will see an impersonation warning."
+msgstr "すでに署名 ID があります。新しく作成すると置き換えられます — 古いキーで署名したものはそのままですが、古いキーを記録した人にはなりすまし警告が表示されます。"
+
+msgid "Your signing name:"
+msgstr "署名する名前:"
