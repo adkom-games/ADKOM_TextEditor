@@ -122,6 +122,10 @@ namespace AteRogue
 
         void PumpMessages()
         {
+            // Terminal screens (tombstone/win/quit) own the display: pending
+            // combat messages must not clobber EndScreen mode (the freeze
+            // Cary hit: die -> More mode -> every key eaten).
+            if (GameOver) { _msgQueue.Clear(); return; }
             if (_msgQueue.Count == 0) return;
             _shownMsg = _msgQueue.Dequeue();
             Term.ClearToEol(0, 0);
