@@ -338,3 +338,9 @@ the bottom. See [[Project State]] for the current snapshot.
   immediately.
 - Every feature is verified live in the editor via the ai-game-developer MCP
   before merging to main.
+
+- **Paper-trail sweep (2026-07-28)**: all historical bugs from git history
+  and this log filed as GitHub issues (#10-#25, closed with root cause +
+  fix commit + shipped version; two umbrellas for the 0.10.0 defects
+  round and the 14 code-review defects). Issue #4 closed retroactively
+  (en.po fix shipped 0.9.0). Only #6 (wrap freeze) remains open.
