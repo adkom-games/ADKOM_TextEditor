@@ -280,11 +280,6 @@ Requires Unity 6000.0+. The `upm` branch delivers only the package —
 your download is lean. Then open **Tools → ADKOM → Text Editor**, or
 just right-click a file — or press **Ctrl+Alt+8** (say it out loud).
 
-## What's next
-
-- More languages (JSON, shaders) via the formatter API
-- Custom user themes; Ctrl+Tab most-recently-used tab order
-
 See [RELEASE-NOTES.md](RELEASE-NOTES.md) for version history and
 [CHANGELOG.md](CHANGELOG.md) for the details.
 
