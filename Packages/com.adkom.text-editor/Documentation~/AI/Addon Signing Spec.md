@@ -131,5 +131,19 @@ Results tab is unchanged (scan is orthogonal to signing).
   TOFU New→Known, same-name-different-key → Impersonation, and the
   full addon lifecycle (unsigned → signed → endorsed ×2 → tampered,
   endorsements dropping when content changes).
+- **Portable backup added 2026-07-28** (Cary: "the identity must be able
+  to be backed up and used on different machines"): Back Up Identity… /
+  Restore Identity from Backup… write and read a `.ateid` file whose
+  private key is re-wrapped under a passphrase — PBKDF2-SHA256
+  (100k iters, stored in the file so it can be raised later) → one
+  derived block split into AES-256-CBC and HMAC-SHA256 keys; the MAC
+  detects a wrong passphrase, and import re-checks that the private key
+  matches the advertised public key before installing it.
+  Iteration count is a measured tradeoff: Mono runs PBKDF2-SHA256 at
+  ~24us/iteration and EACH 32-byte block costs the full count, hence
+  one block + hash-split (2.4s per operation instead of 4.8s).
+  Verified live: export → wipe identity → wrong passphrase rejected →
+  correct passphrase restores the SAME public key, signs and verifies.
 - NOT done (deferred): endorsement drop-box / network fetch (v1 is
-  sidecar-only, by design); revocation propagation.
+  sidecar-only, by design); revocation propagation; masked passphrase
+  entry (the status-bar prompt shows typing — noted in the prompt text).

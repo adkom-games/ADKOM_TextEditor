@@ -866,3 +866,39 @@ msgstr "すでに署名 ID があります。新しく作成すると置き換�
 
 msgid "Your signing name:"
 msgstr "署名する名前:"
+
+msgid "Back Up Identity..."
+msgstr "ID をバックアップ..."
+
+msgid "Back Up Signing Identity"
+msgstr "署名 ID をバックアップ"
+
+msgid "Backup cancelled: a passphrase is required."
+msgstr "バックアップを中止しました: パスフレーズが必要です。"
+
+msgid "Backup failed: "
+msgstr "バックアップに失敗しました: "
+
+msgid "Backup passphrase:"
+msgstr "バックアップのパスフレーズ:"
+
+msgid "Identity backed up to {0}. Store it off this machine — with the passphrase, it restores your signing key anywhere. Without it, nobody can use the file."
+msgstr "ID を {0} にバックアップしました。このマシン以外に保管してください — パスフレーズがあればどこでも署名キーを復元でき、なければ誰も使用できません。"
+
+msgid "Identity restored: {0} ({1}). Signatures you make here are now identical to those from your other machine."
+msgstr "ID を復元しました: {0} ({1})。ここで作成する署名は他のマシンのものと同一になります。"
+
+msgid "Passphrase to protect the backup (visible while typing):"
+msgstr "バックアップを保護するパスフレーズ（入力中は表示されます）:"
+
+msgid "Restore failed: "
+msgstr "復元に失敗しました: "
+
+msgid "Restore Identity from Backup..."
+msgstr "バックアップから ID を復元..."
+
+msgid "Restore Signing Identity"
+msgstr "署名 ID を復元"
+
+msgid "Restoring REPLACES the identity on this machine. The current key is lost unless you have backed it up."
+msgstr "復元するとこのマシンの ID が置き換えられます。バックアップしていない場合、現在のキーは失われます。"

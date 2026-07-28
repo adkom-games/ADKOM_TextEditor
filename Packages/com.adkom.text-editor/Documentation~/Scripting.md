@@ -245,6 +245,17 @@ the folder without re-triggering consent. Manage it all under
 **Tools → Addons → Signing** (create identity, sign, endorse, vouch);
 `Distrust This Key` in the consent banner blocks a key locally.
 
+**Back up your identity.** Your private key lives in
+`%APPDATA%/ADKOM/TextEditor/Keys/identity.json`, protected to *this*
+Windows user on *this* machine — copying that file elsewhere does not
+work. **Back Up Identity…** writes a portable `.ateid` file whose key
+is re-wrapped under a passphrase you choose (PBKDF2-SHA256 →
+AES-256-CBC + HMAC), so **Restore Identity from Backup…** brings the
+same signing key up on any machine. Keep the file and the passphrase
+apart and safe: lose them and you must publish a new fingerprint (and
+everyone who pinned the old key sees an impersonation warning); leak
+them and someone else can sign as you.
+
 Approval is one-time **per addon content**: consent is keyed to the
 file's SHA-256, so any change to the file means a fresh review. The
 store is machine-shared (`%APPDATA%/ADKOM/TextEditor/AddonConsent.json`)

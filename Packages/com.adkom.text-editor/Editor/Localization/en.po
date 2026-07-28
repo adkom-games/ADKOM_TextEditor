@@ -868,3 +868,39 @@ msgstr "You already have a signing identity. Creating a new one REPLACES it — 
 
 msgid "Your signing name:"
 msgstr "Your signing name:"
+
+msgid "Back Up Identity..."
+msgstr "Back Up Identity..."
+
+msgid "Back Up Signing Identity"
+msgstr "Back Up Signing Identity"
+
+msgid "Backup cancelled: a passphrase is required."
+msgstr "Backup cancelled: a passphrase is required."
+
+msgid "Backup failed: "
+msgstr "Backup failed: "
+
+msgid "Backup passphrase:"
+msgstr "Backup passphrase:"
+
+msgid "Identity backed up to {0}. Store it off this machine — with the passphrase, it restores your signing key anywhere. Without it, nobody can use the file."
+msgstr "Identity backed up to {0}. Store it off this machine — with the passphrase, it restores your signing key anywhere. Without it, nobody can use the file."
+
+msgid "Identity restored: {0} ({1}). Signatures you make here are now identical to those from your other machine."
+msgstr "Identity restored: {0} ({1}). Signatures you make here are now identical to those from your other machine."
+
+msgid "Passphrase to protect the backup (visible while typing):"
+msgstr "Passphrase to protect the backup (visible while typing):"
+
+msgid "Restore failed: "
+msgstr "Restore failed: "
+
+msgid "Restore Identity from Backup..."
+msgstr "Restore Identity from Backup..."
+
+msgid "Restore Signing Identity"
+msgstr "Restore Signing Identity"
+
+msgid "Restoring REPLACES the identity on this machine. The current key is lost unless you have backed it up."
+msgstr "Restoring REPLACES the identity on this machine. The current key is lost unless you have backed it up."

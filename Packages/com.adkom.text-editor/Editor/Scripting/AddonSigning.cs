@@ -255,6 +255,161 @@ namespace ADKOM.TextEditor.Scripting
         internal static Envelope SignEndorsePublisher(string authorFp, out string error) =>
             Sign(TypeEndorsePublisher, null, authorFp, null, out error);
 
+        // ---- Portable identity backup (export / import) ----
+        //
+        // identity.json is DPAPI-wrapped to THIS Windows user on THIS machine,
+        // so copying it elsewhere is useless. An export re-wraps the private
+        // key under a passphrase (PBKDF2-SHA256 → AES-256-CBC, HMAC-SHA256
+        // over the ciphertext) so it restores on any machine — and is safe to
+        // store off-machine. Losing the key means republishing a new
+        // fingerprint, so back this up.
+
+        internal const string ExportExt = ".ateid";
+        const string ExportFormat = "ate-identity-1";
+        // Mono's PBKDF2-SHA256 runs ~24us/iteration here (measured), so the
+        // count is a UX/strength tradeoff on a rare, deliberate operation:
+        // 100k ≈ 2.5s of editor freeze per backup/restore. The file also
+        // isn't an online oracle — an attacker needs the backup itself.
+        // Readers of a backup honor the file's stored iteration count, so
+        // this can be raised later without breaking old backups.
+        const int Pbkdf2Iterations = 100000;
+
+        [Serializable]
+        class ExportFile
+        {
+            public string format;
+            public string name;
+            public string publicKey;
+            public string salt, iv, cipher, mac;
+            public int iterations;
+        }
+
+        /// <summary>One PBKDF2 block (a second 32-byte block would cost the
+        /// full iteration count again), split into independent enc/mac keys.</summary>
+        static void DeriveKeys(string passphrase, byte[] salt, int iters,
+            out byte[] encKey, out byte[] macKey)
+        {
+            byte[] dk;
+            using (var kdf = new Rfc2898DeriveBytes(passphrase, salt, iters, HashAlgorithmName.SHA256))
+                dk = kdf.GetBytes(32);
+            using (var sha = SHA256.Create())
+            {
+                encKey = sha.ComputeHash(Concat(dk, Encoding.UTF8.GetBytes("ate-enc")));
+                macKey = sha.ComputeHash(Concat(dk, Encoding.UTF8.GetBytes("ate-mac")));
+            }
+        }
+
+        internal static bool ExportIdentity(string path, string passphrase, out string error)
+        {
+            error = null;
+            var id = LoadIdentity();
+            if (id == null) { error = "no signing identity to export"; return false; }
+            if (string.IsNullOrEmpty(passphrase)) { error = "a passphrase is required"; return false; }
+            try
+            {
+                byte[] priv = Convert.FromBase64String(id.privateBlob);
+                if (id.protectedStorage)
+                {
+                    priv = Dpapi(priv, protect: false);
+                    if (priv == null) { error = "the protected key could not be read on this machine"; return false; }
+                }
+                var salt = RandomBytes(16);
+                var iv = RandomBytes(16);
+                DeriveKeys(passphrase, salt, Pbkdf2Iterations, out var encKey, out var macKey);
+                byte[] cipher;
+                using (var aes = Aes.Create())
+                {
+                    aes.Key = encKey; aes.IV = iv;
+                    aes.Mode = CipherMode.CBC; aes.Padding = PaddingMode.PKCS7;
+                    using (var enc = aes.CreateEncryptor())
+                        cipher = enc.TransformFinalBlock(priv, 0, priv.Length);
+                }
+                byte[] mac;
+                using (var h = new HMACSHA256(macKey))
+                    mac = h.ComputeHash(Concat(iv, cipher));
+                var file = new ExportFile
+                {
+                    format = ExportFormat, name = id.name, publicKey = id.publicKey,
+                    salt = Convert.ToBase64String(salt), iv = Convert.ToBase64String(iv),
+                    cipher = Convert.ToBase64String(cipher), mac = Convert.ToBase64String(mac),
+                    iterations = Pbkdf2Iterations
+                };
+                File.WriteAllText(path, UnityEngine.JsonUtility.ToJson(file, true));
+                return true;
+            }
+            catch (Exception ex) { error = ex.Message; return false; }
+        }
+
+        /// <summary>Restores an exported identity on this machine (re-wrapping
+        /// the private key with local protection). Replaces any current
+        /// identity — callers confirm first.</summary>
+        internal static bool ImportIdentity(string path, string passphrase,
+            out string name, out string fingerprint, out string error)
+        {
+            error = null; name = null; fingerprint = null;
+            try
+            {
+                var file = UnityEngine.JsonUtility.FromJson<ExportFile>(File.ReadAllText(path));
+                if (file == null || file.format != ExportFormat)
+                { error = "not an ATE identity backup"; return false; }
+                var salt = Convert.FromBase64String(file.salt);
+                var iv = Convert.FromBase64String(file.iv);
+                var cipher = Convert.FromBase64String(file.cipher);
+                DeriveKeys(passphrase ?? "", salt,
+                    file.iterations > 0 ? file.iterations : Pbkdf2Iterations,
+                    out var encKey, out var macKey);
+                using (var h = new HMACSHA256(macKey))
+                {
+                    var mac = h.ComputeHash(Concat(iv, cipher));
+                    if (Convert.ToBase64String(mac) != file.mac)
+                    { error = "wrong passphrase (or the backup file is damaged)"; return false; }
+                }
+                byte[] priv;
+                using (var aes = Aes.Create())
+                {
+                    aes.Key = encKey; aes.IV = iv;
+                    aes.Mode = CipherMode.CBC; aes.Padding = PaddingMode.PKCS7;
+                    using (var dec = aes.CreateDecryptor())
+                        priv = dec.TransformFinalBlock(cipher, 0, cipher.Length);
+                }
+                // Sanity: the private key must match the advertised public key.
+                using (var rsa = new RSACryptoServiceProvider())
+                {
+                    rsa.FromXmlString(Encoding.UTF8.GetString(priv));
+                    if (EncodePublic(rsa.ExportParameters(false)) != file.publicKey)
+                    { error = "backup is inconsistent (key pair mismatch)"; return false; }
+                }
+                Directory.CreateDirectory(KeysFolder);
+                var wrapped = Dpapi(priv, protect: true);
+                var id = new StoredIdentity
+                {
+                    name = file.name, publicKey = file.publicKey,
+                    protectedStorage = wrapped != null,
+                    privateBlob = Convert.ToBase64String(wrapped ?? priv)
+                };
+                File.WriteAllText(IdentityFile, UnityEngine.JsonUtility.ToJson(id, true));
+                name = id.name;
+                fingerprint = Fingerprint(id.publicKey);
+                return true;
+            }
+            catch (Exception ex) { error = ex.Message; return false; }
+        }
+
+        static byte[] RandomBytes(int n)
+        {
+            var b = new byte[n];
+            using (var rng = RandomNumberGenerator.Create()) rng.GetBytes(b);
+            return b;
+        }
+
+        static byte[] Concat(byte[] a, byte[] b)
+        {
+            var r = new byte[a.Length + b.Length];
+            Buffer.BlockCopy(a, 0, r, 0, a.Length);
+            Buffer.BlockCopy(b, 0, r, a.Length, b.Length);
+            return r;
+        }
+
         // ---- Trusted keys (TOFU pins + distrust) ----
 
         static string TrustFile => Path.Combine(
