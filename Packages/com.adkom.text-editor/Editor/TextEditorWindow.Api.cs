@@ -14,6 +14,35 @@ namespace ADKOM.TextEditor
     {
         internal bool ApiContains(TextDocument d) => _docs.Contains(d);
 
+        /// <summary>If a tab holds <paramref name="path"/>, reloads its buffer
+        /// from disk (used after ATE itself rewrites a file it may have open —
+        /// e.g. a regenerated security report — where OpenExternal would
+        /// otherwise surface the stale buffer, and the external-change banner
+        /// is about to be replaced by another banner).</summary>
+        internal void ApiReloadFromDiskIfOpen(string path)
+        {
+            if (string.IsNullOrEmpty(path)) return;
+            string full;
+            try { full = Path.GetFullPath(path); } catch { return; }
+            foreach (var d in _docs)
+            {
+                if (!d.HasFile) continue;
+                string df;
+                try { df = Path.GetFullPath(d.FilePath); } catch { continue; }
+                if (!string.Equals(df, full, System.StringComparison.OrdinalIgnoreCase)) continue;
+                d.LoadFrom(d.FilePath);
+                if (HasDocs && Active == d)
+                {
+                    _code?.SetValueWithoutNotify(d.Content);
+                    RefreshFormatter();
+                    UpdateMdUi(); // rendered-Markdown tabs re-render the new content
+                }
+                RebuildTabs();
+                UpdateTitle();
+                return;
+            }
+        }
+
         internal IEnumerable<TextDocument> ApiDocuments()
         {
             foreach (var d in _docs)
