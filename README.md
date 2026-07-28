@@ -115,8 +115,7 @@ Version history: [RELEASE-NOTES.md](Packages/com.adkom.text-editor/RELEASE-NOTES
 ## Contributing
 
 Issues and pull requests are welcome. If you hit a bug or want a
-feature (more languages, custom themes, and Copilot integration are
-already on the roadmap), please open an issue.
+feature, please open an issue.
 
 ## License
 

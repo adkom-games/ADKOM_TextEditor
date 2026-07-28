@@ -182,7 +182,9 @@ is verified live in the editor.
      agree, and every L10n.Tr / WithSc source string is catalogued.
 1. **Docs consistency sweep** (do this FIRST, before any version bumps):
    - Package README: every shipped feature represented; keymap table
-     current; "What's next" roadmap pruned of anything now shipped.
+     current. (READMEs carry NO roadmap sections — removed 2026-07-28,
+     issue #26: they went stale every release. Future plans live in
+     Project State only.)
    - Root README: feature summary and install URLs consistent with the
      package README.
    - Project Log: entries exist for this release's features/defects.
