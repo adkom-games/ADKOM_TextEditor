@@ -920,3 +920,15 @@ msgstr "サンプルへの署名に失敗しました: "
 
 msgid "Verify Shipped Samples"
 msgstr "同梱サンプルの署名を検証"
+
+msgid "{0} installed sample addon(s) are older than the copies shipped with this ATE: {1}."
+msgstr "インストール済みのサンプルアドオン {0} 個が、この ATE に同梱されているものより古くなっています: {1}。"
+
+msgid "Reinstall Samples"
+msgstr "サンプルを再インストール"
+
+msgid "This is an OLDER copy of a sample shipped with this ATE, so its signature no longer matches its code — reinstalling the samples is the fix. "
+msgstr "これはこの ATE に同梱されているサンプルの古いコピーです。そのため署名がコードと一致しません — サンプルを再インストールすれば解決します。 "
+
+msgid "Your installed sample addon(s) — {0} — are older than the copies shipped with this ATE, so their signatures no longer match their code. Reinstall them?"
+msgstr "インストール済みのサンプルアドオン（{0}）は、この ATE に同梱されているものより古いため、署名がコードと一致しません。再インストールしますか？"

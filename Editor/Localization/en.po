@@ -922,3 +922,15 @@ msgstr "Signing samples failed: "
 
 msgid "Verify Shipped Samples"
 msgstr "Verify Shipped Samples"
+
+msgid "{0} installed sample addon(s) are older than the copies shipped with this ATE: {1}."
+msgstr "{0} installed sample addon(s) are older than the copies shipped with this ATE: {1}."
+
+msgid "Reinstall Samples"
+msgstr "Reinstall Samples"
+
+msgid "This is an OLDER copy of a sample shipped with this ATE, so its signature no longer matches its code — reinstalling the samples is the fix. "
+msgstr "This is an OLDER copy of a sample shipped with this ATE, so its signature no longer matches its code — reinstalling the samples is the fix. "
+
+msgid "Your installed sample addon(s) — {0} — are older than the copies shipped with this ATE, so their signatures no longer match their code. Reinstall them?"
+msgstr "Your installed sample addon(s) — {0} — are older than the copies shipped with this ATE, so their signatures no longer match their code. Reinstall them?"

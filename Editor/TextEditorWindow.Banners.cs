@@ -121,6 +121,20 @@ namespace ADKOM.TextEditor
                     (L10n.Tr("Distrust This Key"), () => { HideBanner(); onDistrust(); }));
         }
 
+        /// <summary>Offers to refresh installed sample addons that this ATE
+        /// ships newer copies of (the benign cause of a sample's signature
+        /// not matching — see AteAddonManager.FlagOutdatedSamples).</summary>
+        internal void ShowSampleReinstallOffer(string message)
+        {
+            ShowBanner(message,
+                (L10n.Tr("Reinstall Samples"), () =>
+                {
+                    HideBanner();
+                    Scripting.AteAddonManager.InstallSamples();
+                }),
+                (L10n.Tr("Not Now"), HideBanner));
+        }
+
         /// <summary>Consent for a TAMPERED / possible-impersonation addon:
         /// approval requires typing the addon's name (deliberate friction —
         /// AddonSigning, issue #27).</summary>
