@@ -58,6 +58,7 @@ with the host project.
 | Release 0.10.0 (published 2026-07-27; tag == CI upm head; fresh-clone verified) | Done |
 | Release 0.10.1 (docs-only: Ko-fi links; published 2026-07-27) | Done |
 | 0.11.0 — the AI release (Copilot + Ask Unity AI + Search Results tab; published 2026-07-27) | Done |
+| 0.12.0 — the games release (addons security + folder addons + Game API 1.1 + Snake + Rogue 5.4.4 port; published 2026-07-28) | Done |
 | More languages; custom themes | Future (roadmap) |
 
 ## Current work area
@@ -115,9 +116,14 @@ is verified live in the editor.
    formulas/AI/effects from the BSD source (extracted specs via 3
    agents), input-mode state machine replacing curses blocking reads;
    headless-verified (compile, render, 300-cmd fuzz, descents, combat).
-   No save/restore in v1. REMAINING before merge: Cary play-tests
-   Snake AND Rogue interactively (consent flow shows the security
-   report + Scanner Results on first run of each).
+   No save/restore in v1. 0.12.0 PUBLISHED 2026-07-28 (Cary's go): tag
+   f92c33e == CI upm head; fresh shallow clone verified (0.12.0, 58 .cs
+   files, Rogue/Snake/security/game API present); GitHub Release up.
+   Release friction fixed en route: editor-guard gate now excludes
+   Samples~ (Linux-safe separators — CI had been failing since the
+   samples merge), 10 security-gate strings added to all five l10n
+   catalogs, tag procedure clarified (tag the CI-rebuilt upm head).
+   Rogue backlog: save/restore, run-stop frontier polish (passgo).
 1. FIELD-VERIFIED 2026-07-27: bundled-Roslyn install on a Roslyn-less
    system works cleanly (Cary confirmed). No semantics-install watch
    items remain; the second project healed via the update path earlier.
