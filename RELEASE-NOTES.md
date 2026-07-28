@@ -3,6 +3,46 @@
 **☕ Enjoying ATE? Support development on Ko-fi:**
 [https://ko-fi.com/adkomgames](https://ko-fi.com/adkomgames)
 
+## 0.12.0 — 2026-07-28
+
+The games release: ATE plays Rogue.
+
+### Features
+- **Addons**: drop `.cs` files — or whole **folders** compiled as one
+  addon — into the machine-shared addons folder and they load in every
+  ATE instance (Tools → Addons; full load/unload/focus lifecycle).
+- **Addon security**: every addon's source is scanned against
+  known-dangerous API patterns (process execution, file deletion,
+  network, native interop, dynamic code loading, prefs access, …). A
+  risk report opens with a clickable **Scanner Results** console tab
+  (each finding jumps to its file:line), and **nothing runs until you
+  approve that addon once** — approval is keyed to the exact file
+  content, so any change re-prompts.
+- **Game API (AteApi 1.1)**: per-document game mode (chrome hidden,
+  block cursor, undo-bypassing writes, input owned by the game),
+  overwrite/insert `WriteAt`, per-cell fg/bg colors, consumable key
+  events + key polling, text-coordinate mouse, ≤30 Hz tick, status-bar
+  prompt, per-document font, tab titles, addon lifecycle.
+- **Two games included**: **Snake**, and a faithful port of **Rogue
+  5.4.4** — the 1980 BSD classic, with its real monster/item tables,
+  combat formulas, dungeon generator, traps, identification game,
+  hunger, tombstone, and total-winner screen. Tools → Addons →
+  Install Sample Addons, then Tools → Addons → Games.
+
+### Fixes
+- Tab-list dropdown: selecting a tab now always scrolls it into view;
+  the strip no longer lurches left and pushes the active tab off the
+  right edge (issue #9).
+- Addon consent no longer shows a stale risk report when the report
+  file was already open in a tab.
+- Security scanner now reports every occurrence of a dangerous API
+  (was: first only) and covers EditorPrefs/PlayerPrefs access;
+  approvals granted under weaker scans re-prompt once.
+- Snake: playfield no longer bows on rows containing the snake
+  (fallback-font glyph widths); board is pure ASCII drawn with colors.
+- Rogue polish during the port: death-screen freeze, overlays being
+  overdrawn, Shift+arrow running, double monster turns while running.
+
 ## 0.11.0 — 2026-07-27
 
 The AI release.

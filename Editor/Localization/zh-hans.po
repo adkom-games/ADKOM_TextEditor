@@ -749,3 +749,33 @@ msgstr "安装示例插件"
 
 msgid "{0} sample addon(s) installed."
 msgstr "已安装 {0} 个示例插件。"
+
+msgid "{0} Scanner Results"
+msgstr "{0} 扫描结果"
+
+msgid "{0}: {1} potentially dangerous API"
+msgstr "{0}：{1} 个潜在危险 API"
+
+msgid "{0}: {1} potentially dangerous APIs"
+msgstr "{0}：{1} 个潜在危险 API"
+
+msgid "Addon '{0}' is awaiting your one-time approval — run it from Tools > Addons to review."
+msgstr "插件“{0}”正在等待您的一次性批准 — 请从 Tools > Addons 运行以进行审查。"
+
+msgid "Addon '{0}' uses {1} potentially dangerous API(s) ({2} high severity) — review the report, then approve to run it. Approval is one-time for this exact file content."
+msgstr "插件“{0}”使用了 {1} 个潜在危险 API（{2} 个高危）— 请审查报告后批准运行。批准仅对当前文件内容一次性有效。"
+
+msgid "Addon '{0}': no dangerous APIs detected, but addons run with full editor privileges. Approve to run it (one-time for this exact file content)."
+msgstr "插件“{0}”：未检测到危险 API，但插件将以编辑器完整权限运行。批准后运行（仅对当前文件内容一次性有效）。"
+
+msgid "Approve and Run"
+msgstr "批准并运行"
+
+msgid "more than one [AteAddon] class in the addon"
+msgstr "插件中存在多个 [AteAddon] 类"
+
+msgid "Not Now"
+msgstr "暂不"
+
+msgid "Scanner Results"
+msgstr "扫描结果"

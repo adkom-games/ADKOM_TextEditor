@@ -3,9 +3,56 @@
 All notable changes to this package are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com); versions follow semver.
 
-## [Unreleased]
+## [0.12.0] - 2026-07-28
 
 ### Added
+- Game API (AteApi 1.0.0 → 1.1.0): per-document GameMode (word wrap
+  and syntax highlighting off, programmatic writes bypass undo, keys
+  the game doesn't consume can't edit the buffer, context menu
+  suppressed, editor chrome — gutter, indent guides, minimap — hidden,
+  terminal-style block cursor, clicks don't move the caret);
+  WriteAt(line, col, text, Overwrite|Insert), ReadAt/GetLine/LineCount,
+  TryGetCursor; per-cell foreground/background color overlay
+  (SetColor/ClearColors — render attributes, never buffer content);
+  consumable keyDown/keyUp events + IsKeyDown polling (reset on focus
+  loss); mouseMoved/mouseButtonDown(consumable)/mouseButtonUp in text
+  coordinates; AteApi.Prompt (status-bar mini-buffer with cancel);
+  StartTick clamped to 30 Hz (pauses unfocused); SetFont/ClearFont
+  per-document font override (zoom adjusts the override); SetTitle
+  tab titles; IAteAddonLifecycle (OnLoad/OnUnload/OnFocusGained/
+  OnFocusLost) with single resident instances.
+- Multi-file (folder) addons: a subfolder of the addons folder is one
+  addon — all its .cs files compile into a single assembly (exactly
+  one [AteAddon] class); consent hash covers the whole file set.
+- Addon security: source scanned against known-dangerous API patterns
+  (process execution, file deletion/writes/reads, network, native
+  interop, dynamic code loading, registry, secrets, prefs access);
+  markdown risk report + clickable "<Script> Scanner Results" console
+  tab (file:line rows jump to the location); NOTHING runs — resident
+  OnLoad included — until one-time approval keyed to the file
+  content's SHA-256 and the scanner version.
+- Games (installable samples): Snake (colors, polling, prompt, ticks)
+  and Rogue — a faithful C# port of BSD Rogue 5.4.4 as the first
+  folder addon (original monster/item tables, combat formulas, dungeon
+  generator with dark/maze/treasure rooms, all traps, potions/scrolls/
+  wands/rings, hunger, identification, tombstone and winner screens).
+
+### Fixed
+- Tab-list dropdown selection not always scrolled into view; the strip
+  could scroll fully left and push the active tab off-edge (issue #9 —
+  un-laid-out tab rects report x=0/width=NaN).
+- Addon security consent showed a STALE risk report when the report
+  file was already open in a tab (the reload prompt was stomped by the
+  consent banner).
+- Scanner reported only the first occurrence per dangerous API, and
+  missed ordinary EditorPrefs/PlayerPrefs access entirely.
+- Snake: playfield rows bowed right — non-monospace fallback glyphs;
+  cells are now ASCII colored fg==bg.
+- Rogue (pre-release polish): freeze on death (message pump clobbered
+  the tombstone screen), help/inventory overlays instantly overdrawn,
+  Shift+arrows not running, monsters acting twice per running step.
+
+### Added (addons framework, pre-branch)
 - Tools > Addons > Install Sample Addons: copies three ready-to-run
   sample addons (Hello Addon — resident event subscriber; Insert
   Timestamp — document editing; Word Count — document reading) from
