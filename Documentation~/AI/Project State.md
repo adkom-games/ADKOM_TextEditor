@@ -109,9 +109,15 @@ is verified live in the editor.
    dangerous-API scan, markdown risk report, one-time consent keyed to
    content SHA-256, nothing — incl. resident OnLoad — runs unapproved;
    the gate is the choke point for any future buffer-script execution).
-   REMAINING before merge: Cary play-tests Snake interactively (now
-   including the first-run consent flow: menu shows Snake ⚠, report
-   opens, Approve and Run).
+   Multi-file (folder) addons implemented 2026-07-27 (016b6d8, spec in
+   [[Multi-File Addons Spec]]), and ROGUE 5.4.4 PORTED (6a4c95c):
+   Samples~/Addons/RogueGame/, 13 files ~4.5k lines, full tables/
+   formulas/AI/effects from the BSD source (extracted specs via 3
+   agents), input-mode state machine replacing curses blocking reads;
+   headless-verified (compile, render, 300-cmd fuzz, descents, combat).
+   No save/restore in v1. REMAINING before merge: Cary play-tests
+   Snake AND Rogue interactively (consent flow shows the security
+   report + Scanner Results on first run of each).
 1. FIELD-VERIFIED 2026-07-27: bundled-Roslyn install on a Roslyn-less
    system works cleanly (Cary confirmed). No semantics-install watch
    items remain; the second project healed via the update path earlier.
