@@ -43,6 +43,7 @@ namespace AteRogue
             for (int y = 0; y < H; y++)
                 blank.Append(new string(' ', W)).Append(y < H - 1 ? "\n" : "");
             var doc = AteApi.NewDocument(blank.ToString());
+            doc.SetTitle("Rogue");
             doc.GameMode = true;
             return doc;
         }

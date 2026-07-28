@@ -46,6 +46,7 @@ public class SnakeGame : IAteAddonLifecycle
     {
         if (_doc != null && _doc.IsValid) { _doc.Activate(); return; }
         _doc = AteApi.NewDocument(BuildBoardText());
+        _doc.SetTitle("Snake");
         _doc.GameMode = true;
         PaintBorder();
         NewGame();

@@ -308,6 +308,15 @@ namespace ADKOM.TextEditor.Scripting
             _window.ApiWriteLine(_doc, start, end, sb.ToString());
         }
 
+        /// <summary>Sets the tab title of this document (display only — the
+        /// file path, if any, is untouched). Games name their tab after the
+        /// game. Null or empty restores the default name.</summary>
+        public void SetTitle(string title)
+        {
+            EnsureValid();
+            _window.ApiSetTitle(_doc, title);
+        }
+
         // ---- Per-document font (1.1) ----
 
         /// <summary>Sets this document's font: an OS font family name (e.g.
