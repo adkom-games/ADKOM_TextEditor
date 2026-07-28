@@ -49,6 +49,7 @@ namespace AteRogue
             var monster = MonsterAt(nh);
             if (HasP(MF.ISHELD) && (monster == null || monster.Type != 'F'))
             {
+                StopRunning(); // a run must not spin against the grip
                 Msg("you are being held");
                 return;
             }
