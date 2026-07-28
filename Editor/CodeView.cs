@@ -2756,6 +2756,15 @@ namespace ADKOM.TextEditor
                     return;
                 }
             }
+            // Game mode: the game owns the cursor (it IS the player) — a
+            // click the game didn't consume only focuses the view, never
+            // repositions the caret or starts a selection.
+            if (_gameMode)
+            {
+                Focus();
+                e.StopPropagation();
+                return;
+            }
             _selHistory.Clear();
             HideCompletion();
             if (e.button == 0 && e.altKey && !e.ctrlKey)
