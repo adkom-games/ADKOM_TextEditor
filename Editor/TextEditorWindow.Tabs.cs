@@ -415,6 +415,7 @@ namespace ADKOM.TextEditor
                 _code.wordWrap = Active.GameMode ? false : _wordWrap;
                 _code.AttachOverlay(Active.Overlay);
                 _code.SetFontOverride(Active.FontName, Active.FontSize);
+                ApplyViewChrome();
             }
             _code?.SetValueWithoutNotify(Active.Content);
             RefreshFormatter();

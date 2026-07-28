@@ -842,7 +842,7 @@ namespace ADKOM.TextEditor
             _settingsLines.RegisterValueChangedCallback(e =>
             {
                 _showLineNumbers = e.newValue;
-                if (_code != null) _code.showLineNumbers = e.newValue;
+                ApplyViewChrome();
             });
             _settingsPane.Add(_settingsLines);
 
