@@ -43,7 +43,9 @@ function Get-AddonHash([string]$key) {
         } else {
             $rel = Split-Path $full -Leaf
         }
-        $content = [System.IO.File]::ReadAllText($full)
+        # Normalize line endings, exactly like AddonSecurity.HashFiles: git
+        # rewrites CRLF/LF per platform, and identity must survive checkout.
+        $content = [System.IO.File]::ReadAllText($full).Replace("`r`n", "`n").Replace("`r", "`n")
         [void]$sb.Append($rel.Replace('\', '/')).Append([char]0).Append($content).Append([char]0)
     }
     $sha = [System.Security.Cryptography.SHA256]::Create()

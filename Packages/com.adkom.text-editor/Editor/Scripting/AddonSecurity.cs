@@ -167,10 +167,19 @@ namespace ADKOM.TextEditor.Scripting
                         : Path.GetFileName(f);
                 }
                 catch { }
-                sb.Append(rel.Replace('\\', '/')).Append('\0').Append(File.ReadAllText(f)).Append('\0');
+                // Line endings are NORMALIZED before hashing: git (and every
+                // other transport that touches text) rewrites CRLF/LF per
+                // platform, and a signature that dies on checkout is useless.
+                // The scan still reads the file as-is; only identity is
+                // normalized.
+                sb.Append(rel.Replace('\\', '/')).Append('\0')
+                  .Append(NormalizeEol(File.ReadAllText(f))).Append('\0');
             }
             return Hash(sb.ToString());
         }
+
+        internal static string NormalizeEol(string s) =>
+            s == null ? string.Empty : s.Replace("\r\n", "\n").Replace("\r", "\n");
 
         /// <summary>SHA-256 of the source — the identity consent is bound to.</summary>
         internal static string Hash(string source)
@@ -193,8 +202,9 @@ namespace ADKOM.TextEditor.Scripting
         /// <summary>Bump when the scan's coverage grows: prior approvals were
         /// made from a report the new scan didn't inform, so they re-prompt.
         /// (v2: prefs read/write/delete-key rules. v3: every occurrence
-        /// reported, not just the first per rule.)</summary>
-        const int ScanVersion = 3;
+        /// reported, not just the first per rule. v4: identity hash
+        /// normalizes line endings, so every hash changed once.)</summary>
+        const int ScanVersion = 4;
 
         [Serializable] class ConsentEntry { public string file; public string hash; public int scan; }
         [Serializable] class ConsentList { public List<ConsentEntry> entries = new List<ConsentEntry>(); }
