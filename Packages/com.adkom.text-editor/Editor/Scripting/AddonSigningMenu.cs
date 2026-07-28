@@ -28,6 +28,9 @@ namespace ADKOM.TextEditor.Scripting
                 m.AddItem(new GUIContent(sub + L10n.Tr("Copy My Public Identity")), false, CopyIdentity);
                 m.AddItem(new GUIContent(sub + L10n.Tr("Back Up Identity...")), false, ExportIdentity);
                 m.AddSeparator(sub);
+                m.AddItem(new GUIContent(sub + L10n.Tr("Sign Shipped Samples")), false, SignShippedSamples);
+                m.AddItem(new GUIContent(sub + L10n.Tr("Verify Shipped Samples")), false, VerifyShippedSamples);
+                m.AddSeparator(sub);
                 foreach (var e in AteAddonManager.Entries)
                 {
                     var entry = e;
@@ -113,6 +116,31 @@ namespace ADKOM.TextEditor.Scripting
                     AteConsole.Log(string.Format(L10n.Tr("Identity restored: {0} ({1}). Signatures you make here are now identical to those from your other machine."), name, fp));
                 else AteConsole.Warn("[ADKOM Text Editor] " + L10n.Tr("Restore failed: ") + err);
             }, null, "");
+        }
+
+        /// <summary>Signs every sample in the PACKAGE SOURCE (Samples~) so the
+        /// .atesig files can be committed and ship with the package. Run this
+        /// before a release whenever a sample changed — the release gate
+        /// fails otherwise.</summary>
+        static void SignShippedSamples()
+        {
+            if (AddonSigning.SignShippedSamples(out int n, out string err))
+                AteConsole.Log(string.Format(
+                    L10n.Tr("Signed {0} shipped sample(s) as {1}. Commit the .atesig files so they ship with the package."),
+                    n, AddonSigning.IdentityName));
+            else AteConsole.Warn("[ADKOM Text Editor] " + L10n.Tr("Signing samples failed: ") + err);
+        }
+
+        static void VerifyShippedSamples()
+        {
+            string fp = AddonSigning.HasIdentity
+                ? AddonSigning.Fingerprint(AddonSigning.IdentityPublicKey) : null;
+            var problems = AddonSigning.VerifyShippedSamples(fp);
+            if (problems.Count == 0)
+                AteConsole.Log(L10n.Tr("All shipped samples are signed and match their current content."));
+            else
+                foreach (var p in problems)
+                    AteConsole.Warn("[ADKOM Text Editor] " + L10n.Tr("Shipped sample signature problem: ") + p);
         }
 
         static string SafeFile(string s)

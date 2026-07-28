@@ -27,6 +27,11 @@ jobs:
       - name: Localization completeness check
         shell: pwsh
         run: ./Tools/check-l10n.ps1
+      # Verification needs only the PUBLIC key (Tools/adkom-signing-key.pub);
+      # the signing key never leaves the maintainer's machine.
+      - name: Shipped sample signatures (must match current content)
+        shell: pwsh
+        run: ./Tools/check-sample-signatures.ps1
       - name: Split package subtrees and push
         run: |
           git subtree split --prefix=Packages/com.adkom.text-editor -b upm

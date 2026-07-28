@@ -581,6 +581,86 @@ namespace ADKOM.TextEditor.Scripting
             }
         }
 
+        /// <summary>Every shipped sample in the package: top-level .cs files
+        /// and first-level subfolders of Samples~/Addons. Used by the batch
+        /// signer and by the release gate that verifies them.</summary>
+        internal static List<string> ShippedSampleKeys(out string error)
+        {
+            error = null;
+            var keys = new List<string>();
+            string src;
+            try { src = Path.GetFullPath("Packages/com.adkom.text-editor/Samples~/Addons"); }
+            catch (Exception ex) { error = ex.Message; return keys; }
+            if (!Directory.Exists(src)) { error = "sample addons folder not found: " + src; return keys; }
+            foreach (var f in Directory.GetFiles(src, "*.cs", SearchOption.TopDirectoryOnly)) keys.Add(f);
+            foreach (var d in Directory.GetDirectories(src))
+            {
+                if (Path.GetFileName(d).StartsWith(".", StringComparison.Ordinal)) continue;
+                if (Directory.GetFiles(d, "*.cs", SearchOption.AllDirectories).Length > 0) keys.Add(d);
+            }
+            keys.Sort(StringComparer.OrdinalIgnoreCase);
+            return keys;
+        }
+
+        /// <summary>The identity hash of an addon at <paramref name="key"/>
+        /// (file or folder) — the same computation the consent gate uses.</summary>
+        internal static string HashOfAddonAt(string key)
+        {
+            string[] files = Directory.Exists(key)
+                ? Directory.GetFiles(key, "*.cs", SearchOption.AllDirectories)
+                : new[] { key };
+            Array.Sort(files, StringComparer.OrdinalIgnoreCase);
+            return AddonSecurity.HashFiles(files, key);
+        }
+
+        /// <summary>Signs every shipped sample in the package source, in
+        /// place, so the .atesig files can be committed and shipped.</summary>
+        internal static bool SignShippedSamples(out int signed, out string error)
+        {
+            signed = 0;
+            var keys = ShippedSampleKeys(out error);
+            if (error != null) return false;
+            foreach (var key in keys)
+            {
+                var env = SignAuthor(HashOfAddonAt(key), out error);
+                if (env == null) return false;
+                WriteSidecar(key, KindAuthor, env);
+                signed++;
+            }
+            return true;
+        }
+
+        /// <summary>Release gate: is every shipped sample signed by
+        /// <paramref name="expectFingerprint"/> (when given) with a signature
+        /// matching its CURRENT content? Returns problems, empty when clean.</summary>
+        internal static List<string> VerifyShippedSamples(string expectFingerprint)
+        {
+            var problems = new List<string>();
+            var keys = ShippedSampleKeys(out string error);
+            if (error != null) { problems.Add(error); return problems; }
+            foreach (var key in keys)
+            {
+                string name = Path.GetFileName(key);
+                var info = Evaluate(key, HashOfAddonAt(key));
+                switch (info.Status)
+                {
+                    case SigStatus.Unsigned:
+                        problems.Add(name + ": UNSIGNED (run Tools > Addons > Signing > Sign Shipped Samples)");
+                        break;
+                    case SigStatus.Tampered:
+                        problems.Add(name + ": signature does not match current content — RE-SIGN before releasing");
+                        break;
+                    default:
+                        if (!string.IsNullOrEmpty(expectFingerprint) &&
+                            info.AuthorFingerprint != expectFingerprint)
+                            problems.Add(name + ": signed by " + info.AuthorFingerprint +
+                                ", expected " + expectFingerprint);
+                        break;
+                }
+            }
+            return problems;
+        }
+
         internal static void WriteSidecar(string addonKey, string kind, Envelope e)
         {
             string dir, name;

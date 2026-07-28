@@ -902,3 +902,21 @@ msgstr "署名 ID を復元"
 
 msgid "Restoring REPLACES the identity on this machine. The current key is lost unless you have backed it up."
 msgstr "復元するとこのマシンの ID が置き換えられます。バックアップしていない場合、現在のキーは失われます。"
+
+msgid "All shipped samples are signed and match their current content."
+msgstr "同梱サンプルはすべて署名済みで、現在の内容と一致しています。"
+
+msgid "Shipped sample signature problem: "
+msgstr "同梱サンプルの署名に問題があります: "
+
+msgid "Sign Shipped Samples"
+msgstr "同梱サンプルに署名"
+
+msgid "Signed {0} shipped sample(s) as {1}. Commit the .atesig files so they ship with the package."
+msgstr "{1} として {0} 個の同梱サンプルに署名しました。.atesig ファイルをコミットしてパッケージに含めてください。"
+
+msgid "Signing samples failed: "
+msgstr "サンプルへの署名に失敗しました: "
+
+msgid "Verify Shipped Samples"
+msgstr "同梱サンプルの署名を検証"
