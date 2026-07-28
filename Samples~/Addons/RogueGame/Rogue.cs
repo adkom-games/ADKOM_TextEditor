@@ -74,10 +74,11 @@ namespace AteRogue
             }
             else switch (e.Key)
             {
-                case KeyCode.LeftArrow: g.Key('h', false); e.Handled = true; break;
-                case KeyCode.DownArrow: g.Key('j', false); e.Handled = true; break;
-                case KeyCode.UpArrow: g.Key('k', false); e.Handled = true; break;
-                case KeyCode.RightArrow: g.Key('l', false); e.Handled = true; break;
+                // Shift+arrow runs, exactly like the shifted letters.
+                case KeyCode.LeftArrow: g.Key(e.Shift ? 'H' : 'h', false); e.Handled = true; break;
+                case KeyCode.DownArrow: g.Key(e.Shift ? 'J' : 'j', false); e.Handled = true; break;
+                case KeyCode.UpArrow: g.Key(e.Shift ? 'K' : 'k', false); e.Handled = true; break;
+                case KeyCode.RightArrow: g.Key(e.Shift ? 'L' : 'l', false); e.Handled = true; break;
                 case KeyCode.Escape: g.Key((char)27, false); e.Handled = true; break;
                 case KeyCode.Return:
                 case KeyCode.KeypadEnter: g.Key('\n', false); e.Handled = true; break;

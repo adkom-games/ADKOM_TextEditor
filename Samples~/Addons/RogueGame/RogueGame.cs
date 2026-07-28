@@ -225,9 +225,10 @@ namespace AteRogue
                 }
                 if (Running)
                 {
+                    // DoMove runs the turn clock itself — ticking again here
+                    // gave monsters two moves per running step.
                     DoMove(RunDelta(RunCh), running: true);
                     if (Mode != InputMode.Play || GameOver) break;
-                    OneTurn(consumed: true);
                     continue;
                 }
                 if (CountRepeat > 0 && _countCh != '\0')
