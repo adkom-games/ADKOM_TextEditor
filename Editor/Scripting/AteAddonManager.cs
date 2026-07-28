@@ -330,7 +330,14 @@ namespace ADKOM.TextEditor.Scripting
             var all = UnityEngine.Resources.FindObjectsOfTypeAll<TextEditorWindow>();
             var w = all.Length > 0 ? all[0] : null;
             if (w == null) return;
-            if (reportPath != null) TextEditorWindow.OpenExternal(reportPath, 1, 1);
+            if (reportPath != null)
+            {
+                // The report file may already be open from an earlier consent
+                // round — its tab would show the STALE report (the reload
+                // prompt gets stomped by the consent banner below).
+                w.ApiReloadFromDiskIfOpen(reportPath);
+                TextEditorWindow.OpenExternal(reportPath, 1, 1);
+            }
             int high = 0;
             if (e.Findings != null) foreach (var f in e.Findings) if (f.High) high++;
             // Findings also land in the "<script> Scanner Results" console
