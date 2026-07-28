@@ -227,6 +227,24 @@ an unapproved addon (marked ⚠ in the menu) opens a **security report
 document** listing every finding with line, severity, and why it's
 risky, plus a non-modal banner: *Approve and Run* or *Not Now*.
 
+**Signing & endorsements.** Addons can carry an author signature
+(RSA-2048, sidecar `author.atesig`) over that same content hash, plus
+any number of endorsement sidecars from other people: `endorse-content`
+(vouches for this exact version) and `endorse-publisher` (vouches for
+the author's *key*, so it survives new versions). The consent banner
+and report show `Signed: <name> (<fingerprint>)` with the endorsement
+counts, or a loud `UNSIGNED — author unknown`. A signature proves the
+content came from the holder of that key — never that the name is
+truthful or the code is safe. Names gain meaning two ways: the
+fingerprint (reputable signers publish theirs out-of-band) and
+**continuity** — approving pins the key, so the same name arriving
+later with a *different* key is flagged as possible impersonation and
+requires typing the addon name to approve. Sidecars are excluded from
+the identity hash, so anyone can drop an endorsement they found into
+the folder without re-triggering consent. Manage it all under
+**Tools → Addons → Signing** (create identity, sign, endorse, vouch);
+`Distrust This Key` in the consent banner blocks a key locally.
+
 Approval is one-time **per addon content**: consent is keyed to the
 file's SHA-256, so any change to the file means a fresh review. The
 store is machine-shared (`%APPDATA%/ADKOM/TextEditor/AddonConsent.json`)

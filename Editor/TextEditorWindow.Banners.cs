@@ -107,11 +107,50 @@ namespace ADKOM.TextEditor
         /// <summary>Addon security consent (AddonSecurity): the non-modal
         /// banner asking for the one-time approval. The risk report document
         /// is already open in a tab when this shows.</summary>
-        internal void ShowAddonConsent(string message, System.Action onApprove)
+        internal void ShowAddonConsent(string message, System.Action onApprove,
+            System.Action onDistrust = null)
         {
-            ShowBanner(message,
-                (L10n.Tr("Approve and Run"), () => { HideBanner(); onApprove?.Invoke(); }),
-                (L10n.Tr("Not Now"), HideBanner));
+            if (onDistrust == null)
+                ShowBanner(message,
+                    (L10n.Tr("Approve and Run"), () => { HideBanner(); onApprove?.Invoke(); }),
+                    (L10n.Tr("Not Now"), HideBanner));
+            else
+                ShowBanner(message,
+                    (L10n.Tr("Approve and Run"), () => { HideBanner(); onApprove?.Invoke(); }),
+                    (L10n.Tr("Not Now"), HideBanner),
+                    (L10n.Tr("Distrust This Key"), () => { HideBanner(); onDistrust(); }));
+        }
+
+        /// <summary>Consent for a TAMPERED / possible-impersonation addon:
+        /// approval requires typing the addon's name (deliberate friction —
+        /// AddonSigning, issue #27).</summary>
+        internal void ShowAddonConsentTyped(string message, string addonName,
+            System.Action onApprove, System.Action onDistrust)
+        {
+            System.Action ask = null;
+            ask = () => ShowBanner(message,
+                (L10n.Tr("Approve Anyway…"), () =>
+                {
+                    HideBanner();
+                    StartStatusPrompt(
+                        string.Format(L10n.Tr("Type the addon name '{0}' to approve:"), addonName),
+                        digitsOnly: false,
+                        onCommit: s =>
+                        {
+                            if (string.Equals(s?.Trim(), addonName, System.StringComparison.Ordinal))
+                                onApprove?.Invoke();
+                            else
+                            {
+                                PostStatus(L10n.Tr("Name did not match — not approved."));
+                                ask();
+                            }
+                        },
+                        initialValue: "",
+                        onCancel: ask);
+                }),
+                (L10n.Tr("Not Now"), HideBanner),
+                (L10n.Tr("Distrust This Key"), () => { HideBanner(); onDistrust?.Invoke(); }));
+            ask();
         }
 
         void BuildMiniBuffer(VisualElement statusBar)

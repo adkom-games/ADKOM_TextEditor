@@ -42,6 +42,8 @@ namespace ADKOM.TextEditor.Scripting
             public bool Approved;
             internal string Hash;
             internal List<AddonSecurity.Finding> Findings;
+            // Signing/endorsements (AddonSigning, issue #27).
+            internal AddonSigning.SigningInfo Signing;
         }
 
         static readonly List<Entry> _entries = new List<Entry>();
@@ -153,6 +155,7 @@ namespace ADKOM.TextEditor.Scripting
                     entry.Findings.AddRange(fs);
                 }
                 entry.Approved = AddonSecurity.IsApproved(key, entry.Hash);
+                entry.Signing = AddonSigning.Evaluate(key, entry.Hash);
 
                 if (!_compiler.TryCompileMany(files, out var asm, out var errors))
                 {
@@ -340,7 +343,8 @@ namespace ADKOM.TextEditor.Scripting
         /// the addon then runs.</summary>
         static void RequestConsent(Entry e)
         {
-            string report = AddonSecurity.BuildReport(e.Name, e.File, e.Findings, e.Hash);
+            string report = AddonSecurity.BuildReport(e.Name, e.File, e.Findings, e.Hash)
+                + AddonSecurity.BuildSignatureSection(e.Signing, SigningLine(e.Signing));
             string reportPath = null;
             try
             {
@@ -369,6 +373,7 @@ namespace ADKOM.TextEditor.Scripting
             }
             int high = 0;
             if (e.Findings != null) foreach (var f in e.Findings) if (f.High) high++;
+            string signLine = SigningLine(e.Signing);
             // Findings also land in the "<script> Scanner Results" console
             // tab: one clickable row per finding jumping to file:line.
             if (e.Findings != null && e.Findings.Count > 0)
@@ -389,12 +394,71 @@ namespace ADKOM.TextEditor.Scripting
                     e.Name, e.Findings.Count, high)
                 : string.Format(L10n.Tr("Addon '{0}': no dangerous APIs detected, but addons run with full editor privileges. Approve to run it (one-time for this exact file content)."),
                     e.Name);
-            w.ShowAddonConsent(msg, () =>
+            msg = signLine + "  " + msg;
+            var sig = e.Signing;
+            System.Action approve = () =>
             {
                 AddonSecurity.Approve(e.File, e.Hash);
                 e.Approved = true;
+                // TOFU: approving pins the author and every endorser seen.
+                if (sig != null && sig.Status == AddonSigning.SigStatus.Signed)
+                {
+                    AddonSigning.PinApproved(sig.AuthorName, sig.AuthorFingerprint);
+                    foreach (var en in sig.Endorsements)
+                        AddonSigning.PinApproved(en.Name, en.Fingerprint);
+                }
                 RunApproved(e);
-            });
+            };
+            bool impersonation = sig != null && sig.AuthorPin == AddonSigning.PinState.Impersonation;
+            bool distrusted = sig != null && (sig.AuthorPin == AddonSigning.PinState.Distrusted
+                || sig.Status == AddonSigning.SigStatus.Tampered);
+            System.Action distrust = sig != null && sig.AuthorFingerprint != null
+                ? () => { AddonSigning.Distrust(sig.AuthorFingerprint, sig.AuthorName); Reload(); }
+                : (System.Action)null;
+            if (impersonation || distrusted)
+                w.ShowAddonConsentTyped(msg, e.Name, approve, distrust);
+            else
+                w.ShowAddonConsent(msg, approve, distrust);
+        }
+
+        /// <summary>Accessors for the signing menu (the hash and author
+        /// fingerprint are internal detail elsewhere).</summary>
+        internal static string HashOf(Entry e) => e.Hash;
+        internal static string AuthorFingerprintOf(Entry e) =>
+            e.Signing != null && e.Signing.Status == AddonSigning.SigStatus.Signed
+                ? e.Signing.AuthorFingerprint : null;
+
+        /// <summary>The one-line signing verdict for banner + report.</summary>
+        static string SigningLine(AddonSigning.SigningInfo s)
+        {
+            if (s == null || s.Status == AddonSigning.SigStatus.Unsigned)
+                return L10n.Tr("UNSIGNED — author unknown.");
+            if (s.Status == AddonSigning.SigStatus.Tampered)
+                return L10n.Tr("⚠ SIGNATURE INVALID — content does not match the author's signature.");
+            string who = s.AuthorName + " (" + s.AuthorFingerprint + ")";
+            string pin;
+            switch (s.AuthorPin)
+            {
+                case AddonSigning.PinState.Known:
+                    var d = AddonSigning.PinDetails(s.AuthorFingerprint);
+                    pin = string.Format(L10n.Tr("✓ known since {0}, {1} approval(s)"), d.firstSeen, d.approvals);
+                    break;
+                case AddonSigning.PinState.Impersonation:
+                    pin = L10n.Tr("⚠ NAME KNOWN WITH A DIFFERENT KEY — possible impersonation!");
+                    break;
+                case AddonSigning.PinState.Distrusted:
+                    pin = L10n.Tr("⚠ KEY MARKED DISTRUSTED");
+                    break;
+                default:
+                    pin = L10n.Tr("first sight — verify the fingerprint out-of-band if it matters");
+                    break;
+            }
+            string line = string.Format(L10n.Tr("Signed: {0} — {1}."), who, pin);
+            if (s.ContentEndorsements > 0 || s.PublisherEndorsements > 0)
+                line += " " + string.Format(
+                    L10n.Tr("Endorsed: {0} for this version, {1} vouch for the author."),
+                    s.ContentEndorsements, s.PublisherEndorsements);
+            return line;
         }
 
         /// <summary>Copies the sample addons shipped with the package

@@ -779,3 +779,90 @@ msgstr "나중에"
 
 msgid "Scanner Results"
 msgstr "스캐너 결과"
+
+msgid "'{0}' has no valid author signature to vouch for."
+msgstr "'{0}'에는 보증할 유효한 작성자 서명이 없습니다."
+
+msgid "✓ known since {0}, {1} approval(s)"
+msgstr "✓ {0}부터 알려짐, 승인 {1}회"
+
+msgid "⚠ KEY MARKED DISTRUSTED"
+msgstr "⚠ 이 키는 신뢰하지 않음으로 표시됨"
+
+msgid "⚠ NAME KNOWN WITH A DIFFERENT KEY — possible impersonation!"
+msgstr "⚠ 알려진 이름이 다른 키로 서명됨 — 사칭 가능성!"
+
+msgid "⚠ SIGNATURE INVALID — content does not match the author's signature."
+msgstr "⚠ 서명 무효 — 내용이 작성자 서명과 일치하지 않습니다."
+
+msgid "Approve Anyway…"
+msgstr "그래도 승인…"
+
+msgid "Copy My Public Identity"
+msgstr "내 공개 ID 복사"
+
+msgid "Create Identity..."
+msgstr "ID 만들기..."
+
+msgid "Distrust This Key"
+msgstr "이 키를 신뢰하지 않음"
+
+msgid "Endorse This Version"
+msgstr "이 버전 추천"
+
+msgid "Endorsed '{0}' (this exact version). The endorsement is on the clipboard — post it anywhere; it stays valid for every copy with this content."
+msgstr "'{0}'(이 버전)을 추천했습니다. 추천이 클립보드에 있습니다 — 어디에나 게시할 수 있으며 동일한 내용의 모든 복사본에서 유효합니다."
+
+msgid "Endorsed: {0} for this version, {1} vouch for the author."
+msgstr "추천: 이 버전 {0}건, 작성자 보증 {1}건."
+
+msgid "first sight — verify the fingerprint out-of-band if it matters"
+msgstr "처음 봄 — 중요하다면 지문을 다른 경로로 확인하세요"
+
+msgid "Identity: {0} ({1})"
+msgstr "ID: {0} ({1})"
+
+msgid "Identity: none"
+msgstr "ID: 없음"
+
+msgid "Name did not match — not approved."
+msgstr "이름이 일치하지 않습니다 — 승인되지 않았습니다."
+
+msgid "Public identity copied to the clipboard."
+msgstr "공개 ID를 클립보드에 복사했습니다."
+
+msgid "Replace signing identity?"
+msgstr "서명 ID를 교체할까요?"
+
+msgid "Sign as Author"
+msgstr "작성자로 서명"
+
+msgid "Signed '{0}' as author. Re-sign after any change to its files."
+msgstr "'{0}'에 작성자로 서명했습니다. 파일을 변경한 뒤에는 다시 서명하세요."
+
+msgid "Signed: {0} — {1}."
+msgstr "서명: {0} — {1}."
+
+msgid "Signing"
+msgstr "서명"
+
+msgid "Signing identity created: {0} ({1}). Publish that fingerprint where people can check it."
+msgstr "서명 ID를 만들었습니다: {0} ({1}). 확인할 수 있는 곳에 지문을 공개하세요."
+
+msgid "Type the addon name '{0}' to approve:"
+msgstr "승인하려면 애드온 이름 '{0}'을(를) 입력하세요:"
+
+msgid "UNSIGNED — author unknown."
+msgstr "서명 없음 — 작성자 미상."
+
+msgid "Vouch for the Author's Key"
+msgstr "작성자 키 보증"
+
+msgid "Vouched for the author key {0}. This endorsement survives new versions and applies to any addon signed with that key."
+msgstr "작성자 키 {0}을(를) 보증했습니다. 이 추천은 새 버전에서도 유지되며 해당 키로 서명된 모든 애드온에 적용됩니다."
+
+msgid "You already have a signing identity. Creating a new one REPLACES it — anything signed with the old key keeps its old signature, and people who pinned your old key will see an impersonation warning."
+msgstr "이미 서명 ID가 있습니다. 새로 만들면 교체됩니다 — 기존 키로 서명한 것은 그대로지만, 기존 키를 기억한 사용자에게는 사칭 경고가 표시됩니다."
+
+msgid "Your signing name:"
+msgstr "서명할 이름:"

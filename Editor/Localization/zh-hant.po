@@ -779,3 +779,90 @@ msgstr "暫不"
 
 msgid "Scanner Results"
 msgstr "掃描結果"
+
+msgid "'{0}' has no valid author signature to vouch for."
+msgstr "「{0}」沒有可供背書的有效作者簽章。"
+
+msgid "✓ known since {0}, {1} approval(s)"
+msgstr "✓ 自 {0} 起已知，已核准 {1} 次"
+
+msgid "⚠ KEY MARKED DISTRUSTED"
+msgstr "⚠ 該金鑰已標記為不信任"
+
+msgid "⚠ NAME KNOWN WITH A DIFFERENT KEY — possible impersonation!"
+msgstr "⚠ 已知名稱使用了不同的金鑰 — 可能是冒充！"
+
+msgid "⚠ SIGNATURE INVALID — content does not match the author's signature."
+msgstr "⚠ 簽章無效 — 內容與作者簽章不符。"
+
+msgid "Approve Anyway…"
+msgstr "仍然核准…"
+
+msgid "Copy My Public Identity"
+msgstr "複製我的公開身分"
+
+msgid "Create Identity..."
+msgstr "建立身分..."
+
+msgid "Distrust This Key"
+msgstr "不信任此金鑰"
+
+msgid "Endorse This Version"
+msgstr "為此版本背書"
+
+msgid "Endorsed '{0}' (this exact version). The endorsement is on the clipboard — post it anywhere; it stays valid for every copy with this content."
+msgstr "已為「{0}」（此版本）背書。背書已複製到剪貼簿 — 可發布到任何地方，對內容相同的所有副本均有效。"
+
+msgid "Endorsed: {0} for this version, {1} vouch for the author."
+msgstr "背書：此版本 {0} 個，作者擔保 {1} 個。"
+
+msgid "first sight — verify the fingerprint out-of-band if it matters"
+msgstr "首次看到 — 如果重要，請透過其他管道核對指紋"
+
+msgid "Identity: {0} ({1})"
+msgstr "身分：{0}（{1}）"
+
+msgid "Identity: none"
+msgstr "身分：無"
+
+msgid "Name did not match — not approved."
+msgstr "名稱不符 — 未核准。"
+
+msgid "Public identity copied to the clipboard."
+msgstr "已將公開身分複製到剪貼簿。"
+
+msgid "Replace signing identity?"
+msgstr "取代簽章身分？"
+
+msgid "Sign as Author"
+msgstr "以作者身分簽章"
+
+msgid "Signed '{0}' as author. Re-sign after any change to its files."
+msgstr "已為「{0}」以作者身分簽章。檔案變更後請重新簽章。"
+
+msgid "Signed: {0} — {1}."
+msgstr "簽章：{0} — {1}。"
+
+msgid "Signing"
+msgstr "簽章"
+
+msgid "Signing identity created: {0} ({1}). Publish that fingerprint where people can check it."
+msgstr "已建立簽章身分：{0}（{1}）。請將該指紋發布在他人可核對的位置。"
+
+msgid "Type the addon name '{0}' to approve:"
+msgstr "輸入外掛名稱「{0}」以核准："
+
+msgid "UNSIGNED — author unknown."
+msgstr "未簽章 — 作者不明。"
+
+msgid "Vouch for the Author's Key"
+msgstr "為作者金鑰擔保"
+
+msgid "Vouched for the author key {0}. This endorsement survives new versions and applies to any addon signed with that key."
+msgstr "已為作者金鑰 {0} 擔保。該背書在新版本中仍然有效，並適用於以該金鑰簽章的所有外掛。"
+
+msgid "You already have a signing identity. Creating a new one REPLACES it — anything signed with the old key keeps its old signature, and people who pinned your old key will see an impersonation warning."
+msgstr "您已有簽章身分。新建將取代它 — 以舊金鑰簽章的內容保持不變，但記住舊金鑰的人會看到冒充警告。"
+
+msgid "Your signing name:"
+msgstr "您的簽章名稱："
