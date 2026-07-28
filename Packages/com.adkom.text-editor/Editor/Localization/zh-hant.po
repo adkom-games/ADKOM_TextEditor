@@ -749,3 +749,33 @@ msgstr "安裝範例附加元件"
 
 msgid "{0} sample addon(s) installed."
 msgstr "已安裝 {0} 個範例附加元件。"
+
+msgid "{0} Scanner Results"
+msgstr "{0} 掃描結果"
+
+msgid "{0}: {1} potentially dangerous API"
+msgstr "{0}：{1} 個潛在危險 API"
+
+msgid "{0}: {1} potentially dangerous APIs"
+msgstr "{0}：{1} 個潛在危險 API"
+
+msgid "Addon '{0}' is awaiting your one-time approval — run it from Tools > Addons to review."
+msgstr "外掛「{0}」正在等待您的一次性核准 — 請從 Tools > Addons 執行以進行審查。"
+
+msgid "Addon '{0}' uses {1} potentially dangerous API(s) ({2} high severity) — review the report, then approve to run it. Approval is one-time for this exact file content."
+msgstr "外掛「{0}」使用了 {1} 個潛在危險 API（{2} 個高危）— 請審查報告後核准執行。核准僅對目前檔案內容一次性有效。"
+
+msgid "Addon '{0}': no dangerous APIs detected, but addons run with full editor privileges. Approve to run it (one-time for this exact file content)."
+msgstr "外掛「{0}」：未偵測到危險 API，但外掛將以編輯器完整權限執行。核准後執行（僅對目前檔案內容一次性有效）。"
+
+msgid "Approve and Run"
+msgstr "核准並執行"
+
+msgid "more than one [AteAddon] class in the addon"
+msgstr "外掛中存在多個 [AteAddon] 類別"
+
+msgid "Not Now"
+msgstr "暫不"
+
+msgid "Scanner Results"
+msgstr "掃描結果"

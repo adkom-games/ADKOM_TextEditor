@@ -751,3 +751,33 @@ msgstr "Install Sample Addons"
 
 msgid "{0} sample addon(s) installed."
 msgstr "{0} sample addon(s) installed."
+
+msgid "{0} Scanner Results"
+msgstr "{0} Scanner Results"
+
+msgid "{0}: {1} potentially dangerous API"
+msgstr "{0}: {1} potentially dangerous API"
+
+msgid "{0}: {1} potentially dangerous APIs"
+msgstr "{0}: {1} potentially dangerous APIs"
+
+msgid "Addon '{0}' is awaiting your one-time approval — run it from Tools > Addons to review."
+msgstr "Addon '{0}' is awaiting your one-time approval — run it from Tools > Addons to review."
+
+msgid "Addon '{0}' uses {1} potentially dangerous API(s) ({2} high severity) — review the report, then approve to run it. Approval is one-time for this exact file content."
+msgstr "Addon '{0}' uses {1} potentially dangerous API(s) ({2} high severity) — review the report, then approve to run it. Approval is one-time for this exact file content."
+
+msgid "Addon '{0}': no dangerous APIs detected, but addons run with full editor privileges. Approve to run it (one-time for this exact file content)."
+msgstr "Addon '{0}': no dangerous APIs detected, but addons run with full editor privileges. Approve to run it (one-time for this exact file content)."
+
+msgid "Approve and Run"
+msgstr "Approve and Run"
+
+msgid "more than one [AteAddon] class in the addon"
+msgstr "more than one [AteAddon] class in the addon"
+
+msgid "Not Now"
+msgstr "Not Now"
+
+msgid "Scanner Results"
+msgstr "Scanner Results"
