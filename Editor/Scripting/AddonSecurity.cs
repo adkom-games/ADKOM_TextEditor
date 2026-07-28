@@ -119,7 +119,8 @@ namespace ADKOM.TextEditor.Scripting
                 Risk = "Deletes this project's player preference keys." },
         };
 
-        /// <summary>Scans source text; one finding per rule (first hit's line).</summary>
+        /// <summary>Scans source text; one finding per OCCURRENCE of each
+        /// rule pattern, so the report accounts for every use site.</summary>
         internal static List<Finding> Scan(string source)
         {
             var findings = new List<Finding>();
@@ -127,17 +128,21 @@ namespace ADKOM.TextEditor.Scripting
             foreach (var r in Rules)
             {
                 int idx = source.IndexOf(r.Pattern, StringComparison.Ordinal);
-                if (idx < 0) continue;
-                int line = 1;
-                for (int i = 0; i < idx; i++) if (source[i] == '\n') line++;
-                findings.Add(new Finding
+                while (idx >= 0)
                 {
-                    Api = r.Pattern, Line = line,
-                    Category = r.Category, Risk = r.Risk, High = r.High
-                });
+                    int line = 1;
+                    for (int i = 0; i < idx; i++) if (source[i] == '\n') line++;
+                    findings.Add(new Finding
+                    {
+                        Api = r.Pattern, Line = line,
+                        Category = r.Category, Risk = r.Risk, High = r.High
+                    });
+                    idx = source.IndexOf(r.Pattern, idx + 1, StringComparison.Ordinal);
+                }
             }
             findings.Sort((a, b) => a.High != b.High ? (a.High ? -1 : 1)
-                : string.CompareOrdinal(a.Category, b.Category));
+                : a.Category != b.Category ? string.CompareOrdinal(a.Category, b.Category)
+                : a.Line.CompareTo(b.Line));
             return findings;
         }
 
@@ -159,10 +164,11 @@ namespace ADKOM.TextEditor.Scripting
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
             "ADKOM", "TextEditor", "AddonConsent.json");
 
-        /// <summary>Bump when the rule list grows: prior approvals were made
-        /// from a report the new rules didn't inform, so they re-prompt.
-        /// (v2: prefs read/write/delete-key rules.)</summary>
-        const int ScanVersion = 2;
+        /// <summary>Bump when the scan's coverage grows: prior approvals were
+        /// made from a report the new scan didn't inform, so they re-prompt.
+        /// (v2: prefs read/write/delete-key rules. v3: every occurrence
+        /// reported, not just the first per rule.)</summary>
+        const int ScanVersion = 3;
 
         [Serializable] class ConsentEntry { public string file; public string hash; public int scan; }
         [Serializable] class ConsentList { public List<ConsentEntry> entries = new List<ConsentEntry>(); }
