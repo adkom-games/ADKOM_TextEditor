@@ -198,6 +198,13 @@ namespace ADKOM.TextEditor
                 _code?.SetFontOverride(d.FontName, d.FontSize);
         }
 
+        internal void ApiSetTitle(TextDocument d, string title)
+        {
+            d.VirtualName = string.IsNullOrEmpty(title) ? null : title;
+            RebuildTabs();
+            UpdateTitle();
+        }
+
         internal void ApiPrompt(string prompt, bool digitsOnly,
             System.Action<string> onCommit, System.Action onCancel, string initialValue)
         {
