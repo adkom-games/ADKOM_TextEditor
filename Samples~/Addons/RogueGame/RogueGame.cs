@@ -164,14 +164,13 @@ namespace AteRogue
             switch (Mode)
             {
                 case InputMode.More:
-                    if (c == ' ')
-                    {
-                        Mode = InputMode.Play;
-                        RedrawAll(); // clears inventory/help overlays too
-                        PumpMessages();
-                        if (Mode == InputMode.Play && _pendingTurns) ContinueTurns();
-                        Redraw();
-                    }
+                    // Original rogue insisted on space; ANY key acknowledges
+                    // here — an ignored keypress reads as a frozen game.
+                    Mode = InputMode.Play;
+                    RedrawAll(); // clears inventory/help overlays too
+                    PumpMessages();
+                    if (Mode == InputMode.Play && _pendingTurns) ContinueTurns();
+                    Redraw();
                     return;
                 case InputMode.Direction:
                     HandleDirectionKey(c);
