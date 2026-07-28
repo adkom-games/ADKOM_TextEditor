@@ -866,3 +866,39 @@ msgstr "您已有签名身份。新建将替换它 — 用旧密钥签名的内�
 
 msgid "Your signing name:"
 msgstr "您的签名名称："
+
+msgid "Back Up Identity..."
+msgstr "备份身份..."
+
+msgid "Back Up Signing Identity"
+msgstr "备份签名身份"
+
+msgid "Backup cancelled: a passphrase is required."
+msgstr "备份已取消：需要口令。"
+
+msgid "Backup failed: "
+msgstr "备份失败："
+
+msgid "Backup passphrase:"
+msgstr "备份口令："
+
+msgid "Identity backed up to {0}. Store it off this machine — with the passphrase, it restores your signing key anywhere. Without it, nobody can use the file."
+msgstr "身份已备份到 {0}。请存放在本机之外 — 有口令即可在任何机器上恢复签名密钥；没有口令，任何人都无法使用该文件。"
+
+msgid "Identity restored: {0} ({1}). Signatures you make here are now identical to those from your other machine."
+msgstr "已恢复身份：{0}（{1}）。在此处创建的签名与您其他机器上的完全相同。"
+
+msgid "Passphrase to protect the backup (visible while typing):"
+msgstr "用于保护备份的口令（输入时可见）："
+
+msgid "Restore failed: "
+msgstr "恢复失败："
+
+msgid "Restore Identity from Backup..."
+msgstr "从备份恢复身份..."
+
+msgid "Restore Signing Identity"
+msgstr "恢复签名身份"
+
+msgid "Restoring REPLACES the identity on this machine. The current key is lost unless you have backed it up."
+msgstr "恢复将替换本机上的身份。如果没有备份，当前密钥将丢失。"

@@ -866,3 +866,39 @@ msgstr "您已有簽章身分。新建將取代它 — 以舊金鑰簽章的內�
 
 msgid "Your signing name:"
 msgstr "您的簽章名稱："
+
+msgid "Back Up Identity..."
+msgstr "備份身分..."
+
+msgid "Back Up Signing Identity"
+msgstr "備份簽章身分"
+
+msgid "Backup cancelled: a passphrase is required."
+msgstr "備份已取消：需要通關密語。"
+
+msgid "Backup failed: "
+msgstr "備份失敗："
+
+msgid "Backup passphrase:"
+msgstr "備份通關密語："
+
+msgid "Identity backed up to {0}. Store it off this machine — with the passphrase, it restores your signing key anywhere. Without it, nobody can use the file."
+msgstr "身分已備份到 {0}。請存放在本機之外 — 有通關密語即可在任何機器上還原簽章金鑰；沒有的話，任何人都無法使用該檔案。"
+
+msgid "Identity restored: {0} ({1}). Signatures you make here are now identical to those from your other machine."
+msgstr "已還原身分：{0}（{1}）。在此建立的簽章與您其他機器上的完全相同。"
+
+msgid "Passphrase to protect the backup (visible while typing):"
+msgstr "用於保護備份的通關密語（輸入時可見）："
+
+msgid "Restore failed: "
+msgstr "還原失敗："
+
+msgid "Restore Identity from Backup..."
+msgstr "從備份還原身分..."
+
+msgid "Restore Signing Identity"
+msgstr "還原簽章身分"
+
+msgid "Restoring REPLACES the identity on this machine. The current key is lost unless you have backed it up."
+msgstr "還原將取代本機上的身分。如果沒有備份，目前的金鑰將遺失。"

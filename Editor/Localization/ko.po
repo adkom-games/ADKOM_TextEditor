@@ -866,3 +866,39 @@ msgstr "이미 서명 ID가 있습니다. 새로 만들면 교체됩니다 — �
 
 msgid "Your signing name:"
 msgstr "서명할 이름:"
+
+msgid "Back Up Identity..."
+msgstr "ID 백업..."
+
+msgid "Back Up Signing Identity"
+msgstr "서명 ID 백업"
+
+msgid "Backup cancelled: a passphrase is required."
+msgstr "백업 취소됨: 암호구가 필요합니다."
+
+msgid "Backup failed: "
+msgstr "백업 실패: "
+
+msgid "Backup passphrase:"
+msgstr "백업 암호구:"
+
+msgid "Identity backed up to {0}. Store it off this machine — with the passphrase, it restores your signing key anywhere. Without it, nobody can use the file."
+msgstr "ID를 {0}에 백업했습니다. 이 컴퓨터 외부에 보관하세요 — 암호구가 있으면 어디서든 서명 키를 복원할 수 있고, 없으면 아무도 사용할 수 없습니다."
+
+msgid "Identity restored: {0} ({1}). Signatures you make here are now identical to those from your other machine."
+msgstr "ID 복원됨: {0} ({1}). 여기서 만드는 서명은 다른 컴퓨터의 서명과 동일합니다."
+
+msgid "Passphrase to protect the backup (visible while typing):"
+msgstr "백업을 보호할 암호구(입력 중 표시됨):"
+
+msgid "Restore failed: "
+msgstr "복원 실패: "
+
+msgid "Restore Identity from Backup..."
+msgstr "백업에서 ID 복원..."
+
+msgid "Restore Signing Identity"
+msgstr "서명 ID 복원"
+
+msgid "Restoring REPLACES the identity on this machine. The current key is lost unless you have backed it up."
+msgstr "복원하면 이 컴퓨터의 ID가 교체됩니다. 백업하지 않았다면 현재 키는 사라집니다."

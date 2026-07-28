@@ -22,9 +22,11 @@ namespace ADKOM.TextEditor.Scripting
                 : L10n.Tr("Identity: none");
             m.AddDisabledItem(new GUIContent(sub + who.Replace('/', '∕')));
             m.AddItem(new GUIContent(sub + L10n.Tr("Create Identity...")), false, CreateIdentity);
+            m.AddItem(new GUIContent(sub + L10n.Tr("Restore Identity from Backup...")), false, ImportIdentity);
             if (AddonSigning.HasIdentity)
             {
                 m.AddItem(new GUIContent(sub + L10n.Tr("Copy My Public Identity")), false, CopyIdentity);
+                m.AddItem(new GUIContent(sub + L10n.Tr("Back Up Identity...")), false, ExportIdentity);
                 m.AddSeparator(sub);
                 foreach (var e in AteAddonManager.Entries)
                 {
@@ -70,6 +72,55 @@ namespace ADKOM.TextEditor.Scripting
                 AddonSigning.IdentityPublicKey;
             EditorGUIUtility.systemCopyBuffer = text;
             AteConsole.Log(L10n.Tr("Public identity copied to the clipboard."));
+        }
+
+        /// <summary>Backup: the private key re-wrapped under a passphrase so
+        /// it restores on ANY machine (identity.json itself is bound to this
+        /// Windows user). Keep the file AND the passphrase safe.</summary>
+        static void ExportIdentity()
+        {
+            var w = ActiveWindow();
+            if (w == null) return;
+            string suggested = SafeFile(AddonSigning.IdentityName) + AddonSigning.ExportExt;
+            string path = EditorUtility.SaveFilePanel(L10n.Tr("Back Up Signing Identity"),
+                "", suggested, AddonSigning.ExportExt.TrimStart('.'));
+            if (string.IsNullOrEmpty(path)) return;
+            w.ApiPrompt(L10n.Tr("Passphrase to protect the backup (visible while typing):"), false, pass =>
+            {
+                if (string.IsNullOrEmpty(pass))
+                { AteConsole.Warn(L10n.Tr("Backup cancelled: a passphrase is required.")); return; }
+                if (AddonSigning.ExportIdentity(path, pass, out string err))
+                    AteConsole.Log(string.Format(L10n.Tr("Identity backed up to {0}. Store it off this machine — with the passphrase, it restores your signing key anywhere. Without it, nobody can use the file."), path));
+                else AteConsole.Warn("[ADKOM Text Editor] " + L10n.Tr("Backup failed: ") + err);
+            }, null, "");
+        }
+
+        static void ImportIdentity()
+        {
+            var w = ActiveWindow();
+            if (w == null) return;
+            string path = EditorUtility.OpenFilePanel(L10n.Tr("Restore Signing Identity"),
+                "", AddonSigning.ExportExt.TrimStart('.'));
+            if (string.IsNullOrEmpty(path)) return;
+            if (AddonSigning.HasIdentity &&
+                !EditorUtility.DisplayDialog(L10n.Tr("Replace signing identity?"),
+                    L10n.Tr("Restoring REPLACES the identity on this machine. The current key is lost unless you have backed it up."),
+                    L10n.Tr("Replace"), L10n.Tr("Cancel")))
+                return;
+            w.ApiPrompt(L10n.Tr("Backup passphrase:"), false, pass =>
+            {
+                if (AddonSigning.ImportIdentity(path, pass, out string name, out string fp, out string err))
+                    AteConsole.Log(string.Format(L10n.Tr("Identity restored: {0} ({1}). Signatures you make here are now identical to those from your other machine."), name, fp));
+                else AteConsole.Warn("[ADKOM Text Editor] " + L10n.Tr("Restore failed: ") + err);
+            }, null, "");
+        }
+
+        static string SafeFile(string s)
+        {
+            var sb = new System.Text.StringBuilder();
+            foreach (char c in s ?? "identity")
+                sb.Append(char.IsLetterOrDigit(c) ? c : '-');
+            return sb.Length > 0 ? sb.ToString() : "identity";
         }
 
         static void SignAuthor(AteAddonManager.Entry e)
