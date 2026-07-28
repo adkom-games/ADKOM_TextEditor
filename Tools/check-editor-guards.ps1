@@ -17,7 +17,7 @@ foreach ($f in Get-ChildItem $pkg -Recurse -Filter *.cs -File) {
     # can never compile into a build — and sample ADDONS must NOT be guarded:
     # ATE's Roslyn addon compiler defines no UNITY_EDITOR symbol, so a guard
     # would compile them to nothing.
-    if ($f.FullName -match '\\Samples~\\') { continue }
+    if ($f.FullName -match '[\\/]Samples~[\\/]') { continue } # CI runs on Linux: match both separators
     $lines = Get-Content $f.FullName | Where-Object { $_.Trim().Length -gt 0 }
     if ($lines.Count -eq 0) { $failures += "EMPTY: $($f.FullName)"; continue }
     $first = @($lines)[0].Trim()
