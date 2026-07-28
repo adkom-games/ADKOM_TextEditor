@@ -1362,6 +1362,21 @@ namespace ADKOM.TextEditor
             _caret.style.height = _lineHeight;
             _caret.style.top = (RowOfLine(_caretLine) + sub) * _lineHeight;
             _caret.style.left = MeasureRange(_caretLine, rs, _caretCol);
+            // Game mode: a terminal-style solid block cursor, one character
+            // cell wide. The caret paints BENEATH the row labels, so a
+            // semi-transparent block keeps the glyph on top readable.
+            if (_gameMode)
+            {
+                char under = _caretCol < _lines[_caretLine].Length
+                    ? _lines[_caretLine][_caretCol] : ' ';
+                _caret.style.width = Mathf.Max(CaretWidth, CharWidth(under));
+                _caret.style.backgroundColor = new Color(_textColor.r, _textColor.g, _textColor.b, 0.45f);
+            }
+            else
+            {
+                _caret.style.width = CaretWidth;
+                _caret.style.backgroundColor = _textColor;
+            }
             _caret.style.display = _blinkOn ? DisplayStyle.Flex : DisplayStyle.None;
         }
 
