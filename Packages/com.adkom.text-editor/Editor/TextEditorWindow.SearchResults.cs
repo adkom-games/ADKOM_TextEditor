@@ -71,6 +71,71 @@ namespace ADKOM.TextEditor
             PushNavLocation();
             OpenExternal(it.Path, it.Line + 1, it.Col + 1); // opens the tab if needed
         }
+
+        // ---- Scanner Results: same shape, fed by the addon security scan.
+        // The tab is hidden until a scan with findings shows it, and its
+        // label names the scanned script ("Snake Scanner Results").
+
+        ScrollView _scannerScroll;
+        Label _scannerHeader;
+        readonly List<Label> _scannerLabels = new List<Label>();
+        List<PickLocation> _scannerItems = new List<PickLocation>();
+
+        /// <summary>Fills the "&lt;script&gt; Scanner Results" console tab and
+        /// brings it to the front. Rows jump to file:line, opening the addon
+        /// file in a tab when it is not open yet.</summary>
+        internal void ShowScannerResults(string scriptName, List<PickLocation> items)
+        {
+            if (_scannerScroll == null) return;
+            _scannerItems = items ?? new List<PickLocation>();
+            _scannerTabLabel.text = string.Format(L10n.Tr("{0} Scanner Results"), scriptName);
+            _scannerHeader.text = string.Format(
+                _scannerItems.Count == 1
+                    ? L10n.Tr("{0}: {1} potentially dangerous API")
+                    : L10n.Tr("{0}: {1} potentially dangerous APIs"),
+                scriptName, _scannerItems.Count);
+            for (int i = 0; i < _scannerItems.Count; i++)
+            {
+                if (i >= _scannerLabels.Count)
+                {
+                    var l = new Label();
+                    l.AddToClassList("code-line");
+                    l.style.paddingTop = 1;
+                    l.style.paddingBottom = 1;
+                    l.style.whiteSpace = WhiteSpace.NoWrap;
+                    int idx = i;
+                    l.RegisterCallback<PointerDownEvent>(e =>
+                    {
+                        if (e.button != 0) return;
+                        JumpToScannerResult(idx);
+                        e.StopPropagation();
+                    });
+                    l.RegisterCallback<MouseEnterEvent>(_ =>
+                        l.style.backgroundColor = new Color(0.25f, 0.42f, 0.6f, 0.4f));
+                    l.RegisterCallback<MouseLeaveEvent>(_ =>
+                        l.style.backgroundColor = Color.clear);
+                    _scannerScroll.Add(l);
+                    _scannerLabels.Add(l);
+                }
+                var it = _scannerItems[i];
+                _scannerLabels[i].text = "  " + Path.GetFileName(it.Path) + ":" + (it.Line + 1) + "   " + it.Preview;
+                _scannerLabels[i].tooltip = it.Path + ":" + (it.Line + 1);
+                _scannerLabels[i].style.display = DisplayStyle.Flex;
+            }
+            for (int i = _scannerItems.Count; i < _scannerLabels.Count; i++)
+                _scannerLabels[i].style.display = DisplayStyle.None;
+            _scannerTab.style.display = DisplayStyle.Flex;
+            SetConsoleVisible(true);
+            SelectConsoleTab(2);
+        }
+
+        void JumpToScannerResult(int idx)
+        {
+            if (idx < 0 || idx >= _scannerItems.Count) return;
+            var it = _scannerItems[idx];
+            PushNavLocation();
+            OpenExternal(it.Path, it.Line + 1, it.Col + 1); // opens the tab if needed
+        }
     }
 }
 #endif
