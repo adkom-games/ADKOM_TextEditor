@@ -22,7 +22,8 @@ namespace ADKOM.TextEditor.Scripting
         internal sealed class Finding
         {
             public string Api;       // the matched pattern, as written
-            public int Line;         // 1-based line of first occurrence
+            public int Line;         // 1-based line of the occurrence
+            public string File;      // source file (folder addons span several)
             public string Category;
             public string Risk;      // one-sentence explanation for the report
             public bool High;        // high vs. moderate severity
@@ -146,6 +147,31 @@ namespace ADKOM.TextEditor.Scripting
             return findings;
         }
 
+        /// <summary>Identity hash for a file SET (folder addon): SHA-256 over
+        /// the sorted sequence of (relative path + NUL + content), so any
+        /// file change, addition, or removal re-prompts consent. A single
+        /// file hashes as its own set of one.</summary>
+        internal static string HashFiles(string[] files, string root)
+        {
+            var sorted = (string[])files.Clone();
+            Array.Sort(sorted, StringComparer.OrdinalIgnoreCase);
+            var sb = new StringBuilder();
+            foreach (var f in sorted)
+            {
+                string rel = f;
+                try
+                {
+                    string full = Path.GetFullPath(f), rootFull = Path.GetFullPath(root);
+                    rel = full.StartsWith(rootFull, StringComparison.OrdinalIgnoreCase)
+                        ? full.Substring(rootFull.Length).TrimStart('\\', '/')
+                        : Path.GetFileName(f);
+                }
+                catch { }
+                sb.Append(rel.Replace('\\', '/')).Append('\0').Append(File.ReadAllText(f)).Append('\0');
+            }
+            return Hash(sb.ToString());
+        }
+
         /// <summary>SHA-256 of the source — the identity consent is bound to.</summary>
         internal static string Hash(string source)
         {
@@ -260,12 +286,13 @@ namespace ADKOM.TextEditor.Scripting
                 sb.Append("## ").Append(findings.Count).Append(" potentially dangerous API")
                   .Append(findings.Count == 1 ? "" : "s").Append(" found");
                 if (high > 0) sb.Append(" (").Append(high).Append(" high severity)");
-                sb.Append("\n\n| Severity | Category | API | Line | Risk |\n|---|---|---|---|---|\n");
+                sb.Append("\n\n| Severity | Category | API | File | Line | Risk |\n|---|---|---|---|---|---|\n");
                 foreach (var f in findings)
                     sb.Append("| ").Append(f.High ? "**HIGH**" : "moderate")
                       .Append(" | ").Append(f.Category)
                       .Append(" | `").Append(f.Api)
-                      .Append("` | ").Append(f.Line)
+                      .Append("` | ").Append(Path.GetFileName(f.File ?? file))
+                      .Append(" | ").Append(f.Line)
                       .Append(" | ").Append(f.Risk).Append(" |\n");
                 sb.Append("\nMatches are textual: a hit inside a comment or string still ");
                 sb.Append("flags. Open the addon file at the listed lines and judge the ");

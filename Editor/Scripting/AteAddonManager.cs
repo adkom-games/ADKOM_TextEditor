@@ -15,6 +15,8 @@ namespace ADKOM.TextEditor.Scripting
     public interface IAddonCompiler
     {
         bool TryCompile(string path, out Assembly assembly, out string[] errors);
+        /// <summary>Folder addon: every file compiles into ONE assembly.</summary>
+        bool TryCompileMany(string[] paths, out Assembly assembly, out string[] errors);
     }
 
     /// <summary>
@@ -96,46 +98,67 @@ namespace ADKOM.TextEditor.Scripting
             _entries.Clear();
             EnsureFolder();
             if (!CompilerAvailable) return; // menu explains the requirement
-            string[] files;
-            try { files = Directory.GetFiles(AddonsFolder, "*.cs", SearchOption.AllDirectories); }
+            // Top-level .cs files are single-file addons; each first-level
+            // subfolder (not starting with '.') is ONE folder addon whose
+            // .cs files (recursive) compile together (Multi-File Addons spec).
+            try
+            {
+                foreach (var file in Directory.GetFiles(AddonsFolder, "*.cs", SearchOption.TopDirectoryOnly))
+                    LoadOne(new[] { file }, file);
+                foreach (var dir in Directory.GetDirectories(AddonsFolder))
+                {
+                    if (Path.GetFileName(dir).StartsWith(".", StringComparison.Ordinal)) continue;
+                    var files = Directory.GetFiles(dir, "*.cs", SearchOption.AllDirectories);
+                    if (files.Length == 0) continue;
+                    Array.Sort(files, StringComparer.OrdinalIgnoreCase);
+                    LoadOne(files, dir);
+                }
+            }
             catch (Exception ex)
             {
                 AteConsole.Warn("[ADKOM Text Editor] Addons folder unreadable: " + ex.Message);
                 return;
             }
-            foreach (var file in files)
-                LoadOne(file);
             DisambiguateNames();
             RunResidents();
             if (_entries.Count > 0)
                 AteConsole.Log(string.Format(L10n.Tr("{0} addon(s) loaded."), _entries.Count));
         }
 
-        static void LoadOne(string file)
+        /// <summary>Loads one addon: a single top-level file, or a folder
+        /// whose files compile together. <paramref name="key"/> is the file
+        /// path (single) or folder path — the identity consent binds to.</summary>
+        static void LoadOne(string[] files, string key)
         {
             var entry = new Entry
             {
-                File = file,
-                Name = Path.GetFileNameWithoutExtension(file),
+                File = key,
+                Name = Path.GetFileNameWithoutExtension(key),
                 Category = "General",
                 ApiVersion = "?"
             };
             _entries.Add(entry);
             try
             {
-                // Security scan BEFORE anything else: hash the exact content,
-                // record findings, and look up prior consent. Compiling below
-                // is safe (nothing executes); execution is gated on Approved.
-                string source = File.ReadAllText(file);
-                entry.Hash = AddonSecurity.Hash(source);
-                entry.Findings = AddonSecurity.Scan(source);
-                entry.Approved = AddonSecurity.IsApproved(file, entry.Hash);
+                // Security scan BEFORE anything else: hash the exact content
+                // set, record per-file findings, and look up prior consent.
+                // Compiling below is safe (nothing executes); execution is
+                // gated on Approved.
+                entry.Hash = AddonSecurity.HashFiles(files, key);
+                entry.Findings = new List<AddonSecurity.Finding>();
+                foreach (var f in files)
+                {
+                    var fs = AddonSecurity.Scan(File.ReadAllText(f));
+                    foreach (var fd in fs) fd.File = f;
+                    entry.Findings.AddRange(fs);
+                }
+                entry.Approved = AddonSecurity.IsApproved(key, entry.Hash);
 
-                if (!_compiler.TryCompile(file, out var asm, out var errors))
+                if (!_compiler.TryCompileMany(files, out var asm, out var errors))
                 {
                     entry.Error = string.Join("\n", errors);
                     AteConsole.Warn("[ADKOM Text Editor] Addon failed to compile: " +
-                        Path.GetFileName(file) + "\n" + entry.Error);
+                        Path.GetFileName(key) + "\n" + entry.Error);
                     return;
                 }
                 foreach (var t in asm.GetTypes())
@@ -143,20 +166,26 @@ namespace ADKOM.TextEditor.Scripting
                     var attr = t.GetCustomAttribute<AteAddonAttribute>();
                     if (attr == null || !typeof(IAteAddon).IsAssignableFrom(t) || t.IsAbstract)
                         continue;
+                    if (entry.Type != null)
+                    {
+                        entry.Error = L10n.Tr("more than one [AteAddon] class in the addon");
+                        entry.Type = null;
+                        return;
+                    }
                     entry.Type = t;
                     entry.Name = string.IsNullOrEmpty(attr.Name) ? t.Name : attr.Name;
                     entry.Category = string.IsNullOrEmpty(attr.Category) ? "General" : attr.Category;
                     entry.ApiVersion = attr.ApiVersion ?? "1.0";
-                    if (!IsCompatible(entry.ApiVersion, out string why)) entry.Error = why;
-                    return; // one addon class per file
+                    if (!IsCompatible(entry.ApiVersion, out string why)) { entry.Error = why; return; }
                 }
-                entry.Error = L10n.Tr("no [AteAddon] class implementing IAteAddon found");
+                if (entry.Type == null)
+                    entry.Error = L10n.Tr("no [AteAddon] class implementing IAteAddon found");
             }
             catch (Exception ex)
             {
                 entry.Error = ex.Message;
                 AteConsole.Warn("[ADKOM Text Editor] Addon failed to load: " +
-                    Path.GetFileName(file) + " — " + ex.Message);
+                    Path.GetFileName(key) + " — " + ex.Message);
             }
         }
 
@@ -348,7 +377,7 @@ namespace ADKOM.TextEditor.Scripting
                 foreach (var f in e.Findings)
                     items.Add(new TextEditorWindow.PickLocation
                     {
-                        Path = e.File,
+                        Path = f.File ?? e.File,
                         Line = f.Line - 1,
                         Col = 0,
                         Preview = (f.High ? "HIGH      " : "moderate  ") + f.Api + " — " + f.Risk
@@ -398,6 +427,27 @@ namespace ADKOM.TextEditor.Scripting
                 {
                     AteConsole.Warn("[ADKOM Text Editor] Could not copy sample " +
                         Path.GetFileName(f) + ": " + ex.Message);
+                }
+            }
+            // Folder addons ship as sample subfolders (Multi-File Addons spec).
+            foreach (var dir in Directory.GetDirectories(src))
+            {
+                try
+                {
+                    string dst = Path.Combine(AddonsFolder, Path.GetFileName(dir));
+                    foreach (var f in Directory.GetFiles(dir, "*.cs", SearchOption.AllDirectories))
+                    {
+                        string rel = Path.GetFullPath(f).Substring(Path.GetFullPath(dir).Length).TrimStart('\\', '/');
+                        string target = Path.Combine(dst, rel);
+                        Directory.CreateDirectory(Path.GetDirectoryName(target));
+                        File.Copy(f, target, overwrite: true);
+                    }
+                    copied++;
+                }
+                catch (Exception ex)
+                {
+                    AteConsole.Warn("[ADKOM Text Editor] Could not copy sample folder " +
+                        Path.GetFileName(dir) + ": " + ex.Message);
                 }
             }
             AteConsole.Log(string.Format(L10n.Tr("{0} sample addon(s) installed."), copied));
