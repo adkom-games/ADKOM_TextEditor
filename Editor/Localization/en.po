@@ -904,3 +904,21 @@ msgstr "Restore Signing Identity"
 
 msgid "Restoring REPLACES the identity on this machine. The current key is lost unless you have backed it up."
 msgstr "Restoring REPLACES the identity on this machine. The current key is lost unless you have backed it up."
+
+msgid "All shipped samples are signed and match their current content."
+msgstr "All shipped samples are signed and match their current content."
+
+msgid "Shipped sample signature problem: "
+msgstr "Shipped sample signature problem: "
+
+msgid "Sign Shipped Samples"
+msgstr "Sign Shipped Samples"
+
+msgid "Signed {0} shipped sample(s) as {1}. Commit the .atesig files so they ship with the package."
+msgstr "Signed {0} shipped sample(s) as {1}. Commit the .atesig files so they ship with the package."
+
+msgid "Signing samples failed: "
+msgstr "Signing samples failed: "
+
+msgid "Verify Shipped Samples"
+msgstr "Verify Shipped Samples"

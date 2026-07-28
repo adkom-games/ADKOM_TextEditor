@@ -180,6 +180,15 @@ is verified live in the editor.
      `includePlatforms: ["Editor"]`.
    - `powershell -File Tools/check-l10n.ps1` — all five PO catalogs
      agree, and every L10n.Tr / WithSc source string is catalogued.
+   - `powershell -File Tools/check-sample-signatures.ps1` — every
+     shipped sample carries an author.atesig matching its CURRENT
+     content, signed by the ADKOM key in Tools/adkom-signing-key.pub.
+     If it fails: ATE → Tools → Addons → Signing → **Sign Shipped
+     Samples** (one click, signs all samples in Samples~ with the local
+     private key), then commit the regenerated .atesig files. NEVER put
+     the private key in CI — verification only needs the public one.
+     A stale signature is worse than none: users would see "SIGNATURE
+     INVALID", i.e. ATE's own samples looking tampered with.
 1. **Docs consistency sweep** (do this FIRST, before any version bumps):
    - Package README: every shipped feature represented; keymap table
      current. (READMEs carry NO roadmap sections — removed 2026-07-28,

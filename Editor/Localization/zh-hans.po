@@ -902,3 +902,21 @@ msgstr "恢复签名身份"
 
 msgid "Restoring REPLACES the identity on this machine. The current key is lost unless you have backed it up."
 msgstr "恢复将替换本机上的身份。如果没有备份，当前密钥将丢失。"
+
+msgid "All shipped samples are signed and match their current content."
+msgstr "所有随附示例均已签名且与当前内容一致。"
+
+msgid "Shipped sample signature problem: "
+msgstr "随附示例签名问题："
+
+msgid "Sign Shipped Samples"
+msgstr "为随附示例签名"
+
+msgid "Signed {0} shipped sample(s) as {1}. Commit the .atesig files so they ship with the package."
+msgstr "已以 {1} 的身份为 {0} 个随附示例签名。请提交 .atesig 文件，使其随包发布。"
+
+msgid "Signing samples failed: "
+msgstr "为示例签名失败："
+
+msgid "Verify Shipped Samples"
+msgstr "验证随附示例签名"

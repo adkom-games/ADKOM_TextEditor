@@ -480,11 +480,16 @@ namespace ADKOM.TextEditor.Scripting
                 return;
             }
             int copied = 0;
+            // Signature sidecars ship WITH the samples (AddonSigning): copying
+            // only .cs would land every shipped sample as "UNSIGNED".
             foreach (var f in Directory.GetFiles(src, "*.cs"))
             {
                 try
                 {
                     File.Copy(f, Path.Combine(AddonsFolder, Path.GetFileName(f)), overwrite: true);
+                    foreach (var sc in Directory.GetFiles(src,
+                        Path.GetFileName(f) + ".*" + AddonSigning.SidecarExt, SearchOption.TopDirectoryOnly))
+                        File.Copy(sc, Path.Combine(AddonsFolder, Path.GetFileName(sc)), overwrite: true);
                     copied++;
                 }
                 catch (Exception ex)
@@ -499,13 +504,14 @@ namespace ADKOM.TextEditor.Scripting
                 try
                 {
                     string dst = Path.Combine(AddonsFolder, Path.GetFileName(dir));
-                    foreach (var f in Directory.GetFiles(dir, "*.cs", SearchOption.AllDirectories))
-                    {
-                        string rel = Path.GetFullPath(f).Substring(Path.GetFullPath(dir).Length).TrimStart('\\', '/');
-                        string target = Path.Combine(dst, rel);
-                        Directory.CreateDirectory(Path.GetDirectoryName(target));
-                        File.Copy(f, target, overwrite: true);
-                    }
+                    foreach (var pattern in new[] { "*.cs", "*" + AddonSigning.SidecarExt })
+                        foreach (var f in Directory.GetFiles(dir, pattern, SearchOption.AllDirectories))
+                        {
+                            string rel = Path.GetFullPath(f).Substring(Path.GetFullPath(dir).Length).TrimStart('\\', '/');
+                            string target = Path.Combine(dst, rel);
+                            Directory.CreateDirectory(Path.GetDirectoryName(target));
+                            File.Copy(f, target, overwrite: true);
+                        }
                     copied++;
                 }
                 catch (Exception ex)

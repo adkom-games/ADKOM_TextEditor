@@ -902,3 +902,21 @@ msgstr "서명 ID 복원"
 
 msgid "Restoring REPLACES the identity on this machine. The current key is lost unless you have backed it up."
 msgstr "복원하면 이 컴퓨터의 ID가 교체됩니다. 백업하지 않았다면 현재 키는 사라집니다."
+
+msgid "All shipped samples are signed and match their current content."
+msgstr "모든 동봉 샘플이 서명되어 있으며 현재 내용과 일치합니다."
+
+msgid "Shipped sample signature problem: "
+msgstr "동봉 샘플 서명 문제: "
+
+msgid "Sign Shipped Samples"
+msgstr "동봉 샘플 서명"
+
+msgid "Signed {0} shipped sample(s) as {1}. Commit the .atesig files so they ship with the package."
+msgstr "{1}(으)로 동봉 샘플 {0}개에 서명했습니다. .atesig 파일을 커밋하여 패키지에 포함하세요."
+
+msgid "Signing samples failed: "
+msgstr "샘플 서명 실패: "
+
+msgid "Verify Shipped Samples"
+msgstr "동봉 샘플 서명 검증"
