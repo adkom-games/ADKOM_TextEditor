@@ -13,6 +13,7 @@ namespace AteZMachine
     public sealed class ZMapView : VisualElement
     {
         const int CellW = 150, CellH = 92, BoxW = 128, BoxH = 74;
+        const int Pad = 40; // canvas margin so edge boxes/splines aren't clipped
 
         ZMap _map;
         int _level;
@@ -51,7 +52,14 @@ namespace AteZMachine
             left.Add(bar);
 
             _scroll = new ScrollView(ScrollViewMode.VerticalAndHorizontal) { style = { flexGrow = 1 } };
-            _canvas = new VisualElement { style = { position = Position.Relative } };
+            // Show scrollbars whenever the map is bigger than the viewport so the
+            // user can scroll around it.
+            _scroll.horizontalScrollerVisibility = ScrollerVisibility.Auto;
+            _scroll.verticalScrollerVisibility = ScrollerVisibility.Auto;
+            // The canvas keeps its explicit size (set per Rebuild); without this
+            // the scroll content container shrinks it to the viewport and the
+            // content never overflows, so no scrollbars appear.
+            _canvas = new VisualElement { style = { position = Position.Relative, flexShrink = 0 } };
             _canvas.generateVisualContent += OnDrawLines;
             _scroll.Add(_canvas);
             left.Add(_scroll);
@@ -106,15 +114,15 @@ namespace AteZMachine
                 { minX = Mathf.Min(minX, r.X); minY = Mathf.Min(minY, r.Y); maxX = Mathf.Max(maxX, r.X); maxY = Mathf.Max(maxY, r.Y); }
             if (minX == int.MaxValue) { _canvas.style.width = 200; _canvas.style.height = 60; _canvas.MarkDirtyRepaint(); return; }
 
-            _canvas.style.width = (maxX - minX + 1) * CellW + 20;
-            _canvas.style.height = (maxY - minY + 1) * CellH + 20;
+            _canvas.style.width = (maxX - minX + 1) * CellW + 2 * Pad;
+            _canvas.style.height = (maxY - minY + 1) * CellH + 2 * Pad;
 
             var pos = new Dictionary<int, Vector2>();
             foreach (var r in _map.Rooms.Values)
             {
                 if (!r.Placed || r.Level != _level) continue;
-                float px = (r.X - minX) * CellW + 10;
-                float py = (r.Y - minY) * CellH + 10;
+                float px = (r.X - minX) * CellW + Pad;
+                float py = (r.Y - minY) * CellH + Pad;
                 pos[r.Id] = new Vector2(px, py);
                 var box = BuildRoomBox(r, px, py);
                 if (r.Id == _map.CurrentRoomId) _curBox = box;
@@ -150,7 +158,21 @@ namespace AteZMachine
             var box = e.target as VisualElement;
             if (box == null) return;
             box.UnregisterCallback<GeometryChangedEvent>(OnCurBoxLaidOut);
-            if (box == _curBox) _scroll.ScrollTo(box);
+            if (box == _curBox) CenterOn(box);
+        }
+
+        // Scroll so the current room sits in the centre of the map viewport
+        // (the scroll area, not counting the info panel). scrollOffset clamps
+        // itself to the scrollable range at the edges of the map.
+        void CenterOn(VisualElement box)
+        {
+            var vp = _scroll.contentViewport.layout;
+            if (float.IsNaN(vp.width) || vp.width < 1 || float.IsNaN(box.layout.x)) return;
+            float cx = box.layout.x + box.layout.width / 2f;
+            float cy = box.layout.y + box.layout.height / 2f;
+            _scroll.scrollOffset = new Vector2(
+                Mathf.Max(0f, cx - vp.width / 2f),
+                Mathf.Max(0f, cy - vp.height / 2f));
         }
 
         VisualElement BuildRoomBox(MapRoom r, float px, float py)
