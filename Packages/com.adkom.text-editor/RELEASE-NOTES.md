@@ -3,6 +3,15 @@
 **☕ Enjoying ATE? Support development on Ko-fi:**
 [https://ko-fi.com/adkomgames](https://ko-fi.com/adkomgames)
 
+## 0.12.2 — 2026-07-29
+
+Fix release.
+
+- **Automatic updates no longer fail with "HTTP 403 Forbidden."** The
+  update check was hitting the rate-limited GitHub API; it now reads the
+  releases feed on github.com instead, which needs no auth and isn't
+  rate-limited (#33).
+
 ## 0.12.1 — 2026-07-29
 
 The interactive-fiction release: ATE plays Zork, and maps it.

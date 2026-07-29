@@ -60,6 +60,7 @@ with the host project.
 | 0.11.0 — the AI release (Copilot + Ask Unity AI + Search Results tab; published 2026-07-27) | Done |
 | 0.12.0 — the games release (addons security + folder addons + Game API 1.1 + Snake + Rogue 5.4.4 port; published 2026-07-28) | Done |
 | 0.12.1 — interactive fiction (clean-room Z-Machine v3 + Zork; auto-mapper with arrow connections, interiors-as-areas, SVG export; published 2026-07-29) | Done |
+| 0.12.2 — fix: update check 403 (read github.com releases.atom, not the rate-limited API; issue #33; published 2026-07-29) | Done |
 | More languages; custom themes | Future (roadmap) |
 
 ## Current work area

@@ -3,6 +3,17 @@
 All notable changes to this package are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com); versions follow semver.
 
+## [0.12.2] - 2026-07-29
+
+### Fixed
+- Automatic update check no longer fails with HTTP 403 Forbidden. It
+  polled the rate-limited GitHub REST API (`api.github.com`, 60
+  requests/hour/IP → 403 when exceeded on shared/NAT'd networks; some
+  proxies block the host outright). It now reads the releases Atom feed
+  on github.com (`/releases.atom`) — unauthenticated and not
+  API-rate-limited — parsing the latest tag from the newest entry, with
+  the previous `tag_name` JSON parse kept as a fallback (#33).
+
 ## [0.12.1] - 2026-07-29
 
 ### Added
