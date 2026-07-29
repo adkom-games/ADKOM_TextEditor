@@ -17,7 +17,15 @@ namespace AteZMachine
 
         ZMap _map;
         int _level;
-        VisualElement _curBox;
+
+        // Geometry is stored with its min corner at (0,0); the viewport-aware
+        // Relayout() shifts it by _drawOffset (padding) and centres the current
+        // room. Splines are drawn with _drawOffset applied.
+        Vector2 _drawOffset;
+        float _geomW, _geomH;
+        Vector2 _curCenter;   // current room centre, relative to geometry min
+        bool _hasGeom;
+        readonly List<(VisualElement box, Vector2 basePos)> _boxItems = new List<(VisualElement, Vector2)>();
 
         readonly ScrollView _scroll;
         readonly VisualElement _canvas;
@@ -103,7 +111,8 @@ namespace AteZMachine
         {
             _canvas.Clear();
             _lines.Clear();
-            _curBox = null;
+            _boxItems.Clear();
+            _hasGeom = false;
             if (_map == null || _map.Rooms.Count == 0) { _levelLabel.text = "Level " + _level; _canvas.MarkDirtyRepaint(); return; }
             _levelLabel.text = "Level " + _level;
 
@@ -114,27 +123,17 @@ namespace AteZMachine
                 { minX = Mathf.Min(minX, r.X); minY = Mathf.Min(minY, r.Y); maxX = Mathf.Max(maxX, r.X); maxY = Mathf.Max(maxY, r.Y); }
             if (minX == int.MaxValue) { _canvas.style.width = 200; _canvas.style.height = 60; _canvas.MarkDirtyRepaint(); return; }
 
-            _canvas.style.width = (maxX - minX + 1) * CellW + 2 * Pad;
-            _canvas.style.height = (maxY - minY + 1) * CellH + 2 * Pad;
-
-            var pos = new Dictionary<int, Vector2>();
+            // Base (un-offset) box positions on the grid.
+            var basePos = new Dictionary<int, Vector2>();
             foreach (var r in _map.Rooms.Values)
-            {
-                if (!r.Placed || r.Level != _level) continue;
-                float px = (r.X - minX) * CellW + Pad;
-                float py = (r.Y - minY) * CellH + Pad;
-                pos[r.Id] = new Vector2(px, py);
-                var box = BuildRoomBox(r, px, py);
-                if (r.Id == _map.CurrentRoomId) _curBox = box;
-                _canvas.Add(box);
-            }
-            // Connections as directed splines that attach at the exit's side/
-            // corner, with arrowheads showing travel direction (both ends when
-            // bidirectional). Resolves non-Euclidean links (e.g. a SOUTHWEST
-            // exit back to a room due south) into a visible curve.
+                if (r.Placed && r.Level == _level)
+                    basePos[r.Id] = new Vector2((r.X - minX) * CellW, (r.Y - minY) * CellH);
+
+            // Connections (splines). Attach at the exit's side/corner, arrowheads
+            // show travel direction (both ends when bidirectional).
             foreach (var e in ZMapLayout.EdgesForLevel(_map, _level))
             {
-                if (!pos.TryGetValue(e.E0.Room, out var b0) || !pos.TryGetValue(e.E1.Room, out var b1)) continue;
+                if (!basePos.TryGetValue(e.E0.Room, out var b0) || !basePos.TryGetValue(e.E1.Room, out var b1)) continue;
                 Vector2 p0 = Attach(b0, e.E0.Side), p1 = Attach(b1, e.E1.Side);
                 ZMapLayout.Controls(p0.x, p0.y, e.E0.Side, p1.x, p1.y, e.E1.Side,
                     out float c1x, out float c1y, out float c2x, out float c2y);
@@ -145,34 +144,77 @@ namespace AteZMachine
                     arrowStart = e.Arrow0, arrowEnd = e.Arrow1
                 });
             }
+
+            // Bounds over ALL geometry — boxes and spline control points (a
+            // cubic stays within its control hull) — so the canvas includes the
+            // splines and the scrollbars cover them instead of clipping.
+            float loX = 0, loY = 0, hiX = 0, hiY = 0; bool any = false;
+            void Grow(float x, float y)
+            {
+                if (!any) { loX = hiX = x; loY = hiY = y; any = true; return; }
+                if (x < loX) loX = x; if (x > hiX) hiX = x;
+                if (y < loY) loY = y; if (y > hiY) hiY = y;
+            }
+            foreach (var b in basePos.Values) { Grow(b.x, b.y); Grow(b.x + BoxW, b.y + BoxH); }
+            foreach (var c in _lines) { Grow(c.p0.x, c.p0.y); Grow(c.p1.x, c.p1.y); Grow(c.c1.x, c.c1.y); Grow(c.c2.x, c.c2.y); }
+
+            // Normalise so the geometry's min corner is at (0,0); Relayout()
+            // applies the viewport-dependent offset and centring.
+            var norm = new Vector2(-loX, -loY);
+            for (int i = 0; i < _lines.Count; i++)
+            {
+                var c = _lines[i];
+                c.p0 += norm; c.p1 += norm; c.c1 += norm; c.c2 += norm;
+                _lines[i] = c;
+            }
+            _geomW = hiX - loX;
+            _geomH = hiY - loY;
+            foreach (var r in _map.Rooms.Values)
+            {
+                if (!r.Placed || r.Level != _level) continue;
+                Vector2 p = basePos[r.Id] + norm;
+                var box = BuildRoomBox(r, 0, 0);   // position set in Relayout
+                _boxItems.Add((box, p));
+                _canvas.Add(box);
+                if (r.Id == _map.CurrentRoomId) _curCenter = p + new Vector2(BoxW / 2f, BoxH / 2f);
+            }
+            _hasGeom = _boxItems.Count > 0;
+            Relayout();
+        }
+
+        // Positions the geometry and scrolls so the current room sits in the
+        // CENTRE of the map viewport. The canvas is padded by half the viewport
+        // on each side so even a small map (or a room near the edge) can be
+        // scrolled to the middle; scrollOffset clamps itself at the extremes.
+        void Relayout()
+        {
+            if (!_hasGeom) return;
+            var vp = _scroll.contentViewport.layout;
+            if (float.IsNaN(vp.width) || vp.width < 1 || float.IsNaN(vp.height) || vp.height < 1)
+            {
+                _scroll.schedule.Execute(Relayout); // viewport not laid out yet
+                return;
+            }
+            float padX = Mathf.Max(Pad, vp.width * 0.5f);
+            float padY = Mathf.Max(Pad, vp.height * 0.5f);
+            _drawOffset = new Vector2(padX, padY);
+            _canvas.style.width = _geomW + 2 * padX;
+            _canvas.style.height = _geomH + 2 * padY;
+            foreach (var (box, basePos) in _boxItems)
+            {
+                box.style.left = basePos.x + padX;
+                box.style.top = basePos.y + padY;
+            }
             _canvas.MarkDirtyRepaint();
 
-            // Keep the current room in view as the player moves. ScrollTo needs
-            // the box's resolved layout, so defer a frame until it has one.
-            if (_curBox != null)
-                _curBox.RegisterCallback<GeometryChangedEvent>(OnCurBoxLaidOut);
-        }
-
-        void OnCurBoxLaidOut(GeometryChangedEvent e)
-        {
-            var box = e.target as VisualElement;
-            if (box == null) return;
-            box.UnregisterCallback<GeometryChangedEvent>(OnCurBoxLaidOut);
-            if (box == _curBox) CenterOn(box);
-        }
-
-        // Scroll so the current room sits in the centre of the map viewport
-        // (the scroll area, not counting the info panel). scrollOffset clamps
-        // itself to the scrollable range at the edges of the map.
-        void CenterOn(VisualElement box)
-        {
-            var vp = _scroll.contentViewport.layout;
-            if (float.IsNaN(vp.width) || vp.width < 1 || float.IsNaN(box.layout.x)) return;
-            float cx = box.layout.x + box.layout.width / 2f;
-            float cy = box.layout.y + box.layout.height / 2f;
-            _scroll.scrollOffset = new Vector2(
-                Mathf.Max(0f, cx - vp.width / 2f),
-                Mathf.Max(0f, cy - vp.height / 2f));
+            var target = new Vector2(
+                Mathf.Max(0f, _curCenter.x + padX - vp.width * 0.5f),
+                Mathf.Max(0f, _curCenter.y + padY - vp.height * 0.5f));
+            _scroll.scrollOffset = target;
+            // The scroller's range isn't updated until the resized canvas lays
+            // out, so an immediate set can clamp to a stale max — reapply once
+            // layout settles.
+            _scroll.schedule.Execute(() => _scroll.scrollOffset = target);
         }
 
         VisualElement BuildRoomBox(MapRoom r, float px, float py)
@@ -233,15 +275,16 @@ namespace AteZMachine
         {
             var p = ctx.painter2D;
             p.lineWidth = 1.5f;
+            var o = _drawOffset;
             foreach (var c in _lines)
             {
                 p.strokeColor = LineCol;
                 p.BeginPath();
-                p.MoveTo(c.p0);
-                p.BezierCurveTo(c.c1, c.c2, c.p1);
+                p.MoveTo(c.p0 + o);
+                p.BezierCurveTo(c.c1 + o, c.c2 + o, c.p1 + o);
                 p.Stroke();
-                if (c.arrowEnd) Arrowhead(p, c.p1, c.p1 - c.c2);
-                if (c.arrowStart) Arrowhead(p, c.p0, c.p0 - c.c1);
+                if (c.arrowEnd) Arrowhead(p, c.p1 + o, c.p1 - c.c2);
+                if (c.arrowStart) Arrowhead(p, c.p0 + o, c.p0 - c.c1);
             }
         }
 
