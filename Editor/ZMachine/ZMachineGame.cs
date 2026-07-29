@@ -99,7 +99,7 @@ namespace AteZMachine
                     }
                 };
                 _screen.OnLine = OnPlayerLine;
-                _screen.Doc.SetTitle(Path.GetFileNameWithoutExtension(path));
+                _screen.Doc.SetTitle(ZStory.TitleForFile(path));
 
                 if (!_hooked)
                 {

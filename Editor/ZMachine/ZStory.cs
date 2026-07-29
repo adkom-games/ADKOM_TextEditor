@@ -39,6 +39,17 @@ namespace AteZMachine
                 Url = "https://raw.githubusercontent.com/historicalsource/zork3/3ec9ed412b5f3cafe65d83c727d07db1fe4a86a8/COMPILED/zork3.z3" },
         };
 
+        /// <summary>The display title for a story file — the proper game name
+        /// (e.g. "Zork I") when the file matches a known game, else the file
+        /// name without its extension.</summary>
+        public static string TitleForFile(string path)
+        {
+            string file = Path.GetFileName(path);
+            foreach (var g in Downloadable)
+                if (string.Equals(g.File, file, System.StringComparison.OrdinalIgnoreCase)) return g.Title;
+            return Path.GetFileNameWithoutExtension(path);
+        }
+
         /// <summary>Downloads a game to the story folder if not already there,
         /// and returns the local path (null on failure).</summary>
         public static string EnsureDownloaded(Game g, out string error)
