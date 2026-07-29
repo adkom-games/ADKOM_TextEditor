@@ -974,6 +974,12 @@ msgstr "Object #"
 msgid "Non-adjacent exit"
 msgstr "Non-adjacent exit"
 
+msgid "SVG"
+msgstr "SVG"
+
+msgid "Export map as SVG"
+msgstr "Export map as SVG"
+
 msgid "Auto-map"
 msgstr "Auto-map"
 
