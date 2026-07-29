@@ -22,7 +22,12 @@ namespace AteZMachine
         readonly VisualElement _canvas;
         readonly VisualElement _info;
         readonly Label _levelLabel;
-        readonly List<(Vector2 a, Vector2 b)> _lines = new List<(Vector2, Vector2)>();
+
+        // One drawn connection: a spline p0→p1 (control points c1,c2) with an
+        // arrowhead at whichever end travel arrives.
+        struct Conn { public Vector2 p0, c1, c2, p1; public bool arrowStart, arrowEnd; }
+        readonly List<Conn> _lines = new List<Conn>();
+        const float Ctrl = 40f;
 
         static readonly Color RoomBg = new Color(0.18f, 0.18f, 0.20f);
         static readonly Color RoomCur = new Color(0.20f, 0.34f, 0.22f);
@@ -105,26 +110,34 @@ namespace AteZMachine
             _canvas.style.width = (maxX - minX + 1) * CellW + 20;
             _canvas.style.height = (maxY - minY + 1) * CellH + 20;
 
-            var center = new Dictionary<int, Vector2>();
+            var pos = new Dictionary<int, Vector2>();
             foreach (var r in _map.Rooms.Values)
             {
                 if (!r.Placed || r.Level != _level) continue;
                 float px = (r.X - minX) * CellW + 10;
                 float py = (r.Y - minY) * CellH + 10;
-                center[r.Id] = new Vector2(px + BoxW / 2f, py + BoxH / 2f);
+                pos[r.Id] = new Vector2(px, py);
                 var box = BuildRoomBox(r, px, py);
                 if (r.Id == _map.CurrentRoomId) _curBox = box;
                 _canvas.Add(box);
             }
-            // Connection lines (same-level compass exits only).
-            foreach (var r in _map.Rooms.Values)
+            // Connections as directed splines that attach at the exit's side/
+            // corner, with arrowheads showing travel direction (both ends when
+            // bidirectional). Resolves non-Euclidean links (e.g. a SOUTHWEST
+            // exit back to a room due south) into a visible curve.
+            foreach (var e in ZMapLayout.EdgesForLevel(_map, _level))
             {
-                if (!r.Placed || r.Level != _level || !center.TryGetValue(r.Id, out var a)) continue;
-                foreach (var kv in r.Exits)
+                if (!pos.TryGetValue(e.A, out var baseA) || !pos.TryGetValue(e.B, out var baseB)) continue;
+                Vector2 p0 = Attach(baseA, e.SideA), p1 = Attach(baseB, e.SideB);
+                ZMapLayout.Normal(e.SideA, out float ax, out float ay);
+                ZMapLayout.Normal(e.SideB, out float bx, out float by);
+                _lines.Add(new Conn
                 {
-                    if (kv.Key == Dir.U || kv.Key == Dir.D || kv.Key == Dir.In || kv.Key == Dir.Out) continue;
-                    if (center.TryGetValue(kv.Value, out var b)) _lines.Add((a, b));
-                }
+                    p0 = p0, p1 = p1,
+                    c1 = p0 + new Vector2(ax, ay) * Ctrl,
+                    c2 = p1 + new Vector2(bx, by) * Ctrl,
+                    arrowStart = e.ArrowA, arrowEnd = e.ArrowB
+                });
             }
             _canvas.MarkDirtyRepaint();
 
@@ -170,19 +183,8 @@ namespace AteZMachine
             }
             if (marks.Length > 0) box.Add(new Label(marks) { style = { fontSize = 10, color = Border } });
 
-            // Warp markers: compass exits whose destination is NOT the grid
-            // neighbour in that direction (a non-Euclidean link — e.g. a second
-            // direction reaching a room already linked another way). Its
-            // connection line would coincide with the geometric exit's line and
-            // vanish, so name the direction here instead. Details are in the
-            // info panel (dir → room #id) when the box is clicked.
-            string warps = "";
-            foreach (var kv in r.Exits)
-                if (IsCompass(kv.Key) && !IsGeometricNeighbor(r, kv.Key, kv.Value))
-                    warps += ZMap.DirName(kv.Key) + "⇢ ";
-            if (warps.Length > 0)
-                box.Add(new Label(warps.TrimEnd()) { tooltip = L10n.Tr("Non-adjacent exit"),
-                    style = { fontSize = 10, color = new Color(0.85f, 0.7f, 0.4f) } });
+            // (Non-Euclidean compass exits are now drawn as curved connections
+            // with arrowheads, so they need no in-box marker.)
 
             // Item symbols (clickable).
             var items = new VisualElement { style = { flexDirection = FlexDirection.Row, flexWrap = Wrap.Wrap } };
@@ -201,15 +203,43 @@ namespace AteZMachine
             return box;
         }
 
+        Vector2 Attach(Vector2 boxTopLeft, Dir side)
+        {
+            ZMapLayout.Edge(side, out float fx, out float fy);
+            return new Vector2(boxTopLeft.x + fx * BoxW, boxTopLeft.y + fy * BoxH);
+        }
+
         void OnDrawLines(MeshGenerationContext ctx)
         {
             var p = ctx.painter2D;
-            p.strokeColor = LineCol;
             p.lineWidth = 1.5f;
-            foreach (var (a, b) in _lines)
+            foreach (var c in _lines)
             {
-                p.BeginPath(); p.MoveTo(a); p.LineTo(b); p.Stroke();
+                p.strokeColor = LineCol;
+                p.BeginPath();
+                p.MoveTo(c.p0);
+                p.BezierCurveTo(c.c1, c.c2, c.p1);
+                p.Stroke();
+                if (c.arrowEnd) Arrowhead(p, c.p1, c.p1 - c.c2);
+                if (c.arrowStart) Arrowhead(p, c.p0, c.p0 - c.c1);
             }
+        }
+
+        // A small filled triangle at 'tip', pointing along 'dir'.
+        static void Arrowhead(Painter2D p, Vector2 tip, Vector2 dir)
+        {
+            if (dir.sqrMagnitude < 0.001f) return;
+            dir = dir.normalized;
+            var perp = new Vector2(-dir.y, dir.x);
+            const float len = 9f, half = 4.5f;
+            Vector2 baseC = tip - dir * len;
+            p.fillColor = LineCol;
+            p.BeginPath();
+            p.MoveTo(tip);
+            p.LineTo(baseC + perp * half);
+            p.LineTo(baseC - perp * half);
+            p.ClosePath();
+            p.Fill();
         }
 
         // ---- Info panel ----
@@ -269,31 +299,6 @@ namespace AteZMachine
         }
 
         string RoomName(int id) => _map != null && _map.Rooms.TryGetValue(id, out var r) ? r.Name : "?";
-
-        // Compass directions occupy the first eight enum slots (N..SW); U/D/In/Out follow.
-        static bool IsCompass(Dir d) => d <= Dir.SW;
-
-        // Is dest the room sitting at r's grid cell in direction d (same level)?
-        // If so, its connection renders as a clean adjacency line; if not, the
-        // line would misrepresent or overlap and we mark it as a warp instead.
-        bool IsGeometricNeighbor(MapRoom r, Dir d, int destId)
-        {
-            if (_map == null || !_map.Rooms.TryGetValue(destId, out var dest) || !dest.Placed) return false;
-            int dx = 0, dy = 0;
-            switch (d)
-            {
-                case Dir.N: dy = -1; break;
-                case Dir.S: dy = 1; break;
-                case Dir.E: dx = 1; break;
-                case Dir.W: dx = -1; break;
-                case Dir.NE: dx = 1; dy = -1; break;
-                case Dir.NW: dx = -1; dy = -1; break;
-                case Dir.SE: dx = 1; dy = 1; break;
-                case Dir.SW: dx = -1; dy = 1; break;
-                default: return false;
-            }
-            return dest.Level == r.Level && dest.X == r.X + dx && dest.Y == r.Y + dy;
-        }
 
         static Label Header(string t) =>
             new Label(t) { style = { unityFontStyleAndWeight = FontStyle.Bold, marginTop = 6 } };
