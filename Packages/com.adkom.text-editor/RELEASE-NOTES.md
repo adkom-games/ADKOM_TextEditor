@@ -3,6 +3,29 @@
 **☕ Enjoying ATE? Support development on Ko-fi:**
 [https://ko-fi.com/adkomgames](https://ko-fi.com/adkomgames)
 
+## 0.12.3 — 2026-07-29
+
+Auto-map polish.
+
+### Features
+- **Colour-coded map**: every room gets its own colour (the same one
+  every game), connection arrows take the colour of the room they leave,
+  and the lines now curve around the boxes.
+- **Zoom the map**: a slider (0.4×–2.5×) and Ctrl+scroll, kept in sync.
+- **Revealed objects show up**: move the leaves and the grating appears;
+  open the mailbox and the leaflet appears. Passages/doors are drawn as a
+  ◇ diamond, and up/down as ▲/▼ triangles.
+- **Tidier layout**: new rooms stay next to what they connect to and push
+  others aside instead of overlapping, and the page re-settles so a link
+  to a far room pulls the two together.
+- Room #ids everywhere, and the game tab is named after the game
+  ("Zork I").
+
+### Fixes
+- The map no longer blanks out after zooming (#34).
+- Restoring a save no longer dumps every passage marker into your current
+  room, and the transcript scrolls to the input line on restore (#35).
+
 ## 0.12.2 — 2026-07-29
 
 Fix release.

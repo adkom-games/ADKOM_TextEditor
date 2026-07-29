@@ -86,7 +86,7 @@ https://github.com/adkom-games/ADKOM_TextEditor.git#upm
 Pinned release:
 
 ```
-https://github.com/adkom-games/ADKOM_TextEditor.git#0.12.2
+https://github.com/adkom-games/ADKOM_TextEditor.git#0.12.3
 ```
 
 The `upm` branch contains only the package, so consumer downloads stay
