@@ -978,6 +978,12 @@ msgstr "SVG"
 msgid "Export map as SVG"
 msgstr "将地图导出为 SVG"
 
+msgid "Zoom"
+msgstr "缩放"
+
+msgid "Ctrl+scroll to zoom"
+msgstr "Ctrl+滚动以缩放"
+
 msgid "Auto-map"
 msgstr "自动地图"
 

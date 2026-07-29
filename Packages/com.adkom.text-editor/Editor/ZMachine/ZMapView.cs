@@ -36,6 +36,14 @@ namespace AteZMachine
         readonly VisualElement _info;
         readonly Label _levelLabel;
 
+        // Zoom (dynamic scaling): slider + ctrl-wheel, kept in sync. The canvas
+        // is scaled by a transform and its layout size set to base*zoom so the
+        // scrollbars track the scaled map.
+        const float ZoomMin = 0.4f, ZoomMax = 2.5f;
+        float _zoom = 1f, _appliedZoom = 1f, _canvasBaseW, _canvasBaseH;
+        Slider _zoomSlider;
+        Label _zoomLabel;
+
         // One drawn connection: a spline p0→p1 (control points c1,c2) with an
         // arrowhead at whichever end travel arrives, stroked in the FROM room's
         // colour.
@@ -66,9 +74,29 @@ namespace AteZMachine
                 style = { marginLeft = 12 } };
             bar.Add(new Label(L10n.Tr("Map")) { style = { unityFontStyleAndWeight = FontStyle.Bold, marginLeft = 4, marginRight = 8 } });
             bar.Add(down); bar.Add(_levelLabel); bar.Add(up); bar.Add(svg);
+
+            // Zoom control: slider + a percentage label (ctrl-wheel drives the
+            // same slider so they stay in sync).
+            bar.Add(new Label(L10n.Tr("Zoom")) { tooltip = L10n.Tr("Ctrl+scroll to zoom"),
+                style = { marginLeft = 12, marginRight = 2 } });
+            _zoomSlider = new Slider(ZoomMin, ZoomMax) { value = 1f, style = { width = 90 } };
+            _zoomSlider.RegisterValueChangedCallback(e => { _zoom = e.newValue; if (_zoomLabel != null) _zoomLabel.text = ZoomPct(); ApplyZoom(false); });
+            bar.Add(_zoomSlider);
+            _zoomLabel = new Label("100%") { style = { width = 42, marginLeft = 4 } };
+            bar.Add(_zoomLabel);
             left.Add(bar);
 
             _scroll = new ScrollView(ScrollViewMode.VerticalAndHorizontal) { style = { flexGrow = 1 } };
+            // Ctrl+wheel zooms (routes through the slider so value + slider stay
+            // in sync); plain wheel scrolls as usual. Trickle down so we can
+            // consume it before the ScrollView scrolls.
+            _scroll.RegisterCallback<WheelEvent>(e =>
+            {
+                if (!(e.ctrlKey || e.commandKey)) return;
+                float z = Mathf.Clamp(_zoom * (e.delta.y < 0 ? 1.1f : 1f / 1.1f), ZoomMin, ZoomMax);
+                _zoomSlider.value = z; // fires the value-changed callback → ApplyZoom
+                e.StopPropagation();
+            }, TrickleDown.TrickleDown);
             // Show scrollbars whenever the map is bigger than the viewport so the
             // user can scroll around it.
             _scroll.horizontalScrollerVisibility = ScrollerVisibility.Auto;
@@ -222,32 +250,47 @@ namespace AteZMachine
         {
             if (!_hasGeom) return;
             _drawOffset = new Vector2(CenterPad, CenterPad);
-            _canvas.style.width = _geomW + 2 * CenterPad;
-            _canvas.style.height = _geomH + 2 * CenterPad;
+            _canvasBaseW = _geomW + 2 * CenterPad;
+            _canvasBaseH = _geomH + 2 * CenterPad;
             foreach (var (box, basePos) in _boxItems)
             {
                 box.style.left = basePos.x + CenterPad;
                 box.style.top = basePos.y + CenterPad;
             }
             _canvas.MarkDirtyRepaint();
-            CenterScroll();
+            ApplyZoom(centerOnRoom: true); // sizes the (scaled) canvas + centres
         }
 
-        // Reads the viewport ONLY to compute the scroll target (never to size the
-        // canvas), so there is no feedback loop. Deferred until the viewport has
-        // laid out and reapplied after so it doesn't clamp to a stale range.
-        void CenterScroll()
+        string ZoomPct() => Mathf.RoundToInt(_zoom * 100f) + "%";
+
+        // Applies the zoom: scales the canvas by a transform (origin top-left) and
+        // sets its layout size to base*zoom so the scrollbars track the scaled
+        // map. Reads the viewport ONLY to compute the scroll target (never to
+        // size the canvas → no feedback loop). centerOnRoom centres the current
+        // room; otherwise the point at the viewport centre is kept stable so the
+        // slider/wheel zoom about the centre of the view.
+        void ApplyZoom(bool centerOnRoom)
         {
             if (!_hasGeom) return;
             var vp = _scroll.contentViewport.layout;
             if (float.IsNaN(vp.width) || vp.width < 1 || float.IsNaN(vp.height) || vp.height < 1)
             {
-                _scroll.schedule.Execute(CenterScroll);
+                _scroll.schedule.Execute(() => ApplyZoom(centerOnRoom));
                 return;
             }
-            var target = new Vector2(
-                Mathf.Max(0f, _curCenter.x + CenterPad - vp.width * 0.5f),
-                Mathf.Max(0f, _curCenter.y + CenterPad - vp.height * 0.5f));
+            Vector2 half = new Vector2(vp.width * 0.5f, vp.height * 0.5f);
+            Vector2 baseCenter = centerOnRoom
+                ? _curCenter + new Vector2(CenterPad, CenterPad)
+                : (_scroll.scrollOffset + half) / Mathf.Max(0.0001f, _appliedZoom);
+
+            _canvas.style.transformOrigin = new TransformOrigin(Length.Percent(0f), Length.Percent(0f), 0f);
+            _canvas.style.scale = new Scale(new Vector2(_zoom, _zoom));
+            _canvas.style.width = _canvasBaseW * _zoom;
+            _canvas.style.height = _canvasBaseH * _zoom;
+            _appliedZoom = _zoom;
+
+            var target = new Vector2(Mathf.Max(0f, baseCenter.x * _zoom - half.x),
+                                     Mathf.Max(0f, baseCenter.y * _zoom - half.y));
             _scroll.scrollOffset = target;
             _scroll.schedule.Execute(() => _scroll.scrollOffset = target);
         }
