@@ -198,6 +198,35 @@ namespace ADKOM.TextEditor
 
         /// <summary>External-editor entry point: opens (or focuses) the window,
         /// opens the file, and jumps to the 1-based line/column when given.</summary>
+        /// <summary>ATE's own link scheme: "ate://open?path=&lt;escaped&gt;&amp;line=N"
+        /// opens the file IN ATE at that line instead of handing it to the OS
+        /// (Application.OpenURL would launch the .cs in another app). Used by
+        /// the addon security report's file/line links. Returns true when the
+        /// URL was ours and was handled.</summary>
+        public static bool TryOpenAteLink(string url)
+        {
+            const string prefix = "ate://open?";
+            if (string.IsNullOrEmpty(url) || !url.StartsWith(prefix, System.StringComparison.OrdinalIgnoreCase))
+                return false;
+            string path = null;
+            int line = 1;
+            foreach (var part in url.Substring(prefix.Length).Split('&'))
+            {
+                int eq = part.IndexOf('=');
+                if (eq <= 0) continue;
+                string k = part.Substring(0, eq), v = part.Substring(eq + 1);
+                if (k == "path") path = System.Uri.UnescapeDataString(v);
+                else if (k == "line") int.TryParse(v, out line);
+            }
+            if (string.IsNullOrEmpty(path)) return false;
+            OpenExternal(path, Mathf.Max(1, line), 1);
+            return true;
+        }
+
+        /// <summary>Builds an ate:// link for a file:line location.</summary>
+        internal static string AteLink(string path, int line) =>
+            "ate://open?path=" + System.Uri.EscapeDataString(path ?? "") + "&line=" + line;
+
         public static void OpenExternal(string path, int line, int column)
         {
             var windows = Resources.FindObjectsOfTypeAll<TextEditorWindow>();

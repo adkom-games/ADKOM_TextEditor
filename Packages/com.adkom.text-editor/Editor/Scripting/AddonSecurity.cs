@@ -298,15 +298,21 @@ namespace ADKOM.TextEditor.Scripting
                 if (high > 0) sb.Append(" (").Append(high).Append(" high severity)");
                 sb.Append("\n\n| Severity | Category | API | File | Line | Risk |\n|---|---|---|---|---|---|\n");
                 foreach (var f in findings)
+                {
+                    // File AND line are both links to the same spot: Ctrl+Click
+                    // opens the source in ATE at that line (ate:// scheme).
+                    string src = f.File ?? file;
+                    string link = TextEditorWindow.AteLink(src, f.Line);
                     sb.Append("| ").Append(f.High ? "**HIGH**" : "moderate")
                       .Append(" | ").Append(f.Category)
                       .Append(" | `").Append(f.Api)
-                      .Append("` | ").Append(Path.GetFileName(f.File ?? file))
-                      .Append(" | ").Append(f.Line)
-                      .Append(" | ").Append(f.Risk).Append(" |\n");
+                      .Append("` | [").Append(Path.GetFileName(src)).Append("](").Append(link)
+                      .Append(") | [").Append(f.Line).Append("](").Append(link)
+                      .Append(") | ").Append(f.Risk).Append(" |\n");
+                }
                 sb.Append("\nMatches are textual: a hit inside a comment or string still ");
-                sb.Append("flags. Open the addon file at the listed lines and judge the ");
-                sb.Append("actual use before approving.\n");
+                sb.Append("flags. **Ctrl+Click a file or line** above to open the source ");
+                sb.Append("right there and judge the actual use before approving.\n");
             }
             sb.Append("\n## What approving means\n\n");
             sb.Append("Approving also PINS the signer keys you see below, so an ");

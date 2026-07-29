@@ -61,7 +61,8 @@ namespace ADKOM.TextEditor
             RegisterCallback<PointerDownLinkTagEvent>(e =>
             {
                 if (!(e.ctrlKey || e.commandKey) || string.IsNullOrEmpty(e.linkID)) return;
-                Application.OpenURL(e.linkID);
+                if (!TextEditorWindow.TryOpenAteLink(e.linkID)) // ate:// opens in ATE
+                    Application.OpenURL(e.linkID);
                 e.StopPropagation();
             }, TrickleDown.TrickleDown);
             RegisterCallback<PointerOverLinkTagEvent>(e =>

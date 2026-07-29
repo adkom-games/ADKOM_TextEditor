@@ -1473,7 +1473,8 @@ namespace ADKOM.TextEditor
                     : m.Groups["t"].Success ? m.Groups["t"].Value : null;
                 if (u == null) continue;
                 u = u.TrimEnd('.', ',', ';', ':', '!', '?');
-                if (!u.StartsWith("http://") && !u.StartsWith("https://") && !u.StartsWith("mailto:"))
+                if (!u.StartsWith("http://") && !u.StartsWith("https://") &&
+                    !u.StartsWith("mailto:") && !u.StartsWith("ate://"))
                     continue;
                 url = u;
                 return true;
@@ -1521,6 +1522,7 @@ namespace ADKOM.TextEditor
         bool TryOpenLinkAtCaret()
         {
             if (!TryGetLinkAt(_caretLine, _caretCol, out string url)) return false;
+            if (TextEditorWindow.TryOpenAteLink(url)) return true; // ate:// opens in ATE
             Application.OpenURL(url);
             return true;
         }
