@@ -292,7 +292,7 @@ namespace AteZMachine
             foreach (var o in _map.Objects.Values)
             {
                 if (o.Room != r.Id || o.Carried) continue;
-                var sym = new Label("◦") { tooltip = o.Name, style = { color = ItemCol, fontSize = 13, marginRight = 2 } };
+                var sym = new Label("◦") { tooltip = o.Name + " (#" + o.Id + ")", style = { color = ItemCol, fontSize = 13, marginRight = 2 } };
                 int id = o.Id;
                 sym.RegisterCallback<MouseDownEvent>(e => { ShowObjectInfo(id); e.StopPropagation(); });
                 items.Add(sym);
@@ -384,23 +384,23 @@ namespace AteZMachine
             _info.Add(new Label(o.Name) { style = { unityFontStyleAndWeight = FontStyle.Bold, whiteSpace = WhiteSpace.Normal, marginBottom = 2 } });
             _info.Add(new Label(L10n.Tr("Object #") + o.Id) { style = { color = Border, fontSize = 11, marginBottom = 4 } });
             _info.Add(Wrapped(o.Carried ? L10n.Tr("Carried by you")
-                : L10n.Tr("Location: ") + RoomName(o.Room)));
+                : L10n.Tr("Location: ") + RoomLabel(o.Room)));
             if (o.Container != 0 && _map.Objects.TryGetValue(o.Container, out var c))
-                _info.Add(Wrapped(L10n.Tr("Inside: ") + c.Name));
-            _info.Add(Wrapped(L10n.Tr("First seen: ") + RoomName(o.OriginRoom)));
+                _info.Add(Wrapped(L10n.Tr("Inside: ") + c.Name + " (#" + o.Container + ")"));
+            _info.Add(Wrapped(L10n.Tr("First seen: ") + RoomLabel(o.OriginRoom)));
             if (o.Room != o.OriginRoom || o.Carried)
                 _info.Add(new Label(L10n.Tr("(moved since first seen)")) { style = { color = new Color(0.85f, 0.7f, 0.4f), whiteSpace = WhiteSpace.Normal } });
         }
 
         void AddObjectLink(MapObject o)
         {
-            var b = new Label("◦ " + o.Name) { style = { color = ItemCol, whiteSpace = WhiteSpace.Normal } };
+            var b = new Label("◦ " + o.Name + " (#" + o.Id + ")") { style = { color = ItemCol, whiteSpace = WhiteSpace.Normal } };
             int id = o.Id;
             b.RegisterCallback<MouseDownEvent>(e => { ShowObjectInfo(id); e.StopPropagation(); });
             _info.Add(b);
         }
 
-        string RoomName(int id) => _map != null && _map.Rooms.TryGetValue(id, out var r) ? r.Name : "?";
+        string RoomLabel(int id) => _map != null && _map.Rooms.TryGetValue(id, out var r) ? r.Name + " (#" + id + ")" : "?";
 
         static Label Header(string t) =>
             new Label(t) { style = { unityFontStyleAndWeight = FontStyle.Bold, marginTop = 6 } };

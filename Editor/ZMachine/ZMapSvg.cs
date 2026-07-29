@@ -121,7 +121,7 @@ namespace AteZMachine
                     foreach (var o in map.Objects.Values)
                     {
                         if (o.Room != r.Id || o.Carried) continue;
-                        body.Append(Circle(px + 8 + di * 10, py + BoxH - 8, 3, ItemCol, Esc(o.Name)));
+                        body.Append(Circle(px + 8 + di * 10, py + BoxH - 8, 3, ItemCol, Esc(o.Name + " (#" + o.Id + ")")));
                         if (++di > 10) break;
                     }
                 }
@@ -145,7 +145,7 @@ namespace AteZMachine
                 var o = objs[i];
                 string loc = o.Carried ? "carried"
                     : (map.Rooms.TryGetValue(o.Room, out var rr) ? rr.Name + " (#" + o.Room + ")" : "?");
-                body.Append(Text((int)ex, (int)ey, Esc(o.Name + "  —  " + loc), TextCol, 12, false));
+                body.Append(Text((int)ex, (int)ey, Esc(o.Name + " (#" + o.Id + ")  —  " + loc), TextCol, 12, false));
             }
             y += Math.Max(1, rows) * LegendRowH + 8;
             contentW = Math.Max(contentW, Margin + cols * LegendColW);
