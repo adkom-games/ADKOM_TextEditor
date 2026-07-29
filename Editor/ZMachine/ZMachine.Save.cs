@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 // ATE Z-Machine (v3) — save / restore / restart.
 //
 // Save format is ATE-internal (not Quetzal): dynamic memory, the whole call
@@ -108,3 +109,5 @@ namespace AteZMachine
         }
     }
 }
+
+#endif

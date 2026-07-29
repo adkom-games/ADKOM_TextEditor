@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 // ATE Z-Machine (v3) — object table & properties, from the Standards Document.
 namespace AteZMachine
 {
@@ -133,3 +134,5 @@ namespace AteZMachine
         }
     }
 }
+
+#endif

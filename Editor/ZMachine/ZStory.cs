@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 // ATE Z-Machine — story file management: open a local .z3, or download the
 // MIT-licensed Zork trilogy from its preservation repo (on the user's action,
 // to the user's machine; ATE never redistributes a game).
@@ -69,3 +70,5 @@ namespace AteZMachine
         }
     }
 }
+
+#endif

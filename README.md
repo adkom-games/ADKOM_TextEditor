@@ -222,15 +222,15 @@ no undo churn, editor chrome hidden, block cursor), overwrite-style
 `WriteAt`, per-cell **foreground/background colors**, consumable
 keyboard events plus key-state polling, mouse in text coordinates, a
 30 Hz tick, per-document fonts and tab titles, and the status-bar
-prompt. Three games ship as installable samples: **Snake**; **Rogue**,
-a faithful port of the 1980 BSD classic (26 monsters, the real dungeon
-generator, potions/scrolls/wands/rings, the tombstone); and a
-**Z-Machine interpreter** — a clean-room version-3 virtual machine
-(written from the public Z-Machine Standards Document) that plays any
-`.z3` story file, with one-click download of the MIT-licensed Zork
-trilogy (fetched to your machine, on your action; ATE ships no game
-file). Tools → Addons → Install Sample Addons, then
-Tools → Addons → Games.
+prompt. Two games ship as installable **sample addons** — **Snake**,
+and **Rogue**, a faithful port of the 1980 BSD classic (26 monsters,
+the real dungeon generator, potions/scrolls/wands/rings, the tombstone)
+— via Tools → Addons → Install Sample Addons, then Tools → Addons →
+Games. A third, the **Z-Machine interpreter**, is built into ATE
+(Tools → Z-Machine): a clean-room version-3 virtual machine (written
+from the public Z-Machine Standards Document) that plays any `.z3`
+story file, with one-click download of the MIT-licensed Zork trilogy
+(fetched to your machine, on your action; ATE ships no game file).
 
 ### 🔌 Unity's External Script Editor
 Select ATE in **Preferences → External Tools** and double-clicked

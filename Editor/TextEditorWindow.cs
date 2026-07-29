@@ -1324,6 +1324,11 @@ namespace ADKOM.TextEditor
         // Three layouts (Settings → Keyboard Layout): Visual Studio, VS Code,
         // Rider — covering the defaults that apply to this editor's features.
 
+        /// <summary>Installed by the built-in Z-Machine game while it runs, so
+        /// keys reach the game before editor commands. Returns true to consume.
+        /// Not a [SerializeField] — a domain reload ends any running game.</summary>
+        internal System.Func<KeyDownEvent, bool> GameKeyHandler;
+
         /// <summary>Window-level commands; works from any tab including Settings.</summary>
         void OnGlobalKeyDown(KeyDownEvent e)
         {
@@ -1333,6 +1338,13 @@ namespace ADKOM.TextEditor
             // while the mini-buffer prompt is open so games can use Prompt.
             Scripting.AteApi.NoteKeyDown(e.keyCode);
             if (!MiniBufferOpen && Scripting.AteApi.RaiseKeyDown(e))
+            {
+                e.StopImmediatePropagation();
+                return;
+            }
+            // Built-in game (Z-Machine): a core hook, independent of the addon
+            // input events so it survives addon reloads mid-game.
+            if (!MiniBufferOpen && GameKeyHandler != null && GameKeyHandler(e))
             {
                 e.StopImmediatePropagation();
                 return;
