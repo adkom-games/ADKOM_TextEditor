@@ -230,7 +230,11 @@ Games. A third, the **Z-Machine interpreter**, is built into ATE
 (Tools → Z-Machine): a clean-room version-3 virtual machine (written
 from the public Z-Machine Standards Document) that plays any `.z3`
 story file, with one-click download of the MIT-licensed Zork trilogy
-(fetched to your machine, on your action; ATE ships no game file).
+(fetched to your machine, on your action; ATE ships no game file). It
+saves and restores games, and an optional **auto-mapper** draws the
+world as you explore — rooms, directional connections, items you've
+found, interiors laid out on their own page — with a spoiler-free
+side panel and one-click **SVG export** (map + object legend).
 
 ### 🔌 Unity's External Script Editor
 Select ATE in **Preferences → External Tools** and double-clicked
@@ -273,7 +277,7 @@ https://github.com/adkom-games/ADKOM_TextEditor.git#upm
 Prefer a pinned version?
 
 ```
-https://github.com/adkom-games/ADKOM_TextEditor.git#0.12.0
+https://github.com/adkom-games/ADKOM_TextEditor.git#0.12.1
 ```
 
 Semantic Features (compiler-accurate colors + Go to Definition) are

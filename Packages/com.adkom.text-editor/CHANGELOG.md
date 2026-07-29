@@ -3,6 +3,53 @@
 All notable changes to this package are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com); versions follow semver.
 
+## [0.12.1] - 2026-07-29
+
+### Added
+- Z-Machine interpreter (built into the editor core, Tools → Z-Machine):
+  a clean-room version-3 virtual machine written from the public
+  Z-Machine Standards Document (no Infocom code, no GPL interpreter
+  source) that plays any `.z3` story file — memory/header, ZSCII,
+  object table, dictionary tokeniser, full v3 opcode set, save/restore/
+  restart, output streams. One-click download of the MIT-licensed Zork
+  I/II/III (pinned commits, on your action, to your machine; ATE ships
+  no game file). The screen is a growing, scrollable transcript with a
+  pinned status line, on the Game API.
+- Auto-mapper (Tools → Z-Machine → Auto-map): builds a map purely by
+  observing engine state as you explore — rooms on a per-level grid,
+  directional connections drawn as arrowed splines (both ends for a
+  two-way corridor), items you have found, and a clickable side panel.
+  Spoiler-free: an object appears only once directly visible (in a room
+  or carried), never while nested in an unopened container, and the
+  player avatar is never shown.
+- Interiors as separate areas: entering a container via `in` opens a new
+  area on its own coordinate grid, so an interior no longer collides
+  with the exterior it is nested inside; the pane and export page by
+  (area, level).
+- Map SVG export ("SVG" button): the whole map to a standalone `.svg` —
+  all pages stacked, dashed cross-page connectors for level/area
+  changes, and an alphabetical multi-column object legend (name +
+  location) at the bottom.
+- Map/transcript persistence: the explored map and the on-screen
+  transcript are saved beside the game save and restored with it.
+
+### Fixed
+- Z-Machine terminal shrank a row per command and eventually collapsed
+  (a viewport-measurement feedback loop); replaced the viewport-fitted
+  grid with a growing transcript that scrolls back (#28, #29).
+- Save/restore resume PC accounted for branch polarity (Zork's save is
+  branch-on-failure); ghost `<ENTER>`; status line clipped at the right
+  edge; typing sluggishness (per-keystroke input rendering).
+- Map: distinct corridors between the same two rooms were merged into
+  one two-way spline — now keyed by attach endpoints so they stay
+  separate; non-Euclidean exits are drawn from the correct corner (#31).
+- Map pane: horizontal/vertical scrollbars appear when the map exceeds
+  the pane; splines no longer clip at the edges; the current room is
+  centred; a viewport-derived canvas padding fed back and blanked the
+  map — now a fixed margin (#32).
+- Horizontal scrollbar showed with nothing clipped (content width was
+  over-padded by 60px); now padded by the caret width only (#30).
+
 ## [0.12.0] - 2026-07-28
 
 ### Added

@@ -3,6 +3,43 @@
 **☕ Enjoying ATE? Support development on Ko-fi:**
 [https://ko-fi.com/adkomgames](https://ko-fi.com/adkomgames)
 
+## 0.12.1 — 2026-07-29
+
+The interactive-fiction release: ATE plays Zork, and maps it.
+
+### Features
+- **Z-Machine interpreter** (built in, Tools → Z-Machine): a clean-room
+  version-3 virtual machine — written from the public Z-Machine
+  Standards Document — that plays any `.z3` story file. One-click
+  download of the MIT-licensed **Zork I/II/III** (on your action, to
+  your machine; ATE ships no game file). Save, restore, and restart.
+- **Auto-mapper**: turn it on and ATE draws the world as you explore —
+  rooms, **directional arrow connections** (curved to the right corner,
+  two-headed for two-way passages), the items you've found, and a
+  side panel for details. It's **spoiler-free**: nothing shows up until
+  you've actually seen it, and things inside closed containers stay
+  hidden until you open them.
+- **Interiors get their own map page**: walk `in`to a building and its
+  rooms lay out on a fresh grid instead of tangling with the streets
+  outside.
+- **SVG export**: one click saves the whole map — every level and
+  interior, cross-page links, and an alphabetical **object legend** with
+  each item's location — as a standalone `.svg`.
+- The map and your transcript are **saved and restored** along with the
+  game.
+
+### Fixes
+- The game screen no longer shrinks a line at a time as you play; it's
+  now a proper scrolling transcript you can scroll back through, with a
+  pinned status line (#28, #29).
+- Save/restore reliability (branch-polarity resume), no more ghost
+  Enter, status line no longer clipped, faster typing.
+- Map connections: separate passages between the same two rooms stay
+  separate; odd-angle exits draw from the correct corner (#31).
+- Map pane: scrollbars when the map is big, no clipped curves, the
+  current room stays centred, and the map no longer blanks out (#30,
+  #32).
+
 ## 0.12.0 — 2026-07-28
 
 The games release: ATE plays Rogue.
