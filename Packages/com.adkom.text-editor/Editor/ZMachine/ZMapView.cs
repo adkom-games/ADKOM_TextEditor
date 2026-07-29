@@ -145,7 +145,7 @@ namespace AteZMachine
                     paddingLeft = 4, paddingRight = 4, paddingTop = 2, overflow = Overflow.Hidden
                 }
             };
-            var title = new Label(r.Name) { style = { unityFontStyleAndWeight = FontStyle.Bold, whiteSpace = WhiteSpace.NoWrap } };
+            var title = new Label(r.Name + " (#" + r.Id + ")") { style = { unityFontStyleAndWeight = FontStyle.Bold, whiteSpace = WhiteSpace.NoWrap } };
             box.Add(title);
 
             // Vertical / in-out markers.

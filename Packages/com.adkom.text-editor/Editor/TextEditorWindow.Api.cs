@@ -178,6 +178,15 @@ namespace ADKOM.TextEditor
             }
         }
 
+        internal void ApiSetStatusBar(TextDocument d, string text, Color fg, Color bg)
+        {
+            if (HasDocs && Active == d && _code != null)
+            {
+                if (string.IsNullOrEmpty(text)) _code.HideGameStatusBar();
+                else _code.SetGameStatusBar(text, fg, bg);
+            }
+        }
+
         internal void ApiClearColors(TextDocument d, int line0)
         {
             if (d.Overlay == null) return;
