@@ -188,7 +188,7 @@ namespace ADKOM.TextEditor.Scripting
         /// <summary>Scrolls this document to its very end (when it is the active
         /// tab). For a growing game transcript this brings the input line into
         /// view — e.g. after restoring a saved game.</summary>
-        public void ScrollToEnd() { EnsureValid(); _window.ApiScrollToEnd(_doc); }
+        public void ScrollToEnd() { EnsureValid(); _window.ApiActivate(_doc); _window.ApiScrollToEnd(_doc); }
 
         /// <summary>Brings this tab to the front.</summary>
         public void Activate() { EnsureValid(); _window.ApiActivate(_doc); }

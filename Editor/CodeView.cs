@@ -1478,14 +1478,15 @@ namespace ADKOM.TextEditor
             else if (x > sx + viewW - 10) _scroll.horizontalScroller.value = x - viewW + 40;
         }
 
-        /// <summary>Scrolls to the very bottom. Re-applied next frame because a
-        /// just-changed content's scroller max isn't updated until it lays out
-        /// (used to show a game transcript's input line after a restore).</summary>
+        /// <summary>Scrolls to the very bottom. Re-applied for a short window
+        /// because a just-replaced content's scroller max isn't updated until it
+        /// lays out — a single frame isn't enough for a large transcript (used
+        /// to show a game transcript's input line after a restore).</summary>
         public void ScrollToEnd()
         {
             void ToEnd() { var vs = _scroll.verticalScroller; vs.value = vs.highValue; }
             ToEnd();
-            schedule.Execute(ToEnd);
+            schedule.Execute(ToEnd).Every(25).ForDuration(300);
         }
 
         void AfterCaretMove()
