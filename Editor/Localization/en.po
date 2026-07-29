@@ -958,3 +958,45 @@ msgstr "download failed: "
 
 msgid "Z-Machine (Zork)"
 msgstr "Z-Machine (Zork)"
+
+msgid "(moved since first seen)"
+msgstr "(moved since first seen)"
+
+msgid "(you are here)"
+msgstr "(you are here)"
+
+msgid "Auto-map"
+msgstr "Auto-map"
+
+msgid "Auto-map (build a map as you explore)"
+msgstr "Auto-map (build a map as you explore)"
+
+msgid "Carried by you"
+msgstr "Carried by you"
+
+msgid "Exits"
+msgstr "Exits"
+
+msgid "Explore to build the map. Click a room or an item (◦) for details."
+msgstr "Explore to build the map. Click a room or an item (◦) for details."
+
+msgid "First seen: "
+msgstr "First seen: "
+
+msgid "Inside: "
+msgstr "Inside: "
+
+msgid "Items here"
+msgstr "Items here"
+
+msgid "Location: "
+msgstr "Location: "
+
+msgid "Map"
+msgstr "Map"
+
+msgid "none"
+msgstr "none"
+
+msgid "none seen"
+msgstr "none seen"

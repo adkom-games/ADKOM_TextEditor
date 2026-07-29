@@ -956,3 +956,45 @@ msgstr "下载失败："
 
 msgid "Z-Machine (Zork)"
 msgstr "Z-Machine (Zork)"
+
+msgid "(moved since first seen)"
+msgstr "（自首次发现后已移动）"
+
+msgid "(you are here)"
+msgstr "（当前位置）"
+
+msgid "Auto-map"
+msgstr "自动地图"
+
+msgid "Auto-map (build a map as you explore)"
+msgstr "自动地图（边探索边绘制地图）"
+
+msgid "Carried by you"
+msgstr "随身携带"
+
+msgid "Exits"
+msgstr "出口"
+
+msgid "Explore to build the map. Click a room or an item (◦) for details."
+msgstr "探索即可绘制地图。点击房间或物品（◦）查看详情。"
+
+msgid "First seen: "
+msgstr "首次发现于: "
+
+msgid "Inside: "
+msgstr "位于: "
+
+msgid "Items here"
+msgstr "此处物品"
+
+msgid "Location: "
+msgstr "位置: "
+
+msgid "Map"
+msgstr "地图"
+
+msgid "none"
+msgstr "无"
+
+msgid "none seen"
+msgstr "未探明"
