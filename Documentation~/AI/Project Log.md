@@ -389,6 +389,17 @@ the bottom. See [[Project State]] for the current snapshot.
   FIXED canvas margin — the viewport-derived padding had fed back and
   exploded the canvas, blanking the map (issue #32).
 
+## 2026-07-29 — 0.12.2 (update-check 403 fix)
+
+- **Auto-update HTTP 403.** UpdateChecker polled the GitHub REST API
+  (`api.github.com/.../releases/latest`), rate-limited to 60 req/hr/IP;
+  GitHub returns 403 (not 429) when exceeded — hit on a shared/NAT'd
+  network, and some corporate proxies block api.github.com outright
+  (reported updating from 0.12.0). Switched to the releases Atom feed on
+  github.com (`/releases.atom`): unauthenticated, not API-rate-limited,
+  newest entry first. ParseTagName now reads the first `/releases/tag/`
+  link, keeping the `tag_name` JSON parse as a fallback (issue #33).
+
 ## Conventions
 
 - Branch per feature/fix from main; merge with `--no-ff`; branches are kept.
