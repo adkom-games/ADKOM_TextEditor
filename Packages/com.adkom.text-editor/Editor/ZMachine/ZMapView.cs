@@ -32,7 +32,8 @@ namespace AteZMachine
         readonly List<(VisualElement box, Vector2 basePos)> _boxItems = new List<(VisualElement, Vector2)>();
 
         readonly ScrollView _scroll;
-        readonly VisualElement _canvas;
+        readonly VisualElement _sizer;   // scroll content: unscaled, sized to base*zoom
+        readonly VisualElement _canvas;  // holds the boxes/splines, scaled by the zoom transform
         readonly VisualElement _info;
         readonly Label _levelLabel;
 
@@ -101,12 +102,16 @@ namespace AteZMachine
             // user can scroll around it.
             _scroll.horizontalScrollerVisibility = ScrollerVisibility.Auto;
             _scroll.verticalScrollerVisibility = ScrollerVisibility.Auto;
-            // The canvas keeps its explicit size (set per Rebuild); without this
-            // the scroll content container shrinks it to the viewport and the
-            // content never overflows, so no scrollbars appear.
-            _canvas = new VisualElement { style = { position = Position.Relative, flexShrink = 0 } };
+            // The zoom transform lives on the canvas; the ScrollView measures the
+            // UNSCALED sizer (set to base*zoom) so its scrollbars track the scaled
+            // map — applying the transform directly to the scroll content leaves
+            // it clipped/empty. flexShrink=0 keeps the sizer from being squeezed
+            // to the viewport (which would suppress the scrollbars).
+            _sizer = new VisualElement { style = { flexShrink = 0 } };
+            _canvas = new VisualElement { style = { position = Position.Absolute, left = 0, top = 0 } };
             _canvas.generateVisualContent += OnDrawLines;
-            _scroll.Add(_canvas);
+            _sizer.Add(_canvas);
+            _scroll.Add(_sizer);
             left.Add(_scroll);
             Add(left);
 
@@ -252,13 +257,15 @@ namespace AteZMachine
             _drawOffset = new Vector2(CenterPad, CenterPad);
             _canvasBaseW = _geomW + 2 * CenterPad;
             _canvasBaseH = _geomH + 2 * CenterPad;
+            _canvas.style.width = _canvasBaseW;   // canvas holds base-coord geometry
+            _canvas.style.height = _canvasBaseH;
             foreach (var (box, basePos) in _boxItems)
             {
                 box.style.left = basePos.x + CenterPad;
                 box.style.top = basePos.y + CenterPad;
             }
             _canvas.MarkDirtyRepaint();
-            ApplyZoom(centerOnRoom: true); // sizes the (scaled) canvas + centres
+            ApplyZoom(centerOnRoom: true); // scales the canvas + sizes the sizer + centres
         }
 
         string ZoomPct() => Mathf.RoundToInt(_zoom * 100f) + "%";
@@ -285,8 +292,8 @@ namespace AteZMachine
 
             _canvas.style.transformOrigin = new TransformOrigin(Length.Percent(0f), Length.Percent(0f), 0f);
             _canvas.style.scale = new Scale(new Vector2(_zoom, _zoom));
-            _canvas.style.width = _canvasBaseW * _zoom;
-            _canvas.style.height = _canvasBaseH * _zoom;
+            _sizer.style.width = _canvasBaseW * _zoom;   // scroll content = scaled size
+            _sizer.style.height = _canvasBaseH * _zoom;
             _appliedZoom = _zoom;
 
             var target = new Vector2(Mathf.Max(0f, baseCenter.x * _zoom - half.x),
