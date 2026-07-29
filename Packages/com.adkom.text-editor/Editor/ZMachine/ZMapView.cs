@@ -200,7 +200,9 @@ namespace AteZMachine
         {
             if (_map == null || !_map.Rooms.TryGetValue(roomId, out var r)) return;
             _info.Clear();
-            _info.Add(new Label(r.Name) { style = { unityFontStyleAndWeight = FontStyle.Bold, whiteSpace = WhiteSpace.Normal, marginBottom = 4 } });
+            _info.Add(new Label(r.Name) { style = { unityFontStyleAndWeight = FontStyle.Bold, whiteSpace = WhiteSpace.Normal, marginBottom = 2 } });
+            _info.Add(new Label(L10n.Tr("Room #") + r.Id + "   (" + r.X + "," + r.Y + " L" + r.Level + ")")
+                { style = { color = Border, fontSize = 11, marginBottom = 4 } });
             if (r.Id == _map.CurrentRoomId) _info.Add(new Label(L10n.Tr("(you are here)")) { style = { color = new Color(0.5f, 0.85f, 0.5f) } });
 
             _info.Add(Header(L10n.Tr("Exits")));
@@ -208,7 +210,7 @@ namespace AteZMachine
             foreach (var kv in r.Exits)
             {
                 string dest = _map.Rooms.TryGetValue(kv.Value, out var dr) ? dr.Name : "?";
-                _info.Add(Wrapped(ZMap.DirName(kv.Key) + " → " + dest));
+                _info.Add(Wrapped(ZMap.DirName(kv.Key) + " → " + dest + " (#" + kv.Value + ")"));
             }
 
             _info.Add(Header(L10n.Tr("Items here")));
@@ -222,7 +224,8 @@ namespace AteZMachine
         {
             if (_map == null || !_map.Objects.TryGetValue(objId, out var o)) return;
             _info.Clear();
-            _info.Add(new Label(o.Name) { style = { unityFontStyleAndWeight = FontStyle.Bold, whiteSpace = WhiteSpace.Normal, marginBottom = 4 } });
+            _info.Add(new Label(o.Name) { style = { unityFontStyleAndWeight = FontStyle.Bold, whiteSpace = WhiteSpace.Normal, marginBottom = 2 } });
+            _info.Add(new Label(L10n.Tr("Object #") + o.Id) { style = { color = Border, fontSize = 11, marginBottom = 4 } });
             _info.Add(Wrapped(o.Carried ? L10n.Tr("Carried by you")
                 : L10n.Tr("Location: ") + RoomName(o.Room)));
             if (o.Container != 0 && _map.Objects.TryGetValue(o.Container, out var c))

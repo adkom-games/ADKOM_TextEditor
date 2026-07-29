@@ -965,6 +965,12 @@ msgstr "(moved since first seen)"
 msgid "(you are here)"
 msgstr "(you are here)"
 
+msgid "Room #"
+msgstr "Room #"
+
+msgid "Object #"
+msgstr "Object #"
+
 msgid "Auto-map"
 msgstr "Auto-map"
 

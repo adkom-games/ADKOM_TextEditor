@@ -84,12 +84,19 @@ namespace AteZMachine
                     : EditorUtility.OpenFilePanel(L10n.Tr("Restore game"), ZStory.StoryFolder, "azs");
                 // The auto-map rides alongside the game save as a ".map" sidecar,
                 // so restoring a saved game brings its explored map back too.
-                _machine.AfterSave = p => _map?.SaveTo(p + ".map");
+                _machine.AfterSave = p =>
+                {
+                    _map?.SaveTo(p + ".map");
+                    _screen?.SaveTranscript(p + ".log");
+                };
                 _machine.AfterRestore = p =>
                 {
-                    if (_map == null) return;
-                    _map.LoadFrom(p + ".map"); // no-op if the sidecar is missing
-                    _mapView?.SetMap(_map);
+                    _screen?.LoadTranscript(p + ".log"); // bring the scrollback back
+                    if (_map != null)
+                    {
+                        _map.LoadFrom(p + ".map");        // no-op if the sidecar is missing
+                        _mapView?.SetMap(_map);
+                    }
                 };
                 _screen.OnLine = OnPlayerLine;
                 _screen.Doc.SetTitle(Path.GetFileNameWithoutExtension(path));

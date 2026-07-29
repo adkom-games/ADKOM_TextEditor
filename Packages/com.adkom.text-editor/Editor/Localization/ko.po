@@ -963,6 +963,12 @@ msgstr "(처음 본 곳에서 이동함)"
 msgid "(you are here)"
 msgstr "(현재 위치)"
 
+msgid "Room #"
+msgstr "방 #"
+
+msgid "Object #"
+msgstr "오브젝트 #"
+
 msgid "Auto-map"
 msgstr "자동 지도"
 
