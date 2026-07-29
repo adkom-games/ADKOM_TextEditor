@@ -3,6 +3,36 @@
 All notable changes to this package are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com); versions follow semver.
 
+## [0.12.3] - 2026-07-29
+
+### Added
+- Auto-map polish: procedurally colour-coded rooms (a deterministic
+  colour per room, same every game), connection lines drawn in the FROM
+  room's colour with arrowheads, and splines routed around the boxes.
+- Dynamic map zoom: a Zoom slider (0.4×–2.5×) with a live percentage and
+  Ctrl+mouse-wheel, kept in sync.
+- Revealed hidden objects: an item unhidden by the game — a grating
+  under moved leaves, a leaflet in an opened mailbox — now appears in the
+  room. Connector/door objects (the grating) show as a ◇ diamond, and
+  up/down transitions render as ▲/▼ triangles.
+- Room #ids shown after every room/object name in the map panel, tooltips,
+  and the SVG legend.
+- Grid push/cascade placement: a new room stays adjacent to the room it
+  connects to; occupants are pushed aside instead of overlapping. After a
+  room or edge appears, a bounded relaxation re-settles the page so a
+  connection to a distant room pulls its endpoints together.
+
+### Fixed
+- Map pane went blank after adding zoom (a scale transform on the scroll
+  content, and content sizing gated behind viewport layout) — the canvas
+  is now scaled inside an unscaled sizer and sized unconditionally (#34).
+- Restored games no longer pile every connector diamond into the current
+  room; connectors are placed once and never relocated, and the map's
+  parent/attribute baselines reset on load (#35).
+- The transcript scrolls to the input line after a restore.
+- Z-Machine game tab is titled with the proper game name ("Zork I", not
+  "zork1").
+
 ## [0.12.2] - 2026-07-29
 
 ### Fixed

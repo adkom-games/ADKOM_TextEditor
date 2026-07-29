@@ -400,6 +400,37 @@ the bottom. See [[Project State]] for the current snapshot.
   newest entry first. ParseTagName now reads the first `/releases/tag/`
   link, keeping the `tag_name` JSON parse as a fallback (issue #33).
 
+## 2026-07-29 — 0.12.3 (auto-map polish)
+
+- **Map rendering**: procedural per-room colours (golden-ratio hue hash of
+  the room id — deterministic, same every game); connection splines
+  stroked in the FROM room's colour with arrowheads; obstacle-aware
+  routing (ZMapLayout.RouteControls samples the cubic and bows around
+  boxes). Zoom (slider 0.4–2.5× + Ctrl-wheel, kept in sync) via a scale
+  transform on the canvas inside an unscaled sizer sized to base*zoom
+  (#34: the first attempt scaled the scroll content directly and gated
+  sizing on the viewport → blank map).
+- **Revealed objects** (ScanObjects): an object nested in a container in a
+  known room now surfaces when the game reveals it — its own or its
+  container's attribute bits change since last turn (grating under moved
+  leaves; leaflet in an opened mailbox). New MapAttrBits reads the v3
+  32-attribute bitmask. A revealed connector/door whose home room is
+  unvisited (the grating lives in the room below) is shown in the CURRENT
+  room as a ◇ diamond (IsConnector); up/down exits render as ▲/▼.
+  Connectors are placed once and never relocated, and LoadFrom resets the
+  parent/attr baselines, so a restore no longer piles every diamond into
+  the current room (#35).
+- **Placement**: grid push/cascade (PushChain shoves a contiguous run
+  aside — no overlaps, new room stays adjacent to its connector), then a
+  bounded stress-minimising relaxation (Resolve) that re-settles the page
+  after a room/edge appears so a far-flung connection pulls its endpoints
+  together (squared-distance stress, accept-if-improving → converges;
+  30-pass cap).
+- **Misc**: transcript scrolls to the input line after a restore
+  (AteApi.ScrollToEnd, re-applied for 300 ms past the layout settle); game
+  tab titled with the proper name via ZStory.TitleForFile ("Zork I"); #ids
+  after every room/object name.
+
 ## Conventions
 
 - Branch per feature/fix from main; merge with `--no-ff`; branches are kept.
