@@ -1960,8 +1960,13 @@ namespace ADKOM.TextEditor
             if (float.IsNaN(vp.height) || vp.height < 1 || _lineHeight < 1) return false;
             float cw = CharWidth('M');
             if (float.IsNaN(cw) || cw < 1) return false;
-            rows = Mathf.Max(1, Mathf.FloorToInt(vp.height / _lineHeight));
-            cols = Mathf.Max(1, Mathf.FloorToInt((vp.width - WrapPad) / cw));
+            // Leave a small margin (game mode has word-wrap off): a full-width
+            // line must not overflow into a horizontal scrollbar, which would
+            // push the right of the line — e.g. a status bar's score — off the
+            // visible edge. Also drop the last row so nothing needs a vertical
+            // scrollbar either.
+            rows = Mathf.Max(1, Mathf.FloorToInt(vp.height / _lineHeight) - 1);
+            cols = Mathf.Max(1, Mathf.FloorToInt((vp.width - WrapPad - 2f * cw) / cw));
             return true;
         }
         public int LineCount => _lines.Count;

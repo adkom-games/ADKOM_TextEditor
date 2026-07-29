@@ -109,9 +109,15 @@ namespace AteZMachine
             string right = timeGame
                 ? string.Format("Time: {0}:{1:00}", ((a + 11) % 12) + 1, b)
                 : string.Format("Score: {0}   Moves: {1}", a, b);
-            string left = " " + (location ?? "");
+            // The right side (score/moves) must always show; cap the location.
+            string loc = location ?? "";
+            int maxLoc = _w - right.Length - 3;
+            if (maxLoc < 1) maxLoc = 1;
+            if (loc.Length > maxLoc) loc = loc.Substring(0, Math.Max(1, maxLoc - 1)) + "…";
+            string left = " " + loc;
             int pad = _w - left.Length - right.Length - 1;
             _status = left + (pad > 0 ? new string(' ', pad) : " ") + right + " ";
+            if (_status.Length > _w) _status = _status.Substring(0, _w);
             Render();
         }
 
