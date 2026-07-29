@@ -61,9 +61,11 @@ namespace AteZMachine
             int room = zm.MapCurrentRoom();
             if (room <= 0) return;
             Dir? dir = ParseDir(lastInput);
+            bool topo = false; // a room or edge appeared → re-resolve the layout
 
             if (!Rooms.TryGetValue(room, out var mr))
             {
+                topo = true;
                 mr = new MapRoom { Id = room, Name = zm.MapObjectName(room) };
                 MapRoom from = null;
                 if (CurrentRoomId != 0) Rooms.TryGetValue(CurrentRoomId, out from);
@@ -95,7 +97,10 @@ namespace AteZMachine
             // Record the directed edge (never assume the reverse).
             if (dir.HasValue && CurrentRoomId != 0 && CurrentRoomId != room &&
                 Rooms.TryGetValue(CurrentRoomId, out var cur))
+            {
+                if (!cur.Exits.TryGetValue(dir.Value, out var ex) || ex != room) topo = true;
                 cur.Exits[dir.Value] = room;
+            }
 
             SeedPlayer(zm, room);
             DetectPlayer(zm, room);
@@ -103,6 +108,7 @@ namespace AteZMachine
             if (Rooms.TryGetValue(room, out var here)) CurrentAreaId = here.Area;
             if (PlayerObj > 0) Objects.Remove(PlayerObj); // never map the player avatar
             ScanObjects(zm);
+            if (topo && here != null) Resolve(here.Area, here.Level);
             _prevRoom = room;
             Changed?.Invoke();
         }
@@ -148,6 +154,80 @@ namespace AteZMachine
 
         bool Occupied(int x, int y, int level, int area, int selfId) =>
             RoomAt(x, y, level, area, selfId) != null;
+
+        // ---- Iterative layout relaxation ----
+        // A new room or edge can leave connected rooms far apart (an exit may
+        // link to a room across the map). Greedily move rooms — with cascade
+        // push, so no overlaps — accepting only moves that LOWER the total edge
+        // "stress" (squared grid distance from each edge's ideal adjacency).
+        // Stress strictly decreases per accepted move, so it converges; the pass
+        // count is capped so a non-embeddable graph can't loop forever.
+        struct Edge { public MapRoom A, B; public int Dx, Dy; }
+
+        void Resolve(int area, int level)
+        {
+            var rooms = new List<MapRoom>();
+            foreach (var r in Rooms.Values)
+                if (r.Placed && r.Area == area && r.Level == level) rooms.Add(r);
+            if (rooms.Count < 2) return;
+
+            var edges = new List<Edge>();
+            foreach (var a in rooms)
+                foreach (var kv in a.Exits)
+                {
+                    if ((int)kv.Key > (int)Dir.SW) continue; // compass exits only
+                    if (!Rooms.TryGetValue(kv.Value, out var b) || !b.Placed || b.Area != area || b.Level != level) continue;
+                    if (b == a) continue;
+                    var (dx, dy, _) = Delta(kv.Key);
+                    edges.Add(new Edge { A = a, B = b, Dx = dx, Dy = dy });
+                }
+            if (edges.Count == 0) return;
+
+            var snapX = new int[rooms.Count];
+            var snapY = new int[rooms.Count];
+            const int maxPasses = 30;
+            for (int pass = 0; pass < maxPasses; pass++)
+            {
+                bool moved = false;
+                foreach (var e in edges)
+                {
+                    // Pull B to A's ideal neighbour cell, or A to B's — whichever
+                    // lowers total stress; skip if already satisfied.
+                    if (TryRelocate(e.B, e.A.X + e.Dx, e.A.Y + e.Dy, area, level, rooms, edges, snapX, snapY)) { moved = true; continue; }
+                    if (TryRelocate(e.A, e.B.X - e.Dx, e.B.Y - e.Dy, area, level, rooms, edges, snapX, snapY)) moved = true;
+                }
+                if (!moved) break;
+            }
+        }
+
+        static long Stress(List<Edge> edges)
+        {
+            long s = 0;
+            foreach (var e in edges)
+            {
+                long ex = e.B.X - (e.A.X + e.Dx);
+                long ey = e.B.Y - (e.A.Y + e.Dy);
+                s += ex * ex + ey * ey;
+            }
+            return s;
+        }
+
+        bool TryRelocate(MapRoom room, int tx, int ty, int area, int level,
+                         List<MapRoom> rooms, List<Edge> edges, int[] snapX, int[] snapY)
+        {
+            if (room.X == tx && room.Y == ty) return false;
+            for (int i = 0; i < rooms.Count; i++) { snapX[i] = rooms[i].X; snapY[i] = rooms[i].Y; }
+            long before = Stress(edges);
+
+            int sx = System.Math.Sign(tx - room.X), sy = System.Math.Sign(ty - room.Y);
+            if (sx == 0 && sy == 0) sx = 1;
+            PushChain(tx, ty, level, area, sx, sy, room.Id); // clear the target (no overlaps)
+            room.X = tx; room.Y = ty;
+
+            if (Stress(edges) < before) return true;
+            for (int i = 0; i < rooms.Count; i++) { rooms[i].X = snapX[i]; rooms[i].Y = snapY[i]; }
+            return false;
+        }
 
         static (int, int, int) Delta(Dir d)
         {
