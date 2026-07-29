@@ -37,15 +37,20 @@ namespace AteZMachine
         readonly Label _levelLabel;
 
         // One drawn connection: a spline p0→p1 (control points c1,c2) with an
-        // arrowhead at whichever end travel arrives.
-        struct Conn { public Vector2 p0, c1, c2, p1; public bool arrowStart, arrowEnd; }
+        // arrowhead at whichever end travel arrives, stroked in the FROM room's
+        // colour.
+        struct Conn { public Vector2 p0, c1, c2, p1; public bool arrowStart, arrowEnd; public Color col; }
         readonly List<Conn> _lines = new List<Conn>();
 
-        static readonly Color RoomBg = new Color(0.18f, 0.18f, 0.20f);
-        static readonly Color RoomCur = new Color(0.20f, 0.34f, 0.22f);
         static readonly Color Border = new Color(0.5f, 0.5f, 0.55f);
-        static readonly Color LineCol = new Color(0.55f, 0.55f, 0.6f);
+        static readonly Color CurBorder = new Color(0.55f, 0.95f, 0.6f); // "you are here" outline
         static readonly Color ItemCol = new Color(0.55f, 0.8f, 1f);
+
+        static Color NodeColor(int id)
+        {
+            ZMapLayout.NodeColor(id, out float r, out float g, out float b);
+            return new Color(r, g, b);
+        }
 
         public ZMapView()
         {
@@ -147,19 +152,27 @@ namespace AteZMachine
                 if (r.Placed && r.Area == _area && r.Level == _level)
                     basePos[r.Id] = new Vector2((r.X - minX) * CellW, (r.Y - minY) * CellH);
 
-            // Connections (splines). Attach at the exit's side/corner, arrowheads
-            // show travel direction (both ends when bidirectional).
+            // Obstacle rectangles (all boxes on the page) for spline routing.
+            var obstacles = new List<ZMapLayout.BoxRect>(basePos.Count);
+            foreach (var kv in basePos)
+                obstacles.Add(new ZMapLayout.BoxRect { Id = kv.Key, X = kv.Value.x, Y = kv.Value.y, W = BoxW, H = BoxH });
+
+            // Connections (splines). Attach at the exit's side/corner, routed to
+            // avoid the boxes, stroked in the FROM room's colour, arrowheads for
+            // travel direction (both ends when bidirectional).
             foreach (var e in ZMapLayout.EdgesForPage(_map, _area, _level))
             {
                 if (!basePos.TryGetValue(e.E0.Room, out var b0) || !basePos.TryGetValue(e.E1.Room, out var b1)) continue;
                 Vector2 p0 = Attach(b0, e.E0.Side), p1 = Attach(b1, e.E1.Side);
-                ZMapLayout.Controls(p0.x, p0.y, e.E0.Side, p1.x, p1.y, e.E1.Side,
+                ZMapLayout.RouteControls(p0.x, p0.y, e.E0.Side, p1.x, p1.y, e.E1.Side,
+                    obstacles, e.E0.Room, e.E1.Room,
                     out float c1x, out float c1y, out float c2x, out float c2y);
                 _lines.Add(new Conn
                 {
                     p0 = p0, p1 = p1,
                     c1 = new Vector2(c1x, c1y), c2 = new Vector2(c2x, c2y),
-                    arrowStart = e.Arrow0, arrowEnd = e.Arrow1
+                    arrowStart = e.Arrow0, arrowEnd = e.Arrow1,
+                    col = NodeColor(ZMapLayout.FromRoom(e))
                 });
             }
 
@@ -242,14 +255,18 @@ namespace AteZMachine
         VisualElement BuildRoomBox(MapRoom r, float px, float py)
         {
             bool cur = r.Id == _map.CurrentRoomId;
+            Color bg = NodeColor(r.Id);
+            if (cur) bg = new Color(Mathf.Min(1f, bg.r * 1.5f + 0.06f), Mathf.Min(1f, bg.g * 1.5f + 0.06f), Mathf.Min(1f, bg.b * 1.5f + 0.06f));
+            Color bc = cur ? CurBorder : Border;
+            int bw = cur ? 2 : 1;
             var box = new VisualElement
             {
                 style =
                 {
                     position = Position.Absolute, left = px, top = py, width = BoxW, height = BoxH,
-                    backgroundColor = cur ? RoomCur : RoomBg,
-                    borderTopWidth = 1, borderBottomWidth = 1, borderLeftWidth = 1, borderRightWidth = 1,
-                    borderTopColor = Border, borderBottomColor = Border, borderLeftColor = Border, borderRightColor = Border,
+                    backgroundColor = bg,
+                    borderTopWidth = bw, borderBottomWidth = bw, borderLeftWidth = bw, borderRightWidth = bw,
+                    borderTopColor = bc, borderBottomColor = bc, borderLeftColor = bc, borderRightColor = bc,
                     paddingLeft = 4, paddingRight = 4, paddingTop = 2, overflow = Overflow.Hidden
                 }
             };
@@ -300,25 +317,25 @@ namespace AteZMachine
             var o = _drawOffset;
             foreach (var c in _lines)
             {
-                p.strokeColor = LineCol;
+                p.strokeColor = c.col;
                 p.BeginPath();
                 p.MoveTo(c.p0 + o);
                 p.BezierCurveTo(c.c1 + o, c.c2 + o, c.p1 + o);
                 p.Stroke();
-                if (c.arrowEnd) Arrowhead(p, c.p1 + o, c.p1 - c.c2);
-                if (c.arrowStart) Arrowhead(p, c.p0 + o, c.p0 - c.c1);
+                if (c.arrowEnd) Arrowhead(p, c.p1 + o, c.p1 - c.c2, c.col);
+                if (c.arrowStart) Arrowhead(p, c.p0 + o, c.p0 - c.c1, c.col);
             }
         }
 
         // A small filled triangle at 'tip', pointing along 'dir'.
-        static void Arrowhead(Painter2D p, Vector2 tip, Vector2 dir)
+        static void Arrowhead(Painter2D p, Vector2 tip, Vector2 dir, Color col)
         {
             if (dir.sqrMagnitude < 0.001f) return;
             dir = dir.normalized;
             var perp = new Vector2(-dir.y, dir.x);
             const float len = 9f, half = 4.5f;
             Vector2 baseC = tip - dir * len;
-            p.fillColor = LineCol;
+            p.fillColor = col;
             p.BeginPath();
             p.MoveTo(tip);
             p.LineTo(baseC + perp * half);

@@ -128,13 +128,17 @@ namespace AteZMachine
         static int Cmp(MapEndpoint a, MapEndpoint b) =>
             a.Room != b.Room ? a.Room - b.Room : (int)a.Side - (int)b.Side;
 
+        /// <summary>A room's box for obstacle-aware routing.</summary>
+        internal struct BoxRect { public int Id; public float X, Y, W, H; }
+
         /// <summary>Cubic-Bezier control points for a connection from p0 (leaving
         /// side <paramref name="sideA"/>) to p1 (entering side <paramref
-        /// name="sideB"/>). Each control leaves along that side's outward normal
-        /// with a distance-scaled reach, plus a perpendicular bow (via the two
-        /// normals' average) so the curve bellies AROUND the boxes — and stays a
-        /// straight run for a plain opposite-facing corridor (average is zero).</summary>
-        public static void Controls(float p0x, float p0y, Dir sideA, float p1x, float p1y, Dir sideB,
+        /// name="sideB"/>). Each control leaves along that side's outward normal;
+        /// the curve is then bowed laterally to whichever side keeps it clear of
+        /// the other room boxes (the two endpoint rooms are ignored). A plain
+        /// opposite-facing corridor with a clear straight path stays straight.</summary>
+        public static void RouteControls(float p0x, float p0y, Dir sideA, float p1x, float p1y, Dir sideB,
+            IList<BoxRect> obstacles, int skipA, int skipB,
             out float c1x, out float c1y, out float c2x, out float c2y)
         {
             Normal(sideA, out float ax, out float ay);
@@ -143,12 +147,84 @@ namespace AteZMachine
             float dist = (float)Math.Sqrt(dx * dx + dy * dy);
             float reach = Clamp(dist * 0.35f, 24f, 90f);
 
-            float mx = ax + bx, my = ay + by, ml = (float)Math.Sqrt(mx * mx + my * my);
-            float bow = ml > 0.001f ? Clamp(dist * 0.18f, 0f, 54f) : 0f;
-            float ux = ml > 0.001f ? mx / ml : 0f, uy = ml > 0.001f ? my / ml : 0f;
+            float b1x = p0x + ax * reach, b1y = p0y + ay * reach;
+            float b2x = p1x + bx * reach, b2y = p1y + by * reach;
 
-            c1x = p0x + ax * reach + ux * bow; c1y = p0y + ay * reach + uy * bow;
-            c2x = p1x + bx * reach + ux * bow; c2y = p1y + by * reach + uy * bow;
+            // Unit perpendicular to the straight run — the lateral bow axis.
+            float len = dist > 0.001f ? dist : 1f;
+            float px = -dy / len, py = dx / len;
+
+            // Try increasing lateral offsets on both sides; pick the least the
+            // curve overlaps any box, preferring the smallest bow.
+            float[] ks = { 0f, 45f, -45f, 90f, -90f, 140f, -140f, 200f, -200f };
+            float bestK = 0f; int bestHits = int.MaxValue;
+            foreach (float k in ks)
+            {
+                float cc1x = b1x + px * k, cc1y = b1y + py * k;
+                float cc2x = b2x + px * k, cc2y = b2y + py * k;
+                int hits = CurveHits(p0x, p0y, cc1x, cc1y, cc2x, cc2y, p1x, p1y, obstacles, skipA, skipB);
+                if (hits < bestHits || (hits == bestHits && Math.Abs(k) < Math.Abs(bestK)))
+                { bestHits = hits; bestK = k; }
+                if (bestHits == 0) break; // this offset is clear; no need to try wider ones
+            }
+            c1x = b1x + px * bestK; c1y = b1y + py * bestK;
+            c2x = b2x + px * bestK; c2y = b2y + py * bestK;
+        }
+
+        // Samples the cubic between the endpoints and counts how many samples
+        // land inside an obstacle box (endpoints' own rooms excluded, boxes
+        // slightly inflated so the curve is nudged fully clear).
+        static int CurveHits(float p0x, float p0y, float c1x, float c1y, float c2x, float c2y,
+            float p1x, float p1y, IList<BoxRect> obstacles, int skipA, int skipB)
+        {
+            if (obstacles == null || obstacles.Count == 0) return 0;
+            const float inflate = 6f;
+            int hits = 0;
+            for (int s = 1; s <= 8; s++)
+            {
+                float t = s / 9f, it = 1f - t;
+                float x = it * it * it * p0x + 3 * it * it * t * c1x + 3 * it * t * t * c2x + t * t * t * p1x;
+                float y = it * it * it * p0y + 3 * it * it * t * c1y + 3 * it * t * t * c2y + t * t * t * p1y;
+                foreach (var b in obstacles)
+                {
+                    if (b.Id == skipA || b.Id == skipB) continue;
+                    if (x >= b.X - inflate && x <= b.X + b.W + inflate &&
+                        y >= b.Y - inflate && y <= b.Y + b.H + inflate) { hits++; break; }
+                }
+            }
+            return hits;
+        }
+
+        /// <summary>The room a connection's travel starts FROM — the non-arrow
+        /// end (arrows point INTO the destination). Two-way links use E0.</summary>
+        public static int FromRoom(MapEdge e) =>
+            (e.Arrow1 && !e.Arrow0) ? e.E0.Room : (e.Arrow0 && !e.Arrow1) ? e.E1.Room : e.E0.Room;
+
+        /// <summary>Deterministic per-room colour (same every game — a hash of
+        /// the room id, not randomness): a hue spread by the golden ratio, at a
+        /// fixed dark saturation/value so light text stays readable.</summary>
+        public static void NodeColor(int id, out float r, out float g, out float b)
+        {
+            float hue = Frac(id * 0.61803399f + 0.13f);
+            HsvToRgb(hue, 0.55f, 0.34f, out r, out g, out b);
+        }
+
+        static float Frac(float v) { v -= (float)Math.Floor(v); return v < 0 ? v + 1f : v; }
+
+        static void HsvToRgb(float h, float s, float v, out float r, out float g, out float b)
+        {
+            float i = (float)Math.Floor(h * 6f);
+            float f = h * 6f - i;
+            float p = v * (1f - s), q = v * (1f - f * s), t = v * (1f - (1f - f) * s);
+            switch (((int)i) % 6)
+            {
+                case 0: r = v; g = t; b = p; break;
+                case 1: r = q; g = v; b = p; break;
+                case 2: r = p; g = v; b = t; break;
+                case 3: r = p; g = q; b = v; break;
+                case 4: r = t; g = p; b = v; break;
+                default: r = v; g = p; b = q; break;
+            }
         }
 
         static float Clamp(float v, float lo, float hi) => v < lo ? lo : (v > hi ? hi : v);
