@@ -379,14 +379,15 @@ namespace ADKOM.TextEditor.Scripting
 
         /// <summary>Shows a pinned status line across the top of the game screen
         /// that does NOT scroll with the document — for a growing transcript
-        /// (e.g. a text adventure) whose header must stay put. The reserved row
-        /// pushes the text down so nothing hides behind it. Only takes effect
-        /// while this document is the active tab and in game mode; passing a
-        /// null/empty text hides the bar.</summary>
-        public void SetStatusBar(string text, Color foreground, Color background)
+        /// (e.g. a text adventure) whose header must stay put. <paramref
+        /// name="left"/> is left-aligned (location), <paramref name="right"/> is
+        /// right-aligned (score/moves). The reserved row pushes the text down so
+        /// nothing hides behind it. Only takes effect while this document is the
+        /// active tab and in game mode; passing both empty hides the bar.</summary>
+        public void SetStatusBar(string left, string right, Color foreground, Color background)
         {
             EnsureValid();
-            _window.ApiSetStatusBar(_doc, text, foreground, background);
+            _window.ApiSetStatusBar(_doc, left, right, foreground, background);
         }
 
         /// <summary>1-based line → its [start, end) span in Content.</summary>

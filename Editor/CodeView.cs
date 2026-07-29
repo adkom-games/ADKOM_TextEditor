@@ -272,7 +272,8 @@ namespace ADKOM.TextEditor
         ColorOverlay _overlay;
         readonly List<VisualElement> _ovBgPool = new List<VisualElement>();
         bool _gameMode;
-        Label _gameStatusBar;   // pinned, non-scrolling status line for text games
+        VisualElement _gameStatusBar;          // pinned, non-scrolling status line for text games
+        Label _gameStatusLeft, _gameStatusRight;
 
         internal void AttachOverlay(ColorOverlay overlay)
         {
@@ -305,13 +306,16 @@ namespace ADKOM.TextEditor
         }
 
         /// <summary>Shows/updates the pinned status line for a text game (does
-        /// not scroll with the transcript). Only takes effect in game mode.</summary>
-        internal void SetGameStatusBar(string text, Color fg, Color bg)
+        /// not scroll with the transcript). Location is left-aligned, score/
+        /// moves right-aligned. Only takes effect in game mode.</summary>
+        internal void SetGameStatusBar(string left, string right, Color fg, Color bg)
         {
             if (_gameStatusBar == null) return;
             if (!_gameMode) { HideGameStatusBar(); return; }
-            _gameStatusBar.text = text ?? string.Empty;
-            _gameStatusBar.style.color = fg;
+            _gameStatusLeft.text = left ?? string.Empty;
+            _gameStatusRight.text = right ?? string.Empty;
+            _gameStatusLeft.style.color = fg;
+            _gameStatusRight.style.color = fg;
             _gameStatusBar.style.backgroundColor = bg;
             float h = _lineHeight > 1 ? _lineHeight : 16f;
             _gameStatusBar.style.height = h;
@@ -565,19 +569,35 @@ namespace ADKOM.TextEditor
             Add(_scroll);
 
             // Pinned status line for text games: an absolute bar across the top
-            // that does NOT scroll with the transcript. Hidden unless a game
-            // sets it; the scroll area is pushed down by its height so no text
-            // hides behind it. Added last so it paints above the scroll view.
-            _gameStatusBar = new Label { name = "code-game-status" };
+            // that does NOT scroll with the transcript. Location sits left,
+            // score/moves right (flex layout — no fragile space padding). Hidden
+            // unless a game sets it; the scroll area is pushed down by its height
+            // so no text hides behind it. Added last so it paints above the
+            // scroll view.
+            _gameStatusBar = new VisualElement { name = "code-game-status" };
             _gameStatusBar.style.position = Position.Absolute;
             _gameStatusBar.style.top = 0;
             _gameStatusBar.style.left = 0;
             _gameStatusBar.style.right = 0;
-            _gameStatusBar.style.whiteSpace = WhiteSpace.NoWrap;
+            _gameStatusBar.style.flexDirection = FlexDirection.Row;
+            _gameStatusBar.style.justifyContent = Justify.SpaceBetween;
+            _gameStatusBar.style.alignItems = Align.Center;
             _gameStatusBar.style.overflow = Overflow.Hidden;
             _gameStatusBar.style.display = DisplayStyle.None;
             _gameStatusBar.pickingMode = PickingMode.Ignore;
-            _gameStatusBar.AddToClassList("code-line");
+            _gameStatusLeft = new Label { pickingMode = PickingMode.Ignore };
+            _gameStatusLeft.AddToClassList("code-line");
+            _gameStatusLeft.style.whiteSpace = WhiteSpace.NoWrap;
+            _gameStatusLeft.style.paddingLeft = 4;
+            _gameStatusLeft.style.flexShrink = 1;      // yield first if the row is tight
+            _gameStatusLeft.style.overflow = Overflow.Hidden;
+            _gameStatusRight = new Label { pickingMode = PickingMode.Ignore };
+            _gameStatusRight.AddToClassList("code-line");
+            _gameStatusRight.style.whiteSpace = WhiteSpace.NoWrap;
+            _gameStatusRight.style.paddingRight = 8;
+            _gameStatusRight.style.flexShrink = 0;     // score/moves always fully shown
+            _gameStatusBar.Add(_gameStatusLeft);
+            _gameStatusBar.Add(_gameStatusRight);
             Add(_gameStatusBar);
 
             _caret = new VisualElement { name = "code-caret" };
@@ -1210,7 +1230,11 @@ namespace ADKOM.TextEditor
 
                 if (!_wordWrap)
                 {
-                    float w = MeasureRange(line, 0, _lines[line].Length) + 60;
+                    // Just enough slack for the caret to sit past the last glyph.
+                    // A larger pad (was +60) inflated the content past the
+                    // viewport for full-width lines, showing a horizontal
+                    // scrollbar with nothing actually clipped on the right.
+                    float w = MeasureRange(line, 0, _lines[line].Length) + CaretWidth;
                     if (w > widest) widest = w;
                 }
             }
