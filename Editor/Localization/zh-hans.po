@@ -972,6 +972,12 @@ msgstr "对象 #"
 msgid "Non-adjacent exit"
 msgstr "非相邻出口"
 
+msgid "SVG"
+msgstr "SVG"
+
+msgid "Export map as SVG"
+msgstr "将地图导出为 SVG"
+
 msgid "Auto-map"
 msgstr "自动地图"
 

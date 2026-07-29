@@ -972,6 +972,12 @@ msgstr "オブジェクト #"
 msgid "Non-adjacent exit"
 msgstr "隣接しない出口"
 
+msgid "SVG"
+msgstr "SVG"
+
+msgid "Export map as SVG"
+msgstr "マップを SVG で書き出す"
+
 msgid "Auto-map"
 msgstr "自動マップ"
 

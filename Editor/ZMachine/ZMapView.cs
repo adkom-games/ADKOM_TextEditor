@@ -40,8 +40,10 @@ namespace AteZMachine
             var down = new Button(() => { _level--; Rebuild(); }) { text = "▾" };
             var up = new Button(() => { _level++; Rebuild(); }) { text = "▴" };
             _levelLabel = new Label("Level 0") { style = { marginLeft = 4, marginRight = 4 } };
+            var svg = new Button(ExportSvg) { text = L10n.Tr("SVG"), tooltip = L10n.Tr("Export map as SVG"),
+                style = { marginLeft = 12 } };
             bar.Add(new Label(L10n.Tr("Map")) { style = { unityFontStyleAndWeight = FontStyle.Bold, marginLeft = 4, marginRight = 8 } });
-            bar.Add(down); bar.Add(_levelLabel); bar.Add(up);
+            bar.Add(down); bar.Add(_levelLabel); bar.Add(up); bar.Add(svg);
             left.Add(bar);
 
             _scroll = new ScrollView(ScrollViewMode.VerticalAndHorizontal) { style = { flexGrow = 1 } };
@@ -74,6 +76,15 @@ namespace AteZMachine
             // Follow the player to their current level.
             if (_map != null && _map.Rooms.TryGetValue(_map.CurrentRoomId, out var r)) _level = r.Level;
             Rebuild();
+        }
+
+        void ExportSvg()
+        {
+            if (_map == null || _map.Rooms.Count == 0) return;
+            string path = EditorUtility.SaveFilePanel(L10n.Tr("Export map as SVG"), "", "map.svg", "svg");
+            if (string.IsNullOrEmpty(path)) return;
+            try { System.IO.File.WriteAllText(path, ZMapSvg.ToSvg(_map)); }
+            catch (System.Exception e) { Debug.LogWarning("[ADKOM Text Editor] SVG export failed: " + e.Message); }
         }
 
         void Rebuild()
