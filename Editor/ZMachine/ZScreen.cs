@@ -8,6 +8,7 @@
 // the line to the interpreter.
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using ADKOM.TextEditor.Scripting;
 using UnityEngine;
@@ -168,6 +169,51 @@ namespace AteZMachine
             _doc.WriteAt(_inputDocRow, 1, line.PadRight(_w));
             _doc.SetColor(_inputDocRow, 1, _w + 1, PromptCol, null);
             _doc.GoTo(_inputDocRow, 1);
+        }
+
+        // ---- Transcript persistence (sidecar to the game save) ----
+        // Restore reloads game state; without this the on-screen history would
+        // be only what was typed since launch, leaving the transcript near-empty
+        // after a restore. The transcript rides alongside the save so restoring
+        // brings the scrollback back too.
+
+        const string TransHeader = "ATE-ZSCROLL\t1";
+
+        public void SaveTranscript(string path)
+        {
+            try
+            {
+                using (var w = new StreamWriter(File.Create(path)))
+                {
+                    w.WriteLine(TransHeader);
+                    w.WriteLine(_status ?? "");
+                    w.WriteLine(_lines.Count);
+                    foreach (var l in _lines) w.WriteLine(l ?? "");
+                }
+            }
+            catch { /* transcript sidecar is best-effort */ }
+        }
+
+        public bool LoadTranscript(string path)
+        {
+            try
+            {
+                if (!File.Exists(path)) return false;
+                using (var r = new StreamReader(File.OpenRead(path)))
+                {
+                    if (r.ReadLine() != TransHeader) return false;
+                    _status = r.ReadLine() ?? "";
+                    if (!int.TryParse(r.ReadLine(), out int n) || n < 0) return false;
+                    _lines.Clear();
+                    for (int i = 0; i < n; i++) _lines.Add(r.ReadLine() ?? "");
+                    if (_lines.Count == 0) _lines.Add("");
+                }
+                _inputMode = false;
+                _input.Clear();
+                Render();
+                return true;
+            }
+            catch { return false; }
         }
 
         // ---- Rendering ----

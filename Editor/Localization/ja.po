@@ -963,6 +963,12 @@ msgstr "（最初に見た場所から移動）"
 msgid "(you are here)"
 msgstr "（現在地）"
 
+msgid "Room #"
+msgstr "部屋 #"
+
+msgid "Object #"
+msgstr "オブジェクト #"
+
 msgid "Auto-map"
 msgstr "自動マップ"
 

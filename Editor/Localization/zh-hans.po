@@ -963,6 +963,12 @@ msgstr "（自首次发现后已移动）"
 msgid "(you are here)"
 msgstr "（当前位置）"
 
+msgid "Room #"
+msgstr "房间 #"
+
+msgid "Object #"
+msgstr "对象 #"
+
 msgid "Auto-map"
 msgstr "自动地图"
 
