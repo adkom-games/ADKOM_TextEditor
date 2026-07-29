@@ -207,14 +207,15 @@ namespace AteZMachine
                     // door unhidden here (e.g. the grating under the leaves) — its
                     // real home is the room it leads to. Show it in the CURRENT
                     // room as a connector until it's traversed and resolves.
+                    // Place a connector in the current room only when FIRST
+                    // revealed; NEVER relocate an already-known one. A restore
+                    // reloads memory, so the stale attribute baseline would
+                    // otherwise see every connector "re-revealed" and pull them
+                    // all into the current room.
                     bool justRevealed = _prevAttrs.TryGetValue(o, out uint pr) && pr != attrs[o];
-                    if (justRevealed && CurrentRoomId != 0)
-                    {
-                        if (!Objects.TryGetValue(o, out var mc))
-                            Objects[o] = mc = new MapObject { Id = o, OriginRoom = CurrentRoomId };
-                        mc.Name = name; mc.Room = CurrentRoomId; mc.Carried = false;
-                        mc.Container = 0; mc.IsConnector = true;
-                    }
+                    if (justRevealed && CurrentRoomId != 0 && !Objects.ContainsKey(o))
+                        Objects[o] = new MapObject { Id = o, OriginRoom = CurrentRoomId,
+                            Name = name, Room = CurrentRoomId, IsConnector = true };
                     continue;
                 }
 
@@ -340,6 +341,9 @@ namespace AteZMachine
                 {
                     if (r.ReadInt32() != MapFormat) return false;
                     Rooms.Clear(); Objects.Clear(); AreaName.Clear();
+                    // Fresh baselines so the first scan after a restore doesn't
+                    // read reloaded memory as a flurry of "reveals".
+                    _prevParents.Clear(); _prevAttrs.Clear();
                     CurrentRoomId = r.ReadInt32(); PlayerObj = r.ReadInt32(); _prevRoom = r.ReadInt32();
                     CurrentAreaId = r.ReadInt32(); _nextArea = r.ReadInt32();
                     int na = r.ReadInt32();
