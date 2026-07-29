@@ -20,7 +20,6 @@ namespace AteZMachine
         const int CellW = 150, CellH = 92, BoxW = 128, BoxH = 74;
         const int Margin = 20, HeadingH = 26, SectionGap = 40;
         const int LegendColW = 260, LegendRowH = 18;
-        const float Ctrl = 44f; // spline control-point reach
 
         const string PageBg = "#1e1e20";
         const string RoomBg = "#2e2e33";
@@ -73,9 +72,9 @@ namespace AteZMachine
             foreach (var lb in layout)
                 foreach (var e in ZMapLayout.EdgesForLevel(map, lb.Level))
                 {
-                    var pA = Attach(pos, e.A, e.SideA);
-                    var pB = Attach(pos, e.B, e.SideB);
-                    body.Append(Spline(pA, e.SideA, pB, e.SideB, e.ArrowA, e.ArrowB, LineCol, false));
+                    var pA = Attach(pos, e.E0.Room, e.E0.Side);
+                    var pB = Attach(pos, e.E1.Room, e.E1.Side);
+                    body.Append(Spline(pA, e.E0.Side, pB, e.E1.Side, e.Arrow0, e.Arrow1, LineCol, false));
                 }
             foreach (var e in VerticalEdges(map, pos))
                 body.Append(Spline(e.pUpper, Dir.S, e.pLower, Dir.N, e.arrowUpper, e.arrowLower, LevelCol, true));
@@ -205,10 +204,8 @@ namespace AteZMachine
         static string Spline((float x, float y) p0, Dir sideA, (float x, float y) p1, Dir sideB,
             bool arrowA, bool arrowB, string col, bool cross)
         {
-            ZMapLayout.Normal(sideA, out float ax, out float ay);
-            ZMapLayout.Normal(sideB, out float bx, out float by);
-            float c1x = p0.x + ax * Ctrl, c1y = p0.y + ay * Ctrl;
-            float c2x = p1.x + bx * Ctrl, c2y = p1.y + by * Ctrl;
+            ZMapLayout.Controls(p0.x, p0.y, sideA, p1.x, p1.y, sideB,
+                out float c1x, out float c1y, out float c2x, out float c2y);
             var sb = new StringBuilder();
             sb.Append("<path d=\"M").Append(F(p0.x)).Append(',').Append(F(p0.y))
               .Append(" C").Append(F(c1x)).Append(',').Append(F(c1y)).Append(' ')

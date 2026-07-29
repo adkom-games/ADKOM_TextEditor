@@ -27,7 +27,6 @@ namespace AteZMachine
         // arrowhead at whichever end travel arrives.
         struct Conn { public Vector2 p0, c1, c2, p1; public bool arrowStart, arrowEnd; }
         readonly List<Conn> _lines = new List<Conn>();
-        const float Ctrl = 40f;
 
         static readonly Color RoomBg = new Color(0.18f, 0.18f, 0.20f);
         static readonly Color RoomCur = new Color(0.20f, 0.34f, 0.22f);
@@ -127,16 +126,15 @@ namespace AteZMachine
             // exit back to a room due south) into a visible curve.
             foreach (var e in ZMapLayout.EdgesForLevel(_map, _level))
             {
-                if (!pos.TryGetValue(e.A, out var baseA) || !pos.TryGetValue(e.B, out var baseB)) continue;
-                Vector2 p0 = Attach(baseA, e.SideA), p1 = Attach(baseB, e.SideB);
-                ZMapLayout.Normal(e.SideA, out float ax, out float ay);
-                ZMapLayout.Normal(e.SideB, out float bx, out float by);
+                if (!pos.TryGetValue(e.E0.Room, out var b0) || !pos.TryGetValue(e.E1.Room, out var b1)) continue;
+                Vector2 p0 = Attach(b0, e.E0.Side), p1 = Attach(b1, e.E1.Side);
+                ZMapLayout.Controls(p0.x, p0.y, e.E0.Side, p1.x, p1.y, e.E1.Side,
+                    out float c1x, out float c1y, out float c2x, out float c2y);
                 _lines.Add(new Conn
                 {
                     p0 = p0, p1 = p1,
-                    c1 = p0 + new Vector2(ax, ay) * Ctrl,
-                    c2 = p1 + new Vector2(bx, by) * Ctrl,
-                    arrowStart = e.ArrowA, arrowEnd = e.ArrowB
+                    c1 = new Vector2(c1x, c1y), c2 = new Vector2(c2x, c2y),
+                    arrowStart = e.Arrow0, arrowEnd = e.Arrow1
                 });
             }
             _canvas.MarkDirtyRepaint();
