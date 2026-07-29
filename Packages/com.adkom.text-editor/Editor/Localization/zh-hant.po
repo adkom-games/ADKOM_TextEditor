@@ -947,3 +947,12 @@ msgstr "還原遊戲"
 
 msgid "Z-Machine (Zork)..."
 msgstr "Z-Machine (Zork)..."
+
+msgid "(download)"
+msgstr "（下載）"
+
+msgid "download failed: "
+msgstr "下載失敗："
+
+msgid "Z-Machine (Zork)"
+msgstr "Z-Machine (Zork)"

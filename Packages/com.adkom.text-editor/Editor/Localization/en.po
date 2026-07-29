@@ -949,3 +949,12 @@ msgstr "Restore game"
 
 msgid "Z-Machine (Zork)..."
 msgstr "Z-Machine (Zork)..."
+
+msgid "(download)"
+msgstr "(download)"
+
+msgid "download failed: "
+msgstr "download failed: "
+
+msgid "Z-Machine (Zork)"
+msgstr "Z-Machine (Zork)"
