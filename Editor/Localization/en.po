@@ -986,6 +986,9 @@ msgstr "Zoom"
 msgid "Ctrl+scroll to zoom"
 msgstr "Ctrl+scroll to zoom"
 
+msgid "(connector / passage)"
+msgstr "(connector / passage)"
+
 msgid "Auto-map"
 msgstr "Auto-map"
 

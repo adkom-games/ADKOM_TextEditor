@@ -335,12 +335,12 @@ namespace AteZMachine
             var title = new Label(r.Name + " (#" + r.Id + ")") { style = { unityFontStyleAndWeight = FontStyle.Bold, whiteSpace = WhiteSpace.NoWrap } };
             box.Add(title);
 
-            // Vertical / in-out markers.
+            // Up/down transitions as ▲/▼ triangles; in/out as arrows.
             string marks = "";
             foreach (var kv in r.Exits)
             {
-                if (kv.Key == Dir.U) marks += "↑";
-                else if (kv.Key == Dir.D) marks += "↓";
+                if (kv.Key == Dir.U) marks += "▲";
+                else if (kv.Key == Dir.D) marks += "▼";
                 else if (kv.Key == Dir.In) marks += "▸in";
                 else if (kv.Key == Dir.Out) marks += "◂out";
             }
@@ -349,12 +349,14 @@ namespace AteZMachine
             // (Non-Euclidean compass exits are now drawn as curved connections
             // with arrowheads, so they need no in-box marker.)
 
-            // Item symbols (clickable).
+            // Item symbols (clickable) — a diamond ◇ for revealed connectors/doors,
+            // a circle ◦ for ordinary items.
             var items = new VisualElement { style = { flexDirection = FlexDirection.Row, flexWrap = Wrap.Wrap } };
             foreach (var o in _map.Objects.Values)
             {
                 if (o.Room != r.Id || o.Carried) continue;
-                var sym = new Label("◦") { tooltip = o.Name + " (#" + o.Id + ")", style = { color = ItemCol, fontSize = 13, marginRight = 2 } };
+                var sym = new Label(o.IsConnector ? "◇" : "◦")
+                { tooltip = o.Name + " (#" + o.Id + ")", style = { color = o.IsConnector ? CurBorder : ItemCol, fontSize = 13, marginRight = 2 } };
                 int id = o.Id;
                 sym.RegisterCallback<MouseDownEvent>(e => { ShowObjectInfo(id); e.StopPropagation(); });
                 items.Add(sym);
@@ -445,6 +447,7 @@ namespace AteZMachine
             _info.Clear();
             _info.Add(new Label(o.Name) { style = { unityFontStyleAndWeight = FontStyle.Bold, whiteSpace = WhiteSpace.Normal, marginBottom = 2 } });
             _info.Add(new Label(L10n.Tr("Object #") + o.Id) { style = { color = Border, fontSize = 11, marginBottom = 4 } });
+            if (o.IsConnector) _info.Add(new Label(L10n.Tr("(connector / passage)")) { style = { color = CurBorder, marginBottom = 2 } });
             _info.Add(Wrapped(o.Carried ? L10n.Tr("Carried by you")
                 : L10n.Tr("Location: ") + RoomLabel(o.Room)));
             if (o.Container != 0 && _map.Objects.TryGetValue(o.Container, out var c))
@@ -456,7 +459,8 @@ namespace AteZMachine
 
         void AddObjectLink(MapObject o)
         {
-            var b = new Label("◦ " + o.Name + " (#" + o.Id + ")") { style = { color = ItemCol, whiteSpace = WhiteSpace.Normal } };
+            var b = new Label((o.IsConnector ? "◇ " : "◦ ") + o.Name + " (#" + o.Id + ")")
+            { style = { color = o.IsConnector ? CurBorder : ItemCol, whiteSpace = WhiteSpace.Normal } };
             int id = o.Id;
             b.RegisterCallback<MouseDownEvent>(e => { ShowObjectInfo(id); e.StopPropagation(); });
             _info.Add(b);

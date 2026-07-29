@@ -33,6 +33,7 @@ namespace AteZMachine
         public bool Carried;
         public int OriginRoom;    // where first seen
         public int Container;     // immediate parent when it's not the room/player (0 otherwise)
+        public bool IsConnector;  // a revealed door/passage (drawn as a diamond, not an item circle)
     }
 
     public sealed class ZMap
@@ -198,7 +199,24 @@ namespace AteZMachine
                 if (string.IsNullOrEmpty(name) || parent == 0) continue;
 
                 int locRoom = ContainingRoom(zm, o, out bool carried, out int container);
-                if (locRoom == 0) continue;                 // not in a room we know
+                if (locRoom == 0)
+                {
+                    // The object's containment home is a room we haven't visited.
+                    // If the game just REVEALED it (an attribute flag changed)
+                    // while the player stands in a known room, it's a connector/
+                    // door unhidden here (e.g. the grating under the leaves) — its
+                    // real home is the room it leads to. Show it in the CURRENT
+                    // room as a connector until it's traversed and resolves.
+                    bool justRevealed = _prevAttrs.TryGetValue(o, out uint pr) && pr != attrs[o];
+                    if (justRevealed && CurrentRoomId != 0)
+                    {
+                        if (!Objects.TryGetValue(o, out var mc))
+                            Objects[o] = mc = new MapObject { Id = o, OriginRoom = CurrentRoomId };
+                        mc.Name = name; mc.Room = CurrentRoomId; mc.Carried = false;
+                        mc.Container = 0; mc.IsConnector = true;
+                    }
+                    continue;
+                }
 
                 bool alreadySeen = Objects.ContainsKey(o);
                 // NO SPOILERS: a NEW object is shown only once it is directly
@@ -281,7 +299,7 @@ namespace AteZMachine
 
         // ---- Persistence (sidecar to the game save) ----
 
-        const int MapFormat = 2;
+        const int MapFormat = 3;
 
         public void SaveTo(string path)
         {
@@ -306,7 +324,7 @@ namespace AteZMachine
                     foreach (var o in Objects.Values)
                     {
                         w.Write(o.Id); w.Write(o.Name ?? ""); w.Write(o.Room);
-                        w.Write(o.Carried); w.Write(o.OriginRoom); w.Write(o.Container);
+                        w.Write(o.Carried); w.Write(o.OriginRoom); w.Write(o.Container); w.Write(o.IsConnector);
                     }
                 }
             }
@@ -339,7 +357,8 @@ namespace AteZMachine
                     for (int i = 0; i < no; i++)
                     {
                         var mo = new MapObject { Id = r.ReadInt32(), Name = r.ReadString(), Room = r.ReadInt32(),
-                            Carried = r.ReadBoolean(), OriginRoom = r.ReadInt32(), Container = r.ReadInt32() };
+                            Carried = r.ReadBoolean(), OriginRoom = r.ReadInt32(), Container = r.ReadInt32(),
+                            IsConnector = r.ReadBoolean() };
                         Objects[mo.Id] = mo;
                     }
                 }
