@@ -111,7 +111,10 @@ namespace AteZMachine
             if (_mapView == null) _mapView = new ZMapView();
             _mapView.SetMap(_map);
             _window?.SetGameMapView(_mapView);
-            if (_machine != null) _map.Observe(_machine, "");
+            // Observe only once the machine has actually started (its memory
+            // pointers are set). During Launch, AttachMap runs BEFORE Start();
+            // the post-Start observe there captures the real starting room.
+            if (_machine != null && _machine.State != ZState.Halted) _map.Observe(_machine, "");
         }
 
         static void DetachMap()

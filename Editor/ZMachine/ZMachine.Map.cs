@@ -6,6 +6,10 @@ namespace AteZMachine
 {
     public sealed partial class ZMachine
     {
+        /// <summary>True once Start() has set up the memory pointers — the
+        /// mapper must not read the object table before that.</summary>
+        internal bool MapReady() => _globals != 0 && _objTable != 0;
+
         /// <summary>The current room object (global variable 0 in v3 — the
         /// same value the status line names).</summary>
         internal int MapCurrentRoom() => ReadVar(16);
