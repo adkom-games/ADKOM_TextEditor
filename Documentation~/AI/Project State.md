@@ -16,7 +16,7 @@ with the host project.
   to main (`git subtree split`).
 - **Install:** `https://github.com/adkom-games/ADKOM_TextEditor.git#upm`
   (pinned: `#0.1.0`).
-- **Last updated:** 2026-07-27
+- **Last updated:** 2026-07-29
 - **Active branch:** main (feature branches merged with --no-ff and kept)
 
 ## Milestones
@@ -59,6 +59,7 @@ with the host project.
 | Release 0.10.1 (docs-only: Ko-fi links; published 2026-07-27) | Done |
 | 0.11.0 — the AI release (Copilot + Ask Unity AI + Search Results tab; published 2026-07-27) | Done |
 | 0.12.0 — the games release (addons security + folder addons + Game API 1.1 + Snake + Rogue 5.4.4 port; published 2026-07-28) | Done |
+| 0.12.1 — interactive fiction (clean-room Z-Machine v3 + Zork; auto-mapper with arrow connections, interiors-as-areas, SVG export; published 2026-07-29) | Done |
 | More languages; custom themes | Future (roadmap) |
 
 ## Current work area

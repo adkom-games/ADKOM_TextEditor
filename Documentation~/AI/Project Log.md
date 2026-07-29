@@ -349,6 +349,46 @@ the bottom. See [[Project State]] for the current snapshot.
   (Samples~/Addons/ZMachine/ZmCore.cs, class Zm, never committed) had
   leaked into %APPDATA% via InstallSamples; investigated and removed.
 
+## 2026-07-29 — Z-Machine auto-mapper, SVG export, interiors (0.12.1)
+
+- **Auto-mapper** (Editor/ZMachine/ZMap*, ZMapView, ZMapLayout): builds a
+  map purely by OBSERVING engine state each turn — current room (global 0)
+  and the object-containment tree — plus the direction word parsed from the
+  player's command. Nothing drives execution. Rooms are laid out on a
+  per-level grid; objects tracked through the containment tree (room,
+  carried, origin). Interactive pane in the console area (bidirectional
+  scroll, click a room/item for details); toggle via Tools → Z-Machine →
+  Auto-map.
+- **Spoiler-free**: a new object shows only when directly visible (in a room
+  or carried); items nested in an unopened container stay hidden until
+  taken/opened. The player avatar is never mapped (childless global-
+  referenced room-child heuristic + movement confirmation).
+- **Persistence**: the map and the on-screen transcript ride alongside the
+  game save as `.map`/`.log` sidecars (ZMachine AfterSave/AfterRestore
+  hooks), so restore brings the explored map and scrollback back.
+- **Terminal rework**: ZScreen is now a growing, scrollable transcript with
+  a PINNED status overlay (new CodeView game status bar + AteApi.SetStatusBar)
+  instead of a viewport-fitted grid — fixes the terminal that shrank a row
+  per command (measurement feedback) and gives real scroll-back. Caret sits
+  at the cursor glyph; output reliably scrolls into view (issues #28, #29).
+- **Connections**: directional splines with arrowheads (both ends when a
+  genuine two-way corridor) that attach at the exit's side/corner, so a
+  non-Euclidean link (e.g. a SOUTHWEST exit back to a room due south) is a
+  visible curve. Keyed by attach endpoints, not room pair, so distinct
+  corridors between the same rooms stay separate (issue #31).
+- **SVG export** (ZMapSvg, "SVG" button): the whole map to a standalone
+  `.svg` — all pages stacked, dashed cross-page connectors for level/area
+  changes, and an alphabetical multi-column **object legend** (name +
+  location) at the bottom.
+- **Interiors as areas**: entering a container via `in` opens a NEW area at
+  its own origin, so an interior lays out on its own grid instead of
+  colliding with the exterior. Rooms carry an Area id; the pane/SVG page by
+  (area, level).
+- **Map-pane fixes**: h/v scrollbars (canvas no longer shrinks to viewport),
+  canvas sized to spline extents (no clipping), current room centred with a
+  FIXED canvas margin — the viewport-derived padding had fed back and
+  exploded the canvas, blanking the map (issue #32).
+
 ## Conventions
 
 - Branch per feature/fix from main; merge with `--no-ff`; branches are kept.
