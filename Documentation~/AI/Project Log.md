@@ -331,6 +331,21 @@ the bottom. See [[Project State]] for the current snapshot.
   Editor-guard gate now excludes Samples~ (not compiled by Unity;
   guards would break the addon compiler).
 
+- **Z-Machine interpreter game (2026-07-29)**: clean-room version-3
+  Z-machine written from The Z-Machine Standards Document (no Infocom
+  code, no GPL interpreter source) as a folder addon
+  (Samples~/Addons/ZMachineGame): memory/header, ZSCII decode/encode,
+  object table + properties, dictionary tokeniser, full v3 opcode set,
+  call/branch/store, save/restore/restart, output streams. ZScreen is a
+  scrolling transcript + status line on the game API; input via inline
+  key echo. ZStory downloads the MIT-licensed Zork I/II/III (pinned
+  commit SHAs, user action, to the user's machine; ATE ships no game).
+  Verified live: interpreter runs downloaded Zork I end to end (room
+  'West of House', status line, parser responds, multi-turn loop).
+  NOTE: an orphaned truncated fragment from an interrupted earlier draft
+  (Samples~/Addons/ZMachine/ZmCore.cs, class Zm, never committed) had
+  leaked into %APPDATA% via InstallSamples; investigated and removed.
+
 ## Conventions
 
 - Branch per feature/fix from main; merge with `--no-ff`; branches are kept.
