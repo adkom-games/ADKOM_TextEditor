@@ -23,6 +23,7 @@ namespace AteZMachine
         readonly List<string> _lines = new List<string> { "" };  // scrollback; last = current line
         string _status = "";
         bool _inputMode;
+        int _inputDocRow = 2;                     // doc row of the input line (set by Render)
         readonly StringBuilder _input = new StringBuilder();
 
         static readonly Color StatusFg = Color.black;
@@ -146,7 +147,21 @@ namespace AteZMachine
             }
             if (c == '\b') { if (_input.Length > 0) _input.Length--; }
             else if (c >= ' ' && c < 127 && _input.Length < _w - 4) _input.Append(c);
-            Render();
+            RenderInputLine(); // only the input row changes while typing
+        }
+
+        /// <summary>Fast path for keystrokes: rewrite ONLY the input line (the
+        /// transcript is unchanged), instead of the whole screen — a single
+        /// document edit per character rather than one per row.</summary>
+        void RenderInputLine()
+        {
+            if (!IsValid || !_inputMode) return;
+            string line = _lines[_lines.Count - 1] + _input + "_";
+            // Overflow: show the tail so the cursor stays on screen.
+            if (line.Length > _w) line = line.Substring(line.Length - _w);
+            _doc.WriteAt(_inputDocRow, 1, line.PadRight(_w));
+            _doc.SetColor(_inputDocRow, 1, _w + 1, PromptCol, null);
+            _doc.GoTo(_inputDocRow, 1);
         }
 
         // ---- Rendering ----
@@ -184,6 +199,7 @@ namespace AteZMachine
                 _doc.SetColor(docRow, 1, _w + 1, TextCol, null);
                 if (idx == view.Count - 1) inputRow = docRow;
             }
+            _inputDocRow = inputRow;
             if (_inputMode) _doc.SetColor(inputRow, 1, _w + 1, PromptCol, null);
 
             // Park the caret at the input line (row 1 when idle). When the
