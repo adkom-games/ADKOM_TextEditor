@@ -22,32 +22,39 @@ namespace AteZMachine
         static TextEditorWindow _window;
         static bool _hooked;
 
-        /// <summary>Tools-menu entry: focus a running game, else offer the
-        /// story picker (download the MIT Zork trilogy, or open any .z3).</summary>
-        internal static void ShowMenu(TextEditorWindow window)
+        /// <summary>Adds the Z-Machine items as a submenu of the given menu
+        /// (Tools → Z-Machine (Zork) → Zork I / … / Open Story File…). A real
+        /// submenu, not a popped-up context menu — showing a second menu from
+        /// a menu-item callback is silently dropped by Unity.</summary>
+        internal static void AddMenuItems(GenericMenu m, string prefix, TextEditorWindow window)
         {
-            if (_screen != null && _screen.IsValid) { _screen.Doc.Activate(); return; }
-            _window = window;
-
-            var menu = new GenericMenu();
             foreach (var g in ZStory.Downloadable)
             {
                 var game = g;
                 bool have = File.Exists(Path.Combine(ZStory.StoryFolder, g.File));
-                menu.AddItem(new GUIContent(have ? game.Title : game.Title + "  (download)"), false, () =>
+                string label = prefix + (have ? game.Title : game.Title + " " + L10n.Tr("(download)"));
+                m.AddItem(new GUIContent(label), false, () =>
                 {
+                    _window = window;
+                    if (Focused()) return;
                     string p = ZStory.EnsureDownloaded(game, out string err);
-                    if (p == null) { AteConsole.Warn("[ADKOM Text Editor] " + game.Title + " download failed: " + err); return; }
+                    if (p == null) { AteConsole.Warn("[ADKOM Text Editor] " + game.Title + " " + L10n.Tr("download failed: ") + err); return; }
                     Launch(p);
                 });
             }
-            menu.AddSeparator("");
-            menu.AddItem(new GUIContent(L10n.Tr("Open Story File… (.z3)")), false, () =>
+            m.AddItem(new GUIContent(prefix + L10n.Tr("Open Story File… (.z3)")), false, () =>
             {
+                _window = window;
+                if (Focused()) return;
                 string p = EditorUtility.OpenFilePanel(L10n.Tr("Open Z-machine story file"), ZStory.StoryFolder, "z3,dat");
                 if (!string.IsNullOrEmpty(p)) Launch(p);
             });
-            menu.ShowAsContext();
+        }
+
+        static bool Focused()
+        {
+            if (_screen != null && _screen.IsValid) { _screen.Doc.Activate(); return true; }
+            return false;
         }
 
         static void Launch(string path)

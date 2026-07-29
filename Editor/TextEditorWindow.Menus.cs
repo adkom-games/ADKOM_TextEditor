@@ -205,8 +205,7 @@ namespace ADKOM.TextEditor
                 m.AddItem(new GUIContent(L10n.Tr("Ask Unity AI About This File...")), false, AskUnityAiDocument);
                 m.AddSeparator("");
             }
-            m.AddItem(new GUIContent(L10n.Tr("Z-Machine (Zork)...")), false,
-                () => AteZMachine.ZMachineGame.ShowMenu(this));
+            AteZMachine.ZMachineGame.AddMenuItems(m, L10n.Tr("Z-Machine (Zork)") + "/", this);
             m.AddSeparator("");
             m.AddItem(new GUIContent(WithSc("Options...", Dsp("settings"))), false, OpenSettingsPage);
         }

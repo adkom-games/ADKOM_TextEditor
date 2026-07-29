@@ -296,23 +296,26 @@ namespace ADKOM.TextEditor.Scripting
                 sb.Append("## ").Append(findings.Count).Append(" potentially dangerous API")
                   .Append(findings.Count == 1 ? "" : "s").Append(" found");
                 if (high > 0) sb.Append(" (").Append(high).Append(" high severity)");
-                sb.Append("\n\n| Severity | Category | API | File | Line | Risk |\n|---|---|---|---|---|---|\n");
+                sb.Append("\n\n");
+                // A list, not a table: markdown table cells don't wrap in the
+                // renderer, so the Risk text ran off the right edge. Each
+                // finding is a bullet with the risk on a wrapping second line.
                 foreach (var f in findings)
                 {
-                    // File AND line are both links to the same spot: Ctrl+Click
-                    // opens the source in ATE at that line (ate:// scheme).
+                    // The file:line link is the ate:// scheme — Ctrl+Click opens
+                    // the source in ATE at that line.
                     string src = f.File ?? file;
                     string link = TextEditorWindow.AteLink(src, f.Line);
-                    sb.Append("| ").Append(f.High ? "**HIGH**" : "moderate")
-                      .Append(" | ").Append(f.Category)
-                      .Append(" | `").Append(f.Api)
-                      .Append("` | [").Append(Path.GetFileName(src)).Append("](").Append(link)
-                      .Append(") | [").Append(f.Line).Append("](").Append(link)
-                      .Append(") | ").Append(f.Risk).Append(" |\n");
+                    sb.Append("- ").Append(f.High ? "**HIGH**" : "moderate")
+                      .Append(" · ").Append(f.Category)
+                      .Append(" · `").Append(f.Api).Append("` · [")
+                      .Append(Path.GetFileName(src)).Append(':').Append(f.Line)
+                      .Append("](").Append(link).Append(")  \n    ")
+                      .Append(f.Risk).Append('\n');
                 }
                 sb.Append("\nMatches are textual: a hit inside a comment or string still ");
-                sb.Append("flags. **Ctrl+Click a file or line** above to open the source ");
-                sb.Append("right there and judge the actual use before approving.\n");
+                sb.Append("flags. **Ctrl+Click a file:line** to open the source right ");
+                sb.Append("there and judge the actual use before approving.\n");
             }
             sb.Append("\n## What approving means\n\n");
             sb.Append("Approving also PINS the signer keys you see below, so an ");
