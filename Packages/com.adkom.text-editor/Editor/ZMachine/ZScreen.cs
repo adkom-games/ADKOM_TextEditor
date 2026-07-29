@@ -30,6 +30,7 @@ namespace AteZMachine
         readonly List<string> _lines = new List<string> { "" };  // transcript; last = current line
         string _statusLeft = "", _statusRight = "";
         bool _inputMode;
+        bool _pendingScrollEnd;                   // force scroll to the input line after a restore
         int _inputDocRow = 2;                     // doc row of the input line (set by Render)
         int _coloredRow = -1;                     // row currently carrying the prompt color
         readonly StringBuilder _input = new StringBuilder();
@@ -201,6 +202,15 @@ namespace AteZMachine
 
             int lastLen = view.Count > 0 ? view[view.Count - 1].Length : 0;
             _doc.GoTo(_inputDocRow, Mathf.Max(1, Mathf.Min(lastLen, _w))); // caret at the cursor glyph; scroll into view
+
+            // After a restore, force the view to the end through the post-restore
+            // output until the game is waiting for input, so the active input
+            // line is shown (not the top of the reloaded transcript).
+            if (_pendingScrollEnd)
+            {
+                _doc.ScrollToEnd();
+                if (_inputMode) _pendingScrollEnd = false;
+            }
         }
 
         // ---- Transcript persistence (sidecar to the game save) ----
@@ -244,6 +254,7 @@ namespace AteZMachine
                 }
                 _inputMode = false;
                 _input.Clear();
+                _pendingScrollEnd = true; // show the input line after the restore settles
                 Render();
                 return true;
             }

@@ -75,6 +75,11 @@ namespace ADKOM.TextEditor
 
         internal void ApiGoTo(int line, int col) => _code?.GoToLine(line, col);
 
+        internal void ApiScrollToEnd(TextDocument d)
+        {
+            if (HasDocs && Active == d && _code != null) _code.ScrollToEnd();
+        }
+
         /// <summary>Facade write path. Active document: routed through the
         /// undo system as one Programmatic step. Background document: applied
         /// directly to the model — documented as NOT undoable.</summary>
