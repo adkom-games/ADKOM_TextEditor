@@ -48,6 +48,7 @@ namespace AteZMachine
         int _prevRoom;
         int _nextArea = 1;
         Dictionary<int, int> _prevParents = new Dictionary<int, int>();
+        Dictionary<int, uint> _prevAttrs = new Dictionary<int, uint>();
 
         public event System.Action Changed;
 
@@ -185,10 +186,12 @@ namespace AteZMachine
         {
             int max = zm.MapMaxObject();
             var parents = new Dictionary<int, int>(max);
+            var attrs = new Dictionary<int, uint>(max);
             for (int o = 1; o <= max; o++)
             {
                 int parent = zm.MapParent(o);
                 parents[o] = parent;
+                attrs[o] = zm.MapAttrBits(o);
                 if (o == PlayerObj) continue;               // never map the player avatar
                 if (Rooms.ContainsKey(o)) continue;         // it's a room, not an item
                 string name = zm.MapObjectName(o);
@@ -198,13 +201,23 @@ namespace AteZMachine
                 if (locRoom == 0) continue;                 // not in a room we know
 
                 bool alreadySeen = Objects.ContainsKey(o);
-                // NO SPOILERS: a NEW object is shown only when it is directly
-                // visible — sitting in a room, or carried. Something nested in
-                // a container (immediate parent is neither the room nor the
-                // player) stays hidden until it is opened/taken. Once seen, it
-                // stays tracked wherever it later goes.
+                // NO SPOILERS: a NEW object is shown only once it is directly
+                // visible — sitting in a room, or carried — OR the game has just
+                // REVEALED it. Something nested in a container stays hidden until
+                // then. Once seen, it stays tracked wherever it later goes.
                 bool directlyVisible = Rooms.ContainsKey(parent) || (PlayerObj > 0 && parent == PlayerObj);
-                if (!alreadySeen && !directlyVisible) continue;
+
+                // Reveal a nested object when, since last turn, its OWN attribute
+                // flags changed (the game cleared an "invisible"-style flag, e.g.
+                // moving leaves reveals a grating) OR its immediate container's
+                // flags changed (e.g. opening a mailbox reveals the leaflet).
+                // This only fires AFTER the player acts on it, so nothing is
+                // spoiled at the start.
+                bool revealed = !directlyVisible && !carried && (
+                    (_prevAttrs.TryGetValue(o, out uint pa) && pa != attrs[o]) ||
+                    (_prevAttrs.TryGetValue(parent, out uint pc) && pc != zm.MapAttrBits(parent)));
+
+                if (!alreadySeen && !directlyVisible && !revealed) continue;
 
                 if (!alreadySeen) Objects[o] = new MapObject { Id = o, OriginRoom = locRoom };
                 var mo = Objects[o];
@@ -214,6 +227,7 @@ namespace AteZMachine
                 mo.Container = container;
             }
             _prevParents = parents;
+            _prevAttrs = attrs;
         }
 
         int ContainingRoom(ZMachine zm, int obj, out bool carried, out int container)
