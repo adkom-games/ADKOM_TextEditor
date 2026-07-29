@@ -13,7 +13,10 @@ namespace AteZMachine
     public sealed class ZMapView : VisualElement
     {
         const int CellW = 150, CellH = 92, BoxW = 128, BoxH = 74;
-        const int Pad = 40; // canvas margin so edge boxes/splines aren't clipped
+        // Fixed canvas margin: spline headroom + scroll slack so the current
+        // room can be centred even for a small map. Constant (not viewport-
+        // derived) so canvas size can't feed back into viewport measurement.
+        const int CenterPad = 500;
 
         ZMap _map;
         int _level;
@@ -182,38 +185,42 @@ namespace AteZMachine
             Relayout();
         }
 
-        // Positions the geometry and scrolls so the current room sits in the
-        // CENTRE of the map viewport. The canvas is padded by half the viewport
-        // on each side so even a small map (or a room near the edge) can be
-        // scrolled to the middle; scrollOffset clamps itself at the extremes.
+        // Positions the geometry with a FIXED margin (independent of the
+        // viewport, so canvas size can never feed back into the viewport
+        // measurement and explode) and scrolls so the current room sits in the
+        // centre of the map viewport. The fixed margin doubles as spline
+        // headroom and as scroll slack so even a small/edge map can be centred.
         void Relayout()
+        {
+            if (!_hasGeom) return;
+            _drawOffset = new Vector2(CenterPad, CenterPad);
+            _canvas.style.width = _geomW + 2 * CenterPad;
+            _canvas.style.height = _geomH + 2 * CenterPad;
+            foreach (var (box, basePos) in _boxItems)
+            {
+                box.style.left = basePos.x + CenterPad;
+                box.style.top = basePos.y + CenterPad;
+            }
+            _canvas.MarkDirtyRepaint();
+            CenterScroll();
+        }
+
+        // Reads the viewport ONLY to compute the scroll target (never to size the
+        // canvas), so there is no feedback loop. Deferred until the viewport has
+        // laid out and reapplied after so it doesn't clamp to a stale range.
+        void CenterScroll()
         {
             if (!_hasGeom) return;
             var vp = _scroll.contentViewport.layout;
             if (float.IsNaN(vp.width) || vp.width < 1 || float.IsNaN(vp.height) || vp.height < 1)
             {
-                _scroll.schedule.Execute(Relayout); // viewport not laid out yet
+                _scroll.schedule.Execute(CenterScroll);
                 return;
             }
-            float padX = Mathf.Max(Pad, vp.width * 0.5f);
-            float padY = Mathf.Max(Pad, vp.height * 0.5f);
-            _drawOffset = new Vector2(padX, padY);
-            _canvas.style.width = _geomW + 2 * padX;
-            _canvas.style.height = _geomH + 2 * padY;
-            foreach (var (box, basePos) in _boxItems)
-            {
-                box.style.left = basePos.x + padX;
-                box.style.top = basePos.y + padY;
-            }
-            _canvas.MarkDirtyRepaint();
-
             var target = new Vector2(
-                Mathf.Max(0f, _curCenter.x + padX - vp.width * 0.5f),
-                Mathf.Max(0f, _curCenter.y + padY - vp.height * 0.5f));
+                Mathf.Max(0f, _curCenter.x + CenterPad - vp.width * 0.5f),
+                Mathf.Max(0f, _curCenter.y + CenterPad - vp.height * 0.5f));
             _scroll.scrollOffset = target;
-            // The scroller's range isn't updated until the resized canvas lays
-            // out, so an immediate set can clamp to a stale max — reapply once
-            // layout settles.
             _scroll.schedule.Execute(() => _scroll.scrollOffset = target);
         }
 
