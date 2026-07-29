@@ -100,7 +100,11 @@ namespace AteZMachine
             if (active == null || !active.Equals(_screen.Doc)) return false;
             if (!_screen.InputMode)
                 return e.character != '\0' || e.keyCode != KeyCode.None; // swallow, do nothing
-            if (e.character != '\0') { _screen.Key(e.character); return true; }
+            // Enter arrives as BOTH a '\n' character event and a Return keycode
+            // event; routing only PRINTABLE chars here (and Enter/Backspace via
+            // keycode) submits each line exactly once.
+            char c = e.character;
+            if (c >= ' ' && c < 127) { _screen.Key(c); return true; }
             switch (e.keyCode)
             {
                 case KeyCode.Return: case KeyCode.KeypadEnter: _screen.Key('\n'); return true;

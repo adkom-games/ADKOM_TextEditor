@@ -1949,6 +1949,21 @@ namespace ADKOM.TextEditor
 
         public bool HasSelectionPublic => HasSelection;
         internal void RefreshVisiblePublic() => RefreshVisible();
+
+        /// <summary>The visible size of the viewport in whole characters — for
+        /// games that fill the screen (Game API). False until layout resolves.</summary>
+        internal bool TryGameViewport(out int rows, out int cols)
+        {
+            rows = cols = 0;
+            if (_scroll == null) return false;
+            var vp = _scroll.contentViewport.layout;
+            if (float.IsNaN(vp.height) || vp.height < 1 || _lineHeight < 1) return false;
+            float cw = CharWidth('M');
+            if (float.IsNaN(cw) || cw < 1) return false;
+            rows = Mathf.Max(1, Mathf.FloorToInt(vp.height / _lineHeight));
+            cols = Mathf.Max(1, Mathf.FloorToInt((vp.width - WrapPad) / cw));
+            return true;
+        }
         public int LineCount => _lines.Count;
 
         /// <summary>Selected text, or null when there is no selection.</summary>

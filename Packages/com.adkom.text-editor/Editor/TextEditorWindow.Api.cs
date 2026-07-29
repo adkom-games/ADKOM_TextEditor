@@ -132,6 +132,13 @@ namespace ADKOM.TextEditor
             }
         }
 
+        internal bool ApiTryGetViewport(TextDocument d, out int rows, out int cols)
+        {
+            rows = cols = 0;
+            if (HasDocs && Active == d && _code != null) return _code.TryGameViewport(out rows, out cols);
+            return false;
+        }
+
         internal bool ApiTryGetCursor(TextDocument d, out int line, out int col)
         {
             if (HasDocs && Active == d && _code != null)

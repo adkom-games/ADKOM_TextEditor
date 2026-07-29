@@ -242,6 +242,16 @@ namespace ADKOM.TextEditor.Scripting
             set { EnsureValid(); _window.ApiSetGameMode(_doc, value); }
         }
 
+        /// <summary>The visible size of the game screen in whole characters
+        /// (this document's viewport). Sized to the window, so a full-screen
+        /// game can fit itself exactly. False until the view has laid out or
+        /// when the document is not the active tab.</summary>
+        public bool TryGetViewport(out int rows, out int cols)
+        {
+            EnsureValid();
+            return _window.ApiTryGetViewport(_doc, out rows, out cols);
+        }
+
         /// <summary>The caret position (1-based) when this document is the
         /// active tab; false when it is not active.</summary>
         public bool TryGetCursor(out int line, out int column)
