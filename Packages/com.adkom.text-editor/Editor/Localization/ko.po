@@ -984,6 +984,9 @@ msgstr "확대/축소"
 msgid "Ctrl+scroll to zoom"
 msgstr "Ctrl+스크롤로 확대/축소"
 
+msgid "(connector / passage)"
+msgstr "(연결 통로)"
+
 msgid "Auto-map"
 msgstr "자동 지도"
 

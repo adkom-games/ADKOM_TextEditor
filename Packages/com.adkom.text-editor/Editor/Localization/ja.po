@@ -984,6 +984,9 @@ msgstr "ズーム"
 msgid "Ctrl+scroll to zoom"
 msgstr "Ctrl+スクロールでズーム"
 
+msgid "(connector / passage)"
+msgstr "（通路 / 出入口）"
+
 msgid "Auto-map"
 msgstr "自動マップ"
 

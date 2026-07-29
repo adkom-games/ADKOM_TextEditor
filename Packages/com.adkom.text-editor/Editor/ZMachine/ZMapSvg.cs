@@ -121,7 +121,9 @@ namespace AteZMachine
                     foreach (var o in map.Objects.Values)
                     {
                         if (o.Room != r.Id || o.Carried) continue;
-                        body.Append(Circle(px + 8 + di * 10, py + BoxH - 8, 3, ItemCol, Esc(o.Name + " (#" + o.Id + ")")));
+                        float cx = px + 8 + di * 10, cy = py + BoxH - 8;
+                        string title = Esc(o.Name + " (#" + o.Id + ")");
+                        body.Append(o.IsConnector ? Diamond(cx, cy, 4, CurBorder, title) : Circle(cx, cy, 3, ItemCol, title));
                         if (++di > 10) break;
                     }
                 }
@@ -278,6 +280,11 @@ namespace AteZMachine
         static string Circle(float cx, float cy, float r, string fill, string title) =>
             "<circle cx=\"" + F(cx) + "\" cy=\"" + F(cy) + "\" r=\"" + F(r) + "\" fill=\"" + fill +
             "\"><title>" + title + "</title></circle>\n";
+
+        static string Diamond(float cx, float cy, float r, string fill, string title) =>
+            "<path d=\"M" + F(cx) + "," + F(cy - r) + " L" + F(cx + r) + "," + F(cy) + " L" + F(cx) + "," +
+            F(cy + r) + " L" + F(cx - r) + "," + F(cy) + " Z\" fill=\"" + fill +
+            "\"><title>" + title + "</title></path>\n";
 
         static string Text(int x, int y, string s, string col, int size, bool bold) =>
             "<text x=\"" + x + "\" y=\"" + y + "\" fill=\"" + col + "\" font-size=\"" + size + "\"" +

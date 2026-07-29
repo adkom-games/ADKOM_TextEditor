@@ -984,6 +984,9 @@ msgstr "缩放"
 msgid "Ctrl+scroll to zoom"
 msgstr "Ctrl+滚动以缩放"
 
+msgid "(connector / passage)"
+msgstr "（通道 / 连接）"
+
 msgid "Auto-map"
 msgstr "自动地图"
 
