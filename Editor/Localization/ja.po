@@ -978,6 +978,12 @@ msgstr "SVG"
 msgid "Export map as SVG"
 msgstr "マップを SVG で書き出す"
 
+msgid "Zoom"
+msgstr "ズーム"
+
+msgid "Ctrl+scroll to zoom"
+msgstr "Ctrl+スクロールでズーム"
+
 msgid "Auto-map"
 msgstr "自動マップ"
 

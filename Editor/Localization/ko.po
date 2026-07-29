@@ -978,6 +978,12 @@ msgstr "SVG"
 msgid "Export map as SVG"
 msgstr "지도를 SVG로 내보내기"
 
+msgid "Zoom"
+msgstr "확대/축소"
+
+msgid "Ctrl+scroll to zoom"
+msgstr "Ctrl+스크롤로 확대/축소"
+
 msgid "Auto-map"
 msgstr "자동 지도"
 
