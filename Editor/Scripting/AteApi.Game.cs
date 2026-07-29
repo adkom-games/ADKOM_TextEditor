@@ -377,6 +377,18 @@ namespace ADKOM.TextEditor.Scripting
             _window.ApiClearColors(_doc, -1);
         }
 
+        /// <summary>Shows a pinned status line across the top of the game screen
+        /// that does NOT scroll with the document — for a growing transcript
+        /// (e.g. a text adventure) whose header must stay put. The reserved row
+        /// pushes the text down so nothing hides behind it. Only takes effect
+        /// while this document is the active tab and in game mode; passing a
+        /// null/empty text hides the bar.</summary>
+        public void SetStatusBar(string text, Color foreground, Color background)
+        {
+            EnsureValid();
+            _window.ApiSetStatusBar(_doc, text, foreground, background);
+        }
+
         /// <summary>1-based line → its [start, end) span in Content.</summary>
         void GetLineSpan(int line, out string v, out int start, out int end)
         {

@@ -3,10 +3,10 @@
 //
 // The transcript is a GROWING, scrollable document: new output is appended and
 // the view scrolls to the bottom, so the player can scroll UP through history
-// (real scrollback). Document line 1 is the status line (location + score/
-// moves); it scrolls with the transcript. Output is word-wrapped by the screen
-// to the viewport width, so a line never needs a horizontal scrollbar. Input is
-// echoed inline; Enter submits the line to the interpreter.
+// (real scrollback). The status line (location + score/moves) is a PINNED
+// overlay above the transcript (SetStatusBar) — it never scrolls. Output is
+// word-wrapped by the screen to the viewport width, so a line never needs a
+// horizontal scrollbar. Input is echoed inline; Enter submits to the interpreter.
 //
 // NOTE: the screen no longer fits itself to the viewport height. The old
 // fixed-grid terminal re-measured the viewport every render and rebuilt a
@@ -104,13 +104,15 @@ namespace AteZMachine
                 ? string.Format("Time: {0}:{1:00}", ((a + 11) % 12) + 1, b)
                 : string.Format("Score: {0}   Moves: {1}", a, b);
             // The right side (score/moves) must always show; cap the location.
+            // The bar is a pinned overlay, so it can run the full width (no need
+            // to leave a trailing column to avoid scrolling).
             string loc = location ?? "";
-            int maxLoc = _w - right.Length - 3;
+            int maxLoc = _w - right.Length - 2;
             if (maxLoc < 1) maxLoc = 1;
             if (loc.Length > maxLoc) loc = loc.Substring(0, Math.Max(1, maxLoc - 1)) + "…";
             string left = " " + loc;
-            int pad = _w - left.Length - right.Length - 1;
-            _status = left + (pad > 0 ? new string(' ', pad) : " ") + right + " ";
+            int pad = _w - left.Length - right.Length;
+            _status = left + (pad > 0 ? new string(' ', pad) : " ") + right;
             if (_status.Length > _w) _status = _status.Substring(0, _w);
             Render();
         }
@@ -158,12 +160,13 @@ namespace AteZMachine
             if (!IsValid || !_inputMode) return;
             string line = _lines[_lines.Count - 1] + _input + "_";
             // Overflow: show the tail so the cursor stays on screen.
-            int caretCol = Mathf.Min(line.Length, _w) + 1;
+            int caretCol = Mathf.Max(1, Mathf.Min(line.Length, _w)); // AT the "_" glyph
             if (line.Length > _w) line = line.Substring(line.Length - _w);
             _doc.WriteAt(_inputDocRow, 1, line.PadRight(_w));
             _doc.SetColor(_inputDocRow, 1, _w + 1, PromptCol, null);
             _coloredRow = _inputDocRow;
-            _doc.GoTo(_inputDocRow, caretCol); // scroll the bottom line into view
+            _doc.SetStatusBar(_status ?? "", StatusFg, StatusBg); // keep the bar present while typing
+            _doc.GoTo(_inputDocRow, caretCol); // block caret coincides with the "_"; scrolls into view
         }
 
         // ---- Rendering ----
@@ -182,26 +185,23 @@ namespace AteZMachine
             var view = new List<string>(_lines);
             if (_inputMode) view[view.Count - 1] = view[view.Count - 1] + _input + "_";
 
-            // Line 1 = status; lines 2.. = transcript. The document grows; the
-            // editor provides the scrollbar and we scroll to the bottom below.
+            // The document holds ONLY the transcript (grows and scrolls). The
+            // status line is a pinned overlay (SetStatusBar) that never scrolls.
             var sb = new StringBuilder();
-            string status = (_status ?? "").PadRight(_w);
-            if (status.Length > _w) status = status.Substring(0, _w);
-            sb.Append(status);
-            foreach (var l in view) sb.Append('\n').Append(l);
+            for (int i = 0; i < view.Count; i++) { if (i > 0) sb.Append('\n'); sb.Append(view[i]); }
             _doc.SetText(sb.ToString());
+            _doc.SetStatusBar(_status ?? "", StatusFg, StatusBg);
 
             // Colors are a positional overlay that survives SetText, so a prompt
             // color left on the previous input row would stain a now-committed
             // line — clear it before recoloring.
             if (_coloredRow > 0) { _doc.SetColor(_coloredRow, 1, _w + 1, null, null); _coloredRow = -1; }
-            _doc.SetColor(1, 1, _w + 1, StatusFg, StatusBg);
 
-            _inputDocRow = 1 + view.Count;
+            _inputDocRow = view.Count;
             if (_inputMode) { _doc.SetColor(_inputDocRow, 1, _w + 1, PromptCol, null); _coloredRow = _inputDocRow; }
 
             int lastLen = view.Count > 0 ? view[view.Count - 1].Length : 0;
-            _doc.GoTo(_inputDocRow, Mathf.Min(lastLen, _w) + 1); // scroll to the newest line
+            _doc.GoTo(_inputDocRow, Mathf.Max(1, Mathf.Min(lastLen, _w))); // caret at the cursor glyph; scroll into view
         }
 
         // ---- Transcript persistence (sidecar to the game save) ----

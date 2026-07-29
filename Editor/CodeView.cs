@@ -272,6 +272,7 @@ namespace ADKOM.TextEditor
         ColorOverlay _overlay;
         readonly List<VisualElement> _ovBgPool = new List<VisualElement>();
         bool _gameMode;
+        Label _gameStatusBar;   // pinned, non-scrolling status line for text games
 
         internal void AttachOverlay(ColorOverlay overlay)
         {
@@ -297,9 +298,32 @@ namespace ADKOM.TextEditor
                     _redo.Clear();
                     BreakUndoGroup();
                 }
+                else HideGameStatusBar(); // leaving game mode drops the pinned bar
                 Reclassify();
                 RefreshVisible();
             }
+        }
+
+        /// <summary>Shows/updates the pinned status line for a text game (does
+        /// not scroll with the transcript). Only takes effect in game mode.</summary>
+        internal void SetGameStatusBar(string text, Color fg, Color bg)
+        {
+            if (_gameStatusBar == null) return;
+            if (!_gameMode) { HideGameStatusBar(); return; }
+            _gameStatusBar.text = text ?? string.Empty;
+            _gameStatusBar.style.color = fg;
+            _gameStatusBar.style.backgroundColor = bg;
+            float h = _lineHeight > 1 ? _lineHeight : 16f;
+            _gameStatusBar.style.height = h;
+            _gameStatusBar.style.display = DisplayStyle.Flex;
+            _scroll.style.marginTop = h; // reserve the top row so no text hides behind it
+        }
+
+        internal void HideGameStatusBar()
+        {
+            if (_gameStatusBar == null) return;
+            _gameStatusBar.style.display = DisplayStyle.None;
+            _scroll.style.marginTop = 0;
         }
 
         List<OvSpan> OverlayFor(int line) =>
@@ -539,6 +563,22 @@ namespace ADKOM.TextEditor
             _content.style.position = Position.Relative;
             _scroll.Add(_content);
             Add(_scroll);
+
+            // Pinned status line for text games: an absolute bar across the top
+            // that does NOT scroll with the transcript. Hidden unless a game
+            // sets it; the scroll area is pushed down by its height so no text
+            // hides behind it. Added last so it paints above the scroll view.
+            _gameStatusBar = new Label { name = "code-game-status" };
+            _gameStatusBar.style.position = Position.Absolute;
+            _gameStatusBar.style.top = 0;
+            _gameStatusBar.style.left = 0;
+            _gameStatusBar.style.right = 0;
+            _gameStatusBar.style.whiteSpace = WhiteSpace.NoWrap;
+            _gameStatusBar.style.overflow = Overflow.Hidden;
+            _gameStatusBar.style.display = DisplayStyle.None;
+            _gameStatusBar.pickingMode = PickingMode.Ignore;
+            _gameStatusBar.AddToClassList("code-line");
+            Add(_gameStatusBar);
 
             _caret = new VisualElement { name = "code-caret" };
             _caret.style.position = Position.Absolute;
@@ -1938,6 +1978,12 @@ namespace ADKOM.TextEditor
             _preferredCol = -1;
             CollapseAnchor();
             AfterCaretMove();
+            // Game transcripts SetText then GoTo to the new bottom line, but the
+            // grown content's layout (and the scroller's max) has not updated
+            // yet, so the immediate EnsureCaretVisible can clamp to a stale
+            // maximum and leave the newest line just out of view. Re-run it once
+            // layout settles. (Issue #29)
+            if (_gameMode) schedule.Execute(() => { if (_gameMode) EnsureCaretVisible(); });
         }
 
         public void SelectAll()
