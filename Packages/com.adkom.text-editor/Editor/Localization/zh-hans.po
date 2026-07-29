@@ -969,6 +969,9 @@ msgstr "房间 #"
 msgid "Object #"
 msgstr "对象 #"
 
+msgid "Non-adjacent exit"
+msgstr "非相邻出口"
+
 msgid "Auto-map"
 msgstr "自动地图"
 

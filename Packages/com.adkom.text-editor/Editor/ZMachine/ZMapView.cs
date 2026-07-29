@@ -159,6 +159,20 @@ namespace AteZMachine
             }
             if (marks.Length > 0) box.Add(new Label(marks) { style = { fontSize = 10, color = Border } });
 
+            // Warp markers: compass exits whose destination is NOT the grid
+            // neighbour in that direction (a non-Euclidean link — e.g. a second
+            // direction reaching a room already linked another way). Its
+            // connection line would coincide with the geometric exit's line and
+            // vanish, so name the direction here instead. Details are in the
+            // info panel (dir → room #id) when the box is clicked.
+            string warps = "";
+            foreach (var kv in r.Exits)
+                if (IsCompass(kv.Key) && !IsGeometricNeighbor(r, kv.Key, kv.Value))
+                    warps += ZMap.DirName(kv.Key) + "⇢ ";
+            if (warps.Length > 0)
+                box.Add(new Label(warps.TrimEnd()) { tooltip = L10n.Tr("Non-adjacent exit"),
+                    style = { fontSize = 10, color = new Color(0.85f, 0.7f, 0.4f) } });
+
             // Item symbols (clickable).
             var items = new VisualElement { style = { flexDirection = FlexDirection.Row, flexWrap = Wrap.Wrap } };
             foreach (var o in _map.Objects.Values)
@@ -244,6 +258,31 @@ namespace AteZMachine
         }
 
         string RoomName(int id) => _map != null && _map.Rooms.TryGetValue(id, out var r) ? r.Name : "?";
+
+        // Compass directions occupy the first eight enum slots (N..SW); U/D/In/Out follow.
+        static bool IsCompass(Dir d) => d <= Dir.SW;
+
+        // Is dest the room sitting at r's grid cell in direction d (same level)?
+        // If so, its connection renders as a clean adjacency line; if not, the
+        // line would misrepresent or overlap and we mark it as a warp instead.
+        bool IsGeometricNeighbor(MapRoom r, Dir d, int destId)
+        {
+            if (_map == null || !_map.Rooms.TryGetValue(destId, out var dest) || !dest.Placed) return false;
+            int dx = 0, dy = 0;
+            switch (d)
+            {
+                case Dir.N: dy = -1; break;
+                case Dir.S: dy = 1; break;
+                case Dir.E: dx = 1; break;
+                case Dir.W: dx = -1; break;
+                case Dir.NE: dx = 1; dy = -1; break;
+                case Dir.NW: dx = -1; dy = -1; break;
+                case Dir.SE: dx = 1; dy = 1; break;
+                case Dir.SW: dx = -1; dy = 1; break;
+                default: return false;
+            }
+            return dest.Level == r.Level && dest.X == r.X + dx && dest.Y == r.Y + dy;
+        }
 
         static Label Header(string t) =>
             new Label(t) { style = { unityFontStyleAndWeight = FontStyle.Bold, marginTop = 6 } };

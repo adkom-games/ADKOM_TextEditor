@@ -969,6 +969,9 @@ msgstr "방 #"
 msgid "Object #"
 msgstr "오브젝트 #"
 
+msgid "Non-adjacent exit"
+msgstr "인접하지 않은 출구"
+
 msgid "Auto-map"
 msgstr "자동 지도"
 

@@ -971,6 +971,9 @@ msgstr "Room #"
 msgid "Object #"
 msgstr "Object #"
 
+msgid "Non-adjacent exit"
+msgstr "Non-adjacent exit"
+
 msgid "Auto-map"
 msgstr "Auto-map"
 
