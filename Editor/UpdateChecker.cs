@@ -19,7 +19,12 @@ namespace ADKOM.TextEditor
     [InitializeOnLoad]
     public static class UpdateChecker
     {
-        const string RepoApiLatest = "https://api.github.com/repos/adkom-games/ADKOM_TextEditor/releases/latest";
+        // The releases Atom feed on github.com — unauthenticated and NOT subject
+        // to the api.github.com rate limit (60 requests/hr/IP), which returned
+        // HTTP 403 Forbidden on shared/NAT'd networks (and some corporate
+        // proxies block api.github.com outright). The feed lists releases newest
+        // first, so the first entry is the latest.
+        const string ReleasesFeed = "https://github.com/adkom-games/ADKOM_TextEditor/releases.atom";
         const string GitInstallUrl = "https://github.com/adkom-games/ADKOM_TextEditor.git";
         const string LastCheckKey = "ADKOM.TextEditor.LastUpdateCheckTicks";
         // Per project: a machine-wide key let whichever project ran a new
@@ -98,7 +103,7 @@ namespace ADKOM.TextEditor
             _checkInFlight = true;
             EditorPrefs.SetString(LastCheckKey, DateTime.UtcNow.Ticks.ToString());
 
-            var req = UnityWebRequest.Get(RepoApiLatest);
+            var req = UnityWebRequest.Get(ReleasesFeed);
             req.SetRequestHeader("User-Agent", "ADKOM-Text-Editor-UpdateChecker");
             var op = req.SendWebRequest();
             op.completed += _ =>
@@ -142,18 +147,34 @@ namespace ADKOM.TextEditor
             };
         }
 
-        internal static string ParseTagName(string json)
+        internal static string ParseTagName(string text)
         {
+            if (string.IsNullOrEmpty(text)) return null;
+
+            // Atom feed (primary): the newest entry links to .../releases/tag/<TAG>.
+            const string marker = "/releases/tag/";
+            int a = text.IndexOf(marker, StringComparison.Ordinal);
+            if (a >= 0)
+            {
+                int s = a + marker.Length, e = s;
+                while (e < text.Length && text[e] != '"' && text[e] != '<' &&
+                       text[e] != '/' && !char.IsWhiteSpace(text[e])) e++;
+                if (e > s) return StripV(text.Substring(s, e - s));
+            }
+
+            // REST JSON fallback: "tag_name": "<TAG>".
             const string key = "\"tag_name\":";
-            int i = json.IndexOf(key, StringComparison.Ordinal);
+            int i = text.IndexOf(key, StringComparison.Ordinal);
             if (i < 0) return null;
-            int q1 = json.IndexOf('"', i + key.Length);
+            int q1 = text.IndexOf('"', i + key.Length);
             if (q1 < 0) return null;
-            int q2 = json.IndexOf('"', q1 + 1);
+            int q2 = text.IndexOf('"', q1 + 1);
             if (q2 < 0) return null;
-            string tag = json.Substring(q1 + 1, q2 - q1 - 1);
-            return tag.StartsWith("v", StringComparison.OrdinalIgnoreCase) ? tag.Substring(1) : tag;
+            return StripV(text.Substring(q1 + 1, q2 - q1 - 1));
         }
+
+        static string StripV(string tag) =>
+            tag.StartsWith("v", StringComparison.OrdinalIgnoreCase) ? tag.Substring(1) : tag;
 
         internal static int CompareVersions(string a, string b)
         {
