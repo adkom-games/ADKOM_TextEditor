@@ -70,8 +70,10 @@ namespace AteZMachine
                 Rooms.TryGetValue(CurrentRoomId, out var cur))
                 cur.Exits[dir.Value] = room;
 
+            SeedPlayer(zm, room);
             DetectPlayer(zm, room);
             CurrentRoomId = room;
+            if (PlayerObj > 0) Objects.Remove(PlayerObj); // never map the player avatar
             ScanObjects(zm);
             _prevRoom = room;
             Changed?.Invoke();
@@ -117,6 +119,27 @@ namespace AteZMachine
             }
         }
 
+        // Turn-1 detection: the player/actor object is a child of the current
+        // room that a global variable points to (games keep a player global)
+        // and holds no visible contents at the start (containers like a
+        // mailbox are also global-referenced but have children). If exactly
+        // one room-child qualifies, take it as the player. Movement detection
+        // corrects/confirms it once the player first changes rooms.
+        void SeedPlayer(ZMachine zm, int room)
+        {
+            if (PlayerObj > 0) return;
+            int max = zm.MapMaxObject();
+            int found = 0, count = 0;
+            for (int o = 1; o <= max; o++)
+            {
+                if (zm.MapParent(o) != room || Rooms.ContainsKey(o)) continue;
+                if (string.IsNullOrEmpty(zm.MapObjectName(o))) continue;
+                if (!zm.MapReferencedByGlobal(o) || zm.MapChild(o) != 0) continue;
+                found = o; count++;
+            }
+            if (count == 1) PlayerObj = found;
+        }
+
         // The player object's parent tracks the current room: on the first
         // room change, the object that moved oldRoom → newRoom is the player.
         void DetectPlayer(ZMachine zm, int room)
@@ -139,6 +162,7 @@ namespace AteZMachine
             {
                 int parent = zm.MapParent(o);
                 parents[o] = parent;
+                if (o == PlayerObj) continue;               // never map the player avatar
                 if (Rooms.ContainsKey(o)) continue;         // it's a room, not an item
                 string name = zm.MapObjectName(o);
                 if (string.IsNullOrEmpty(name) || parent == 0) continue;
@@ -146,8 +170,17 @@ namespace AteZMachine
                 int locRoom = ContainingRoom(zm, o, out bool carried, out int container);
                 if (locRoom == 0) continue;                 // not in a room we know
 
-                if (!Objects.TryGetValue(o, out var mo))
-                    Objects[o] = mo = new MapObject { Id = o, OriginRoom = locRoom };
+                bool alreadySeen = Objects.ContainsKey(o);
+                // NO SPOILERS: a NEW object is shown only when it is directly
+                // visible — sitting in a room, or carried. Something nested in
+                // a container (immediate parent is neither the room nor the
+                // player) stays hidden until it is opened/taken. Once seen, it
+                // stays tracked wherever it later goes.
+                bool directlyVisible = Rooms.ContainsKey(parent) || (PlayerObj > 0 && parent == PlayerObj);
+                if (!alreadySeen && !directlyVisible) continue;
+
+                if (!alreadySeen) Objects[o] = new MapObject { Id = o, OriginRoom = locRoom };
+                var mo = Objects[o];
                 mo.Name = name;
                 mo.Room = locRoom;
                 mo.Carried = carried;
