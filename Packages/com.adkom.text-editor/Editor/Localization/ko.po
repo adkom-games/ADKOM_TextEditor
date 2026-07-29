@@ -956,3 +956,45 @@ msgstr "다운로드 실패: "
 
 msgid "Z-Machine (Zork)"
 msgstr "Z-Machine (Zork)"
+
+msgid "(moved since first seen)"
+msgstr "(처음 본 곳에서 이동함)"
+
+msgid "(you are here)"
+msgstr "(현재 위치)"
+
+msgid "Auto-map"
+msgstr "자동 지도"
+
+msgid "Auto-map (build a map as you explore)"
+msgstr "자동 지도 (탐험하며 지도 작성)"
+
+msgid "Carried by you"
+msgstr "소지 중"
+
+msgid "Exits"
+msgstr "출구"
+
+msgid "Explore to build the map. Click a room or an item (◦) for details."
+msgstr "탐험하면 지도가 만들어집니다. 방이나 아이템(◦)을 클릭하면 세부 정보가 표시됩니다."
+
+msgid "First seen: "
+msgstr "처음 본 곳: "
+
+msgid "Inside: "
+msgstr "안에: "
+
+msgid "Items here"
+msgstr "여기 있는 아이템"
+
+msgid "Location: "
+msgstr "위치: "
+
+msgid "Map"
+msgstr "지도"
+
+msgid "none"
+msgstr "없음"
+
+msgid "none seen"
+msgstr "확인 안 됨"

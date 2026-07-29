@@ -21,6 +21,11 @@ namespace AteZMachine
         static ZMachine _machine;
         static TextEditorWindow _window;
         static bool _hooked;
+        static ZMap _map;
+        static ZMapView _mapView;
+
+        const string AutoMapPref = "ADKOM.ZMachine.AutoMap";
+        static bool AutoMapOn { get => EditorPrefs.GetBool(AutoMapPref, true); set => EditorPrefs.SetBool(AutoMapPref, value); }
 
         /// <summary>Adds the Z-Machine items as a submenu of the given menu
         /// (Tools → Z-Machine (Zork) → Zork I / … / Open Story File…). A real
@@ -49,6 +54,13 @@ namespace AteZMachine
                 string p = EditorUtility.OpenFilePanel(L10n.Tr("Open Z-machine story file"), ZStory.StoryFolder, "z3,dat");
                 if (!string.IsNullOrEmpty(p)) Launch(p);
             });
+            m.AddSeparator(prefix);
+            m.AddItem(new GUIContent(prefix + L10n.Tr("Auto-map (build a map as you explore)")), AutoMapOn, () =>
+            {
+                AutoMapOn = !AutoMapOn;
+                if (_map != null && !AutoMapOn) DetachMap();
+                else if (_machine != null && AutoMapOn) AttachMap();
+            });
         }
 
         static bool Focused()
@@ -70,19 +82,43 @@ namespace AteZMachine
                 _machine.ChooseSaveFile = save => save
                     ? EditorUtility.SaveFilePanel(L10n.Tr("Save game"), ZStory.StoryFolder, "save.azs", "azs")
                     : EditorUtility.OpenFilePanel(L10n.Tr("Restore game"), ZStory.StoryFolder, "azs");
-                _screen.OnLine = line => _machine.CompleteInput(line);
+                _screen.OnLine = OnPlayerLine;
                 _screen.Doc.SetTitle(Path.GetFileNameWithoutExtension(path));
 
                 if (!_hooked) { AteApi.documentClosed += OnDocClosed; _hooked = true; }
                 _window.GameKeyHandler = OnKey;
 
+                if (AutoMapOn) AttachMap();
                 _machine.Start();
+                _map?.Observe(_machine, ""); // capture the starting room
             }
             catch (Exception ex)
             {
                 _screen.Print("\n[cannot start: " + ex.Message + "]\n");
                 AteConsole.Warn("[ADKOM Text Editor] Z-Machine: " + ex.Message);
             }
+        }
+
+        static void OnPlayerLine(string line)
+        {
+            _machine.CompleteInput(line);
+            _map?.Observe(_machine, line);
+        }
+
+        static void AttachMap()
+        {
+            if (_map == null) _map = new ZMap();
+            if (_mapView == null) _mapView = new ZMapView();
+            _mapView.SetMap(_map);
+            _window?.SetGameMapView(_mapView);
+            if (_machine != null) _map.Observe(_machine, "");
+        }
+
+        static void DetachMap()
+        {
+            _window?.SetGameMapView(null);
+            _map = null;
+            _mapView = null;
         }
 
         static void OnDocClosed(AteDocument d)
@@ -92,10 +128,12 @@ namespace AteZMachine
 
         static void Stop()
         {
-            if (_window != null) _window.GameKeyHandler = null;
+            if (_window != null) { _window.GameKeyHandler = null; _window.SetGameMapView(null); }
             _screen?.Close();
             _screen = null;
             _machine = null;
+            _map = null;
+            _mapView = null;
         }
 
         /// <summary>Core key hook (installed on the window while a game runs).

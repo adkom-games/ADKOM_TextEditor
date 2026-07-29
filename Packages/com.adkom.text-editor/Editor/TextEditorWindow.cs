@@ -729,6 +729,14 @@ namespace ADKOM.TextEditor
             _scannerTab.RegisterCallback<PointerDownEvent>(e => { SelectConsoleTab(2); e.StopPropagation(); });
             _scannerTab.style.display = DisplayStyle.None;
             tabs.Add(_scannerTab);
+            // Map: appears only while the built-in Z-Machine game runs with the
+            // auto-mapper on. Hosts the game's map view.
+            _mapTab = new VisualElement();
+            _mapTab.AddToClassList("console-tab");
+            _mapTab.Add(new Label(L10n.Tr("Map")));
+            _mapTab.RegisterCallback<PointerDownEvent>(e => { SelectConsoleTab(3); e.StopPropagation(); });
+            _mapTab.style.display = DisplayStyle.None;
+            tabs.Add(_mapTab);
             _consolePane.Add(tabs);
 
             _consoleScroll = new ScrollView(ScrollViewMode.Vertical) { name = "console-scroll" };
@@ -773,17 +781,20 @@ namespace ADKOM.TextEditor
             _scannerHeader.style.paddingLeft = 4;
             _scannerScroll.Add(_scannerHeader);
             _consolePane.Add(_scannerScroll);
+
+            _mapHost = new VisualElement { name = "game-map-host", style = { flexGrow = 1, display = DisplayStyle.None } };
+            _consolePane.Add(_mapHost);
             SelectConsoleTab(0);
 
             root.Add(_consolePane);
             SetConsoleVisible(_consoleVisible);
         }
 
-        VisualElement _consoleTab, _searchTab, _scannerTab;
+        VisualElement _consoleTab, _searchTab, _scannerTab, _mapTab, _mapHost;
         Label _scannerTabLabel;
         int _activeConsoleTab;
 
-        /// <summary>0 = Console, 1 = Search Results, 2 = Scanner Results.</summary>
+        /// <summary>0 = Console, 1 = Search Results, 2 = Scanner Results, 3 = Map.</summary>
         void SelectConsoleTab(int index)
         {
             _activeConsoleTab = index;
@@ -793,6 +804,8 @@ namespace ADKOM.TextEditor
                 _searchScroll.style.display = index == 1 ? DisplayStyle.Flex : DisplayStyle.None;
             if (_scannerScroll != null)
                 _scannerScroll.style.display = index == 2 ? DisplayStyle.Flex : DisplayStyle.None;
+            if (_mapHost != null)
+                _mapHost.style.display = index == 3 ? DisplayStyle.Flex : DisplayStyle.None;
             var active = new Color(0.5f, 0.5f, 0.5f, 0.25f);
             if (_consoleTab != null)
                 _consoleTab.style.backgroundColor = index == 0 ? active : Color.clear;
@@ -800,6 +813,26 @@ namespace ADKOM.TextEditor
                 _searchTab.style.backgroundColor = index == 1 ? active : Color.clear;
             if (_scannerTab != null)
                 _scannerTab.style.backgroundColor = index == 2 ? active : Color.clear;
+            if (_mapTab != null)
+                _mapTab.style.backgroundColor = index == 3 ? active : Color.clear;
+        }
+
+        /// <summary>Built-in game map: host a map view in the Map console tab,
+        /// show the tab, and bring it up. Passing null removes it.</summary>
+        internal void SetGameMapView(VisualElement content)
+        {
+            if (_mapHost == null) return;
+            _mapHost.Clear();
+            if (content == null)
+            {
+                _mapTab.style.display = DisplayStyle.None;
+                if (_activeConsoleTab == 3) SelectConsoleTab(0);
+                return;
+            }
+            _mapHost.Add(content);
+            _mapTab.style.display = DisplayStyle.Flex;
+            SetConsoleVisible(true);
+            SelectConsoleTab(3);
         }
 
         void SetConsoleVisible(bool visible)
