@@ -30,24 +30,26 @@ namespace AteZMachine
         const string ItemCol = "#8cccff";
         const string TextCol = "#d9d9d9";
 
-        struct LevelBox { public int Level; public float HeadingY, Top; public int MinX, MinY, MaxX, MaxY; }
+        struct PageBox { public int Area, Level; public float HeadingY, Top; public int MinX, MinY, MaxX, MaxY; }
 
         public static string ToSvg(ZMap map)
         {
-            // Highest level on top (up = visually up).
-            var levels = new List<int>();
-            foreach (var r in map.Rooms.Values) if (r.Placed && !levels.Contains(r.Level)) levels.Add(r.Level);
-            levels.Sort((a, b) => b.CompareTo(a));
+            // One page per (area, level). Exterior (area 0) first, then each
+            // interior area; within an area the highest level is on top.
+            var pages = new List<(int area, int level)>();
+            foreach (var r in map.Rooms.Values)
+                if (r.Placed && !pages.Contains((r.Area, r.Level))) pages.Add((r.Area, r.Level));
+            pages.Sort((a, b) => a.area != b.area ? a.area - b.area : b.level - a.level);
 
-            // ---- Pass 1: absolute room positions + level layout ----
+            // ---- Pass 1: absolute room positions + page layout ----
             var pos = new Dictionary<int, (float x, float y)>();
-            var layout = new List<LevelBox>();
+            var layout = new List<PageBox>();
             float contentW = 200f, y = Margin;
-            foreach (int level in levels)
+            foreach (var (area, level) in pages)
             {
                 int minX = int.MaxValue, minY = int.MaxValue, maxX = int.MinValue, maxY = int.MinValue;
                 foreach (var r in map.Rooms.Values)
-                    if (r.Placed && r.Level == level)
+                    if (r.Placed && r.Area == area && r.Level == level)
                     {
                         if (r.X < minX) minX = r.X; if (r.Y < minY) minY = r.Y;
                         if (r.X > maxX) maxX = r.X; if (r.Y > maxY) maxY = r.Y;
@@ -57,10 +59,10 @@ namespace AteZMachine
                 float headingY = y;
                 float top = y + HeadingH;
                 foreach (var r in map.Rooms.Values)
-                    if (r.Placed && r.Level == level)
+                    if (r.Placed && r.Area == area && r.Level == level)
                         pos[r.Id] = (Margin + (r.X - minX) * CellW, top + (r.Y - minY) * CellH);
 
-                layout.Add(new LevelBox { Level = level, HeadingY = headingY, Top = top,
+                layout.Add(new PageBox { Area = area, Level = level, HeadingY = headingY, Top = top,
                     MinX = minX, MinY = minY, MaxX = maxX, MaxY = maxY });
                 contentW = Math.Max(contentW, Margin + (maxX - minX + 1) * CellW);
                 y = top + (maxY - minY + 1) * CellH + SectionGap;
@@ -70,23 +72,24 @@ namespace AteZMachine
 
             // ---- Connections (under the boxes) ----
             foreach (var lb in layout)
-                foreach (var e in ZMapLayout.EdgesForLevel(map, lb.Level))
+                foreach (var e in ZMapLayout.EdgesForPage(map, lb.Area, lb.Level))
                 {
                     var pA = Attach(pos, e.E0.Room, e.E0.Side);
                     var pB = Attach(pos, e.E1.Room, e.E1.Side);
                     body.Append(Spline(pA, e.E0.Side, pB, e.E1.Side, e.Arrow0, e.Arrow1, LineCol, false));
                 }
-            foreach (var e in VerticalEdges(map, pos))
+            // Exits that cross to another page (a level change OR entering/leaving
+            // an area) are drawn as dashed cross-page connectors.
+            foreach (var e in CrossEdges(map, pos))
                 body.Append(Spline(e.pUpper, Dir.S, e.pLower, Dir.N, e.arrowUpper, e.arrowLower, LevelCol, true));
 
             // ---- Boxes, text, markers, items ----
             foreach (var lb in layout)
             {
-                body.Append(Text(Margin, (int)lb.HeadingY + 16,
-                    Esc(lb.Level == 0 ? "Ground level" : "Level " + lb.Level), TextCol, 14, true));
+                body.Append(Text(Margin, (int)lb.HeadingY + 16, Esc(PageHeading(map, lb.Area, lb.Level)), TextCol, 14, true));
                 foreach (var r in map.Rooms.Values)
                 {
-                    if (!r.Placed || r.Level != lb.Level) continue;
+                    if (!r.Placed || r.Area != lb.Area || r.Level != lb.Level) continue;
                     var (px, py) = pos[r.Id];
                     bool cur = r.Id == map.CurrentRoomId;
                     body.Append(Rect(px, py, BoxW, BoxH, cur ? RoomCur : RoomBg));
@@ -142,9 +145,17 @@ namespace AteZMachine
 
         struct VEdge { public (float x, float y) pUpper, pLower; public bool arrowUpper, arrowLower; }
 
-        // UP/DOWN exits between placed rooms → cross-level connectors, resolved
-        // by absolute position (upper = smaller y on the page).
-        static List<VEdge> VerticalEdges(ZMap map, Dictionary<int, (float x, float y)> pos)
+        static string PageHeading(ZMap map, int area, int level)
+        {
+            if (area != 0 && map.AreaName.TryGetValue(area, out var n) && !string.IsNullOrEmpty(n))
+                return n + (level == 0 ? "" : " · Level " + level);
+            return level == 0 ? "Ground level" : "Level " + level;
+        }
+
+        // Exits whose two rooms sit on DIFFERENT pages (a level change or an
+        // area change via in/out) → dashed cross-page connectors, resolved by
+        // absolute position (upper = smaller y on the stacked page layout).
+        static List<VEdge> CrossEdges(ZMap map, Dictionary<int, (float x, float y)> pos)
         {
             var up = new Dictionary<long, bool>();   // exit from upper → lower exists
             var dn = new Dictionary<long, bool>();   // exit from lower → upper exists
@@ -154,9 +165,10 @@ namespace AteZMachine
                 if (!r.Placed) continue;
                 foreach (var kv in r.Exits)
                 {
-                    if (kv.Key != Dir.U && kv.Key != Dir.D) continue;
                     if (!pos.ContainsKey(r.Id) || !pos.ContainsKey(kv.Value)) continue;
                     if (kv.Value == r.Id) continue;
+                    if (!map.Rooms.TryGetValue(kv.Value, out var dest)) continue;
+                    if (dest.Area == r.Area && dest.Level == r.Level) continue; // same page → handled as an edge
                     int a = Math.Min(r.Id, kv.Value), b = Math.Max(r.Id, kv.Value);
                     long key = ((long)a << 32) | (uint)b;
                     int upper = pos[a].y <= pos[b].y ? a : b;

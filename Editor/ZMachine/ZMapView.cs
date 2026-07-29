@@ -20,6 +20,7 @@ namespace AteZMachine
 
         ZMap _map;
         int _level;
+        int _area;
 
         // Geometry is stored with its min corner at (0,0); the viewport-aware
         // Relayout() shifts it by _drawOffset (padding) and centres the current
@@ -90,15 +91,29 @@ namespace AteZMachine
             if (_map != null) _map.Changed -= OnChanged;
             _map = map;
             if (_map != null) _map.Changed += OnChanged;
-            _level = _map != null && _map.Rooms.TryGetValue(_map.CurrentRoomId, out var r) ? r.Level : 0;
+            FollowPlayer();
             Rebuild();
         }
 
         void OnChanged()
         {
-            // Follow the player to their current level.
-            if (_map != null && _map.Rooms.TryGetValue(_map.CurrentRoomId, out var r)) _level = r.Level;
+            FollowPlayer();
             Rebuild();
+        }
+
+        // Follow the player to their current area and level.
+        void FollowPlayer()
+        {
+            if (_map != null && _map.Rooms.TryGetValue(_map.CurrentRoomId, out var r))
+            { _area = r.Area; _level = r.Level; }
+        }
+
+        // The page heading: interiors are named after their entry room.
+        string PageLabel()
+        {
+            if (_map != null && _area != 0 && _map.AreaName.TryGetValue(_area, out var n) && !string.IsNullOrEmpty(n))
+                return n + " · L" + _level;
+            return "Level " + _level;
         }
 
         void ExportSvg()
@@ -116,25 +131,25 @@ namespace AteZMachine
             _lines.Clear();
             _boxItems.Clear();
             _hasGeom = false;
-            if (_map == null || _map.Rooms.Count == 0) { _levelLabel.text = "Level " + _level; _canvas.MarkDirtyRepaint(); return; }
-            _levelLabel.text = "Level " + _level;
+            if (_map == null || _map.Rooms.Count == 0) { _levelLabel.text = PageLabel(); _canvas.MarkDirtyRepaint(); return; }
+            _levelLabel.text = PageLabel();
 
-            // Bounds for this level.
+            // Bounds for this page (current area + level).
             int minX = int.MaxValue, minY = int.MaxValue, maxX = int.MinValue, maxY = int.MinValue;
             foreach (var r in _map.Rooms.Values)
-                if (r.Placed && r.Level == _level)
+                if (r.Placed && r.Area == _area && r.Level == _level)
                 { minX = Mathf.Min(minX, r.X); minY = Mathf.Min(minY, r.Y); maxX = Mathf.Max(maxX, r.X); maxY = Mathf.Max(maxY, r.Y); }
             if (minX == int.MaxValue) { _canvas.style.width = 200; _canvas.style.height = 60; _canvas.MarkDirtyRepaint(); return; }
 
             // Base (un-offset) box positions on the grid.
             var basePos = new Dictionary<int, Vector2>();
             foreach (var r in _map.Rooms.Values)
-                if (r.Placed && r.Level == _level)
+                if (r.Placed && r.Area == _area && r.Level == _level)
                     basePos[r.Id] = new Vector2((r.X - minX) * CellW, (r.Y - minY) * CellH);
 
             // Connections (splines). Attach at the exit's side/corner, arrowheads
             // show travel direction (both ends when bidirectional).
-            foreach (var e in ZMapLayout.EdgesForLevel(_map, _level))
+            foreach (var e in ZMapLayout.EdgesForPage(_map, _area, _level))
             {
                 if (!basePos.TryGetValue(e.E0.Room, out var b0) || !basePos.TryGetValue(e.E1.Room, out var b1)) continue;
                 Vector2 p0 = Attach(b0, e.E0.Side), p1 = Attach(b1, e.E1.Side);
@@ -174,7 +189,7 @@ namespace AteZMachine
             _geomH = hiY - loY;
             foreach (var r in _map.Rooms.Values)
             {
-                if (!r.Placed || r.Level != _level) continue;
+                if (!r.Placed || r.Area != _area || r.Level != _level) continue;
                 Vector2 p = basePos[r.Id] + norm;
                 var box = BuildRoomBox(r, 0, 0);   // position set in Relayout
                 _boxItems.Add((box, p));
