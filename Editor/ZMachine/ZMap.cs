@@ -114,21 +114,40 @@ namespace AteZMachine
             mr.Level = from.Level + dl;
             mr.X = from.X + dx;
             mr.Y = from.Y + dy;
-            // v1 collision policy: nudge along the same axis until free (keeps
-            // the grid readable; non-Euclidean maps can still overlap and that
-            // is accepted — an explorer's map, not a perfect one).
-            int guard = 0;
-            while (guard++ < 8 && Occupied(mr.X, mr.Y, mr.Level, mr.Area, mr.Id))
-            { mr.X += (dx != 0 ? System.Math.Sign(dx) : 1); mr.Y += (dy != 0 ? System.Math.Sign(dy) : 0); }
+
+            // Keep the new room adjacent to the room it connects to; if that cell
+            // is taken, PUSH the occupant (and any rooms behind it) one cell
+            // further along the same direction, cascading to make room — no
+            // overlaps, and the new room stays next to its connector.
+            if (Occupied(mr.X, mr.Y, mr.Level, mr.Area, mr.Id))
+            {
+                int sx = System.Math.Sign(dx), sy = System.Math.Sign(dy);
+                if (sx == 0 && sy == 0) sx = 1; // pure vertical move onto an occupied cell → shove +x
+                PushChain(mr.X, mr.Y, mr.Level, mr.Area, sx, sy, mr.Id);
+            }
             mr.Placed = true;
         }
 
-        bool Occupied(int x, int y, int level, int area, int selfId)
+        // Shifts the contiguous run of rooms starting at (x,y) one step along
+        // (sx,sy), clearing the target cell. Recurses outward first so each room
+        // moves into a cell already vacated; terminates at the first empty cell.
+        void PushChain(int x, int y, int level, int area, int sx, int sy, int excludeId)
+        {
+            var occ = RoomAt(x, y, level, area, excludeId);
+            if (occ == null) return;
+            PushChain(x + sx, y + sy, level, area, sx, sy, excludeId);
+            occ.X += sx; occ.Y += sy;
+        }
+
+        MapRoom RoomAt(int x, int y, int level, int area, int excludeId)
         {
             foreach (var r in Rooms.Values)
-                if (r.Id != selfId && r.Placed && r.Area == area && r.Level == level && r.X == x && r.Y == y) return true;
-            return false;
+                if (r.Id != excludeId && r.Placed && r.Area == area && r.Level == level && r.X == x && r.Y == y) return r;
+            return null;
         }
+
+        bool Occupied(int x, int y, int level, int area, int selfId) =>
+            RoomAt(x, y, level, area, selfId) != null;
 
         static (int, int, int) Delta(Dir d)
         {
