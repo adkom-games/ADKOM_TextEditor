@@ -1,0 +1,34 @@
+#if UNITY_EDITOR
+// ATE Z-Machine — internal accessors the auto-mapper reads (current room,
+// object tree, object count). Observation only — nothing here changes
+// execution.
+namespace AteZMachine
+{
+    public sealed partial class ZMachine
+    {
+        /// <summary>The current room object (global variable 0 in v3 — the
+        /// same value the status line names).</summary>
+        internal int MapCurrentRoom() => ReadVar(16);
+
+        internal string MapObjectName(int obj) => obj <= 0 || obj > MapMaxObject() ? "" : ObjectName(obj);
+        internal int MapParent(int obj) => obj <= 0 ? 0 : GetParent(obj);
+        internal int MapChild(int obj) => obj <= 0 ? 0 : GetChild(obj);
+        internal int MapSibling(int obj) => obj <= 0 ? 0 : GetSibling(obj);
+        internal bool MapAttr(int obj, int attr) => TestAttr(obj, attr);
+
+        int _maxObjCache = -1;
+
+        /// <summary>Object count (v3): the object entries run from object 1 up
+        /// to the first property table, 9 bytes each.</summary>
+        internal int MapMaxObject()
+        {
+            if (_maxObjCache > 0) return _maxObjCache;
+            int first = ObjAddr(1);
+            int firstProp = ReadWord(first + 7);
+            int n = (firstProp - first) / OBJ_ENTRY;
+            _maxObjCache = n > 0 && n <= 255 ? n : 255;
+            return _maxObjCache;
+        }
+    }
+}
+#endif
