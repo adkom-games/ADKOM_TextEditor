@@ -24,6 +24,18 @@ namespace AteZMachine
         }
 
         internal string MapObjectName(int obj) => obj <= 0 || obj > MapMaxObject() ? "" : ObjectName(obj);
+
+        /// <summary>The object's 32 attribute flags (v3) as one bitmask — the
+        /// first 4 bytes of its entry. The mapper watches this for changes: a
+        /// game revealing a hidden object (clearing an "invisible"-style flag)
+        /// flips a bit here without reparenting it.</summary>
+        internal uint MapAttrBits(int obj)
+        {
+            if (obj <= 0 || obj > MapMaxObject()) return 0;
+            int a = ObjAddr(obj);
+            return ((uint)ReadWord(a) << 16) | ReadWord(a + 2);
+        }
+
         internal int MapParent(int obj) => obj <= 0 ? 0 : GetParent(obj);
         internal int MapChild(int obj) => obj <= 0 ? 0 : GetChild(obj);
         internal int MapSibling(int obj) => obj <= 0 ? 0 : GetSibling(obj);
