@@ -14,6 +14,11 @@ namespace AteZMachine
         /// at save/restore time (returns a path, or null to cancel).</summary>
         public Func<bool, string> ChooseSaveFile;
 
+        /// <summary>Called with the chosen save-file path after a successful
+        /// save/restore, so the launcher can persist/reload the auto-map
+        /// alongside the game state.</summary>
+        public Action<string> AfterSave, AfterRestore;
+
         readonly byte[] _initial; // captured for restart
 
         void DoSave()
@@ -43,6 +48,7 @@ namespace AteZMachine
                         }
                     }
                     ok = true;
+                    try { AfterSave?.Invoke(path); } catch { /* map sidecar is best-effort */ }
                 }
             }
             catch (Exception ex) { _screen.Print("\n[save failed: " + ex.Message + "]\n"); }
@@ -77,6 +83,7 @@ namespace AteZMachine
                             for (int j = 0; j < ne; j++) f.Eval.Add(r.ReadUInt16());
                             _frames.Add(f);
                         }
+                        try { AfterRestore?.Invoke(path); } catch { /* map sidecar is best-effort */ }
                         return; // resumed at saved PC; do NOT take restore's branch
                     }
                 }

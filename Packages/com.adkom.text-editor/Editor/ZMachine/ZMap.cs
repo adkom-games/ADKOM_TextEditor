@@ -7,7 +7,9 @@
 // neighbours; up/down change level; in/out and teleports are recorded as
 // links but may leave a room unplaced). Objects are tracked through the
 // containment tree: current room, whether carried, and where first seen.
+using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace AteZMachine
 {
@@ -237,6 +239,70 @@ namespace AteZMachine
         }
 
         public static string DirName(Dir d) => d.ToString().ToLowerInvariant();
+
+        // ---- Persistence (sidecar to the game save) ----
+
+        const int MapFormat = 1;
+
+        public void SaveTo(string path)
+        {
+            try
+            {
+                using (var w = new BinaryWriter(File.Create(path)))
+                {
+                    w.Write(MapFormat);
+                    w.Write(CurrentRoomId); w.Write(PlayerObj); w.Write(_prevRoom);
+                    w.Write(Rooms.Count);
+                    foreach (var r in Rooms.Values)
+                    {
+                        w.Write(r.Id); w.Write(r.Name ?? ""); w.Write(r.X); w.Write(r.Y);
+                        w.Write(r.Level); w.Write(r.Placed);
+                        w.Write(r.Exits.Count);
+                        foreach (var kv in r.Exits) { w.Write((int)kv.Key); w.Write(kv.Value); }
+                    }
+                    w.Write(Objects.Count);
+                    foreach (var o in Objects.Values)
+                    {
+                        w.Write(o.Id); w.Write(o.Name ?? ""); w.Write(o.Room);
+                        w.Write(o.Carried); w.Write(o.OriginRoom); w.Write(o.Container);
+                    }
+                }
+            }
+            catch { /* map persistence is best-effort */ }
+        }
+
+        public bool LoadFrom(string path)
+        {
+            try
+            {
+                if (!File.Exists(path)) return false;
+                using (var r = new BinaryReader(File.OpenRead(path)))
+                {
+                    if (r.ReadInt32() != MapFormat) return false;
+                    Rooms.Clear(); Objects.Clear();
+                    CurrentRoomId = r.ReadInt32(); PlayerObj = r.ReadInt32(); _prevRoom = r.ReadInt32();
+                    int nr = r.ReadInt32();
+                    for (int i = 0; i < nr; i++)
+                    {
+                        var mr = new MapRoom { Id = r.ReadInt32(), Name = r.ReadString(), X = r.ReadInt32(),
+                            Y = r.ReadInt32(), Level = r.ReadInt32(), Placed = r.ReadBoolean() };
+                        int ne = r.ReadInt32();
+                        for (int e = 0; e < ne; e++) mr.Exits[(Dir)r.ReadInt32()] = r.ReadInt32();
+                        Rooms[mr.Id] = mr;
+                    }
+                    int no = r.ReadInt32();
+                    for (int i = 0; i < no; i++)
+                    {
+                        var mo = new MapObject { Id = r.ReadInt32(), Name = r.ReadString(), Room = r.ReadInt32(),
+                            Carried = r.ReadBoolean(), OriginRoom = r.ReadInt32(), Container = r.ReadInt32() };
+                        Objects[mo.Id] = mo;
+                    }
+                }
+                Changed?.Invoke();
+                return true;
+            }
+            catch { return false; }
+        }
     }
 }
 #endif

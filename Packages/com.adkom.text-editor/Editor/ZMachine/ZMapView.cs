@@ -16,6 +16,7 @@ namespace AteZMachine
 
         ZMap _map;
         int _level;
+        VisualElement _curBox;
 
         readonly ScrollView _scroll;
         readonly VisualElement _canvas;
@@ -79,6 +80,7 @@ namespace AteZMachine
         {
             _canvas.Clear();
             _lines.Clear();
+            _curBox = null;
             if (_map == null || _map.Rooms.Count == 0) { _levelLabel.text = "Level " + _level; _canvas.MarkDirtyRepaint(); return; }
             _levelLabel.text = "Level " + _level;
 
@@ -99,7 +101,9 @@ namespace AteZMachine
                 float px = (r.X - minX) * CellW + 10;
                 float py = (r.Y - minY) * CellH + 10;
                 center[r.Id] = new Vector2(px + BoxW / 2f, py + BoxH / 2f);
-                _canvas.Add(BuildRoomBox(r, px, py));
+                var box = BuildRoomBox(r, px, py);
+                if (r.Id == _map.CurrentRoomId) _curBox = box;
+                _canvas.Add(box);
             }
             // Connection lines (same-level compass exits only).
             foreach (var r in _map.Rooms.Values)
@@ -112,6 +116,19 @@ namespace AteZMachine
                 }
             }
             _canvas.MarkDirtyRepaint();
+
+            // Keep the current room in view as the player moves. ScrollTo needs
+            // the box's resolved layout, so defer a frame until it has one.
+            if (_curBox != null)
+                _curBox.RegisterCallback<GeometryChangedEvent>(OnCurBoxLaidOut);
+        }
+
+        void OnCurBoxLaidOut(GeometryChangedEvent e)
+        {
+            var box = e.target as VisualElement;
+            if (box == null) return;
+            box.UnregisterCallback<GeometryChangedEvent>(OnCurBoxLaidOut);
+            if (box == _curBox) _scroll.ScrollTo(box);
         }
 
         VisualElement BuildRoomBox(MapRoom r, float px, float py)
