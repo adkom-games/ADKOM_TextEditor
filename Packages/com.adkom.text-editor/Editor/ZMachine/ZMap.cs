@@ -19,6 +19,7 @@ namespace AteZMachine
     {
         public int Id;
         public string Name;
+        public int Area;          // separate coordinate region (0 = exterior; interiors get their own)
         public int X, Y, Level;
         public bool Placed;
         public readonly Dictionary<Dir, int> Exits = new Dictionary<Dir, int>();
@@ -38,10 +39,14 @@ namespace AteZMachine
     {
         public readonly Dictionary<int, MapRoom> Rooms = new Dictionary<int, MapRoom>();
         public readonly Dictionary<int, MapObject> Objects = new Dictionary<int, MapObject>();
+        // Display name of each area (its entry room), for the page heading.
+        public readonly Dictionary<int, string> AreaName = new Dictionary<int, string>();
         public int CurrentRoomId { get; private set; }
+        public int CurrentAreaId { get; private set; }
         public int PlayerObj { get; private set; } = -1;
 
         int _prevRoom;
+        int _nextArea = 1;
         Dictionary<int, int> _prevParents = new Dictionary<int, int>();
 
         public event System.Action Changed;
@@ -58,11 +63,29 @@ namespace AteZMachine
             if (!Rooms.TryGetValue(room, out var mr))
             {
                 mr = new MapRoom { Id = room, Name = zm.MapObjectName(room) };
-                if (Rooms.Count == 0) { mr.X = mr.Y = mr.Level = 0; mr.Placed = true; }
-                else if (dir.HasValue && CurrentRoomId != 0 &&
-                         Rooms.TryGetValue(CurrentRoomId, out var from) && from.Placed)
-                    Place(mr, from, dir.Value);
-                // else: reached with no known direction → leave unplaced
+                MapRoom from = null;
+                if (CurrentRoomId != 0) Rooms.TryGetValue(CurrentRoomId, out from);
+                if (Rooms.Count == 0)
+                {
+                    mr.Area = 0; mr.X = mr.Y = mr.Level = 0; mr.Placed = true;
+                }
+                else if (dir == Dir.In && from != null)
+                {
+                    // Entering a container opens a NEW area at its own origin,
+                    // so an interior lays out on its own grid instead of colliding
+                    // with the exterior it is nested inside.
+                    mr.Area = _nextArea++;
+                    mr.X = mr.Y = mr.Level = 0; mr.Placed = true;
+                    AreaName[mr.Area] = mr.Name;
+                }
+                else if (dir.HasValue && from != null && from.Placed)
+                {
+                    Place(mr, from, dir.Value); // same area as 'from'
+                }
+                else
+                {
+                    mr.Area = CurrentAreaId; // reached with no known direction → leave unplaced
+                }
                 Rooms[room] = mr;
             }
             else if (string.IsNullOrEmpty(mr.Name)) mr.Name = zm.MapObjectName(room);
@@ -75,6 +98,7 @@ namespace AteZMachine
             SeedPlayer(zm, room);
             DetectPlayer(zm, room);
             CurrentRoomId = room;
+            if (Rooms.TryGetValue(room, out var here)) CurrentAreaId = here.Area;
             if (PlayerObj > 0) Objects.Remove(PlayerObj); // never map the player avatar
             ScanObjects(zm);
             _prevRoom = room;
@@ -83,6 +107,7 @@ namespace AteZMachine
 
         void Place(MapRoom mr, MapRoom from, Dir d)
         {
+            mr.Area = from.Area; // stays in the same region
             var (dx, dy, dl) = Delta(d);
             mr.Level = from.Level + dl;
             mr.X = from.X + dx;
@@ -91,15 +116,15 @@ namespace AteZMachine
             // the grid readable; non-Euclidean maps can still overlap and that
             // is accepted — an explorer's map, not a perfect one).
             int guard = 0;
-            while (guard++ < 8 && Occupied(mr.X, mr.Y, mr.Level, mr.Id))
+            while (guard++ < 8 && Occupied(mr.X, mr.Y, mr.Level, mr.Area, mr.Id))
             { mr.X += (dx != 0 ? System.Math.Sign(dx) : 1); mr.Y += (dy != 0 ? System.Math.Sign(dy) : 0); }
             mr.Placed = true;
         }
 
-        bool Occupied(int x, int y, int level, int selfId)
+        bool Occupied(int x, int y, int level, int area, int selfId)
         {
             foreach (var r in Rooms.Values)
-                if (r.Id != selfId && r.Placed && r.Level == level && r.X == x && r.Y == y) return true;
+                if (r.Id != selfId && r.Placed && r.Area == area && r.Level == level && r.X == x && r.Y == y) return true;
             return false;
         }
 
@@ -242,7 +267,7 @@ namespace AteZMachine
 
         // ---- Persistence (sidecar to the game save) ----
 
-        const int MapFormat = 1;
+        const int MapFormat = 2;
 
         public void SaveTo(string path)
         {
@@ -252,10 +277,13 @@ namespace AteZMachine
                 {
                     w.Write(MapFormat);
                     w.Write(CurrentRoomId); w.Write(PlayerObj); w.Write(_prevRoom);
+                    w.Write(CurrentAreaId); w.Write(_nextArea);
+                    w.Write(AreaName.Count);
+                    foreach (var kv in AreaName) { w.Write(kv.Key); w.Write(kv.Value ?? ""); }
                     w.Write(Rooms.Count);
                     foreach (var r in Rooms.Values)
                     {
-                        w.Write(r.Id); w.Write(r.Name ?? ""); w.Write(r.X); w.Write(r.Y);
+                        w.Write(r.Id); w.Write(r.Name ?? ""); w.Write(r.Area); w.Write(r.X); w.Write(r.Y);
                         w.Write(r.Level); w.Write(r.Placed);
                         w.Write(r.Exits.Count);
                         foreach (var kv in r.Exits) { w.Write((int)kv.Key); w.Write(kv.Value); }
@@ -279,13 +307,16 @@ namespace AteZMachine
                 using (var r = new BinaryReader(File.OpenRead(path)))
                 {
                     if (r.ReadInt32() != MapFormat) return false;
-                    Rooms.Clear(); Objects.Clear();
+                    Rooms.Clear(); Objects.Clear(); AreaName.Clear();
                     CurrentRoomId = r.ReadInt32(); PlayerObj = r.ReadInt32(); _prevRoom = r.ReadInt32();
+                    CurrentAreaId = r.ReadInt32(); _nextArea = r.ReadInt32();
+                    int na = r.ReadInt32();
+                    for (int i = 0; i < na; i++) { int k = r.ReadInt32(); AreaName[k] = r.ReadString(); }
                     int nr = r.ReadInt32();
                     for (int i = 0; i < nr; i++)
                     {
-                        var mr = new MapRoom { Id = r.ReadInt32(), Name = r.ReadString(), X = r.ReadInt32(),
-                            Y = r.ReadInt32(), Level = r.ReadInt32(), Placed = r.ReadBoolean() };
+                        var mr = new MapRoom { Id = r.ReadInt32(), Name = r.ReadString(), Area = r.ReadInt32(),
+                            X = r.ReadInt32(), Y = r.ReadInt32(), Level = r.ReadInt32(), Placed = r.ReadBoolean() };
                         int ne = r.ReadInt32();
                         for (int e = 0; e < ne; e++) mr.Exits[(Dir)r.ReadInt32()] = r.ReadInt32();
                         Rooms[mr.Id] = mr;

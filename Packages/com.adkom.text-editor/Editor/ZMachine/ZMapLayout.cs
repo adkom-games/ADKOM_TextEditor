@@ -93,16 +93,17 @@ namespace AteZMachine
         /// link plus a curving SOUTH one) are kept as separate paths. Only exits
         /// resolving to the identical pair of endpoints — a real two-way corridor
         /// — merge into one edge with an arrowhead at both ends.</summary>
-        public static List<MapEdge> EdgesForLevel(ZMap map, int level)
+        public static List<MapEdge> EdgesForPage(ZMap map, int area, int level)
         {
             var acc = new Dictionary<string, MapEdge>();
             foreach (var r in map.Rooms.Values)
             {
-                if (!r.Placed || r.Level != level) continue;
+                if (!r.Placed || r.Area != area || r.Level != level) continue;
                 foreach (var kv in r.Exits)
                 {
                     if (!IsCompass(kv.Key)) continue;
-                    if (!map.Rooms.TryGetValue(kv.Value, out var dest) || !dest.Placed || dest.Level != level) continue;
+                    if (!map.Rooms.TryGetValue(kv.Value, out var dest) || !dest.Placed
+                        || dest.Area != area || dest.Level != level) continue;
                     if (dest.Id == r.Id) continue;
 
                     var s0 = new MapEndpoint { Room = r.Id, Side = kv.Key };                 // leaves here
