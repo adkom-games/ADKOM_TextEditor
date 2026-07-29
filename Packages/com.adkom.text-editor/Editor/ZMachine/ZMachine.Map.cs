@@ -14,6 +14,15 @@ namespace AteZMachine
         /// same value the status line names).</summary>
         internal int MapCurrentRoom() => ReadVar(16);
 
+        /// <summary>Is this object the value of any global variable? The
+        /// player/actor object is typically held in a global, which lets the
+        /// mapper identify it on turn 1 (so it is never shown as an item).</summary>
+        internal bool MapReferencedByGlobal(int obj)
+        {
+            for (int v = 16; v <= 255; v++) if (ReadVar(v) == obj) return true;
+            return false;
+        }
+
         internal string MapObjectName(int obj) => obj <= 0 || obj > MapMaxObject() ? "" : ObjectName(obj);
         internal int MapParent(int obj) => obj <= 0 ? 0 : GetParent(obj);
         internal int MapChild(int obj) => obj <= 0 ? 0 : GetChild(obj);
