@@ -969,6 +969,9 @@ msgstr "部屋 #"
 msgid "Object #"
 msgstr "オブジェクト #"
 
+msgid "Non-adjacent exit"
+msgstr "隣接しない出口"
+
 msgid "Auto-map"
 msgstr "自動マップ"
 
