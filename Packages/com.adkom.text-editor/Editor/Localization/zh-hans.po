@@ -932,3 +932,18 @@ msgstr "这是此 ATE 随附示例的旧副本，因此其签名与代码不匹�
 
 msgid "Your installed sample addon(s) — {0} — are older than the copies shipped with this ATE, so their signatures no longer match their code. Reinstall them?"
 msgstr "已安装的示例插件（{0}）比此 ATE 随附的版本旧，因此签名与代码不匹配。要重新安装吗？"
+
+msgid "Open Story File… (.z3)"
+msgstr "打开故事文件… (.z3)"
+
+msgid "Open Z-machine story file"
+msgstr "打开 Z-machine 故事文件"
+
+msgid "Save game"
+msgstr "保存游戏"
+
+msgid "Restore game"
+msgstr "恢复游戏"
+
+msgid "Z-Machine (Zork)..."
+msgstr "Z-Machine (Zork)..."

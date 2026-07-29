@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 // ATE Z-Machine — terminal screen over an ATE game-mode document.
 //
 // A scrolling transcript with a status line on top, word-wrapped to the
@@ -172,3 +173,5 @@ namespace AteZMachine
         }
     }
 }
+
+#endif

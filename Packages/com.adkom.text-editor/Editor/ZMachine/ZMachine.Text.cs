@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 // ATE Z-Machine (v3) — ZSCII text decode/encode, from the Standards Document.
 using System;
 using System.Collections.Generic;
@@ -106,3 +107,5 @@ namespace AteZMachine
         }
     }
 }
+
+#endif

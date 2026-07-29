@@ -333,12 +333,15 @@ the bottom. See [[Project State]] for the current snapshot.
 
 - **Z-Machine interpreter game (2026-07-29)**: clean-room version-3
   Z-machine written from The Z-Machine Standards Document (no Infocom
-  code, no GPL interpreter source) as a folder addon
-  (Samples~/Addons/ZMachineGame): memory/header, ZSCII decode/encode,
+  code, no GPL interpreter source). Lives in the EDITOR CORE
+  (Editor/ZMachine, Tools -> Z-Machine) rather than as an addon, so its
+  story-file download is a native ATE feature trusted by installation
+  and never hits the addon consent gate (Cary's call 2026-07-29):
+  memory/header, ZSCII decode/encode,
   object table + properties, dictionary tokeniser, full v3 opcode set,
   call/branch/store, save/restore/restart, output streams. ZScreen is a
-  scrolling transcript + status line on the game API; input via inline
-  key echo. ZStory downloads the MIT-licensed Zork I/II/III (pinned
+  scrolling transcript + status line on the game API; input via inline key echo through a core window key hook (not the
+  addon input events, which an addon reload resets). ZStory downloads the MIT-licensed Zork I/II/III (pinned
   commit SHAs, user action, to the user's machine; ATE ships no game).
   Verified live: interpreter runs downloaded Zork I end to end (room
   'West of House', status line, parser responds, multi-turn loop).

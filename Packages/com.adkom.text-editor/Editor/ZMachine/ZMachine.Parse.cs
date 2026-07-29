@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 // ATE Z-Machine (v3) — sread input, tokeniser, and status line.
 using System;
 using System.Collections.Generic;
@@ -108,3 +109,5 @@ namespace AteZMachine
         }
     }
 }
+
+#endif

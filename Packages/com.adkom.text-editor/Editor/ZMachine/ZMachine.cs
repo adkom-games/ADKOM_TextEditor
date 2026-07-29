@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 // ATE Z-Machine interpreter (version 3) — core CPU.
 //
 // A CLEAN-ROOM implementation written from The Z-Machine Standards
@@ -245,3 +246,5 @@ namespace AteZMachine
         }
     }
 }
+
+#endif

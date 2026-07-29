@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 // ATE Z-Machine (v3) — opcode implementations, from the Standards Document.
 using System;
 
@@ -209,3 +210,5 @@ namespace AteZMachine
         int ZsciiOut(char c) => c == '\n' ? 13 : c;
     }
 }
+
+#endif
