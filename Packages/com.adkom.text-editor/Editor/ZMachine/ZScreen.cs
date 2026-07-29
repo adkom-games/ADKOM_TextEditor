@@ -28,7 +28,7 @@ namespace AteZMachine
 
         AteDocument _doc;
         readonly List<string> _lines = new List<string> { "" };  // transcript; last = current line
-        string _status = "";
+        string _statusLeft = "", _statusRight = "";
         bool _inputMode;
         int _inputDocRow = 2;                     // doc row of the input line (set by Render)
         int _coloredRow = -1;                     // row currently carrying the prompt color
@@ -100,21 +100,20 @@ namespace AteZMachine
 
         public void SetStatus(string location, int a, int b, bool timeGame)
         {
-            string right = timeGame
+            // The bar lays out with flex (location left, score/moves right), so
+            // no space padding — just the two strings.
+            _statusRight = timeGame
                 ? string.Format("Time: {0}:{1:00}", ((a + 11) % 12) + 1, b)
                 : string.Format("Score: {0}   Moves: {1}", a, b);
-            // The right side (score/moves) must always show; cap the location.
-            // The bar is a pinned overlay, so it can run the full width (no need
-            // to leave a trailing column to avoid scrolling).
-            string loc = location ?? "";
-            int maxLoc = _w - right.Length - 2;
-            if (maxLoc < 1) maxLoc = 1;
-            if (loc.Length > maxLoc) loc = loc.Substring(0, Math.Max(1, maxLoc - 1)) + "…";
-            string left = " " + loc;
-            int pad = _w - left.Length - right.Length;
-            _status = left + (pad > 0 ? new string(' ', pad) : " ") + right;
-            if (_status.Length > _w) _status = _status.Substring(0, _w);
+            _statusLeft = location ?? "";
             Render();
+        }
+
+        /// <summary>Repaints the whole screen — used when this document becomes
+        /// the active tab again so the pinned status bar reappears at once.</summary>
+        public void Redraw()
+        {
+            if (IsValid) Render();
         }
 
         public void RequestLine()
@@ -165,7 +164,7 @@ namespace AteZMachine
             _doc.WriteAt(_inputDocRow, 1, line.PadRight(_w));
             _doc.SetColor(_inputDocRow, 1, _w + 1, PromptCol, null);
             _coloredRow = _inputDocRow;
-            _doc.SetStatusBar(_status ?? "", StatusFg, StatusBg); // keep the bar present while typing
+            _doc.SetStatusBar(_statusLeft, _statusRight, StatusFg, StatusBg); // keep the bar present while typing
             _doc.GoTo(_inputDocRow, caretCol); // block caret coincides with the "_"; scrolls into view
         }
 
@@ -190,7 +189,7 @@ namespace AteZMachine
             var sb = new StringBuilder();
             for (int i = 0; i < view.Count; i++) { if (i > 0) sb.Append('\n'); sb.Append(view[i]); }
             _doc.SetText(sb.ToString());
-            _doc.SetStatusBar(_status ?? "", StatusFg, StatusBg);
+            _doc.SetStatusBar(_statusLeft, _statusRight, StatusFg, StatusBg);
 
             // Colors are a positional overlay that survives SetText, so a prompt
             // color left on the previous input row would stain a now-committed
@@ -210,7 +209,7 @@ namespace AteZMachine
         // after a restore. The transcript rides alongside the save so restoring
         // brings the scrollback back too.
 
-        const string TransHeader = "ATE-ZSCROLL\t1";
+        const string TransHeader = "ATE-ZSCROLL\t2";
 
         public void SaveTranscript(string path)
         {
@@ -219,7 +218,8 @@ namespace AteZMachine
                 using (var w = new StreamWriter(File.Create(path)))
                 {
                     w.WriteLine(TransHeader);
-                    w.WriteLine(_status ?? "");
+                    w.WriteLine(_statusLeft ?? "");
+                    w.WriteLine(_statusRight ?? "");
                     w.WriteLine(_lines.Count);
                     foreach (var l in _lines) w.WriteLine(l ?? "");
                 }
@@ -235,7 +235,8 @@ namespace AteZMachine
                 using (var r = new StreamReader(File.OpenRead(path)))
                 {
                     if (r.ReadLine() != TransHeader) return false;
-                    _status = r.ReadLine() ?? "";
+                    _statusLeft = r.ReadLine() ?? "";
+                    _statusRight = r.ReadLine() ?? "";
                     if (!int.TryParse(r.ReadLine(), out int n) || n < 0) return false;
                     _lines.Clear();
                     for (int i = 0; i < n; i++) _lines.Add(r.ReadLine() ?? "");

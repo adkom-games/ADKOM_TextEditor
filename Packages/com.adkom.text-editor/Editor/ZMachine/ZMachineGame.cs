@@ -101,7 +101,12 @@ namespace AteZMachine
                 _screen.OnLine = OnPlayerLine;
                 _screen.Doc.SetTitle(Path.GetFileNameWithoutExtension(path));
 
-                if (!_hooked) { AteApi.documentClosed += OnDocClosed; _hooked = true; }
+                if (!_hooked)
+                {
+                    AteApi.documentClosed += OnDocClosed;
+                    AteApi.activeDocumentChanged += OnActiveChanged;
+                    _hooked = true;
+                }
                 _window.GameKeyHandler = OnKey;
 
                 if (AutoMapOn) AttachMap();
@@ -143,6 +148,15 @@ namespace AteZMachine
         static void OnDocClosed(AteDocument d)
         {
             if (_screen != null && Equals(d, _screen.Doc)) Stop();
+        }
+
+        // When the game tab becomes active again, repaint at once so the pinned
+        // status bar (which only applies to the active document) reappears
+        // instantly instead of on the next turn.
+        static void OnActiveChanged(AteDocument d)
+        {
+            if (_screen != null && _screen.IsValid && d != null && Equals(d, _screen.Doc))
+                _screen.Redraw();
         }
 
         static void Stop()
