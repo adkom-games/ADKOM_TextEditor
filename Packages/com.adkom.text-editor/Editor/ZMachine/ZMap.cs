@@ -48,6 +48,7 @@ namespace AteZMachine
         /// player's raw input, to update the map from the new engine state.</summary>
         public void Observe(ZMachine zm, string lastInput)
         {
+            if (zm == null || !zm.MapReady()) return; // machine not started yet
             int room = zm.MapCurrentRoom();
             if (room <= 0) return;
             Dir? dir = ParseDir(lastInput);
