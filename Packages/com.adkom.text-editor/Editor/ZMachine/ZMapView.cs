@@ -279,23 +279,35 @@ namespace AteZMachine
         void ApplyZoom(bool centerOnRoom)
         {
             if (!_hasGeom) return;
+            // Size/scale UNCONDITIONALLY (never gated on the viewport) so the
+            // content is never left at zero size — the earlier gate blanked the
+            // map whenever the viewport wasn't laid out yet.
+            _canvas.style.transformOrigin = new TransformOrigin(Length.Percent(0f), Length.Percent(0f), 0f);
+            _canvas.style.scale = new Scale(new Vector2(_zoom, _zoom));
+            _sizer.style.width = _canvasBaseW * _zoom;   // scroll content = scaled size
+            _sizer.style.height = _canvasBaseH * _zoom;
+
+            float prevZoom = _appliedZoom;
+            _appliedZoom = _zoom;
+            ScrollToCentre(centerOnRoom, prevZoom); // only the centring needs the viewport
+        }
+
+        // Reads the viewport ONLY to compute the scroll target (deferred until it
+        // has laid out). centerOnRoom centres the current room; otherwise the
+        // point at the viewport centre is kept stable across the zoom change.
+        void ScrollToCentre(bool centerOnRoom, float prevZoom)
+        {
+            if (!_hasGeom) return;
             var vp = _scroll.contentViewport.layout;
             if (float.IsNaN(vp.width) || vp.width < 1 || float.IsNaN(vp.height) || vp.height < 1)
             {
-                _scroll.schedule.Execute(() => ApplyZoom(centerOnRoom));
+                _scroll.schedule.Execute(() => ScrollToCentre(centerOnRoom, prevZoom));
                 return;
             }
             Vector2 half = new Vector2(vp.width * 0.5f, vp.height * 0.5f);
             Vector2 baseCenter = centerOnRoom
                 ? _curCenter + new Vector2(CenterPad, CenterPad)
-                : (_scroll.scrollOffset + half) / Mathf.Max(0.0001f, _appliedZoom);
-
-            _canvas.style.transformOrigin = new TransformOrigin(Length.Percent(0f), Length.Percent(0f), 0f);
-            _canvas.style.scale = new Scale(new Vector2(_zoom, _zoom));
-            _sizer.style.width = _canvasBaseW * _zoom;   // scroll content = scaled size
-            _sizer.style.height = _canvasBaseH * _zoom;
-            _appliedZoom = _zoom;
-
+                : (_scroll.scrollOffset + half) / Mathf.Max(0.0001f, prevZoom);
             var target = new Vector2(Mathf.Max(0f, baseCenter.x * _zoom - half.x),
                                      Mathf.Max(0f, baseCenter.y * _zoom - half.y));
             _scroll.scrollOffset = target;
