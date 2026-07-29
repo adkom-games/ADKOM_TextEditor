@@ -19,7 +19,7 @@ namespace AteZMachine
         void DoSave()
         {
             ReadBranch(out bool on, out int off);
-            int target = ComputeTarget(on, off);
+            int target = SuccessPc(on, off); // where execution goes if SUCCEED
             bool ok = false;
             try
             {
@@ -46,7 +46,7 @@ namespace AteZMachine
                 }
             }
             catch (Exception ex) { _screen.Print("\n[save failed: " + ex.Message + "]\n"); }
-            ApplyTarget(ok, on, off, target);
+            ApplyBranch(ok, on, off); // live: branch on the actual save result
         }
 
         void DoRestore()
@@ -96,16 +96,17 @@ namespace AteZMachine
             Start();
         }
 
-        int ComputeTarget(bool on, int off)
+        /// <summary>The PC where execution continues if the save/restore
+        /// SUCCEEDS (result = true) — accounting for branch polarity. For a
+        /// branch-on-true it's the branch target; for branch-on-false (Zork's
+        /// save) it's the fall-through. This is the PC we serialise, so a
+        /// restore resumes exactly where a successful save would have.
+        /// _pc is currently just past the branch data.</summary>
+        int SuccessPc(bool on, int off)
         {
-            // Where a taken branch would land (used to serialise the resume PC).
-            if (off == 0 || off == 1) return _pc;
-            return _pc + off - 2;
-        }
-
-        void ApplyTarget(bool cond, bool on, int off, int target)
-        {
-            if (cond == on) _pc = target;
+            if (on) // branch taken when result is true
+                return (off == 0 || off == 1) ? _pc : _pc + off - 2;
+            return _pc; // result true does not take the branch → fall through
         }
     }
 }
