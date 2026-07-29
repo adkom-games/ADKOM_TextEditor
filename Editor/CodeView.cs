@@ -1950,25 +1950,42 @@ namespace ADKOM.TextEditor
         public bool HasSelectionPublic => HasSelection;
         internal void RefreshVisiblePublic() => RefreshVisible();
 
+        // Cache the game viewport by pixel size so the measure loop below runs
+        // only when the window/zoom actually changes, not every render.
+        float _gvW = -1f, _gvH = -1f;
+        int _gvRows, _gvCols;
+
         /// <summary>The visible size of the viewport in whole characters — for
-        /// games that fill the screen (Game API). False until layout resolves.</summary>
+        /// games that fill the screen (Game API). False until layout resolves.
+        /// The column count is found by MEASURING a full row and shrinking it
+        /// until it truly fits (game mode wraps off, so a too-wide row would
+        /// spill into a horizontal scrollbar and hide the right edge — e.g. a
+        /// status bar's score). Extrapolating from one char's width was not
+        /// precise enough.</summary>
         internal bool TryGameViewport(out int rows, out int cols)
         {
             rows = cols = 0;
             if (_scroll == null) return false;
             var vp = _scroll.contentViewport.layout;
-            if (float.IsNaN(vp.height) || vp.height < 1 || _lineHeight < 1) return false;
+            if (float.IsNaN(vp.height) || vp.height < 1 || vp.width < 1 || _lineHeight < 1) return false;
+            if (Mathf.Approximately(vp.width, _gvW) && Mathf.Approximately(vp.height, _gvH) && _gvCols > 0)
+            { rows = _gvRows; cols = _gvCols; return true; }
+
             float cw = CharWidth('M');
             if (float.IsNaN(cw) || cw < 1) return false;
-            // Leave a small margin (game mode has word-wrap off): a full-width
-            // line must not overflow into a horizontal scrollbar, which would
-            // push the right of the line — e.g. a status bar's score — off the
-            // visible edge. Also drop the last row so nothing needs a vertical
-            // scrollbar either.
-            rows = Mathf.Max(1, Mathf.FloorToInt(vp.height / _lineHeight) - 1);
-            cols = Mathf.Max(1, Mathf.FloorToInt((vp.width - WrapPad - 2f * cw) / cw));
+            float usable = vp.width - WrapPad - cw; // a full char of slack past the true fit
+            int n = Mathf.Clamp(Mathf.FloorToInt(usable / cw) + 2, 1, 400);
+            while (n > 1 && MeasureRun(n) > usable) n--;
+
+            _gvRows = Mathf.Max(1, Mathf.FloorToInt(vp.height / _lineHeight) - 1);
+            _gvCols = Mathf.Max(1, n);
+            _gvW = vp.width; _gvH = vp.height;
+            rows = _gvRows; cols = _gvCols;
             return true;
         }
+
+        float MeasureRun(int n) =>
+            _measure.MeasureTextSize(new string('M', n), 0, MeasureMode.Undefined, 0, MeasureMode.Undefined).x;
         public int LineCount => _lines.Count;
 
         /// <summary>Selected text, or null when there is no selection.</summary>
