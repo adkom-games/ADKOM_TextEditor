@@ -1,9 +1,11 @@
 #if UNITY_EDITOR
 // ATE Z-Machine — terminal screen over an ATE game-mode document.
 //
-// A scrolling transcript with a status line on top, word-wrapped to the
-// window width. Input is echoed inline; Enter submits the line to the
-// interpreter. Colors use the game API's fg/bg overlay.
+// A scrolling transcript with a pinned status line on top, word-wrapped to
+// the window width. The document is sized to the actual viewport, so it has
+// no scrollbar of its own: content fills from the top and scrolls up only
+// once it overflows — a real terminal. Input is echoed inline; Enter submits
+// the line to the interpreter.
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -14,9 +16,8 @@ namespace AteZMachine
 {
     public sealed class ZScreen : IZScreen
     {
-        public const int W = 80, H = 30;
-        const int Top = 1;              // row 0 is the status line
-        const int Rows = H - Top;       // transcript rows
+        const int StatusRows = 1;                 // document line 1 = status
+        int _w = 80, _h = 24;                     // grid size (fitted to viewport)
 
         AteDocument _doc;
         readonly List<string> _lines = new List<string> { "" };  // scrollback; last = current line
@@ -26,23 +27,22 @@ namespace AteZMachine
 
         static readonly Color StatusFg = Color.black;
         static readonly Color StatusBg = new Color(0.75f, 0.75f, 0.75f);
-        static readonly Color Text = new Color(0.85f, 0.85f, 0.85f);
-        static readonly Color Prompt = new Color(0.5f, 0.85f, 1f);
+        static readonly Color TextCol = new Color(0.85f, 0.85f, 0.85f);
+        static readonly Color PromptCol = new Color(0.5f, 0.85f, 1f);
 
         public AteDocument Doc => _doc;
         public bool IsValid => _doc != null && _doc.IsValid;
         public bool InputMode => _inputMode;
 
-        public Action<string> OnLine;   // addon sets this to feed the interpreter
+        public Action<string> OnLine;
 
         public void Attach()
         {
-            var blank = new StringBuilder();
-            for (int y = 0; y < H; y++) blank.Append(new string(' ', W)).Append(y < H - 1 ? "\n" : "");
-            _doc = AteApi.NewDocument(blank.ToString());
+            _doc = AteApi.NewDocument("");
             _doc.SetTitle("Z-Machine");
             _doc.SetFont("Consolas", 15);
             _doc.GameMode = true;
+            Resize();                             // may stay default until layout resolves
         }
 
         public void Close()
@@ -51,20 +51,45 @@ namespace AteZMachine
             _doc = null;
         }
 
+        /// <summary>Fits the document to the viewport (rows × cols). Returns
+        /// true if the size changed (and the blank canvas was rebuilt).</summary>
+        bool Resize()
+        {
+            if (!IsValid) return false;
+            if (!_doc.TryGetViewport(out int r, out int c)) { EnsureCanvas(); return false; }
+            r = Mathf.Max(4, r);
+            c = Mathf.Max(20, c);
+            if (r == _h && c == _w && _doc.LineCount == _h) return false;
+            _h = r; _w = c;
+            RebuildCanvas();
+            return true;
+        }
+
+        void EnsureCanvas()
+        {
+            if (_doc.LineCount != _h) RebuildCanvas();
+        }
+
+        void RebuildCanvas()
+        {
+            var sb = new StringBuilder();
+            for (int y = 0; y < _h; y++) sb.Append(new string(' ', _w)).Append(y < _h - 1 ? "\n" : "");
+            _doc.SetText(sb.ToString());
+        }
+
         // ---- IZScreen ----
 
         public void Print(string s)
         {
-            foreach (char c in s ?? "")
+            foreach (char ch in s ?? "")
             {
-                if (c == '\n') { _lines.Add(""); continue; }
-                if (c == '\r') continue;
+                if (ch == '\n') { _lines.Add(""); continue; }
+                if (ch == '\r') continue;
                 string cur = _lines[_lines.Count - 1];
-                if (cur.Length >= W)
+                if (cur.Length >= _w)
                 {
-                    // Word-wrap: break at the last space if there is one.
                     int sp = cur.LastIndexOf(' ');
-                    if (sp > 0 && sp > W - 20)
+                    if (sp > 0 && sp > _w - 20)
                     {
                         string tail = cur.Substring(sp + 1);
                         _lines[_lines.Count - 1] = cur.Substring(0, sp);
@@ -72,7 +97,7 @@ namespace AteZMachine
                     }
                     else _lines.Add("");
                 }
-                _lines[_lines.Count - 1] += c;
+                _lines[_lines.Count - 1] += ch;
             }
             TrimScrollback();
             Render();
@@ -84,9 +109,8 @@ namespace AteZMachine
                 ? string.Format("Time: {0}:{1:00}", ((a + 11) % 12) + 1, b)
                 : string.Format("Score: {0}   Moves: {1}", a, b);
             string left = " " + (location ?? "");
-            int pad = W - left.Length - right.Length - 1;
+            int pad = _w - left.Length - right.Length - 1;
             _status = left + (pad > 0 ? new string(' ', pad) : " ") + right + " ";
-            if (_status.Length > W) _status = _status.Substring(0, W);
             Render();
         }
 
@@ -104,7 +128,7 @@ namespace AteZMachine
             Print("\n[The game has ended. Close this tab.]\n");
         }
 
-        // ---- Key input (called by the addon) ----
+        // ---- Key input (called by the core key hook) ----
 
         public void Key(char c)
         {
@@ -112,7 +136,7 @@ namespace AteZMachine
             if (c == '\n' || c == '\r')
             {
                 string line = _input.ToString();
-                _lines[_lines.Count - 1] += line;     // echo committed
+                _lines[_lines.Count - 1] += line;   // echo the committed line
                 _lines.Add("");
                 _inputMode = false;
                 _input.Clear();
@@ -120,12 +144,8 @@ namespace AteZMachine
                 OnLine?.Invoke(line);
                 return;
             }
-            if (c == '\b')
-            {
-                if (_input.Length > 0) _input.Length--;
-            }
-            else if (c >= ' ' && c < 127 && _input.Length < W - 4)
-                _input.Append(c);
+            if (c == '\b') { if (_input.Length > 0) _input.Length--; }
+            else if (c >= ' ' && c < 127 && _input.Length < _w - 4) _input.Append(c);
             Render();
         }
 
@@ -133,45 +153,44 @@ namespace AteZMachine
 
         void TrimScrollback()
         {
-            const int keep = 400;
+            const int keep = 500;
             if (_lines.Count > keep) _lines.RemoveRange(0, _lines.Count - keep);
         }
 
         void Render()
         {
             if (!IsValid) return;
+            Resize();                               // adapt to window/zoom changes
+            EnsureCanvas();
 
-            // Status line (row 0), inverse.
-            string status = _status.PadRight(W).Substring(0, W);
+            string status = (_status ?? "").PadRight(_w);
+            if (status.Length > _w) status = status.Substring(0, _w);
             _doc.WriteAt(1, 1, status);
-            _doc.SetColor(1, 1, W + 1, StatusFg, StatusBg);
+            _doc.SetColor(1, 1, _w + 1, StatusFg, StatusBg);
 
-            // Build the visible transcript: the tail that fits, plus the input
-            // line being typed when in input mode.
+            int rows = _h - StatusRows;             // transcript rows: doc lines 2.._h
             var view = new List<string>(_lines);
-            if (_inputMode)
-            {
-                view[view.Count - 1] = view[view.Count - 1] + _input.ToString() + "_";
-            }
-            int first = Math.Max(0, view.Count - Rows);
-            for (int r = 0; r < Rows; r++)
+            if (_inputMode) view[view.Count - 1] = view[view.Count - 1] + _input + "_";
+
+            int first = Math.Max(0, view.Count - rows);
+            int inputRow = 1 + StatusRows;
+            for (int r = 0; r < rows; r++)
             {
                 int idx = first + r;
                 string line = idx < view.Count ? view[idx] : "";
-                if (line.Length > W) line = line.Substring(0, W);
-                _doc.WriteAt(Top + r + 1, 1, line.PadRight(W));
-                _doc.SetColor(Top + r + 1, 1, W + 1, Text, null);
+                if (line.Length > _w) line = line.Substring(0, _w);
+                int docRow = 1 + StatusRows + r;
+                _doc.WriteAt(docRow, 1, line.PadRight(_w));
+                _doc.SetColor(docRow, 1, _w + 1, TextCol, null);
+                if (idx == view.Count - 1) inputRow = docRow;
             }
-            // Tint the current input line so it reads as a prompt.
-            if (_inputMode)
-            {
-                int row = Top + (Math.Min(view.Count, Rows)) ;
-                if (row >= Top + 1 && row <= H)
-                    _doc.SetColor(row, 1, W + 1, Prompt, null);
-            }
-            _doc.GoTo(H, W); // park caret out of the way
+            if (_inputMode) _doc.SetColor(inputRow, 1, _w + 1, PromptCol, null);
+
+            // Park the caret at the input line (row 1 when idle). When the
+            // document is fitted to the viewport there is no scroll region, so
+            // this never pulls the title off the top.
+            _doc.GoTo(_inputMode ? inputRow : 1, 1);
         }
     }
 }
-
 #endif
