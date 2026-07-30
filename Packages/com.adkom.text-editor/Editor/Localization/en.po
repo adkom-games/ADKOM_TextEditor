@@ -1111,3 +1111,36 @@ msgstr "snippet"
 
 msgid "Edit Snippets..."
 msgstr "Edit Snippets..."
+
+msgid "Generate Unity Method"
+msgstr "Generate Unity Method"
+
+msgid "Override Method..."
+msgstr "Override Method..."
+
+msgid "'{0}' is already declared in this class."
+msgstr "'{0}' is already declared in this class."
+
+msgid "Override generation needs Semantic Features (enable in Settings)."
+msgstr "Override generation needs Semantic Features (enable in Settings)."
+
+msgid "No overridable members found at the caret."
+msgstr "No overridable members found at the caret."
+
+msgid "Lifecycle"
+msgstr "Lifecycle"
+
+msgid "Physics"
+msgstr "Physics"
+
+msgid "Physics 2D"
+msgstr "Physics 2D"
+
+msgid "Mouse"
+msgstr "Mouse"
+
+msgid "Application"
+msgstr "Application"
+
+msgid "Rendering"
+msgstr "Rendering"

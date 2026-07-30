@@ -124,6 +124,31 @@ namespace ADKOM.TextEditor
         bool TryGetDiagnostics(string path, string text, out List<DiagnosticItem> items);
     }
 
+    /// <summary>One generatable member for the override picker.</summary>
+    public struct GenerationCandidate
+    {
+        public string Label; // e.g. "protected override void OnDestroy()"
+        public string Stub;  // ready-to-insert member text ($END$ inside)
+    }
+
+    /// <summary>Optional provider capability: code generation context —
+    /// what the class at a position already declares, and what it could
+    /// override. Called on the main thread (one-shot menu interactions).</summary>
+    public interface ISemanticGeneration
+    {
+        /// <summary>The class containing <paramref name="offset"/>: its
+        /// directly-declared method names and whether it derives from
+        /// UnityEngine.MonoBehaviour. False when no class is at the caret.</summary>
+        bool TryGetTypeContext(string path, string text, int offset,
+            out HashSet<string> declaredMethods, out bool isMonoBehaviour);
+
+        /// <summary>Overridable members (methods and properties) of the base
+        /// chain of the class at <paramref name="offset"/> that are not yet
+        /// overridden there, each with a ready-to-insert stub.</summary>
+        bool TryGetOverrideCandidates(string path, string text, int offset,
+            out List<GenerationCandidate> candidates);
+    }
+
     /// <summary>One occurrence of the symbol under the caret, for read/write
     /// reference highlighting.</summary>
     public struct SymbolOccurrence

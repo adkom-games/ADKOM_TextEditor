@@ -62,6 +62,63 @@ namespace ADKOM.TextEditor
             });
         }
 
+        // --- Code generators (Unity messages, overrides) ---
+
+        /// <summary>Inserts a Unity message stub at the caret. When semantics
+        /// can answer, refuses a duplicate the class already declares.</summary>
+        internal void GenerateUnityMessage(UnityMessages.Msg msg)
+        {
+            if (!CanEditDoc) return;
+            if (EditorConfig.SemanticsEnabled &&
+                SemanticServices.Provider is ISemanticGeneration gen &&
+                SemanticContextPath != null)
+            {
+                try
+                {
+                    if (gen.TryGetTypeContext(SemanticContextPath, _code.value, _code.cursorIndex,
+                            out var declared, out _) && declared.Contains(msg.Name))
+                    {
+                        PostStatus(string.Format(L10n.Tr("'{0}' is already declared in this class."), msg.Name));
+                        return;
+                    }
+                }
+                catch (System.Exception) { /* generation must not depend on a clean parse */ }
+            }
+            _code.InsertSnippet(UnityMessages.Stub(msg));
+        }
+
+        /// <summary>Pops a picker of the overridable members of the class at
+        /// the caret; choosing one inserts its stub (base call included).</summary>
+        internal void GenerateOverrideCommand()
+        {
+            var gen = EditorConfig.SemanticsEnabled
+                ? SemanticServices.Provider as ISemanticGeneration : null;
+            if (gen == null)
+            {
+                PostStatus(L10n.Tr("Override generation needs Semantic Features (enable in Settings)."));
+                return;
+            }
+            string path = SemanticContextPath;
+            if (path == null) return;
+            List<GenerationCandidate> candidates = null;
+            try { gen.TryGetOverrideCandidates(path, _code.value, _code.cursorIndex, out candidates); }
+            catch (System.Exception ex)
+            { AteConsole.Warn("[ADKOM Text Editor] Override lookup failed: " + ex.Message); }
+            if (candidates == null || candidates.Count == 0)
+            {
+                PostStatus(L10n.Tr("No overridable members found at the caret."));
+                return;
+            }
+            var menu = new GenericMenu();
+            foreach (var c in candidates)
+            {
+                var cand = c;
+                menu.AddItem(new GUIContent(cand.Label.Replace('/', '∕')), false,
+                    () => _code.InsertSnippet(cand.Stub));
+            }
+            menu.ShowAsContext();
+        }
+
         // --- Read/write occurrence highlighting ---
 
         int _occLastCaret = -1, _occLastVersion = -1;

@@ -1109,3 +1109,36 @@ msgstr "스니펫"
 
 msgid "Edit Snippets..."
 msgstr "스니펫 편집..."
+
+msgid "Generate Unity Method"
+msgstr "Unity 메서드 생성"
+
+msgid "Override Method..."
+msgstr "메서드 재정의..."
+
+msgid "'{0}' is already declared in this class."
+msgstr "'{0}'은(는) 이 클래스에 이미 선언되어 있습니다."
+
+msgid "Override generation needs Semantic Features (enable in Settings)."
+msgstr "재정의 생성에는 시맨틱 기능이 필요합니다(설정에서 활성화)."
+
+msgid "No overridable members found at the caret."
+msgstr "캐럿 위치에 재정의할 수 있는 멤버가 없습니다."
+
+msgid "Lifecycle"
+msgstr "수명 주기"
+
+msgid "Physics"
+msgstr "물리"
+
+msgid "Physics 2D"
+msgstr "2D 물리"
+
+msgid "Mouse"
+msgstr "마우스"
+
+msgid "Application"
+msgstr "애플리케이션"
+
+msgid "Rendering"
+msgstr "렌더링"
