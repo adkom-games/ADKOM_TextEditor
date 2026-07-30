@@ -1093,6 +1093,11 @@ namespace ADKOM.TextEditor
             _settingsFinalNewline.tooltip = L10n.Tr("Guarantee the file ends with exactly one newline when saving (per project).");
             _settingsPane.Add(_settingsFinalNewline);
 
+            var autoSaveFocus = new Toggle(L10n.Tr("Auto-Save on Focus Loss")) { value = EditorConfig.AutoSaveOnFocusLoss };
+            autoSaveFocus.RegisterValueChangedCallback(e => EditorConfig.AutoSaveOnFocusLoss = e.newValue);
+            autoSaveFocus.tooltip = L10n.Tr("Save every dirty file-backed document when the ATE window loses focus. Untitled buffers are skipped (session persistence still protects them). Per project.");
+            _settingsPane.Add(autoSaveFocus);
+
             _settingsRecentMax = new IntegerField(L10n.Tr("Recent Files Count")) { value = EditorConfig.RecentFilesMax };
             _settingsRecentMax.RegisterValueChangedCallback(e =>
             {
@@ -1357,6 +1362,16 @@ namespace ADKOM.TextEditor
         void OnLostFocus()
         {
             _code?.BreakUndoGroup();
+            // Auto-save: dirty FILE-BACKED docs only — never Save As prompts
+            // from a mere focus change.
+            if (EditorConfig.AutoSaveOnFocusLoss && _docs != null)
+            {
+                bool saved = false;
+                foreach (var doc in _docs)
+                    if (!doc.IsSettings && doc.IsDirty && doc.HasFile)
+                    { FileService.Save(doc); saved = true; }
+                if (saved) { RebuildTabs(); UpdateTitle(); UpdateStatus(); }
+            }
             Scripting.AteApi.NotifyWindowFocus(false);
         }
 

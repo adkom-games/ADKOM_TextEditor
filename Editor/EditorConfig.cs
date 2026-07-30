@@ -336,6 +336,17 @@ namespace ADKOM.TextEditor
             set => EditorPrefs.SetBool(ProjectScoped(FinalNewlineKey), value);
         }
 
+        const string AutoSaveFocusKey = "ADKOM.TextEditor.AutoSaveOnFocusLoss";
+
+        /// <summary>Save every dirty FILE-BACKED document when the ATE window
+        /// loses focus (untitled buffers are skipped — no dialogs fire without
+        /// the user asking). Per project. Default off.</summary>
+        public static bool AutoSaveOnFocusLoss
+        {
+            get => EditorPrefs.GetBool(ProjectScoped(AutoSaveFocusKey), false);
+            set => EditorPrefs.SetBool(ProjectScoped(AutoSaveFocusKey), value);
+        }
+
         const string MdOpenRenderedKey = "ADKOM.TextEditor.MdOpenRendered";
 
         /// <summary>Default view for .md files when opened: rendered (WYSIWYG)

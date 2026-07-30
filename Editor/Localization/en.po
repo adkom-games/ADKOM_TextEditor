@@ -1144,3 +1144,9 @@ msgstr "Application"
 
 msgid "Rendering"
 msgstr "Rendering"
+
+msgid "Auto-Save on Focus Loss"
+msgstr "Auto-Save on Focus Loss"
+
+msgid "Save every dirty file-backed document when the ATE window loses focus. Untitled buffers are skipped (session persistence still protects them). Per project."
+msgstr "Save every dirty file-backed document when the ATE window loses focus. Untitled buffers are skipped (session persistence still protects them). Per project."

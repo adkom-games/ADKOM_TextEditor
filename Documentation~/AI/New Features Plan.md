@@ -27,7 +27,7 @@ for the release snapshot and [[Project Log]] for per-item history.
 | 2 | Customizable code snippets | 2 | **Done** (4774b3d) |
 | 3 | Unity magic-method generator | 2 | **Done** (with #4) |
 | 4 | Override-method generator | 2 | **Done** (with #3) |
-| 5 | Automated saving and reloading | 0 | Pending (toggles over existing autosave/reload) |
+| 5 | Automated saving and reloading | 0 | **Done** (auto-save on focus loss; auto-reload existed) |
 | 6–7 | Static fields/properties inspection popup | 4 | Pending |
 | 8–9 | MonoBehaviour fields/properties inspection popup | 4 | Pending |
 | 10 | Execute parameterless static methods | 4 | Pending |
