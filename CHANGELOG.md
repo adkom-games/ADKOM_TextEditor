@@ -3,6 +3,73 @@
 All notable changes to this package are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com); versions follow semver.
 
+## [0.13.0] - 2026-07-30
+
+The IDE release — every item of the new-features campaign.
+
+### Added
+- IntelliSense: compiler-accurate C# completion. After `.` the actual
+  members of the expression (instance vs static vs namespace contexts,
+  accessibility respected, base chain walked); elsewhere every symbol
+  in scope. Overload groups collapse with a (+N) count and a signature
+  detail; semantic candidates blend with word/keyword completion, one
+  background query per word filtered locally as the prefix grows.
+- Error highlighting: live compiler diagnostics as red (error) / amber
+  (warning) underlines, version-gated so stale results never land on
+  edited text; hover shows the full message.
+- Read/write reference highlighting: a bare caret on a symbol highlights
+  every use in the file — reads in the match tint, writes (declaration,
+  assignment incl. compound, ++/--, ref/out) in amber.
+- Customizable code snippets: one plain-text file (Tools → Edit
+  Snippets…, hot-reloaded), [trigger] + body with $name$ tab stops and
+  $END$; expand via Tab or the completion popup; live sessions cycle
+  stops with Tab/Shift+Tab; 12 C# defaults ship.
+- Code generators: Generate Unity Method (33 messages with correct
+  signatures, duplicates refused when semantics can tell) and Override
+  Method… (overridable methods/properties up the base chain, stubs with
+  correct accessibility, parameter modifiers, and base calls).
+- Visual edit history (Edit → History…): the undo/redo timeline, one
+  row per step with edit summaries; any point previews the document
+  exactly as it was (changed line highlighted); restore (still
+  undoable), open as a new tab, or copy.
+- Find/Replace in Files: project-wide search (Assets + Packages or any
+  root; glob, regex with group substitutions, case/word; binary
+  sniffing; open buffers searched as seen); per-match checkboxes with
+  a before → after preview; Replace Selected applies as ONE journaled
+  operation with global Undo/Redo across all touched files (stale
+  matches verified and skipped, disk writes BOM-aware).
+- Reflection inspector (right-click → Inspect Symbol…): live static
+  fields/properties (play-mode values update; writable primitives
+  editable), Run buttons for parameterless static methods, and a
+  scene-instance picker for Component types with live instance members.
+- Git integration (system git CLI): gutter diff markers vs HEAD (green
+  added / amber modified / red deletion stubs), Blame as an annotated
+  read-only tab, File History opening any past revision, and a Git
+  Panel with stage/unstage checkboxes, commit, push, and an INTERACTIVE
+  branch-history tree — vertical ⇄ horizontal toggle, checkout branch /
+  create branch here / checkout detached (guarded while dirty).
+- Optional spell checking (Settings, off by default): comments/strings
+  in code, everything in markdown/plain; camelCase judged per hump;
+  bundled 114,926-word SCOWL-derived dictionary (US + UK spellings +
+  contractions, attributed in THIRD-PARTY-NOTICES); Hunspell .dic /
+  plain .txt imports from a shared Dictionaries folder; right-click →
+  add to the user or per-project dictionary.
+- Syntax coloring for JSON/JSONC (.json, .asmdef, .asmref — keys vs
+  values distinguished) and Unity shaders (.shader, .hlsl, .cginc,
+  .compute — ShaderLab + HLSL keywords, types, calls).
+- #region support: regions fold like brace blocks everywhere, and
+  Edit → Go To → Go to #region… jumps between them.
+- Find All References results gained a live filter box ("N of M shown").
+- Auto-Save on Focus Loss (Settings, per project): dirty file-backed
+  documents save when the window loses focus; untitled buffers never
+  prompt.
+
+### Changed
+- Edit menu reorganized: common items flat, the rest grouped into Find,
+  Selection, Line, Code, Go To, and Bookmarks submenus.
+- Settings organized under section headers (Appearance, Editor, Fonts,
+  Language & Tools, Display, Editing, AI, Files & Saving, Updates).
+
 ## [0.12.3] - 2026-07-29
 
 ### Added

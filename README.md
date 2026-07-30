@@ -41,8 +41,10 @@ count configurable) so yesterday's file is two clicks away.
 ### 🎨 Syntax highlighting & themes
 C# highlighting out of the box — keywords, strings, comments, and
 **identifiers too**: types, methods, variables, and parameters, in each
-theme's authentic colors. Flip on **Semantic
-Features** in Settings and the colors become compiler-accurate (powered
+theme's authentic colors — plus **JSON** (keys, values, comments; .json
+and .asmdef) and **Unity shaders** (ShaderLab + HLSL; .shader, .hlsl,
+.cginc, .compute), and Markdown. Flip on **Semantic
+Features** in Settings and the C# colors become compiler-accurate (powered
 by Roslyn) — every dependency installs itself automatically. Pick your palette: **Visual Studio**, **VS Code**,
 or **JetBrains Rider** — each with authentic dark and light variants,
 following your Unity Editor skin automatically (or forced Dark/Light,
@@ -127,7 +129,62 @@ layout) fuzzy-finds any project file; per-document **bookmarks**
 (Ctrl+Alt+K) mark lines in the gutter with next/previous jumps; and
 selected text **drags and drops** to a new location (Ctrl to copy).
 Optional save cleanups trim trailing whitespace and ensure a final
-newline.
+newline, and **Auto-Save on Focus Loss** can save every dirty file the
+moment you click away.
+
+### 🧠 IntelliSense & live errors
+With Semantic Features on, completion becomes **compiler-accurate**:
+type `.` and get the actual members of the expression — instance,
+static, or namespace — with signatures, overload counts, and
+accessibility respected; elsewhere every symbol in scope blends with
+words and keywords. **Errors and warnings underline live** as you type
+(red/amber, hover for the full compiler message), and parking the caret
+on a symbol highlights every use in the file — **reads in grey, writes
+in amber**.
+
+### 📋 Snippets & code generators
+**Snippets** live in one plain-text file you edit in ATE itself (Tools →
+Edit Snippets…): type a trigger and press Tab — the body expands
+re-indented, placeholders become live tab stops you cycle with Tab, and
+`$END$` marks where you land. A default C# set ships; add your own and
+they hot-reload on save. **Generate Unity Method** inserts any of 33
+Unity messages with correct signatures (and refuses duplicates the
+class already declares); **Override Method…** lists everything
+overridable up the base chain and generates the stub, base call
+included.
+
+### 🕰 Edit history, visually
+**Edit → History…** shows your undo/redo timeline — one row per edit
+with a summary and line number, future (redo) steps dimmed on top,
+down to the original. Click any point to see the document **exactly as
+it looked then** (changed line highlighted), restore to it (still
+undoable), open the snapshot as a new tab, or copy it.
+
+### 🔬 Inspect running code
+Right-click a symbol → **Inspect Symbol…** and a reflection inspector
+opens on its type: static fields and properties with **live values**
+(play-mode state updates as it changes), writable primitives editable
+in place, **Run buttons for parameterless static methods**, and — for
+MonoBehaviours — a scene-instance picker with the instance's fields
+live too.
+
+### 🔀 Git, built in
+Gutter markers show **added/modified/deleted lines** against HEAD as
+you work. Tools → Git brings **Blame** (a read-only annotated view),
+**File History** (open any past revision of the file), and the **Git
+Panel**: stage and unstage with checkboxes, commit, push, and a
+**branch-history tree** — an interactive commit graph, switchable
+vertical ⇄ horizontal, where you can check out branches or create one
+at any commit (guarded while your tree is dirty). Uses your system git;
+no bundled VCS.
+
+### 🔤 Spell checking, optional
+Flip it on in Settings and unknown words get a soft blue underline —
+comments and strings in code, everything in markdown and plain text,
+camelCase split and judged per hump. Ships a 115k-word English
+dictionary (US + UK, SCOWL-derived, fully attributed); drop in
+Hunspell `.dic` files for other languages, and right-click any flagged
+word to add it to your **user or per-project dictionary**.
 
 ### 🤖 AI, both flavors
 **GitHub Copilot** (Settings, off by default): real ghost-text inline
@@ -164,6 +221,11 @@ Search the current file or every open tab at once — match case, whole
 word, plain text or full regular expressions (with $1 group
 replacements), wrap-around, and backwards search, all from a compact
 modeless dialog. F3 repeats your last search without reopening it.
+**Find in Files** goes further: search the whole project (Assets +
+Packages, or any folder), open buffers searched as you see them, each
+match with a checkbox and a before → after preview — and **Replace
+Selected** applies as one operation you can undo across every touched
+file, open or closed, with a single click.
 
 ### 📝 Markdown, both ways
 Open a `.md` file and a toggle appears next to the settings gear:
@@ -278,7 +340,7 @@ https://github.com/adkom-games/ADKOM_TextEditor.git#upm
 Prefer a pinned version?
 
 ```
-https://github.com/adkom-games/ADKOM_TextEditor.git#0.12.3
+https://github.com/adkom-games/ADKOM_TextEditor.git#0.13.0
 ```
 
 Semantic Features (compiler-accurate colors + Go to Definition) are

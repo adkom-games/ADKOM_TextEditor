@@ -431,6 +431,39 @@ the bottom. See [[Project State]] for the current snapshot.
   tab titled with the proper name via ZStory.TitleForFile ("Zork I"); #ids
   after every room/object name.
 
+## 2026-07-30 — 0.13.0: the IDE release (newfeatures.md campaign, all 21 items)
+
+Full campaign plan/statuses in [[New Features Plan]]. One-line map (details
+in the per-item commits):
+
+- **Semantic capability pattern**: each Roslyn feature is an optional
+  interface on the provider (`ISemanticCompletion`, `ISemanticDiagnostics`,
+  `ISemanticOccurrences`, `ISemanticGeneration`, `ISemanticSymbolInfo`),
+  discovered by cast, background-threaded, version-gated on apply.
+- IntelliSense (member/scope, one query per word, local prefix filtering);
+  error underlines (model.GetDiagnostics, hover tip); read/write occurrence
+  highlighting (declaration/assignment/++/--/ref-out = write).
+- Snippets (SnippetStore plain-text format, live tab-stop sessions in
+  CodeView.Snippets); generators (UnityMessages catalog + override stubs).
+- History window (undo-delta reconstruction — never snapshots); #region
+  folding + navigator; Search Results filter box; Edit menu submenus;
+  Settings sections; auto-save on focus loss; JSON + Shader classifiers.
+- Find/Replace in Files (FindInFiles engine: buffer-aware, binary-sniffed,
+  glob/regex; ReplaceJournal global undo of full before/after per file;
+  stale matches verified and skipped; BOM-aware disk writes).
+- Reflection inspector (ISemanticSymbolInfo CLR names incl. nested Outer+
+  Inner; live-polled statics/instances; run parameterless statics).
+- Git (GitService CLI backend: unified-0 diff → gutter marks; line-porcelain
+  blame → virtual tab; log --follow history → revision tabs; status/stage/
+  commit/push panel; --all --topo-order graph with lane assignment →
+  interactive V⇄H branch tree, dirty-tree guarded checkouts).
+- Spell check (SCOWL 2020.12.07 sizes 10–60 US+UK+contractions = 114,926
+  words in Editor/SpellCheckData~, attributed in THIRD-PARTY-NOTICES;
+  Hunspell .dic imports; global + ProjectSettings/AteDictionary.txt;
+  comments/strings in code, camelCase per-hump).
+- Every engine was verified headlessly via MCP script-execute against the
+  live compilation/repository before commit (results quoted per commit).
+
 ## Conventions
 
 - Branch per feature/fix from main; merge with `--no-ff`; branches are kept.
