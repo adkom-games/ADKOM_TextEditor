@@ -249,6 +249,9 @@ namespace ADKOM.TextEditor
                 new AteCommand { Id = "goto-region", Scope = CmdScope.Editor,
                     VS = All(), VSCode = All(), Rider = All(),
                     Run = _ => True(GoToRegionCommand) },
+                new AteCommand { Id = "history", Scope = CmdScope.Editor,
+                    VS = All(), VSCode = All(), Rider = All(),
+                    Run = _ => True(() => HistoryWindow.Open(this)) },
 
                                 new AteCommand { Id = "quick-open", Scope = CmdScope.Global,
                     VS = All(K(KeyCode.Comma, ctrl: true, d: "Ctrl+,")),

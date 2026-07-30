@@ -60,6 +60,33 @@ msgstr "실행 취소"
 msgid "Redo"
 msgstr "다시 실행"
 
+msgid "History..."
+msgstr "히스토리..."
+
+msgid "Edit History"
+msgstr "편집 히스토리"
+
+msgid "{0}-caret edit"
+msgstr "{0}개 캐럿 편집"
+
+msgid "Original (before recorded edits)"
+msgstr "원본 (기록된 편집 이전)"
+
+msgid "Restore to This Point"
+msgstr "이 지점으로 복원"
+
+msgid "Open as New Tab"
+msgstr "새 탭으로 열기"
+
+msgid "Copy to Clipboard"
+msgstr "클립보드에 복사"
+
+msgid "No edits recorded for this document yet."
+msgstr "이 문서에 아직 기록된 편집이 없습니다."
+
+msgid "{0} past / {1} future edit steps"
+msgstr "과거 {0} / 미래 {1} 편집 단계"
+
 msgid "Cut"
 msgstr "잘라내기"
 

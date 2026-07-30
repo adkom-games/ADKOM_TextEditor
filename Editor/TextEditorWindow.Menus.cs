@@ -84,6 +84,7 @@ namespace ADKOM.TextEditor
             // ---- Common (flat) ----
             Item(WithSc("Undo", Dsp("undo")), edit && _code.CanUndo, _code.Undo);
             Item(WithSc("Redo", Dsp("redo")), edit && _code.CanRedo, _code.Redo);
+            Item(WithSc("History...", Dsp("history")), edit, () => HistoryWindow.Open(this));
             m.AddSeparator("");
             // Empty-selection Cut/Copy act on the whole line (VS/VSCode/Rider).
             Item(WithSc("Cut", Dsp("cut")), edit, _code.Cut);
