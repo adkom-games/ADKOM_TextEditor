@@ -1103,3 +1103,9 @@ msgstr "無"
 
 msgid "none seen"
 msgstr "未探明"
+
+msgid "snippet"
+msgstr "程式碼片段"
+
+msgid "Edit Snippets..."
+msgstr "編輯程式碼片段..."

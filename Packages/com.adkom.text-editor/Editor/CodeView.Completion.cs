@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -113,6 +114,17 @@ namespace ADKOM.TextEditor
             // from elsewhere in the file is pure noise).
             if (!afterDot)
             {
+                // Snippets rank first: exact tools the user defined.
+                foreach (var sn in SnippetStore.All)
+                    if (sn.Trigger.Length >= prefix.Length &&
+                        sn.Trigger.StartsWith(prefix, StringComparison.OrdinalIgnoreCase) &&
+                        seen.Add(sn.Trigger))
+                        matches.Add(new CompletionItem
+                        {
+                            Insert = sn.Trigger, Display = sn.Trigger,
+                            Detail = L10n.Tr("snippet"), Kind = TokenClass.Preprocessor,
+                            Snippet = sn.Body
+                        });
                 void Harvest(string text)
                 {
                     if (string.IsNullOrEmpty(text) || text.Length > 300000) return;
@@ -237,11 +249,16 @@ namespace ADKOM.TextEditor
         void AcceptCompletion()
         {
             if (!CompletionVisible || _acSel < 0 || _acSel >= _acItems.Count) return;
-            string word = _acItems[_acSel].Insert;
+            var item = _acItems[_acSel];
             int end = cursorIndex;
             HideCompletion();
-            ReplaceRangeInternal(_acWordStartIdx, end, word,
-                _acWordStartIdx + word.Length, EditKind.Programmatic);
+            if (item.Snippet != null)
+            {
+                InsertSnippet(item.Snippet, _acWordStartIdx, end); // replaces the typed prefix
+                return;
+            }
+            ReplaceRangeInternal(_acWordStartIdx, end, item.Insert,
+                _acWordStartIdx + item.Insert.Length, EditKind.Programmatic);
         }
 
         /// <summary>Popup keyboard handling; runs before normal key handling.

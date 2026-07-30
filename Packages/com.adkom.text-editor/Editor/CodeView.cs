@@ -1694,6 +1694,7 @@ namespace ADKOM.TextEditor
             start = Mathf.Clamp(start, 0, v.Length);
             end = Mathf.Clamp(end, start, v.Length);
             AdjustFoldsForEdit(start, end, replacement);
+            AdjustSnippetStopsForEdit(start, end, replacement);
             if (onLineDelta != null)
             {
                 int nl = 0;
@@ -1945,6 +1946,7 @@ namespace ADKOM.TextEditor
                 case KeyCode.Escape:
                     if (HasGhost) ClearGhost();
                     else if (HasMultiCarets) CollapseExtraCarets();
+                    else if (SnippetSessionActive) EndSnippetSession();
                     else handled = false;
                     break;
                 case KeyCode.LeftArrow:
