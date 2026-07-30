@@ -723,6 +723,12 @@ msgstr "検索結果"
 msgid "(no search results yet)"
 msgstr "（検索結果はまだありません）"
 
+msgid "Filter"
+msgstr "フィルター"
+
+msgid "{0}  ({1} of {2} shown)"
+msgstr "{0}  ({2} 件中 {1} 件を表示)"
+
 msgid "Copied."
 msgstr "コピーしました。"
 

@@ -723,6 +723,12 @@ msgstr "검색 결과"
 msgid "(no search results yet)"
 msgstr "(아직 검색 결과 없음)"
 
+msgid "Filter"
+msgstr "필터"
+
+msgid "{0}  ({1} of {2} shown)"
+msgstr "{0}  ({2}개 중 {1}개 표시)"
+
 msgid "Copied."
 msgstr "복사했습니다."
 

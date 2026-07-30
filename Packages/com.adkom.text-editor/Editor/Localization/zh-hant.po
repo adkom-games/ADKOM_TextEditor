@@ -723,6 +723,12 @@ msgstr "搜尋結果"
 msgid "(no search results yet)"
 msgstr "（尚無搜尋結果）"
 
+msgid "Filter"
+msgstr "篩選"
+
+msgid "{0}  ({1} of {2} shown)"
+msgstr "{0}  (顯示 {2} 項中的 {1} 項)"
+
 msgid "Copied."
 msgstr "已複製。"
 
