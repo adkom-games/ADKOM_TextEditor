@@ -336,6 +336,16 @@ namespace ADKOM.TextEditor
             set => EditorPrefs.SetBool(ProjectScoped(FinalNewlineKey), value);
         }
 
+        const string SpellCheckKey = "ADKOM.TextEditor.SpellCheck";
+
+        /// <summary>Optional spell checking (comments/strings in code, whole
+        /// text in markdown/plain). Machine-wide user preference. Default off.</summary>
+        public static bool SpellCheckEnabled
+        {
+            get => EditorPrefs.GetBool(SpellCheckKey, false);
+            set => EditorPrefs.SetBool(SpellCheckKey, value);
+        }
+
         const string AutoSaveFocusKey = "ADKOM.TextEditor.AutoSaveOnFocusLoss";
 
         /// <summary>Save every dirty FILE-BACKED document when the ATE window

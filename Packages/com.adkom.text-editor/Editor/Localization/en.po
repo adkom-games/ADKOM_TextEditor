@@ -1270,3 +1270,15 @@ msgstr "{0} threw: {1}"
 
 msgid "No type at the caret."
 msgstr "No type at the caret."
+
+msgid "Spell Checking"
+msgstr "Spell Checking"
+
+msgid "Underline unknown words — comments and strings in code, everything in markdown/plain text. Right-click a flagged word to add it to your dictionary. Drop extra dictionaries (.txt / Hunspell .dic) in the shared Dictionaries folder."
+msgstr "Underline unknown words — comments and strings in code, everything in markdown/plain text. Right-click a flagged word to add it to your dictionary. Drop extra dictionaries (.txt / Hunspell .dic) in the shared Dictionaries folder."
+
+msgid "Add '{0}' to User Dictionary"
+msgstr "Add '{0}' to User Dictionary"
+
+msgid "Add '{0}' to Project Dictionary"
+msgstr "Add '{0}' to Project Dictionary"

@@ -74,6 +74,17 @@ namespace ADKOM.TextEditor
             else if (!isCs)
                 m.AddDisabledItem(new GUIContent(L10n.Tr("Find Occurrences")));
 
+            // --- Spell check: add the flagged word under the cursor ---
+            string misspelled = _code.MisspelledWordAt(line, col);
+            if (misspelled != null)
+            {
+                m.AddSeparator("");
+                m.AddItem(new GUIContent(string.Format(L10n.Tr("Add '{0}' to User Dictionary"), misspelled)),
+                    false, () => { SpellChecker.Add(misspelled, project: false); _code.RespellNow(); });
+                m.AddItem(new GUIContent(string.Format(L10n.Tr("Add '{0}' to Project Dictionary"), misspelled)),
+                    false, () => { SpellChecker.Add(misspelled, project: true); _code.RespellNow(); });
+            }
+
             // --- Send to AI (only when Unity AI Assistant is installed) ---
             if (UnityAiBridge.Available)
             {

@@ -1268,3 +1268,15 @@ msgstr "{0}에서 예외 발생: {1}"
 
 msgid "No type at the caret."
 msgstr "캐럿 위치에 형식이 없습니다."
+
+msgid "Spell Checking"
+msgstr "맞춤법 검사"
+
+msgid "Underline unknown words — comments and strings in code, everything in markdown/plain text. Right-click a flagged word to add it to your dictionary. Drop extra dictionaries (.txt / Hunspell .dic) in the shared Dictionaries folder."
+msgstr "알 수 없는 단어에 밑줄 표시 — 코드에서는 주석과 문자열, 마크다운/일반 텍스트에서는 전체. 밑줄 친 단어를 마우스 오른쪽 버튼으로 클릭하면 사전에 추가할 수 있습니다. 추가 사전(.txt / Hunspell .dic)은 공유 Dictionaries 폴더에 넣으세요."
+
+msgid "Add '{0}' to User Dictionary"
+msgstr "'{0}'을(를) 사용자 사전에 추가"
+
+msgid "Add '{0}' to Project Dictionary"
+msgstr "'{0}'을(를) 프로젝트 사전에 추가"

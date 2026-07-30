@@ -1268,3 +1268,15 @@ msgstr "{0} が例外を送出: {1}"
 
 msgid "No type at the caret."
 msgstr "キャレット位置に型がありません。"
+
+msgid "Spell Checking"
+msgstr "スペルチェック"
+
+msgid "Underline unknown words — comments and strings in code, everything in markdown/plain text. Right-click a flagged word to add it to your dictionary. Drop extra dictionaries (.txt / Hunspell .dic) in the shared Dictionaries folder."
+msgstr "未知の単語に下線を表示 — コードではコメントと文字列、Markdown/プレーンテキストでは全文。下線の単語を右クリックで辞書に追加できます。追加辞書（.txt / Hunspell .dic）は共有 Dictionaries フォルダーに配置してください。"
+
+msgid "Add '{0}' to User Dictionary"
+msgstr "'{0}' をユーザー辞書に追加"
+
+msgid "Add '{0}' to Project Dictionary"
+msgstr "'{0}' をプロジェクト辞書に追加"
