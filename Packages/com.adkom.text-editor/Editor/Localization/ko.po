@@ -75,6 +75,12 @@ msgstr "모두 선택"
 msgid "Goto Line..."
 msgstr "줄 이동..."
 
+msgid "Go to #region..."
+msgstr "#region으로 이동..."
+
+msgid "No #regions in this file."
+msgstr "이 파일에 #region이 없습니다."
+
 msgid "Goto Line:"
 msgstr "줄 이동:"
 

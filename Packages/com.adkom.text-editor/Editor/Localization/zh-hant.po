@@ -75,6 +75,12 @@ msgstr "全選"
 msgid "Goto Line..."
 msgstr "移至行..."
 
+msgid "Go to #region..."
+msgstr "跳至 #region..."
+
+msgid "No #regions in this file."
+msgstr "此檔案中沒有 #region。"
+
 msgid "Goto Line:"
 msgstr "移至行:"
 

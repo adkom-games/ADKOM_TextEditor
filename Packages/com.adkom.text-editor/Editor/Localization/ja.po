@@ -75,6 +75,12 @@ msgstr "すべて選択"
 msgid "Goto Line..."
 msgstr "指定行へ移動..."
 
+msgid "Go to #region..."
+msgstr "#region へ移動..."
+
+msgid "No #regions in this file."
+msgstr "このファイルに #region はありません。"
+
 msgid "Goto Line:"
 msgstr "指定行へ移動:"
 

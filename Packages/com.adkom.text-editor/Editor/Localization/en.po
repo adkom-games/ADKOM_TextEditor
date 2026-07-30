@@ -77,6 +77,12 @@ msgstr "Select All"
 msgid "Goto Line..."
 msgstr "Goto Line..."
 
+msgid "Go to #region..."
+msgstr "Go to #region..."
+
+msgid "No #regions in this file."
+msgstr "No #regions in this file."
+
 msgid "Goto Line:"
 msgstr "Goto Line:"
 
