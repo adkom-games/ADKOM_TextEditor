@@ -723,6 +723,12 @@ msgstr "搜索结果"
 msgid "(no search results yet)"
 msgstr "（尚无搜索结果）"
 
+msgid "Filter"
+msgstr "筛选"
+
+msgid "{0}  ({1} of {2} shown)"
+msgstr "{0}  (显示 {2} 项中的 {1} 项)"
+
 msgid "Copied."
 msgstr "已复制。"
 

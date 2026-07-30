@@ -19,31 +19,54 @@ namespace ADKOM.TextEditor
             public string Preview; // trimmed line text
         }
 
+        VisualElement _searchPane;
+        TextField _searchFilter;
         ScrollView _searchScroll;
         Label _searchHeader;
         readonly List<Label> _searchLabels = new List<Label>();
         List<PickLocation> _searchItems = new List<PickLocation>();
+        readonly List<int> _searchRowItem = new List<int>(); // visible row -> item index
+        string _searchTitle = "";
 
         /// <summary>Fills the Search Results tab and brings it to the front
         /// (showing the console pane if hidden).</summary>
         internal void ShowSearchResults(string title, List<PickLocation> items)
         {
             _searchItems = items ?? new List<PickLocation>();
-            _searchHeader.text = title;
+            _searchTitle = title;
+            RenderSearchResults();
+            SetConsoleVisible(true);
+            SelectConsoleTab(1);
+        }
+
+        /// <summary>(Re)renders the result rows applying the Filter box — a
+        /// case-insensitive substring over the file name, full path, and the
+        /// matched line text. The header shows "N of M shown" when filtering.</summary>
+        void RenderSearchResults()
+        {
+            string filter = _searchFilter != null ? (_searchFilter.value ?? "").Trim().ToLowerInvariant() : "";
+            _searchRowItem.Clear();
+            int row = 0;
             for (int i = 0; i < _searchItems.Count; i++)
             {
-                if (i >= _searchLabels.Count)
+                var it = _searchItems[i];
+                if (filter.Length > 0)
+                {
+                    string hay = (Path.GetFileName(it.Path) + " " + it.Path + " " + it.Preview).ToLowerInvariant();
+                    if (!hay.Contains(filter)) continue;
+                }
+                if (row >= _searchLabels.Count)
                 {
                     var l = new Label();
                     l.AddToClassList("code-line");
                     l.style.paddingTop = 1;
                     l.style.paddingBottom = 1;
                     l.style.whiteSpace = WhiteSpace.NoWrap;
-                    int idx = i;
+                    int rowIdx = row;
                     l.RegisterCallback<PointerDownEvent>(e =>
                     {
                         if (e.button != 0) return;
-                        JumpToSearchResult(idx);
+                        JumpToSearchRow(rowIdx);
                         e.StopPropagation();
                     });
                     l.RegisterCallback<MouseEnterEvent>(_ =>
@@ -53,21 +76,23 @@ namespace ADKOM.TextEditor
                     _searchScroll.Add(l);
                     _searchLabels.Add(l);
                 }
-                var it = _searchItems[i];
-                _searchLabels[i].text = "  " + Path.GetFileName(it.Path) + ":" + (it.Line + 1) + "   " + it.Preview;
-                _searchLabels[i].tooltip = it.Path + ":" + (it.Line + 1);
-                _searchLabels[i].style.display = DisplayStyle.Flex;
+                _searchLabels[row].text = "  " + Path.GetFileName(it.Path) + ":" + (it.Line + 1) + "   " + it.Preview;
+                _searchLabels[row].tooltip = it.Path + ":" + (it.Line + 1);
+                _searchLabels[row].style.display = DisplayStyle.Flex;
+                _searchRowItem.Add(i);
+                row++;
             }
-            for (int i = _searchItems.Count; i < _searchLabels.Count; i++)
+            for (int i = row; i < _searchLabels.Count; i++)
                 _searchLabels[i].style.display = DisplayStyle.None;
-            SetConsoleVisible(true);
-            SelectConsoleTab(1);
+            _searchHeader.text = filter.Length == 0 || row == _searchItems.Count
+                ? _searchTitle
+                : string.Format(L10n.Tr("{0}  ({1} of {2} shown)"), _searchTitle, row, _searchItems.Count);
         }
 
-        void JumpToSearchResult(int idx)
+        void JumpToSearchRow(int row)
         {
-            if (idx < 0 || idx >= _searchItems.Count) return;
-            var it = _searchItems[idx];
+            if (row < 0 || row >= _searchRowItem.Count) return;
+            var it = _searchItems[_searchRowItem[row]];
             PushNavLocation();
             OpenExternal(it.Path, it.Line + 1, it.Col + 1); // opens the tab if needed
         }

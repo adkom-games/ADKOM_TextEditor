@@ -725,6 +725,12 @@ msgstr "Search Results"
 msgid "(no search results yet)"
 msgstr "(no search results yet)"
 
+msgid "Filter"
+msgstr "Filter"
+
+msgid "{0}  ({1} of {2} shown)"
+msgstr "{0}  ({1} of {2} shown)"
+
 msgid "Copied."
 msgstr "Copied."
 

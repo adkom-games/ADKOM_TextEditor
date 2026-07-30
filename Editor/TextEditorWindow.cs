@@ -766,13 +766,24 @@ namespace ADKOM.TextEditor
             _consoleScroll.Add(_consoleOutput);
             _consolePane.Add(_consoleScroll);
 
-            _searchScroll = new ScrollView(ScrollViewMode.Vertical) { name = "search-results-scroll" };
-            _searchScroll.style.display = DisplayStyle.None;
+            _searchPane = new VisualElement { name = "search-results-pane",
+                style = { display = DisplayStyle.None, flexGrow = 1, flexDirection = FlexDirection.Column } };
+            var searchTop = new VisualElement { style = { flexDirection = FlexDirection.Row, alignItems = Align.Center, flexShrink = 0 } };
             _searchHeader = new Label(L10n.Tr("(no search results yet)"));
             _searchHeader.style.unityFontStyleAndWeight = FontStyle.Bold;
             _searchHeader.style.paddingLeft = 4;
-            _searchScroll.Add(_searchHeader);
-            _consolePane.Add(_searchScroll);
+            _searchHeader.style.flexGrow = 1;
+            _searchHeader.style.whiteSpace = WhiteSpace.NoWrap;
+            _searchHeader.style.overflow = Overflow.Hidden;
+            searchTop.Add(_searchHeader);
+            searchTop.Add(new Label(L10n.Tr("Filter")) { style = { marginRight = 2 } });
+            _searchFilter = new TextField { name = "search-filter", style = { width = 160, marginRight = 4 } };
+            _searchFilter.RegisterValueChangedCallback(_ => RenderSearchResults());
+            searchTop.Add(_searchFilter);
+            _searchPane.Add(searchTop);
+            _searchScroll = new ScrollView(ScrollViewMode.Vertical) { name = "search-results-scroll", style = { flexGrow = 1 } };
+            _searchPane.Add(_searchScroll);
+            _consolePane.Add(_searchPane);
 
             _scannerScroll = new ScrollView(ScrollViewMode.Vertical) { name = "scanner-results-scroll" };
             _scannerScroll.style.display = DisplayStyle.None;
@@ -800,8 +811,8 @@ namespace ADKOM.TextEditor
             _activeConsoleTab = index;
             if (_consoleScroll != null)
                 _consoleScroll.style.display = index == 0 ? DisplayStyle.Flex : DisplayStyle.None;
-            if (_searchScroll != null)
-                _searchScroll.style.display = index == 1 ? DisplayStyle.Flex : DisplayStyle.None;
+            if (_searchPane != null)
+                _searchPane.style.display = index == 1 ? DisplayStyle.Flex : DisplayStyle.None;
             if (_scannerScroll != null)
                 _scannerScroll.style.display = index == 2 ? DisplayStyle.Flex : DisplayStyle.None;
             if (_mapHost != null)
