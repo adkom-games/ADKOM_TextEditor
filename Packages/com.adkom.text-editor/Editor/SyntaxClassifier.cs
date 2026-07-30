@@ -106,6 +106,23 @@ namespace ADKOM.TextEditor
         bool TryGetCompletions(string path, string text, int offset, out List<CompletionItem> items);
     }
 
+    /// <summary>One compiler diagnostic anchored to a span of one line.</summary>
+    public struct DiagnosticItem
+    {
+        public int Line;      // 0-based
+        public int Start;     // column, 0-based
+        public int Length;    // >= 1
+        public bool IsError;  // else warning
+        public string Message; // "CS0103: The name 'x' does not exist ..."
+    }
+
+    /// <summary>Optional provider capability: live compiler diagnostics for a
+    /// document (errors + warnings). May run on a background thread.</summary>
+    public interface ISemanticDiagnostics
+    {
+        bool TryGetDiagnostics(string path, string text, out List<DiagnosticItem> items);
+    }
+
     /// <summary>One reference to a symbol, for the Find All References list.</summary>
     public struct SymbolReference
     {

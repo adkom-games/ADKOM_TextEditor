@@ -46,6 +46,14 @@ namespace ADKOM.TextEditor
                             if (this == null || _code == null || _code.panel == null) return;
                             _code.ApplySemanticSpans(spans, version);
                         }, null);
+                    // Error highlighting rides the same debounced pass.
+                    if (provider is ISemanticDiagnostics diag &&
+                        diag.TryGetDiagnostics(path, text, out var items))
+                        ctx.Post(_ =>
+                        {
+                            if (this == null || _code == null || _code.panel == null) return;
+                            _code.ApplyDiagnostics(items, version);
+                        }, null);
                 }
                 catch (System.Exception ex)
                 {

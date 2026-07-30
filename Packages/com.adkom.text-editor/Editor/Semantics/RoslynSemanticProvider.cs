@@ -19,7 +19,8 @@ namespace ADKOM.TextEditor.Semantics
     /// go-to-definition queries from background threads.
     /// </summary>
     public sealed class RoslynSemanticProvider : ADKOM.TextEditor.ISemanticProvider,
-        ADKOM.TextEditor.ISemanticRefactorings, ADKOM.TextEditor.ISemanticCompletion
+        ADKOM.TextEditor.ISemanticRefactorings, ADKOM.TextEditor.ISemanticCompletion,
+        ADKOM.TextEditor.ISemanticDiagnostics
     {
         public string Name => "Roslyn";
 
@@ -342,6 +343,43 @@ namespace ADKOM.TextEditor.Semantics
             result.Sort((x, y) => x.Item1.CompareTo(y.Item1));
             spans = result;
             symbolName = target.Name;
+            return true;
+        }
+
+        // --- Diagnostics (error highlighting) ---
+
+        /// <summary>Errors and warnings for the live buffer — the document's
+        /// tree only (other files are read from disk, so cross-file errors
+        /// from unsaved OTHER buffers can be stale until they save).</summary>
+        public bool TryGetDiagnostics(string path, string text,
+            out List<ADKOM.TextEditor.DiagnosticItem> items)
+        {
+            items = null;
+            var (model, tree) = GetModel(path, text);
+            if (model == null) return false;
+            var srcText = tree.GetText();
+            var result = new List<ADKOM.TextEditor.DiagnosticItem>();
+            foreach (var d in model.GetDiagnostics())
+            {
+                if (d.Severity != DiagnosticSeverity.Error && d.Severity != DiagnosticSeverity.Warning)
+                    continue;
+                if (!d.Location.IsInSource || d.Location.SourceTree != tree) continue;
+                var span = d.Location.SourceSpan;
+                int line = srcText.Lines.GetLinePosition(span.Start).Line;
+                var lineSpan = srcText.Lines[line].Span;
+                int start = Math.Max(span.Start, lineSpan.Start) - lineSpan.Start;
+                int end = Math.Min(span.End, lineSpan.End) - lineSpan.Start;
+                result.Add(new ADKOM.TextEditor.DiagnosticItem
+                {
+                    Line = line,
+                    Start = start,
+                    Length = Math.Max(1, end - start), // zero-length (EOL) → 1 char
+                    IsError = d.Severity == DiagnosticSeverity.Error,
+                    Message = d.Id + ": " + d.GetMessage()
+                });
+                if (result.Count >= 500) break; // a broken file has thousands
+            }
+            items = result;
             return true;
         }
 

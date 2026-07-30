@@ -516,6 +516,9 @@ namespace ADKOM.TextEditor
                 else if (Active.VirtualMarkdown) classifierPath = "virtual.md";
             }
             _code?.SetClassifier(SyntaxClassifiers.ForPath(classifierPath));
+            // Never show the previous document's (or a disabled provider's)
+            // underlines; the pass repopulates them for the new context.
+            _code?.ClearDiagnostics();
             ScheduleSemanticPass();
         }
 
