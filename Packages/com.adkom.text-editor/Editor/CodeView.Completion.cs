@@ -6,17 +6,20 @@ using UnityEngine.UIElements;
 
 namespace ADKOM.TextEditor
 {
-    // Word-based autocomplete (must-have #5): a popup of prefix-matched words
-    // harvested from the document (and, via completionTextSources, every
-    // other open tab). Ctrl+Space opens it explicitly; it also appears while
-    // typing word characters once the prefix is 2+ chars. Up/Down navigate,
-    // Enter/Tab accept, Escape dismisses, further typing refines.
+    // Autocomplete (must-have #5) + IntelliSense. The popup blends two
+    // sources: compiler-accurate symbols from the semantics module when it is
+    // available (members after '.', scope symbols otherwise — one background
+    // query per word, filtered locally as the prefix grows), and word tokens
+    // harvested from the document / other open tabs / language keywords.
+    // Ctrl+Space opens it explicitly; it also appears while typing word
+    // characters once the prefix is 2+ chars, and immediately after '.' when
+    // semantics are on. Up/Down navigate, Enter/Tab accept, Escape dismisses.
     public partial class CodeView
     {
         VisualElement _acPopup;
         ScrollView _acScroll;
         readonly List<Label> _acLabels = new List<Label>();
-        readonly List<string> _acItems = new List<string>();
+        readonly List<CompletionItem> _acItems = new List<CompletionItem>();
         int _acSel;
         int _acWordStartIdx;
         const int AcMaxItems = 50;
@@ -25,6 +28,16 @@ namespace ADKOM.TextEditor
         /// <summary>Window hook: raw texts of the OTHER open documents so
         /// completions can come from every tab, not just this one.</summary>
         internal Func<IEnumerable<string>> completionTextSources;
+
+        /// <summary>Window hook: asynchronous semantic completions
+        /// (IntelliSense). Wired only when Semantic Features are enabled and
+        /// the document is C#; the callback arrives on the main thread.</summary>
+        internal Action<int, Action<List<CompletionItem>>> requestSemanticCompletions;
+
+        // One semantic query serves the whole word: cached by word-start index
+        // until the popup closes (edits outside the word invalidate offsets).
+        List<CompletionItem> _acSem;
+        int _acSemStart = -1;
 
         internal bool CompletionVisible =>
             _acPopup != null && _acPopup.style.display == DisplayStyle.Flex;
@@ -57,65 +70,103 @@ namespace ADKOM.TextEditor
             int ws = _caretCol;
             while (ws > 0 && IsWordCharUndo(line[ws - 1])) ws--;
             string prefix = line.Substring(ws, _caretCol - ws);
-            if (!manual && prefix.Length < 2) { HideCompletion(); return; }
+            bool afterDot = ws > 0 && line[ws - 1] == '.';
+            bool semantic = requestSemanticCompletions != null;
+            if (!manual && prefix.Length < 2 && !(afterDot && semantic)) { HideCompletion(); return; }
 
+            int wordStartIdx = LineColToIndex(_caretLine, ws);
             var seen = new HashSet<string>(StringComparer.Ordinal);
-            var matches = new List<string>();
-            void Harvest(string text)
+            var matches = new List<CompletionItem>();
+
+            // Compiler-accurate candidates first. One query per word start —
+            // fire it in the background and re-open when the answer lands.
+            if (semantic)
             {
-                if (string.IsNullOrEmpty(text) || text.Length > 300000) return;
-                int i = 0, n = text.Length;
-                while (i < n)
+                if (_acSemStart == wordStartIdx && _acSem != null)
                 {
-                    if (!IsWordCharUndo(text[i])) { i++; continue; }
-                    int start = i;
-                    while (i < n && IsWordCharUndo(text[i])) i++;
-                    if (i - start >= 2 && i - start >= prefix.Length)
+                    foreach (var it in _acSem)
                     {
-                        string w = text.Substring(start, i - start);
-                        if (w.Length > prefix.Length || !w.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                        if (prefix.Length > 0 &&
+                            !it.Display.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)) continue;
+                        if (seen.Add(it.Insert)) matches.Add(it);
+                        if (matches.Count >= AcMaxItems * 4) break;
+                    }
+                }
+                else if (_acSemStart != wordStartIdx)
+                {
+                    _acSemStart = wordStartIdx;
+                    _acSem = null;
+                    int reqStart = wordStartIdx, reqCaret = cursorIndex;
+                    requestSemanticCompletions(reqStart, items =>
+                    {
+                        if (_acSemStart != reqStart) return; // moved to another word
+                        _acSem = items ?? new List<CompletionItem>();
+                        // Merge into a live popup — or open one for the '.' case
+                        // — but never resurrect a context the user left.
+                        if (CompletionVisible || cursorIndex == reqCaret)
+                            ShowCompletion(manual: false);
+                    });
+                }
+            }
+
+            // Word-based candidates (skipped after '.', where identifier soup
+            // from elsewhere in the file is pure noise).
+            if (!afterDot)
+            {
+                void Harvest(string text)
+                {
+                    if (string.IsNullOrEmpty(text) || text.Length > 300000) return;
+                    int i = 0, n = text.Length;
+                    while (i < n)
+                    {
+                        if (!IsWordCharUndo(text[i])) { i++; continue; }
+                        int start = i;
+                        while (i < n && IsWordCharUndo(text[i])) i++;
+                        if (i - start >= 2 && i - start >= prefix.Length)
                         {
+                            string w = text.Substring(start, i - start);
                             if (w.StartsWith(prefix, StringComparison.OrdinalIgnoreCase) &&
                                 !string.Equals(w, prefix, StringComparison.Ordinal) && seen.Add(w))
-                                matches.Add(w);
+                                matches.Add(new CompletionItem { Insert = w, Display = w, Kind = TokenClass.Default });
                         }
                     }
                 }
+                // Language keywords of the ACTIVE classifier rank as first-class
+                // candidates (C# today; any future language that implements
+                // ICompletionKeywords joins automatically).
+                if (_classifier is ICompletionKeywords kw)
+                    foreach (var k in kw.CompletionKeywords)
+                        if (k.Length >= prefix.Length &&
+                            k.StartsWith(prefix, StringComparison.OrdinalIgnoreCase) &&
+                            !string.Equals(k, prefix, StringComparison.Ordinal) && seen.Add(k))
+                            matches.Add(new CompletionItem { Insert = k, Display = k, Kind = TokenClass.Keyword });
+                Harvest(GetValueInternal());
+                if (completionTextSources != null)
+                    foreach (var t in completionTextSources())
+                    {
+                        if (matches.Count >= AcMaxItems * 4) break;
+                        Harvest(t);
+                    }
             }
-            // Language keywords of the ACTIVE classifier rank as first-class
-            // candidates (C# today; any future language that implements
-            // ICompletionKeywords joins automatically).
-            if (_classifier is ICompletionKeywords kw)
-                foreach (var k in kw.CompletionKeywords)
-                    if (k.Length >= prefix.Length &&
-                        k.StartsWith(prefix, StringComparison.OrdinalIgnoreCase) &&
-                        !string.Equals(k, prefix, StringComparison.Ordinal) && seen.Add(k))
-                        matches.Add(k);
-            Harvest(GetValueInternal());
-            if (completionTextSources != null)
-                foreach (var t in completionTextSources())
-                {
-                    if (matches.Count >= AcMaxItems * 4) break;
-                    Harvest(t);
-                }
+
             // Best first: case-sensitive prefix beats case-insensitive,
             // shorter beats longer, then ordinal.
             matches.Sort((a, b) =>
             {
-                bool ca = a.StartsWith(prefix, StringComparison.Ordinal);
-                bool cb = b.StartsWith(prefix, StringComparison.Ordinal);
+                bool ca = a.Display.StartsWith(prefix, StringComparison.Ordinal);
+                bool cb = b.Display.StartsWith(prefix, StringComparison.Ordinal);
                 if (ca != cb) return ca ? -1 : 1;
-                if (a.Length != b.Length) return a.Length - b.Length;
-                return string.CompareOrdinal(a, b);
+                if (a.Display.Length != b.Display.Length) return a.Display.Length - b.Display.Length;
+                return string.CompareOrdinal(a.Display, b.Display);
             });
             if (matches.Count > AcMaxItems) matches.RemoveRange(AcMaxItems, matches.Count - AcMaxItems);
-            if (matches.Count == 0) { HideCompletion(); return; }
+            if (matches.Count == 0) { HideCompletionPopupOnly(); return; }
 
             EnsureAcPopup();
             _acItems.Clear();
             _acItems.AddRange(matches);
             _acSel = 0;
-            _acWordStartIdx = LineColToIndex(_caretLine, ws);
+            _acWordStartIdx = wordStartIdx;
             RebuildAcList();
 
             int sub = SubRowOfCol(_caretLine, _caretCol);
@@ -126,13 +177,17 @@ namespace ADKOM.TextEditor
             _acPopup.style.display = DisplayStyle.Flex;
         }
 
+        /// <summary>Rich text with literal '&lt;' kept literal (generics).</summary>
+        static string AcEsc(string s) =>
+            s.IndexOf('<') >= 0 ? "<noparse>" + s + "</noparse>" : s;
+
         void RebuildAcList()
         {
             for (int i = 0; i < _acItems.Count; i++)
             {
                 if (i >= _acLabels.Count)
                 {
-                    var l = new Label();
+                    var l = new Label { enableRichText = true };
                     l.AddToClassList("code-line");
                     l.style.paddingLeft = 6;
                     l.style.paddingRight = 6;
@@ -146,7 +201,14 @@ namespace ADKOM.TextEditor
                     _acScroll.Add(l);
                     _acLabels.Add(l);
                 }
-                _acLabels[i].text = _acItems[i];
+                var it = _acItems[i];
+                string color = it.Kind != TokenClass.Default ? _palette?.ColorFor(it.Kind) : null;
+                string name = color != null
+                    ? "<color=" + color + ">" + AcEsc(it.Display) + "</color>"
+                    : AcEsc(it.Display);
+                _acLabels[i].text = string.IsNullOrEmpty(it.Detail)
+                    ? name
+                    : name + "  <color=#8A8A8A>" + AcEsc(it.Detail) + "</color>";
                 _acLabels[i].style.display = DisplayStyle.Flex;
                 _acLabels[i].style.color = _textColor;
                 _acLabels[i].style.backgroundColor = i == _acSel
@@ -158,13 +220,24 @@ namespace ADKOM.TextEditor
 
         internal void HideCompletion()
         {
+            HideCompletionPopupOnly();
+            // Any later reopen re-queries: edits outside the popup's lifetime
+            // can shift the cached word-start offset.
+            _acSemStart = -1;
+            _acSem = null;
+        }
+
+        // Keeps the semantic cache: used mid-word when the current prefix has
+        // no matches yet but the in-flight/ cached query is still valid.
+        void HideCompletionPopupOnly()
+        {
             if (_acPopup != null) _acPopup.style.display = DisplayStyle.None;
         }
 
         void AcceptCompletion()
         {
             if (!CompletionVisible || _acSel < 0 || _acSel >= _acItems.Count) return;
-            string word = _acItems[_acSel];
+            string word = _acItems[_acSel].Insert;
             int end = cursorIndex;
             HideCompletion();
             ReplaceRangeInternal(_acWordStartIdx, end, word,

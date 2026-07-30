@@ -368,6 +368,7 @@ namespace ADKOM.TextEditor
                     if (!d.IsSettings && d != Active && d.Content != null) texts.Add(d.Content);
                 return texts;
             };
+            _code.requestSemanticCompletions = RequestSemanticCompletions;
             _code.RegisterCallback<MouseUpEvent>(OnCodeContextMenu);
             // Zoom on a font-overridden document adjusts the override; the
             // document remembers it so tab switches round-trip the size.
