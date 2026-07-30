@@ -3,6 +3,44 @@
 **☕ Enjoying ATE? Support development on Ko-fi:**
 [https://ko-fi.com/adkomgames](https://ko-fi.com/adkomgames)
 
+## 0.13.0 — 2026-07-30
+
+The IDE release. Twenty-one features — ATE now edits like a full IDE.
+
+### Code intelligence
+- **IntelliSense**: type `.` and get the expression's real members —
+  signatures, overloads, accessibility all correct. Scope symbols,
+  words, keywords, and your snippets blend into one popup.
+- **Live errors**: compiler errors and warnings underline as you type;
+  hover for the message.
+- **Read/write highlighting**: put the caret on a symbol and see every
+  use — writes in amber.
+- **Go to #region**, and regions now fold like braces.
+
+### Editing power
+- **Snippets**: your own, in one plain-text file — trigger + Tab,
+  live tab stops, hot-reload. Twelve C# defaults included.
+- **Generators**: any Unity magic method (33, duplicate-aware) or any
+  overridable base member — full stubs, base calls included.
+- **Visual History**: your undo timeline, with the document shown
+  exactly as it was at any point — restore, open as tab, or copy.
+- **Find/Replace in Files**: whole-project search with per-match
+  checkboxes and previews — and one-click **undo across every file**
+  a replace touched.
+- **Auto-Save on Focus Loss** (optional, per project).
+
+### The world around your code
+- **Git built in**: change markers in the gutter, blame, per-file
+  history, stage/commit/push — and an **interactive branch tree** you
+  can flip vertical ⇄ horizontal.
+- **Inspect running code**: live static and MonoBehaviour values while
+  you play, editable primitives, one-click running of parameterless
+  static methods.
+- **Spell checking** (optional): 115k-word dictionary, other languages
+  via Hunspell files, personal and per-project word lists.
+- **JSON and shader coloring**, a filterable Find All References list,
+  a tidier Edit menu, and organized Settings.
+
 ## 0.12.3 — 2026-07-29
 
 Auto-map polish.

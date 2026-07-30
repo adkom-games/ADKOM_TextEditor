@@ -64,6 +64,18 @@ feature pitch.
 - **Stable scripting API** (`AteApi`): open/edit/save/close documents and subscribe to editor events from your own editor scripts, with an importable every-member sample ([docs](Packages/com.adkom.text-editor/Documentation~/Scripting.md))
 - **100% Editor-only** — nothing ships in player builds
 
+**IDE intelligence** (new in 0.13.0)
+- **IntelliSense**: compiler-accurate C# completion — members after `.` (instance/static/namespace, accessibility respected), scope symbols, signatures and overload counts — blended with word/keyword completion
+- **Live error highlighting**: red/amber underlines from the real compiler as you type, hover for the message
+- **Read/write reference highlighting**: caret on a symbol highlights every use — writes in amber
+- **Customizable snippets** (plain-text file, live tab-stop sessions) + **code generators** for Unity magic methods (33, duplicate-aware) and overrides (full stubs with base calls)
+- **Visual edit history**: an undo/redo timeline showing the document at any point — restore, open as tab, or copy
+- **Find/Replace in Files**: project-wide, buffer-aware, per-match selection with preview, and **global undo** across all touched files
+- **Reflection inspector**: live static/instance values (play mode included), editable primitives, run parameterless static methods
+- **Git integration**: gutter diff markers, blame, file history, stage/commit/push panel, and an **interactive branch-history tree** (vertical ⇄ horizontal)
+- **Optional spell checking**: 115k-word SCOWL dictionary, Hunspell imports, user + per-project dictionaries
+- **More languages colored**: JSON (.json/.asmdef) and Unity shaders (.shader/.hlsl/.cginc/.compute); **#region** folding + navigation; auto-save on focus loss
+
 **Addons & games** (new in 0.12.0)
 - **Addons**: single-file or **multi-file folder** `.cs` addons in a machine-shared folder, Roslyn-compiled in-memory, with a full load/unload/focus lifecycle and a Tools → Addons menu
 - **Addon security**: source scanned against known-dangerous API patterns; a risk report + clickable Scanner Results console tab; **nothing runs until one-time approval** keyed to the exact file content
@@ -86,7 +98,7 @@ https://github.com/adkom-games/ADKOM_TextEditor.git#upm
 Pinned release:
 
 ```
-https://github.com/adkom-games/ADKOM_TextEditor.git#0.12.3
+https://github.com/adkom-games/ADKOM_TextEditor.git#0.13.0
 ```
 
 The `upm` branch contains only the package, so consumer downloads stay
