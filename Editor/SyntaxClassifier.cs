@@ -123,6 +123,22 @@ namespace ADKOM.TextEditor
         bool TryGetDiagnostics(string path, string text, out List<DiagnosticItem> items);
     }
 
+    /// <summary>One occurrence of the symbol under the caret, for read/write
+    /// reference highlighting.</summary>
+    public struct SymbolOccurrence
+    {
+        public int Start, Length; // document offsets
+        public bool IsWrite;      // assignment target / declaration / ref-out
+    }
+
+    /// <summary>Optional provider capability: all occurrences of the symbol at
+    /// a position WITHIN the document, classified read vs write. May run on a
+    /// background thread.</summary>
+    public interface ISemanticOccurrences
+    {
+        bool TryGetOccurrences(string path, string text, int offset, out List<SymbolOccurrence> occurrences);
+    }
+
     /// <summary>One reference to a symbol, for the Find All References list.</summary>
     public struct SymbolReference
     {
