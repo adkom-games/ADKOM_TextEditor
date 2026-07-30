@@ -1148,3 +1148,84 @@ msgstr "포커스 해제 시 자동 저장"
 
 msgid "Save every dirty file-backed document when the ATE window loses focus. Untitled buffers are skipped (session persistence still protects them). Per project."
 msgstr "ATE 창이 포커스를 잃을 때 수정된 파일 문서를 모두 저장합니다. 제목 없는 버퍼는 건너뜁니다(세션 지속성이 계속 보호합니다). 프로젝트별."
+
+msgid "Find in Files..."
+msgstr "파일에서 찾기..."
+
+msgid "Find in Files"
+msgstr "파일에서 찾기"
+
+msgid "Find:"
+msgstr "찾기:"
+
+msgid "Replace:"
+msgstr "바꾸기:"
+
+msgid "Search"
+msgstr "검색"
+
+msgid "Match Case"
+msgstr "대/소문자 구분"
+
+msgid "Whole Word"
+msgstr "단어 단위"
+
+msgid "Files"
+msgstr "파일"
+
+msgid "Root"
+msgstr "루트"
+
+msgid "Folder to search. Empty = Assets + Packages."
+msgstr "검색할 폴더. 비우면 Assets + Packages."
+
+msgid "Search root folder"
+msgstr "검색 루트 폴더"
+
+msgid "Enter a query and press Search."
+msgstr "검색어를 입력하고 검색을 누르세요."
+
+msgid "Searching..."
+msgstr "검색 중..."
+
+msgid "{0} match(es) in {1} file(s), {2} file(s) scanned."
+msgstr "{1}개 파일에서 {0}개 일치({2}개 파일 검사)."
+
+msgid "(truncated)"
+msgstr "(잘림)"
+
+msgid "No matches."
+msgstr "일치 항목이 없습니다."
+
+msgid "Select a match to preview; double-click to open it."
+msgstr "일치 항목을 선택하면 미리 보고, 두 번 클릭하면 엽니다."
+
+msgid "Nothing selected."
+msgstr "선택된 항목이 없습니다."
+
+msgid "Replaced {0} match(es) in {1} file(s)."
+msgstr "{1}개 파일에서 {0}개를 바꿨습니다."
+
+msgid "Skipped {0} stale match(es)."
+msgstr "오래된 일치 {0}개를 건너뛰었습니다."
+
+msgid "Undo Replace"
+msgstr "바꾸기 실행 취소"
+
+msgid "Redo Replace"
+msgstr "바꾸기 다시 실행"
+
+msgid "Undid: {0}"
+msgstr "실행 취소: {0}"
+
+msgid "Redid: {0}"
+msgstr "다시 실행: {0}"
+
+msgid "Replace Selected"
+msgstr "선택 항목 바꾸기"
+
+msgid "{0} replacement(s) in {1} file(s)"
+msgstr "{1}개 파일에서 {0}개 바꿈"
+
+msgid "Invalid regex: {0}"
+msgstr "잘못된 정규식: {0}"

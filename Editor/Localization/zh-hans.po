@@ -1148,3 +1148,84 @@ msgstr "失去焦点时自动保存"
 
 msgid "Save every dirty file-backed document when the ATE window loses focus. Untitled buffers are skipped (session persistence still protects them). Per project."
 msgstr "当 ATE 窗口失去焦点时，保存所有已修改的文件文档。未命名缓冲区将被跳过（会话持久化仍会保护它们）。按项目设置。"
+
+msgid "Find in Files..."
+msgstr "在文件中查找..."
+
+msgid "Find in Files"
+msgstr "在文件中查找"
+
+msgid "Find:"
+msgstr "查找:"
+
+msgid "Replace:"
+msgstr "替换:"
+
+msgid "Search"
+msgstr "搜索"
+
+msgid "Match Case"
+msgstr "区分大小写"
+
+msgid "Whole Word"
+msgstr "全字匹配"
+
+msgid "Files"
+msgstr "文件"
+
+msgid "Root"
+msgstr "根目录"
+
+msgid "Folder to search. Empty = Assets + Packages."
+msgstr "要搜索的文件夹。留空 = Assets + Packages。"
+
+msgid "Search root folder"
+msgstr "搜索根文件夹"
+
+msgid "Enter a query and press Search."
+msgstr "输入查询内容并按搜索。"
+
+msgid "Searching..."
+msgstr "正在搜索..."
+
+msgid "{0} match(es) in {1} file(s), {2} file(s) scanned."
+msgstr "在 {1} 个文件中找到 {0} 个匹配项（扫描了 {2} 个文件）。"
+
+msgid "(truncated)"
+msgstr "（已截断）"
+
+msgid "No matches."
+msgstr "没有匹配项。"
+
+msgid "Select a match to preview; double-click to open it."
+msgstr "单击匹配项预览；双击打开。"
+
+msgid "Nothing selected."
+msgstr "未选择任何内容。"
+
+msgid "Replaced {0} match(es) in {1} file(s)."
+msgstr "已在 {1} 个文件中替换 {0} 个匹配项。"
+
+msgid "Skipped {0} stale match(es)."
+msgstr "跳过了 {0} 个已过期的匹配项。"
+
+msgid "Undo Replace"
+msgstr "撤销替换"
+
+msgid "Redo Replace"
+msgstr "重做替换"
+
+msgid "Undid: {0}"
+msgstr "已撤销: {0}"
+
+msgid "Redid: {0}"
+msgstr "已重做: {0}"
+
+msgid "Replace Selected"
+msgstr "替换所选项"
+
+msgid "{0} replacement(s) in {1} file(s)"
+msgstr "{1} 个文件中的 {0} 个替换"
+
+msgid "Invalid regex: {0}"
+msgstr "无效的正则表达式: {0}"

@@ -1148,3 +1148,84 @@ msgstr "フォーカス喪失時に自動保存"
 
 msgid "Save every dirty file-backed document when the ATE window loses focus. Untitled buffers are skipped (session persistence still protects them). Per project."
 msgstr "ATE ウィンドウがフォーカスを失ったとき、未保存のファイル文書をすべて保存します。無題のバッファーはスキップされます（セッション永続化で保護されます）。プロジェクトごと。"
+
+msgid "Find in Files..."
+msgstr "ファイルを横断検索..."
+
+msgid "Find in Files"
+msgstr "ファイルを横断検索"
+
+msgid "Find:"
+msgstr "検索:"
+
+msgid "Replace:"
+msgstr "置換:"
+
+msgid "Search"
+msgstr "検索"
+
+msgid "Match Case"
+msgstr "大文字と小文字を区別"
+
+msgid "Whole Word"
+msgstr "単語単位"
+
+msgid "Files"
+msgstr "ファイル"
+
+msgid "Root"
+msgstr "ルート"
+
+msgid "Folder to search. Empty = Assets + Packages."
+msgstr "検索するフォルダー。空 = Assets + Packages。"
+
+msgid "Search root folder"
+msgstr "検索ルートフォルダー"
+
+msgid "Enter a query and press Search."
+msgstr "クエリを入力して検索を押してください。"
+
+msgid "Searching..."
+msgstr "検索中..."
+
+msgid "{0} match(es) in {1} file(s), {2} file(s) scanned."
+msgstr "{1} ファイル中 {0} 件一致（{2} ファイルを走査）。"
+
+msgid "(truncated)"
+msgstr "（打ち切り）"
+
+msgid "No matches."
+msgstr "一致はありません。"
+
+msgid "Select a match to preview; double-click to open it."
+msgstr "一致をクリックでプレビュー、ダブルクリックで開きます。"
+
+msgid "Nothing selected."
+msgstr "何も選択されていません。"
+
+msgid "Replaced {0} match(es) in {1} file(s)."
+msgstr "{1} ファイルで {0} 件置換しました。"
+
+msgid "Skipped {0} stale match(es)."
+msgstr "{0} 件の古い一致をスキップしました。"
+
+msgid "Undo Replace"
+msgstr "置換を元に戻す"
+
+msgid "Redo Replace"
+msgstr "置換をやり直す"
+
+msgid "Undid: {0}"
+msgstr "元に戻しました: {0}"
+
+msgid "Redid: {0}"
+msgstr "やり直しました: {0}"
+
+msgid "Replace Selected"
+msgstr "選択項目を置換"
+
+msgid "{0} replacement(s) in {1} file(s)"
+msgstr "{1} ファイルで {0} 件の置換"
+
+msgid "Invalid regex: {0}"
+msgstr "無効な正規表現: {0}"
