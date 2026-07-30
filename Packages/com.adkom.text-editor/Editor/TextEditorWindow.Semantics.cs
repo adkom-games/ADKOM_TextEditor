@@ -62,6 +62,50 @@ namespace ADKOM.TextEditor
             });
         }
 
+        // --- Read/write occurrence highlighting ---
+
+        int _occLastCaret = -1, _occLastVersion = -1;
+        bool _occInFlight;
+
+        /// <summary>300ms poll: when the caret settles on a new spot (bare
+        /// caret, C#, semantics on), resolve the symbol's occurrences on a
+        /// background thread and highlight them read vs write.</summary>
+        void PollOccurrences()
+        {
+            if (_code == null || _occInFlight) return;
+            var provider = EditorConfig.SemanticsEnabled
+                ? SemanticServices.Provider as ISemanticOccurrences : null;
+            string path = SemanticContextPath;
+            bool applicable = provider != null && path != null &&
+                (!Active.HasFile || Active.FilePath.EndsWith(".cs", System.StringComparison.OrdinalIgnoreCase));
+            int caret = _code.cursorIndex;
+            int version = _code.DocVersion;
+            if (caret == _occLastCaret && version == _occLastVersion) return;
+            _occLastCaret = caret;
+            _occLastVersion = version;
+            if (!applicable || _code.HasSelectionPublic)
+            {
+                _code.ClearOccurrences();
+                return;
+            }
+            string text = _code.value;
+            var ctx = _mainCtx;
+            _occInFlight = true;
+            System.Threading.Tasks.Task.Run(() =>
+            {
+                List<SymbolOccurrence> occ = null;
+                try { provider.TryGetOccurrences(path, text, caret, out occ); }
+                catch (System.Exception) { /* transient parse states are fine */ }
+                ctx.Post(_ =>
+                {
+                    _occInFlight = false;
+                    if (this == null || _code == null || _code.panel == null) return;
+                    if (occ == null) _code.ClearOccurrences();
+                    else _code.ApplyOccurrences(occ, version);
+                }, null);
+            });
+        }
+
         /// <summary>IntelliSense back end for the completion popup: resolves
         /// the candidates at <paramref name="offset"/> on a background thread
         /// and posts them back to the main thread. Deliberately silent when

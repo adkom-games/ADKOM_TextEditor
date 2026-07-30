@@ -443,6 +443,8 @@ namespace ADKOM.TextEditor
 
             // Caret moves don't fire value changes; poll cheaply for line:col.
             root.schedule.Execute(UpdateStatus).Every(200);
+            // Read/write occurrence highlighting follows the caret the same way.
+            root.schedule.Execute(PollOccurrences).Every(300);
         }
 
         static ToolbarButton ToolbarBtn(string text, System.Action onClick) =>

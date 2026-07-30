@@ -20,7 +20,7 @@ namespace ADKOM.TextEditor.Semantics
     /// </summary>
     public sealed class RoslynSemanticProvider : ADKOM.TextEditor.ISemanticProvider,
         ADKOM.TextEditor.ISemanticRefactorings, ADKOM.TextEditor.ISemanticCompletion,
-        ADKOM.TextEditor.ISemanticDiagnostics
+        ADKOM.TextEditor.ISemanticDiagnostics, ADKOM.TextEditor.ISemanticOccurrences
     {
         public string Name => "Roslyn";
 
@@ -344,6 +344,71 @@ namespace ADKOM.TextEditor.Semantics
             spans = result;
             symbolName = target.Name;
             return true;
+        }
+
+        // --- Occurrence highlighting (read vs write) ---
+
+        /// <summary>All occurrences of the symbol at <paramref name="offset"/>
+        /// within THIS document, classified read vs write (assignment target,
+        /// ++/--, ref/out argument, or the declaration itself).</summary>
+        public bool TryGetOccurrences(string path, string text, int offset,
+            out List<ADKOM.TextEditor.SymbolOccurrence> occurrences)
+        {
+            occurrences = null;
+            var (model, tree) = GetModel(path, text);
+            if (model == null) return false;
+            var target = SymbolAt(model, tree, offset);
+            if (target == null || target is INamespaceSymbol) return false;
+
+            var result = new List<ADKOM.TextEditor.SymbolOccurrence>();
+            foreach (var token in tree.GetRoot().DescendantTokens())
+            {
+                if (!token.IsKind(SyntaxKind.IdentifierToken) || token.ValueText != target.Name)
+                    continue;
+                var node = token.Parent;
+                if (node == null) continue;
+                var sym = model.GetSymbolInfo(node).Symbol ?? model.GetDeclaredSymbol(node);
+                if (sym == null ||
+                    !SymbolEqualityComparer.Default.Equals(sym.OriginalDefinition, target.OriginalDefinition))
+                    continue;
+                result.Add(new ADKOM.TextEditor.SymbolOccurrence
+                {
+                    Start = token.Span.Start,
+                    Length = token.Span.Length,
+                    IsWrite = IsWriteAccess(token, model)
+                });
+                if (result.Count > 500) return false; // too many to be useful
+            }
+            occurrences = result;
+            return result.Count > 0;
+        }
+
+        static bool IsWriteAccess(SyntaxToken token, SemanticModel model)
+        {
+            var node = token.Parent;
+            if (node == null) return false;
+            // Declarations write their initial value (locals, fields, foreach
+            // variables, parameters, and member declarations generally).
+            if (model.GetDeclaredSymbol(node) != null) return true;
+
+            // Climb through the wrapper the token names: x, this.x, a.b.x.
+            SyntaxNode expr = node;
+            while (expr.Parent is Microsoft.CodeAnalysis.CSharp.Syntax.MemberAccessExpressionSyntax ma &&
+                   ma.Name == expr)
+                expr = ma;
+            var parent = expr.Parent;
+            if (parent is Microsoft.CodeAnalysis.CSharp.Syntax.AssignmentExpressionSyntax asg &&
+                asg.Left == expr)
+                return true; // includes compound assignments (+= etc.)
+            if (parent is Microsoft.CodeAnalysis.CSharp.Syntax.PrefixUnaryExpressionSyntax pre &&
+                (pre.IsKind(SyntaxKind.PreIncrementExpression) || pre.IsKind(SyntaxKind.PreDecrementExpression)))
+                return true;
+            if (parent is Microsoft.CodeAnalysis.CSharp.Syntax.PostfixUnaryExpressionSyntax)
+                return true; // ++ / -- are the only postfix kinds
+            if (parent is Microsoft.CodeAnalysis.CSharp.Syntax.ArgumentSyntax arg &&
+                arg.RefOrOutKeyword.RawKind != 0)
+                return true;
+            return false;
         }
 
         // --- Diagnostics (error highlighting) ---

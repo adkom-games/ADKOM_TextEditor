@@ -1253,6 +1253,7 @@ namespace ADKOM.TextEditor
             RefreshOverlayBg(firstRow, visible);
             RefreshSelection(firstRow, visible);
             RefreshSelectionMatches(firstRow, visible);
+            RefreshOccurrences(firstRow, visible);
             RefreshBracketMatch(firstRow, visible);
             RefreshExtraCarets(firstRow, visible);
             RefreshIndentGuides(firstRow, visible);
