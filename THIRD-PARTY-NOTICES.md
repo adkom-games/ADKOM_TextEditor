@@ -46,3 +46,23 @@ SOFTWARE.
 
 Roslyn: https://github.com/dotnet/roslyn
 Runtime libraries: https://github.com/dotnet/runtime
+
+---
+
+## SCOWL (Spell Checker Oriented Word Lists)
+
+The bundled English spell-check dictionary (`Editor/SpellCheckData~/words-en.txt`)
+is derived from SCOWL by Kevin Atkinson (http://wordlist.aspell.net/).
+
+The collective work is Copyright 2000-2018 by Kevin Atkinson. Permission to
+use, copy, modify, distribute and sell these word lists, the associated
+scripts, the output created from the scripts, and its documentation for any
+purpose is hereby granted without fee, provided that the above copyright
+notice appears in all copies and that both that copyright notice and this
+permission notice appear in supporting documentation. Kevin Atkinson makes
+no representations about the suitability of this array for any purpose. It
+is provided "as is" without express or implied warranty.
+
+The complete SCOWL copyright statement, including its component word lists'
+notices, ships alongside the dictionary as
+`Editor/SpellCheckData~/SCOWL-Copyright.txt`.

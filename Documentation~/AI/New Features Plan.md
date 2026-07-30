@@ -40,7 +40,7 @@ for the release snapshot and [[Project Log]] for per-item history.
 | 17 | Git integration + branch-history tree | 5 | Pending |
 | 18 | Clean up the Edit menu | 0 | **Done** (be4139e, approved) |
 | 19 | Organize Settings | 0 | **Done** (27e7047, approved) |
-| 20 | Optional spell checking | 6 | Pending |
+| 20 | Optional spell checking | 6 | **Done** (SCOWL bundled, Hunspell imports, global + project dictionaries) |
 | 21 | Syntax coloring: JSON, Shaders | 2.5 | **Done** (08b6c8a) |
 
 All completed items are on `main`, unreleased as of 2026-07-30 — they ship

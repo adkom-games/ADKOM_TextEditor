@@ -1268,3 +1268,15 @@ msgstr "{0} 擲回例外狀況: {1}"
 
 msgid "No type at the caret."
 msgstr "游標處沒有類型。"
+
+msgid "Spell Checking"
+msgstr "拼字檢查"
+
+msgid "Underline unknown words — comments and strings in code, everything in markdown/plain text. Right-click a flagged word to add it to your dictionary. Drop extra dictionaries (.txt / Hunspell .dic) in the shared Dictionaries folder."
+msgstr "為未知單字加底線 — 程式碼中檢查註解與字串，Markdown/純文字檢查全部內容。以滑鼠右鍵按一下標記的單字可將其加入字典。將額外字典（.txt / Hunspell .dic）放入共用 Dictionaries 資料夾。"
+
+msgid "Add '{0}' to User Dictionary"
+msgstr "將 '{0}' 加入使用者字典"
+
+msgid "Add '{0}' to Project Dictionary"
+msgstr "將 '{0}' 加入專案字典"

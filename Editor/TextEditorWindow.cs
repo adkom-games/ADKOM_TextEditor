@@ -521,6 +521,7 @@ namespace ADKOM.TextEditor
             // Never show the previous document's (or a disabled provider's)
             // underlines; the pass repopulates them for the new context.
             _code?.ClearDiagnostics();
+            if (_code != null) _code.spellEnabled = EditorConfig.SpellCheckEnabled;
             ScheduleSemanticPass();
         }
 
@@ -1036,6 +1037,15 @@ namespace ADKOM.TextEditor
             _settingsAutoClose.RegisterValueChangedCallback(e => EditorConfig.AutoCloseBrackets = e.newValue);
             _settingsAutoClose.tooltip = L10n.Tr("Typing ( [ { \" ' inserts the closing pair, closers type over, Backspace removes empty pairs, selections get wrapped.");
             _settingsPane.Add(_settingsAutoClose);
+
+            var spell = new Toggle(L10n.Tr("Spell Checking")) { value = EditorConfig.SpellCheckEnabled };
+            spell.RegisterValueChangedCallback(e =>
+            {
+                EditorConfig.SpellCheckEnabled = e.newValue;
+                if (_code != null) _code.spellEnabled = e.newValue;
+            });
+            spell.tooltip = L10n.Tr("Underline unknown words — comments and strings in code, everything in markdown/plain text. Right-click a flagged word to add it to your dictionary. Drop extra dictionaries (.txt / Hunspell .dic) in the shared Dictionaries folder.");
+            _settingsPane.Add(spell);
 
             _settingsAutoReload = new Toggle(L10n.Tr("Auto-Reload Changed Files")) { value = EditorConfig.AutoReloadFromDisk };
             _settingsAutoReload.RegisterValueChangedCallback(e => EditorConfig.AutoReloadFromDisk = e.newValue);

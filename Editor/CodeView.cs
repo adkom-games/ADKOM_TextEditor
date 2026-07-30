@@ -943,6 +943,7 @@ namespace ADKOM.TextEditor
         void Reclassify()
         {
             _lineMarkup = null;
+            ScheduleSpell(); // debounced; no-op when spell checking is off
             if (_gameMode) { _lineSpans = null; return; } // overlay colors only
             if (_classifier == null || GetValueInternal().Length > 400_000)
             {
@@ -1258,6 +1259,7 @@ namespace ADKOM.TextEditor
             RefreshExtraCarets(firstRow, visible);
             RefreshIndentGuides(firstRow, visible);
             RefreshDiagnostics(firstRow, visible);
+            RefreshSpelling(firstRow, visible);
             RefreshCaret();
         }
 

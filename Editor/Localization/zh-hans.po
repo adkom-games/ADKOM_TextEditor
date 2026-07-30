@@ -1268,3 +1268,15 @@ msgstr "{0} 引发异常: {1}"
 
 msgid "No type at the caret."
 msgstr "光标处没有类型。"
+
+msgid "Spell Checking"
+msgstr "拼写检查"
+
+msgid "Underline unknown words — comments and strings in code, everything in markdown/plain text. Right-click a flagged word to add it to your dictionary. Drop extra dictionaries (.txt / Hunspell .dic) in the shared Dictionaries folder."
+msgstr "为未知单词加下划线 — 代码中检查注释和字符串，Markdown/纯文本检查全部内容。右键单击标记的单词可将其添加到词典。将额外词典（.txt / Hunspell .dic）放入共享 Dictionaries 文件夹。"
+
+msgid "Add '{0}' to User Dictionary"
+msgstr "将 '{0}' 添加到用户词典"
+
+msgid "Add '{0}' to Project Dictionary"
+msgstr "将 '{0}' 添加到项目词典"
