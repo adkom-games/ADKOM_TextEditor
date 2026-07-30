@@ -1282,3 +1282,90 @@ msgstr "Add '{0}' to User Dictionary"
 
 msgid "Add '{0}' to Project Dictionary"
 msgstr "Add '{0}' to Project Dictionary"
+
+msgid "Git Panel..."
+msgstr "Git Panel..."
+
+msgid "Blame Current File"
+msgstr "Blame Current File"
+
+msgid "File History..."
+msgstr "File History..."
+
+msgid "Not inside a git repository."
+msgstr "Not inside a git repository."
+
+msgid "Running git blame…"
+msgstr "Running git blame…"
+
+msgid "No blame available (not in a git repository?)."
+msgstr "No blame available (not in a git repository?)."
+
+msgid "Blame {0}"
+msgstr "Blame {0}"
+
+msgid "Reading history…"
+msgstr "Reading history…"
+
+msgid "No history available (not in a git repository?)."
+msgstr "No history available (not in a git repository?)."
+
+msgid "Could not read that revision."
+msgstr "Could not read that revision."
+
+msgid "Changes"
+msgstr "Changes"
+
+msgid "Commit message"
+msgstr "Commit message"
+
+msgid "Commit"
+msgstr "Commit"
+
+msgid "Push"
+msgstr "Push"
+
+msgid "Branch History"
+msgstr "Branch History"
+
+msgid "Toggle vertical / horizontal layout"
+msgstr "Toggle vertical / horizontal layout"
+
+msgid "Working…"
+msgstr "Working…"
+
+msgid "Working tree clean."
+msgstr "Working tree clean."
+
+msgid "{0} changed file(s)."
+msgstr "{0} changed file(s)."
+
+msgid "Staged for commit"
+msgstr "Staged for commit"
+
+msgid "Enter a commit message."
+msgstr "Enter a commit message."
+
+msgid "Checkout {0}"
+msgstr "Checkout {0}"
+
+msgid "Checkout {0} (working tree not clean)"
+msgstr "Checkout {0} (working tree not clean)"
+
+msgid "Create Branch Here..."
+msgstr "Create Branch Here..."
+
+msgid "Created branch {0}."
+msgstr "Created branch {0}."
+
+msgid "Checkout Commit (detached)"
+msgstr "Checkout Commit (detached)"
+
+msgid "Checkout Commit (working tree not clean)"
+msgstr "Checkout Commit (working tree not clean)"
+
+msgid "Copy Hash"
+msgstr "Copy Hash"
+
+msgid "Git"
+msgstr "Git"

@@ -228,6 +228,27 @@ namespace ADKOM.TextEditor
             }
             AteZMachine.ZMachineGame.AddMenuItems(m, L10n.Tr("Z-Machine (Zork)") + "/", this);
             m.AddSeparator("");
+            string gitRoot = L10n.Tr("Git") + "/";
+            m.AddItem(new GUIContent(gitRoot + L10n.Tr("Git Panel...")), false, () =>
+            {
+                string repo = HasDocs && Active.HasFile
+                    ? GitService.RepoRoot(Active.FilePath)
+                    : GitService.RepoRoot(UnityEngine.Application.dataPath);
+                if (repo == null) { PostStatus(L10n.Tr("Not inside a git repository.")); return; }
+                GitWindow.Open(this, repo);
+            });
+            bool gitFile = HasDocs && Active != null && Active.HasFile;
+            if (gitFile)
+            {
+                m.AddItem(new GUIContent(gitRoot + L10n.Tr("Blame Current File")), false, GitBlameCurrent);
+                m.AddItem(new GUIContent(gitRoot + L10n.Tr("File History...")), false, GitFileHistory);
+            }
+            else
+            {
+                m.AddDisabledItem(new GUIContent(gitRoot + L10n.Tr("Blame Current File")));
+                m.AddDisabledItem(new GUIContent(gitRoot + L10n.Tr("File History...")));
+            }
+            m.AddSeparator("");
             // Snippets are one plain-text file the user edits in ATE itself;
             // saving it hot-reloads the set (timestamp watch in SnippetStore).
             m.AddItem(new GUIContent(L10n.Tr("Edit Snippets...")), false, () =>
