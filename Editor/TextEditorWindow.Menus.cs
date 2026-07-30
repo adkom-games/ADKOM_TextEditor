@@ -135,6 +135,13 @@ namespace ADKOM.TextEditor
             Item(codeg + WithSc("Autocomplete", "Ctrl+Space"), edit, () => _code.ShowCompletion(true));
             Item(codeg + WithSc("Rename Symbol...", Dsp("rename-symbol")), edit, RenameSymbolAtCaret);
             Item(codeg + WithSc("Find All References", Dsp("find-references")), edit, FindAllReferences);
+            foreach (var msg in UnityMessages.All)
+            {
+                var mm = msg;
+                Item(codeg + L10n.Tr("Generate Unity Method") + "/" + L10n.Tr(mm.Group) + "/" + mm.Signature,
+                    edit, () => GenerateUnityMessage(mm));
+            }
+            Item(codeg + WithSc("Override Method...", null), edit, GenerateOverrideCommand);
 
             string gog = L10n.Tr("Go To") + "/";
             Item(gog + WithSc("Goto Line...", Dsp("goto-line")), edit, GotoLineCommand);

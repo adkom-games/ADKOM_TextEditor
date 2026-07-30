@@ -20,7 +20,8 @@ namespace ADKOM.TextEditor.Semantics
     /// </summary>
     public sealed class RoslynSemanticProvider : ADKOM.TextEditor.ISemanticProvider,
         ADKOM.TextEditor.ISemanticRefactorings, ADKOM.TextEditor.ISemanticCompletion,
-        ADKOM.TextEditor.ISemanticDiagnostics, ADKOM.TextEditor.ISemanticOccurrences
+        ADKOM.TextEditor.ISemanticDiagnostics, ADKOM.TextEditor.ISemanticOccurrences,
+        ADKOM.TextEditor.ISemanticGeneration
     {
         public string Name => "Roslyn";
 
@@ -344,6 +345,139 @@ namespace ADKOM.TextEditor.Semantics
             spans = result;
             symbolName = target.Name;
             return true;
+        }
+
+        // --- Code generation (Unity messages context + override picker) ---
+
+        INamedTypeSymbol ClassAt(string path, string text, int offset, out SemanticModel model)
+        {
+            model = null;
+            var (m, tree) = GetModel(path, text);
+            if (m == null) return null;
+            model = m;
+            var root = tree.GetRoot();
+            offset = Math.Max(0, Math.Min(offset, root.FullSpan.End - 1));
+            var node = root.FindToken(offset).Parent;
+            while (node != null && !(node is Microsoft.CodeAnalysis.CSharp.Syntax.TypeDeclarationSyntax))
+                node = node.Parent;
+            return node == null ? null : model.GetDeclaredSymbol(node) as INamedTypeSymbol;
+        }
+
+        public bool TryGetTypeContext(string path, string text, int offset,
+            out HashSet<string> declaredMethods, out bool isMonoBehaviour)
+        {
+            declaredMethods = null;
+            isMonoBehaviour = false;
+            var cls = ClassAt(path, text, offset, out _);
+            if (cls == null) return false;
+            declaredMethods = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var m in cls.GetMembers().OfType<IMethodSymbol>())
+                if (m.MethodKind == MethodKind.Ordinary) declaredMethods.Add(m.Name);
+            for (var t = cls.BaseType; t != null; t = t.BaseType)
+                if (t.Name == "MonoBehaviour" &&
+                    t.ContainingNamespace?.ToDisplayString() == "UnityEngine")
+                { isMonoBehaviour = true; break; }
+            return true;
+        }
+
+        public bool TryGetOverrideCandidates(string path, string text, int offset,
+            out List<ADKOM.TextEditor.GenerationCandidate> candidates)
+        {
+            candidates = null;
+            var cls = ClassAt(path, text, offset, out _);
+            if (cls == null) return false;
+
+            // Signatures already declared here (any override/new hides the base).
+            var taken = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var m in cls.GetMembers()) taken.Add(SigKey(m));
+
+            var fmt = SymbolDisplayFormat.MinimallyQualifiedFormat;
+            var result = new List<ADKOM.TextEditor.GenerationCandidate>();
+            var seen = new HashSet<string>(StringComparer.Ordinal);
+            for (var t = cls.BaseType; t != null; t = t.BaseType)
+            {
+                foreach (var member in t.GetMembers())
+                {
+                    if (member.IsStatic || member.IsSealed) continue;
+                    if (!(member.IsVirtual || member.IsAbstract || member.IsOverride)) continue;
+                    if (member.DeclaredAccessibility == Accessibility.Private) continue;
+                    string key = SigKey(member);
+                    if (!seen.Add(key)) continue;            // nearest declaration wins
+                    if (taken.Contains(key)) continue;       // already overridden here
+
+                    if (member is IMethodSymbol method && method.MethodKind == MethodKind.Ordinary &&
+                        method.Name != "Finalize")
+                        result.Add(MethodStub(method, fmt));
+                    else if (member is IPropertySymbol prop && !prop.IsIndexer)
+                        result.Add(PropertyStub(prop, fmt));
+                }
+            }
+            result.Sort((a, b) => string.CompareOrdinal(a.Label, b.Label));
+            candidates = result;
+            return result.Count > 0;
+        }
+
+        static string SigKey(ISymbol s)
+        {
+            if (s is IMethodSymbol m)
+                return "M:" + m.Name + "(" + string.Join(",",
+                    m.Parameters.Select(p => p.Type.ToDisplayString())) + ")";
+            return s.Kind + ":" + s.Name;
+        }
+
+        static string AccessText(Accessibility a) => a switch
+        {
+            Accessibility.Public => "public",
+            Accessibility.Protected => "protected",
+            Accessibility.Internal => "internal",
+            Accessibility.ProtectedOrInternal => "protected internal",
+            Accessibility.ProtectedAndInternal => "private protected",
+            _ => "protected"
+        };
+
+        static ADKOM.TextEditor.GenerationCandidate MethodStub(IMethodSymbol m, SymbolDisplayFormat fmt)
+        {
+            string ret = m.ReturnType.ToDisplayString(fmt);
+            var ps = m.Parameters.Select(p =>
+            {
+                string mod = p.RefKind == RefKind.Ref ? "ref "
+                    : p.RefKind == RefKind.Out ? "out "
+                    : p.RefKind == RefKind.In ? "in "
+                    : p.IsParams ? "params " : "";
+                return mod + p.Type.ToDisplayString(fmt) + " " + p.Name;
+            });
+            var callArgs = m.Parameters.Select(p =>
+                (p.RefKind == RefKind.Ref ? "ref " : p.RefKind == RefKind.Out ? "out " : "") + p.Name);
+            string head = AccessText(m.DeclaredAccessibility) + " override " + ret + " " +
+                m.Name + "(" + string.Join(", ", ps) + ")";
+            string body = m.IsAbstract
+                ? "throw new System.NotImplementedException();$END$"
+                : m.ReturnsVoid
+                    ? "base." + m.Name + "(" + string.Join(", ", callArgs) + ");$END$"
+                    : "return base." + m.Name + "(" + string.Join(", ", callArgs) + ");$END$";
+            return new ADKOM.TextEditor.GenerationCandidate
+            {
+                Label = head,
+                Stub = head + "\n{\n    " + body + "\n}"
+            };
+        }
+
+        static ADKOM.TextEditor.GenerationCandidate PropertyStub(IPropertySymbol p, SymbolDisplayFormat fmt)
+        {
+            string type = p.Type.ToDisplayString(fmt);
+            string head = AccessText(p.DeclaredAccessibility) + " override " + type + " " + p.Name;
+            string get = p.GetMethod == null ? null
+                : p.IsAbstract ? "get => throw new System.NotImplementedException();"
+                : "get => base." + p.Name + ";";
+            string set = p.SetMethod == null ? null
+                : p.IsAbstract ? "set => throw new System.NotImplementedException();"
+                : "set => base." + p.Name + " = value;";
+            string body = "{ " + (get ?? "") + (get != null && set != null ? " " : "") + (set ?? "") + " }$END$";
+            return new ADKOM.TextEditor.GenerationCandidate
+            {
+                Label = head + " { " + (p.GetMethod != null ? "get; " : "") + (p.SetMethod != null ? "set; " : "") + "}",
+                Stub = head + " " + body
+            };
         }
 
         // --- Occurrence highlighting (read vs write) ---

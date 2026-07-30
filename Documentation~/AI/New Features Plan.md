@@ -25,8 +25,8 @@ for the release snapshot and [[Project Log]] for per-item history.
 |---|---|---|---|
 | 1 | IntelliSense (semantic C# completion) | 1 | **Done** (6b37909) |
 | 2 | Customizable code snippets | 2 | **Done** (4774b3d) |
-| 3 | Unity magic-method generator | 2 | Next |
-| 4 | Override-method generator | 2 | Next |
+| 3 | Unity magic-method generator | 2 | **Done** (with #4) |
+| 4 | Override-method generator | 2 | **Done** (with #3) |
 | 5 | Automated saving and reloading | 0 | Pending (toggles over existing autosave/reload) |
 | 6–7 | Static fields/properties inspection popup | 4 | Pending |
 | 8–9 | MonoBehaviour fields/properties inspection popup | 4 | Pending |

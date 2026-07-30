@@ -1109,3 +1109,36 @@ msgstr "代码片段"
 
 msgid "Edit Snippets..."
 msgstr "编辑代码片段..."
+
+msgid "Generate Unity Method"
+msgstr "生成 Unity 方法"
+
+msgid "Override Method..."
+msgstr "重写方法..."
+
+msgid "'{0}' is already declared in this class."
+msgstr "'{0}' 已在此类中声明。"
+
+msgid "Override generation needs Semantic Features (enable in Settings)."
+msgstr "重写生成需要语义功能（在设置中启用）。"
+
+msgid "No overridable members found at the caret."
+msgstr "光标处未找到可重写的成员。"
+
+msgid "Lifecycle"
+msgstr "生命周期"
+
+msgid "Physics"
+msgstr "物理"
+
+msgid "Physics 2D"
+msgstr "2D 物理"
+
+msgid "Mouse"
+msgstr "鼠标"
+
+msgid "Application"
+msgstr "应用程序"
+
+msgid "Rendering"
+msgstr "渲染"
