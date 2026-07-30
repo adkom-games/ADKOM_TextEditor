@@ -1150,3 +1150,84 @@ msgstr "Auto-Save on Focus Loss"
 
 msgid "Save every dirty file-backed document when the ATE window loses focus. Untitled buffers are skipped (session persistence still protects them). Per project."
 msgstr "Save every dirty file-backed document when the ATE window loses focus. Untitled buffers are skipped (session persistence still protects them). Per project."
+
+msgid "Find in Files..."
+msgstr "Find in Files..."
+
+msgid "Find in Files"
+msgstr "Find in Files"
+
+msgid "Find:"
+msgstr "Find:"
+
+msgid "Replace:"
+msgstr "Replace:"
+
+msgid "Search"
+msgstr "Search"
+
+msgid "Match Case"
+msgstr "Match Case"
+
+msgid "Whole Word"
+msgstr "Whole Word"
+
+msgid "Files"
+msgstr "Files"
+
+msgid "Root"
+msgstr "Root"
+
+msgid "Folder to search. Empty = Assets + Packages."
+msgstr "Folder to search. Empty = Assets + Packages."
+
+msgid "Search root folder"
+msgstr "Search root folder"
+
+msgid "Enter a query and press Search."
+msgstr "Enter a query and press Search."
+
+msgid "Searching..."
+msgstr "Searching..."
+
+msgid "{0} match(es) in {1} file(s), {2} file(s) scanned."
+msgstr "{0} match(es) in {1} file(s), {2} file(s) scanned."
+
+msgid "(truncated)"
+msgstr "(truncated)"
+
+msgid "No matches."
+msgstr "No matches."
+
+msgid "Select a match to preview; double-click to open it."
+msgstr "Select a match to preview; double-click to open it."
+
+msgid "Nothing selected."
+msgstr "Nothing selected."
+
+msgid "Replaced {0} match(es) in {1} file(s)."
+msgstr "Replaced {0} match(es) in {1} file(s)."
+
+msgid "Skipped {0} stale match(es)."
+msgstr "Skipped {0} stale match(es)."
+
+msgid "Undo Replace"
+msgstr "Undo Replace"
+
+msgid "Redo Replace"
+msgstr "Redo Replace"
+
+msgid "Undid: {0}"
+msgstr "Undid: {0}"
+
+msgid "Redid: {0}"
+msgstr "Redid: {0}"
+
+msgid "Replace Selected"
+msgstr "Replace Selected"
+
+msgid "{0} replacement(s) in {1} file(s)"
+msgstr "{0} replacement(s) in {1} file(s)"
+
+msgid "Invalid regex: {0}"
+msgstr "Invalid regex: {0}"

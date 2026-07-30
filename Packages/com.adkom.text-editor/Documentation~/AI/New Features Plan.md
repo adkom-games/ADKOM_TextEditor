@@ -33,7 +33,7 @@ for the release snapshot and [[Project Log]] for per-item history.
 | 10 | Execute parameterless static methods | 4 | Pending |
 | 11 | Code #region navigation | 0 | **Done** (f9b87a3) |
 | 12 | Find All References with filtering | 0 | **Done** (cef5ae2) |
-| 13 | Find/Replace in Files (+preview/selections, global undo) | 3 | Pending |
+| 13 | Find/Replace in Files (+preview/selections, global undo) | 3 | **Done** (dedicated window, not the console tab — better checkbox/preview UX) |
 | 14 | History navigation (visual undo/redo timeline) | 1.5 | **Done** (dc37c6c) |
 | 15 | Error highlighting | 1 | **Done** (7dbf05c) |
 | 16 | Read/write reference highlighting | 1 | **Done** (c049b7e) |

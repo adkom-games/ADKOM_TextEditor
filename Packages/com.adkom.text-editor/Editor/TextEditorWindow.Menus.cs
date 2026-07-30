@@ -94,6 +94,7 @@ namespace ADKOM.TextEditor
             m.AddSeparator("");
             Item(WithSc("Find...", Dsp("find")), true, () => FindReplaceWindow.Open(this, false, false));
             Item(WithSc("Replace...", Dsp("replace")), true, () => FindReplaceWindow.Open(this, true, false));
+            Item(WithSc("Find in Files...", Dsp("find-in-files")), true, () => FindInFilesWindow.Open(this));
             m.AddSeparator("");
 
             // ---- Grouped submenus ----
