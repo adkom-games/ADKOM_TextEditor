@@ -86,6 +86,26 @@ namespace ADKOM.TextEditor
             out string title, out string source, out int line);
     }
 
+    /// <summary>One IntelliSense completion candidate.</summary>
+    public struct CompletionItem
+    {
+        public string Insert;   // text inserted on accept
+        public string Display;  // list label (usually == Insert)
+        public string Detail;   // dimmed signature/type hint (may be null)
+        public TokenClass Kind; // colors the label like the code it completes
+    }
+
+    /// <summary>Optional provider capability: compiler-accurate completions
+    /// (IntelliSense) — scope symbols at a position, or the members of the
+    /// expression before a '.'. May be called from a background thread.</summary>
+    public interface ISemanticCompletion
+    {
+        /// <summary>All candidates at <paramref name="offset"/> (the caret /
+        /// word start). The caller filters by the typed prefix as it grows, so
+        /// one query serves the whole word.</summary>
+        bool TryGetCompletions(string path, string text, int offset, out List<CompletionItem> items);
+    }
+
     /// <summary>One reference to a symbol, for the Find All References list.</summary>
     public struct SymbolReference
     {

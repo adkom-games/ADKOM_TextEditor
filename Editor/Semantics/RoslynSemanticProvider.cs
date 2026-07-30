@@ -18,7 +18,8 @@ namespace ADKOM.TextEditor.Semantics
     /// CompilationPipeline), caches it, and answers classification and
     /// go-to-definition queries from background threads.
     /// </summary>
-    public sealed class RoslynSemanticProvider : ADKOM.TextEditor.ISemanticProvider, ADKOM.TextEditor.ISemanticRefactorings
+    public sealed class RoslynSemanticProvider : ADKOM.TextEditor.ISemanticProvider,
+        ADKOM.TextEditor.ISemanticRefactorings, ADKOM.TextEditor.ISemanticCompletion
     {
         public string Name => "Roslyn";
 
@@ -342,6 +343,124 @@ namespace ADKOM.TextEditor.Semantics
             spans = result;
             symbolName = target.Name;
             return true;
+        }
+
+        // --- IntelliSense completions ---
+
+        /// <summary>Candidates at <paramref name="offset"/>: after a '.' the
+        /// accessible members of the left-hand expression (instance members for
+        /// a value, statics + nested types for a type name, types + child
+        /// namespaces for a namespace); otherwise every symbol in scope
+        /// (LookupSymbols). One query serves the whole word — the editor
+        /// filters by the typed prefix locally.</summary>
+        public bool TryGetCompletions(string path, string text, int offset,
+            out List<ADKOM.TextEditor.CompletionItem> items)
+        {
+            items = null;
+            var (model, tree) = GetModel(path, text);
+            if (model == null) return false;
+            var root = tree.GetRoot();
+            offset = Math.Max(0, Math.Min(offset, root.FullSpan.End));
+
+            IEnumerable<ISymbol> found;
+            var lhs = MemberAccessLhs(root, offset);
+            if (lhs != null)
+            {
+                var sym = model.GetSymbolInfo(lhs).Symbol
+                    ?? model.GetSymbolInfo(lhs).CandidateSymbols.FirstOrDefault();
+                if (sym is INamespaceSymbol ns)
+                    found = ns.GetMembers().Where(m =>
+                        m is INamespaceSymbol ||
+                        (m is INamedTypeSymbol nt && model.IsAccessible(offset, nt)));
+                else if (sym is ITypeSymbol typeRef)      // "Debug." — static context
+                    found = StaticMembers(model, offset, typeRef);
+                else
+                {
+                    var type = model.GetTypeInfo(lhs).Type; // "myVar." — instance context
+                    if (type == null) return false;
+                    found = InstanceMembers(model, offset, type);
+                }
+            }
+            else
+            {
+                found = model.LookupSymbols(offset);      // everything in scope
+            }
+
+            // Dedupe by name (overload groups collapse to one row with a count).
+            var byName = new Dictionary<string, (ISymbol first, int n)>(StringComparer.Ordinal);
+            foreach (var s in found)
+            {
+                if (s.IsImplicitlyDeclared || !s.CanBeReferencedByName) continue;
+                if (s.Name.Length == 0 || s.Name[0] == '<') continue;
+                if (byName.TryGetValue(s.Name, out var g)) byName[s.Name] = (g.first, g.n + 1);
+                else byName[s.Name] = (s, 1);
+                if (byName.Count > 5000) break;
+            }
+            if (byName.Count == 0) return false;
+
+            var result = new List<ADKOM.TextEditor.CompletionItem>(byName.Count);
+            var fmt = SymbolDisplayFormat.MinimallyQualifiedFormat;
+            foreach (var kv in byName)
+            {
+                string detail;
+                try
+                {
+                    var s = kv.Value.first;
+                    detail = s is INamespaceSymbol ? "namespace"
+                        : s is INamedTypeSymbol nt ? nt.TypeKind.ToString().ToLowerInvariant()
+                        : s.ToDisplayString(fmt);
+                    if (detail.Length > 64) detail = detail.Substring(0, 63) + "…";
+                    if (kv.Value.n > 1) detail += " (+" + (kv.Value.n - 1) + ")";
+                }
+                catch (Exception) { detail = null; }
+                result.Add(new ADKOM.TextEditor.CompletionItem
+                {
+                    Insert = kv.Key,
+                    Display = kv.Key,
+                    Detail = detail,
+                    Kind = Map(kv.Value.first)
+                });
+            }
+            result.Sort((a, b) => string.Compare(a.Display, b.Display, StringComparison.OrdinalIgnoreCase));
+            items = result;
+            return true;
+        }
+
+        /// <summary>The expression left of the '.' when <paramref name="offset"/>
+        /// sits right after a dot or inside the member name being typed.</summary>
+        static Microsoft.CodeAnalysis.CSharp.Syntax.ExpressionSyntax MemberAccessLhs(SyntaxNode root, int offset)
+        {
+            var token = root.FindToken(Math.Max(0, offset - 1));
+            if (token.IsKind(SyntaxKind.DotToken))
+            {
+                if (token.Parent is Microsoft.CodeAnalysis.CSharp.Syntax.MemberAccessExpressionSyntax ma) return ma.Expression;
+                if (token.Parent is Microsoft.CodeAnalysis.CSharp.Syntax.QualifiedNameSyntax qn) return qn.Left;
+                return null;
+            }
+            if (token.IsKind(SyntaxKind.IdentifierToken) &&
+                token.Parent is Microsoft.CodeAnalysis.CSharp.Syntax.SimpleNameSyntax sn)
+            {
+                if (sn.Parent is Microsoft.CodeAnalysis.CSharp.Syntax.MemberAccessExpressionSyntax ma && ma.Name == sn) return ma.Expression;
+                if (sn.Parent is Microsoft.CodeAnalysis.CSharp.Syntax.QualifiedNameSyntax qn && qn.Right == sn) return qn.Left;
+            }
+            return null;
+        }
+
+        static IEnumerable<ISymbol> StaticMembers(SemanticModel model, int offset, ITypeSymbol type)
+        {
+            for (var t = type; t != null; t = t.BaseType)
+                foreach (var m in t.GetMembers())
+                    if ((m.IsStatic || m is INamedTypeSymbol || t.TypeKind == TypeKind.Enum) &&
+                        model.IsAccessible(offset, m))
+                        yield return m;
+        }
+
+        static IEnumerable<ISymbol> InstanceMembers(SemanticModel model, int offset, ITypeSymbol type)
+        {
+            for (var t = type; t != null; t = t.BaseType)
+                foreach (var m in t.GetMembers())
+                    if (!m.IsStatic && !(m is ITypeSymbol) && model.IsAccessible(offset, m))
+                        yield return m;
         }
 
         // --- "From metadata" stub view ---

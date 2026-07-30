@@ -1819,14 +1819,16 @@ namespace ADKOM.TextEditor
                         e.StopPropagation();
                         return;
                     }
+                    // '.' triggers member IntelliSense when semantics are wired.
+                    bool triggers = IsWordCharUndo(c) || (c == '.' && requestSemanticCompletions != null);
                     if (EditorConfig.AutoCloseBrackets && HandleAutoClose(c))
                     {
-                        if (IsWordCharUndo(c)) ShowCompletion(manual: false); else HideCompletion();
+                        if (triggers) ShowCompletion(manual: false); else HideCompletion();
                         e.StopPropagation();
                         return;
                     }
                     InsertText(c.ToString(), typing: true);
-                    if (IsWordCharUndo(c)) ShowCompletion(manual: false); else HideCompletion();
+                    if (triggers) ShowCompletion(manual: false); else HideCompletion();
                     e.StopPropagation();
                 }
                 return;

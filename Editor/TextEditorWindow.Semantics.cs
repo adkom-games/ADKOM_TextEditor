@@ -54,6 +54,37 @@ namespace ADKOM.TextEditor
             });
         }
 
+        /// <summary>IntelliSense back end for the completion popup: resolves
+        /// the candidates at <paramref name="offset"/> on a background thread
+        /// and posts them back to the main thread. Deliberately silent when
+        /// semantics are unavailable — the popup then runs word-based only
+        /// (the callback is simply never invoked).</summary>
+        void RequestSemanticCompletions(int offset, System.Action<List<CompletionItem>> onDone)
+        {
+            if (!EditorConfig.SemanticsEnabled) return;
+            var provider = SemanticServices.Provider as ISemanticCompletion;
+            string path = SemanticContextPath;
+            if (provider == null || path == null ||
+                (Active.HasFile && !Active.FilePath.EndsWith(".cs", System.StringComparison.OrdinalIgnoreCase)))
+                return;
+            string text = _code.value;
+            var ctx = _mainCtx;
+            System.Threading.Tasks.Task.Run(() =>
+            {
+                List<CompletionItem> items = null;
+                try { provider.TryGetCompletions(path, text, offset, out items); }
+                catch (System.Exception ex)
+                {
+                    AteConsole.Warn("[ADKOM Text Editor] Completion query failed: " + ex.Message);
+                }
+                ctx.Post(_ =>
+                {
+                    if (this == null || _code == null || _code.panel == null) return;
+                    onDone(items);
+                }, null);
+            });
+        }
+
         /// <summary>Go to Definition at (line, col) — Ctrl+Click / F12 / Ctrl+B.
         /// Requires the semantics module; resolved on a background thread.</summary>
         void NavigateToDefinition(int line, int col)
