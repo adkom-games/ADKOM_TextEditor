@@ -1256,6 +1256,7 @@ namespace ADKOM.TextEditor
             RefreshBracketMatch(firstRow, visible);
             RefreshExtraCarets(firstRow, visible);
             RefreshIndentGuides(firstRow, visible);
+            RefreshDiagnostics(firstRow, visible);
             RefreshCaret();
         }
 
@@ -1566,7 +1567,8 @@ namespace ADKOM.TextEditor
         void UpdateLinkHover(Vector2 worldPos)
         {
             HitTest(worldPos, out int line, out int col);
-            if (TryGetLinkAt(line, col, out string url))
+            string diag = DiagnosticAt(line, col);
+            if (TryGetLinkAt(line, col, out string url) || diag != null)
             {
                 if (_linkTip == null)
                 {
@@ -1585,8 +1587,20 @@ namespace ADKOM.TextEditor
                     _linkTip.style.fontSize = 10;
                     Add(_linkTip);
                 }
-                string shown = url.Length > 60 ? url.Substring(0, 57) + "..." : url;
-                _linkTip.text = string.Format(L10n.Tr("Ctrl+Click to open {0}"), shown);
+                if (diag != null)
+                {
+                    // Diagnostics outrank link hints; wrap long compiler messages.
+                    _linkTip.text = diag.Length > 200 ? diag.Substring(0, 197) + "..." : diag;
+                    _linkTip.style.whiteSpace = WhiteSpace.Normal;
+                    _linkTip.style.maxWidth = 520;
+                }
+                else
+                {
+                    string shown = url.Length > 60 ? url.Substring(0, 57) + "..." : url;
+                    _linkTip.text = string.Format(L10n.Tr("Ctrl+Click to open {0}"), shown);
+                    _linkTip.style.whiteSpace = WhiteSpace.NoWrap;
+                    _linkTip.style.maxWidth = StyleKeyword.None;
+                }
                 var local = this.WorldToLocal(worldPos);
                 _linkTip.style.left = Mathf.Max(0, local.x + 12);
                 _linkTip.style.top = Mathf.Max(0, local.y - 26);
