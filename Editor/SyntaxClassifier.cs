@@ -46,6 +46,8 @@ namespace ADKOM.TextEditor
     {
         static readonly CSharpClassifier CSharp = new CSharpClassifier();
         static readonly MarkdownClassifier Markdown = new MarkdownClassifier();
+        static readonly JsonClassifier Json = new JsonClassifier();
+        static readonly ShaderClassifier Shader = new ShaderClassifier();
 
         public static ISyntaxClassifier ForPath(string path)
         {
@@ -54,6 +56,13 @@ namespace ADKOM.TextEditor
             {
                 ".cs" => CSharp,
                 ".md" => Markdown,
+                ".json" => Json,
+                ".asmdef" => Json,
+                ".asmref" => Json,
+                ".shader" => Shader,
+                ".hlsl" => Shader,
+                ".cginc" => Shader,
+                ".compute" => Shader,
                 _ => null
             };
         }
