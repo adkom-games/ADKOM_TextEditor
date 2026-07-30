@@ -893,6 +893,13 @@ namespace ADKOM.TextEditor
             title.AddToClassList("settings-title");
             _settingsPane.Add(title);
 
+            // Group the flat list under section headers.
+            void Section(string t) => _settingsPane.Add(new Label(L10n.Tr(t))
+            {
+                style = { unityFontStyleAndWeight = FontStyle.Bold, marginTop = 12, marginBottom = 2, opacity = 0.8f }
+            });
+
+            Section("Appearance");
             var themeNames = new List<string>();
             foreach (var t in HighlightTheme.All) themeNames.Add(t.Name);
             _settingsTheme = new PopupField<string>(L10n.Tr("Color Theme"), themeNames, CurrentTheme.Name);
@@ -927,6 +934,7 @@ namespace ADKOM.TextEditor
             });
             _settingsPane.Add(_settingsWrap);
 
+            Section("Editor");
             _settingsTabSize = new IntegerField(L10n.Tr("Tab Size")) { value = EditorConfig.TabSize };
             _settingsTabSize.RegisterValueChangedCallback(e =>
             {
@@ -947,6 +955,7 @@ namespace ADKOM.TextEditor
             fontNames.AddRange(Font.GetOSInstalledFontNames().OrderBy(n => n));
             string currentFont = string.IsNullOrEmpty(EditorConfig.FontName) ? fontNames[0]
                 : (fontNames.Contains(EditorConfig.FontName) ? EditorConfig.FontName : fontNames[0]);
+            Section("Fonts");
             _settingsFont = new PopupField<string>(L10n.Tr("Font"), fontNames, currentFont);
             _settingsFont.RegisterValueChangedCallback(e =>
             {
@@ -974,6 +983,7 @@ namespace ADKOM.TextEditor
             string currentLabel = fallbackLabels[0];
             foreach (var kv in editors)
                 if (kv.Key == EditorConfig.FallbackEditorPath) currentLabel = kv.Value;
+            Section("Language & Tools");
             _settingsFallback = new PopupField<string>(L10n.Tr("External Fallback"), fallbackLabels, currentLabel);
             _settingsFallback.RegisterValueChangedCallback(e =>
             {
@@ -994,6 +1004,7 @@ namespace ADKOM.TextEditor
             _settingsSemantics.tooltip = L10n.Tr("Compiler-accurate colors and Go to Definition. If the project has no Roslyn, enabling installs the bundled MIT-licensed Roslyn assemblies (see THIRD-PARTY-NOTICES).");
             _settingsPane.Add(_settingsSemantics);
 
+            Section("Display");
             _settingsSmooth = new Toggle(L10n.Tr("Smooth Scrolling")) { value = EditorConfig.SmoothScrolling };
             _settingsSmooth.RegisterValueChangedCallback(e => EditorConfig.SmoothScrolling = e.newValue);
             _settingsSmooth.tooltip = L10n.Tr("Animate wheel scrolling instead of stepping line by line.");
@@ -1014,6 +1025,7 @@ namespace ADKOM.TextEditor
             _settingsTabColor.tooltip = L10n.Tr("Base color of the tab strip; each tab gets its own stable shade of it.");
             _settingsPane.Add(_settingsTabColor);
 
+            Section("Editing");
             _settingsAutoClose = new Toggle(L10n.Tr("Auto-Close Brackets")) { value = EditorConfig.AutoCloseBrackets };
             _settingsAutoClose.RegisterValueChangedCallback(e => EditorConfig.AutoCloseBrackets = e.newValue);
             _settingsAutoClose.tooltip = L10n.Tr("Typing ( [ { \" ' inserts the closing pair, closers type over, Backspace removes empty pairs, selections get wrapped.");
@@ -1024,6 +1036,7 @@ namespace ADKOM.TextEditor
             _settingsAutoReload.tooltip = L10n.Tr("When a file changes on disk and the buffer has no unsaved edits, reload it automatically instead of asking. Buffers with unsaved edits still ask.");
             _settingsPane.Add(_settingsAutoReload);
 
+            Section("AI");
             _settingsCopilot = new Toggle(L10n.Tr("GitHub Copilot (inline suggestions)")) { value = EditorConfig.CopilotEnabled };
             _settingsCopilot.tooltip = L10n.Tr("Ghost-text code suggestions from GitHub Copilot. Requires Node.js on this machine and your own Copilot subscription; the official Copilot Language Server is installed on first enable. Tab accepts a suggestion, Escape dismisses it.");
             _settingsCopilot.RegisterValueChangedCallback(e =>
@@ -1063,6 +1076,7 @@ namespace ADKOM.TextEditor
                 _settingsPane.Add(_settingsUnityAiRow);
             }
 
+            Section("Files & Saving");
             _settingsTrimSave = new Toggle(L10n.Tr("Trim Trailing Whitespace on Save")) { value = EditorConfig.TrimTrailingOnSave };
             _settingsTrimSave.RegisterValueChangedCallback(e => EditorConfig.TrimTrailingOnSave = e.newValue);
             _settingsTrimSave.tooltip = L10n.Tr("Remove spaces and tabs at line ends when saving (per project).");
@@ -1082,6 +1096,7 @@ namespace ADKOM.TextEditor
             _settingsRecentMax.tooltip = L10n.Tr("How many entries File → Recent Files keeps (1-30).");
             _settingsPane.Add(_settingsRecentMax);
 
+            Section("Updates");
             _settingsAutoUpdate = new Toggle(L10n.Tr("Automatic Updates")) { value = EditorConfig.AutoUpdate };
             _settingsAutoUpdate.RegisterValueChangedCallback(e => EditorConfig.AutoUpdate = e.newValue);
             _settingsAutoUpdate.tooltip = L10n.Tr("Check GitHub for new releases and offer to install them.");

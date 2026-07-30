@@ -741,6 +741,33 @@ msgstr "转到"
 msgid "Bookmarks"
 msgstr "书签"
 
+msgid "Appearance"
+msgstr "外观"
+
+msgid "Editor"
+msgstr "编辑器"
+
+msgid "Fonts"
+msgstr "字体"
+
+msgid "Language & Tools"
+msgstr "语言与工具"
+
+msgid "Display"
+msgstr "显示"
+
+msgid "Editing"
+msgstr "编辑"
+
+msgid "AI"
+msgstr "AI"
+
+msgid "Files & Saving"
+msgstr "文件与保存"
+
+msgid "Updates"
+msgstr "更新"
+
 msgid "{0}  ({1} of {2} shown)"
 msgstr "{0}  (显示 {2} 项中的 {1} 项)"
 

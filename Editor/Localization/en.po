@@ -743,6 +743,33 @@ msgstr "Go To"
 msgid "Bookmarks"
 msgstr "Bookmarks"
 
+msgid "Appearance"
+msgstr "Appearance"
+
+msgid "Editor"
+msgstr "Editor"
+
+msgid "Fonts"
+msgstr "Fonts"
+
+msgid "Language & Tools"
+msgstr "Language & Tools"
+
+msgid "Display"
+msgstr "Display"
+
+msgid "Editing"
+msgstr "Editing"
+
+msgid "AI"
+msgstr "AI"
+
+msgid "Files & Saving"
+msgstr "Files & Saving"
+
+msgid "Updates"
+msgstr "Updates"
+
 msgid "{0}  ({1} of {2} shown)"
 msgstr "{0}  ({1} of {2} shown)"
 
