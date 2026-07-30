@@ -1476,6 +1476,10 @@ namespace ADKOM.TextEditor
                     handled = true; // Copilot ghost text accepts on Tab
                 else if (_code != null && _code.CompletionVisible)
                     handled = false; // the completion popup accepts on Tab
+                else if (_code != null && _code.SnippetTabJump(e.shiftKey))
+                    handled = true; // active snippet session: cycle its stops
+                else if (_code != null && !e.shiftKey && _code.TryExpandSnippetAtCaret())
+                    handled = true; // trigger word + Tab expands the snippet
                 else
                 {
                     if (e.shiftKey) UnindentSelection(); else InsertTab();

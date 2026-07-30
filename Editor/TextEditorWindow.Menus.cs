@@ -220,6 +220,14 @@ namespace ADKOM.TextEditor
             }
             AteZMachine.ZMachineGame.AddMenuItems(m, L10n.Tr("Z-Machine (Zork)") + "/", this);
             m.AddSeparator("");
+            // Snippets are one plain-text file the user edits in ATE itself;
+            // saving it hot-reloads the set (timestamp watch in SnippetStore).
+            m.AddItem(new GUIContent(L10n.Tr("Edit Snippets...")), false, () =>
+            {
+                var unused = SnippetStore.All; // materializes the default file on first use
+                OpenExternal(SnippetStore.SnippetsPath, 1, 1);
+            });
+            m.AddSeparator("");
             m.AddItem(new GUIContent(WithSc("Options...", Dsp("settings"))), false, OpenSettingsPage);
         }
 

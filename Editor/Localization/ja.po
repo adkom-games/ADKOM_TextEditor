@@ -1103,3 +1103,9 @@ msgstr "なし"
 
 msgid "none seen"
 msgstr "未確認"
+
+msgid "snippet"
+msgstr "スニペット"
+
+msgid "Edit Snippets..."
+msgstr "スニペットを編集..."

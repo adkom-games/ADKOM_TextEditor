@@ -93,6 +93,7 @@ namespace ADKOM.TextEditor
         public string Display;  // list label (usually == Insert)
         public string Detail;   // dimmed signature/type hint (may be null)
         public TokenClass Kind; // colors the label like the code it completes
+        public string Snippet;  // non-null: accepting expands this snippet body
     }
 
     /// <summary>Optional provider capability: compiler-accurate completions

@@ -1105,3 +1105,9 @@ msgstr "none"
 
 msgid "none seen"
 msgstr "none seen"
+
+msgid "snippet"
+msgstr "snippet"
+
+msgid "Edit Snippets..."
+msgstr "Edit Snippets..."
