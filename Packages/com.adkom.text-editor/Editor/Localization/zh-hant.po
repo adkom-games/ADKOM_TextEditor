@@ -1142,3 +1142,9 @@ msgstr "應用程式"
 
 msgid "Rendering"
 msgstr "轉譯"
+
+msgid "Auto-Save on Focus Loss"
+msgstr "失去焦點時自動儲存"
+
+msgid "Save every dirty file-backed document when the ATE window loses focus. Untitled buffers are skipped (session persistence still protects them). Per project."
+msgstr "當 ATE 視窗失去焦點時，儲存所有已修改的檔案文件。未命名緩衝區將被跳過（工作階段持續性仍會保護它們）。依專案設定。"

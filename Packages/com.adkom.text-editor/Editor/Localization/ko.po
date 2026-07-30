@@ -1142,3 +1142,9 @@ msgstr "애플리케이션"
 
 msgid "Rendering"
 msgstr "렌더링"
+
+msgid "Auto-Save on Focus Loss"
+msgstr "포커스 해제 시 자동 저장"
+
+msgid "Save every dirty file-backed document when the ATE window loses focus. Untitled buffers are skipped (session persistence still protects them). Per project."
+msgstr "ATE 창이 포커스를 잃을 때 수정된 파일 문서를 모두 저장합니다. 제목 없는 버퍼는 건너뜁니다(세션 지속성이 계속 보호합니다). 프로젝트별."

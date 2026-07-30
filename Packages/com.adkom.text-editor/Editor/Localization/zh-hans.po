@@ -1142,3 +1142,9 @@ msgstr "应用程序"
 
 msgid "Rendering"
 msgstr "渲染"
+
+msgid "Auto-Save on Focus Loss"
+msgstr "失去焦点时自动保存"
+
+msgid "Save every dirty file-backed document when the ATE window loses focus. Untitled buffers are skipped (session persistence still protects them). Per project."
+msgstr "当 ATE 窗口失去焦点时，保存所有已修改的文件文档。未命名缓冲区将被跳过（会话持久化仍会保护它们）。按项目设置。"
