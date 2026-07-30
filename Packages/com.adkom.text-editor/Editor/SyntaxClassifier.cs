@@ -158,6 +158,18 @@ namespace ADKOM.TextEditor
             out List<GenerationCandidate> candidates);
     }
 
+    /// <summary>Optional provider capability: identify the runtime TYPE the
+    /// symbol at a position belongs to, so reflection features (the inspector,
+    /// static-method execution) can find it in the loaded assemblies.</summary>
+    public interface ISemanticSymbolInfo
+    {
+        /// <summary>CLR metadata name (Namespace.Outer+Nested) of the type
+        /// at — or containing — the symbol at <paramref name="offset"/>, and
+        /// its assembly's simple name.</summary>
+        bool TryGetTypeAt(string path, string text, int offset,
+            out string metadataName, out string assemblyName);
+    }
+
     /// <summary>One occurrence of the symbol under the caret, for read/write
     /// reference highlighting.</summary>
     public struct SymbolOccurrence

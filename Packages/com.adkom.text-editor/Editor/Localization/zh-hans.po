@@ -1229,3 +1229,42 @@ msgstr "{1} 个文件中的 {0} 个替换"
 
 msgid "Invalid regex: {0}"
 msgstr "无效的正则表达式: {0}"
+
+msgid "Inspect Symbol..."
+msgstr "检查符号..."
+
+msgid "Inspect Type"
+msgstr "检查类型"
+
+msgid "Type not found: {0}"
+msgstr "未找到类型: {0}"
+
+msgid "Static Fields & Properties"
+msgstr "静态字段和属性"
+
+msgid "Static Methods (parameterless)"
+msgstr "静态方法（无参数）"
+
+msgid "Scene Instances"
+msgstr "场景实例"
+
+msgid "(none)"
+msgstr "（无）"
+
+msgid "(no instances in the loaded scenes)"
+msgstr "（已加载的场景中没有实例）"
+
+msgid "Run"
+msgstr "运行"
+
+msgid "Refresh"
+msgstr "刷新"
+
+msgid "Ran {0}.{1}() → {2}"
+msgstr "已运行 {0}.{1}() → {2}"
+
+msgid "{0} threw: {1}"
+msgstr "{0} 引发异常: {1}"
+
+msgid "No type at the caret."
+msgstr "光标处没有类型。"

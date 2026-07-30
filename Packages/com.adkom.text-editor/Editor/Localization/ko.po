@@ -1229,3 +1229,42 @@ msgstr "{1}개 파일에서 {0}개 바꿈"
 
 msgid "Invalid regex: {0}"
 msgstr "잘못된 정규식: {0}"
+
+msgid "Inspect Symbol..."
+msgstr "심볼 검사..."
+
+msgid "Inspect Type"
+msgstr "형식 검사"
+
+msgid "Type not found: {0}"
+msgstr "형식을 찾을 수 없습니다: {0}"
+
+msgid "Static Fields & Properties"
+msgstr "정적 필드 및 속성"
+
+msgid "Static Methods (parameterless)"
+msgstr "정적 메서드(매개변수 없음)"
+
+msgid "Scene Instances"
+msgstr "씬 인스턴스"
+
+msgid "(none)"
+msgstr "(없음)"
+
+msgid "(no instances in the loaded scenes)"
+msgstr "(로드된 씬에 인스턴스가 없습니다)"
+
+msgid "Run"
+msgstr "실행"
+
+msgid "Refresh"
+msgstr "새로 고침"
+
+msgid "Ran {0}.{1}() → {2}"
+msgstr "{0}.{1}() 실행 → {2}"
+
+msgid "{0} threw: {1}"
+msgstr "{0}에서 예외 발생: {1}"
+
+msgid "No type at the caret."
+msgstr "캐럿 위치에 형식이 없습니다."

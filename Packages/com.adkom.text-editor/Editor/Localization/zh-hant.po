@@ -1229,3 +1229,42 @@ msgstr "{1} 個檔案中的 {0} 個取代"
 
 msgid "Invalid regex: {0}"
 msgstr "無效的規則運算式: {0}"
+
+msgid "Inspect Symbol..."
+msgstr "檢查符號..."
+
+msgid "Inspect Type"
+msgstr "檢查類型"
+
+msgid "Type not found: {0}"
+msgstr "找不到類型: {0}"
+
+msgid "Static Fields & Properties"
+msgstr "靜態欄位與屬性"
+
+msgid "Static Methods (parameterless)"
+msgstr "靜態方法（無參數）"
+
+msgid "Scene Instances"
+msgstr "場景執行個體"
+
+msgid "(none)"
+msgstr "（無）"
+
+msgid "(no instances in the loaded scenes)"
+msgstr "（已載入的場景中沒有執行個體）"
+
+msgid "Run"
+msgstr "執行"
+
+msgid "Refresh"
+msgstr "重新整理"
+
+msgid "Ran {0}.{1}() → {2}"
+msgstr "已執行 {0}.{1}() → {2}"
+
+msgid "{0} threw: {1}"
+msgstr "{0} 擲回例外狀況: {1}"
+
+msgid "No type at the caret."
+msgstr "游標處沒有類型。"

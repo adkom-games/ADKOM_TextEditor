@@ -119,6 +119,33 @@ namespace ADKOM.TextEditor
             menu.ShowAsContext();
         }
 
+        /// <summary>Opens the reflection inspector for the type at (line, col):
+        /// semantics resolve the exact metadata name when available, with the
+        /// word under the caret as a simple-name fallback.</summary>
+        internal void InspectSymbolAtCaret(int line, int col)
+        {
+            if (!CanEditDoc) return;
+            string word = _code.WordAt(line, col, select: false);
+            string meta = null, asmName = null;
+            var info = EditorConfig.SemanticsEnabled
+                ? SemanticServices.Provider as ISemanticSymbolInfo : null;
+            if (info != null && SemanticContextPath != null)
+            {
+                try
+                {
+                    info.TryGetTypeAt(SemanticContextPath, _code.value,
+                        _code.LineColToIndex(line, col), out meta, out asmName);
+                }
+                catch (System.Exception) { /* fall back to the word */ }
+            }
+            if (meta == null && string.IsNullOrEmpty(word))
+            {
+                PostStatus(L10n.Tr("No type at the caret."));
+                return;
+            }
+            AteInspectorWindow.Open(meta, asmName, word);
+        }
+
         // --- Read/write occurrence highlighting ---
 
         int _occLastCaret = -1, _occLastVersion = -1;
