@@ -1280,3 +1280,90 @@ msgstr "'{0}'을(를) 사용자 사전에 추가"
 
 msgid "Add '{0}' to Project Dictionary"
 msgstr "'{0}'을(를) 프로젝트 사전에 추가"
+
+msgid "Git Panel..."
+msgstr "Git 패널..."
+
+msgid "Blame Current File"
+msgstr "현재 파일 Blame"
+
+msgid "File History..."
+msgstr "파일 히스토리..."
+
+msgid "Not inside a git repository."
+msgstr "git 리포지토리 안이 아닙니다."
+
+msgid "Running git blame…"
+msgstr "git blame 실행 중…"
+
+msgid "No blame available (not in a git repository?)."
+msgstr "Blame을 사용할 수 없습니다(git 리포지토리가 아닌가요?)."
+
+msgid "Blame {0}"
+msgstr "Blame {0}"
+
+msgid "Reading history…"
+msgstr "히스토리를 읽는 중…"
+
+msgid "No history available (not in a git repository?)."
+msgstr "히스토리를 사용할 수 없습니다(git 리포지토리가 아닌가요?)."
+
+msgid "Could not read that revision."
+msgstr "해당 리비전을 읽을 수 없습니다."
+
+msgid "Changes"
+msgstr "변경 사항"
+
+msgid "Commit message"
+msgstr "커밋 메시지"
+
+msgid "Commit"
+msgstr "커밋"
+
+msgid "Push"
+msgstr "푸시"
+
+msgid "Branch History"
+msgstr "브랜치 히스토리"
+
+msgid "Toggle vertical / horizontal layout"
+msgstr "세로/가로 레이아웃 전환"
+
+msgid "Working…"
+msgstr "작업 중…"
+
+msgid "Working tree clean."
+msgstr "작업 트리가 깨끗합니다."
+
+msgid "{0} changed file(s)."
+msgstr "{0}개 파일이 변경되었습니다."
+
+msgid "Staged for commit"
+msgstr "커밋을 위해 스테이징됨"
+
+msgid "Enter a commit message."
+msgstr "커밋 메시지를 입력하세요."
+
+msgid "Checkout {0}"
+msgstr "{0} 체크아웃"
+
+msgid "Checkout {0} (working tree not clean)"
+msgstr "{0} 체크아웃(작업 트리가 깨끗하지 않음)"
+
+msgid "Create Branch Here..."
+msgstr "여기에 브랜치 만들기..."
+
+msgid "Created branch {0}."
+msgstr "브랜치 {0}을(를) 만들었습니다."
+
+msgid "Checkout Commit (detached)"
+msgstr "커밋 체크아웃(분리됨)"
+
+msgid "Checkout Commit (working tree not clean)"
+msgstr "커밋 체크아웃(작업 트리가 깨끗하지 않음)"
+
+msgid "Copy Hash"
+msgstr "해시 복사"
+
+msgid "Git"
+msgstr "Git"

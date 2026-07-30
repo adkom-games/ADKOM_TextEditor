@@ -37,7 +37,7 @@ for the release snapshot and [[Project Log]] for per-item history.
 | 14 | History navigation (visual undo/redo timeline) | 1.5 | **Done** (dc37c6c) |
 | 15 | Error highlighting | 1 | **Done** (7dbf05c) |
 | 16 | Read/write reference highlighting | 1 | **Done** (c049b7e) |
-| 17 | Git integration + branch-history tree | 5 | Pending |
+| 17 | Git integration + branch-history tree | 5 | **Done** (gutter markers, blame, file history, stage/commit/push panel, interactive V⇄H branch graph) |
 | 18 | Clean up the Edit menu | 0 | **Done** (be4139e, approved) |
 | 19 | Organize Settings | 0 | **Done** (27e7047, approved) |
 | 20 | Optional spell checking | 6 | **Done** (SCOWL bundled, Hunspell imports, global + project dictionaries) |

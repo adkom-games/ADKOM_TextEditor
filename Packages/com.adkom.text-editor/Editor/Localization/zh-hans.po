@@ -1280,3 +1280,90 @@ msgstr "将 '{0}' 添加到用户词典"
 
 msgid "Add '{0}' to Project Dictionary"
 msgstr "将 '{0}' 添加到项目词典"
+
+msgid "Git Panel..."
+msgstr "Git 面板..."
+
+msgid "Blame Current File"
+msgstr "当前文件 Blame"
+
+msgid "File History..."
+msgstr "文件历史..."
+
+msgid "Not inside a git repository."
+msgstr "不在 git 仓库内。"
+
+msgid "Running git blame…"
+msgstr "正在运行 git blame…"
+
+msgid "No blame available (not in a git repository?)."
+msgstr "无法获取 blame（不在 git 仓库中？）。"
+
+msgid "Blame {0}"
+msgstr "Blame {0}"
+
+msgid "Reading history…"
+msgstr "正在读取历史…"
+
+msgid "No history available (not in a git repository?)."
+msgstr "无法获取历史（不在 git 仓库中？）。"
+
+msgid "Could not read that revision."
+msgstr "无法读取该修订版本。"
+
+msgid "Changes"
+msgstr "更改"
+
+msgid "Commit message"
+msgstr "提交消息"
+
+msgid "Commit"
+msgstr "提交"
+
+msgid "Push"
+msgstr "推送"
+
+msgid "Branch History"
+msgstr "分支历史"
+
+msgid "Toggle vertical / horizontal layout"
+msgstr "切换垂直/水平布局"
+
+msgid "Working…"
+msgstr "处理中…"
+
+msgid "Working tree clean."
+msgstr "工作树是干净的。"
+
+msgid "{0} changed file(s)."
+msgstr "{0} 个文件已更改。"
+
+msgid "Staged for commit"
+msgstr "已暂存以供提交"
+
+msgid "Enter a commit message."
+msgstr "请输入提交消息。"
+
+msgid "Checkout {0}"
+msgstr "检出 {0}"
+
+msgid "Checkout {0} (working tree not clean)"
+msgstr "检出 {0}（工作树不干净）"
+
+msgid "Create Branch Here..."
+msgstr "在此创建分支..."
+
+msgid "Created branch {0}."
+msgstr "已创建分支 {0}。"
+
+msgid "Checkout Commit (detached)"
+msgstr "检出提交（分离头指针）"
+
+msgid "Checkout Commit (working tree not clean)"
+msgstr "检出提交（工作树不干净）"
+
+msgid "Copy Hash"
+msgstr "复制哈希"
+
+msgid "Git"
+msgstr "Git"

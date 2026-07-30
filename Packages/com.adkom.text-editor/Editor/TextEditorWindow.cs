@@ -522,6 +522,8 @@ namespace ADKOM.TextEditor
             // underlines; the pass repopulates them for the new context.
             _code?.ClearDiagnostics();
             if (_code != null) _code.spellEnabled = EditorConfig.SpellCheckEnabled;
+            _code?.ApplyGitMarks(null); // stale marks belong to the previous doc
+            RefreshGitMarksAsync();
             ScheduleSemanticPass();
         }
 
@@ -1340,6 +1342,7 @@ namespace ADKOM.TextEditor
                 _code?.BreakUndoGroup(); // undo-past-save is a deliberate step
                 if (saveAs && Active.HasFile) EditorConfig.AddRecentFile(Path.GetFullPath(Active.FilePath));
                 RefreshFormatter(); // Save As can change the extension/language
+                RefreshGitMarksAsync(); // the diff against HEAD just changed
                 RebuildTabs();
                 UpdateTitle();
                 UpdateStatus();
@@ -1391,6 +1394,7 @@ namespace ADKOM.TextEditor
             // Inactive tabs are checked when they are activated (SwitchTo).
             if (_docs == null || _docs.Count == 0 || _active >= _docs.Count) return;
             CheckExternalChange(Active); // non-modal banner
+            RefreshGitMarksAsync();      // commits/pulls may have moved HEAD
         }
 
         void SetUpdatingOverlay(bool updating)

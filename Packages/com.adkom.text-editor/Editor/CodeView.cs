@@ -1250,6 +1250,7 @@ namespace ADKOM.TextEditor
             }
 
             RefreshGutter(firstRow, visible, scrollY);
+            RefreshGitMarks(firstRow, visible, scrollY);
             _minimap?.MarkDirtyRepaint();
             RefreshOverlayBg(firstRow, visible);
             RefreshSelection(firstRow, visible);

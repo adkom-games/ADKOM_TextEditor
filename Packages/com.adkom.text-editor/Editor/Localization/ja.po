@@ -1280,3 +1280,90 @@ msgstr "'{0}' をユーザー辞書に追加"
 
 msgid "Add '{0}' to Project Dictionary"
 msgstr "'{0}' をプロジェクト辞書に追加"
+
+msgid "Git Panel..."
+msgstr "Git パネル..."
+
+msgid "Blame Current File"
+msgstr "現在のファイルの Blame"
+
+msgid "File History..."
+msgstr "ファイル履歴..."
+
+msgid "Not inside a git repository."
+msgstr "git リポジトリの中ではありません。"
+
+msgid "Running git blame…"
+msgstr "git blame を実行中…"
+
+msgid "No blame available (not in a git repository?)."
+msgstr "Blame を取得できません（git リポジトリ外？）。"
+
+msgid "Blame {0}"
+msgstr "Blame {0}"
+
+msgid "Reading history…"
+msgstr "履歴を読み込み中…"
+
+msgid "No history available (not in a git repository?)."
+msgstr "履歴を取得できません（git リポジトリ外？）。"
+
+msgid "Could not read that revision."
+msgstr "そのリビジョンを読み取れませんでした。"
+
+msgid "Changes"
+msgstr "変更"
+
+msgid "Commit message"
+msgstr "コミットメッセージ"
+
+msgid "Commit"
+msgstr "コミット"
+
+msgid "Push"
+msgstr "プッシュ"
+
+msgid "Branch History"
+msgstr "ブランチ履歴"
+
+msgid "Toggle vertical / horizontal layout"
+msgstr "縦 / 横レイアウトを切り替え"
+
+msgid "Working…"
+msgstr "処理中…"
+
+msgid "Working tree clean."
+msgstr "作業ツリーはクリーンです。"
+
+msgid "{0} changed file(s)."
+msgstr "{0} 個のファイルが変更されています。"
+
+msgid "Staged for commit"
+msgstr "コミット対象（ステージ済み）"
+
+msgid "Enter a commit message."
+msgstr "コミットメッセージを入力してください。"
+
+msgid "Checkout {0}"
+msgstr "{0} をチェックアウト"
+
+msgid "Checkout {0} (working tree not clean)"
+msgstr "{0} をチェックアウト（作業ツリーがクリーンではありません）"
+
+msgid "Create Branch Here..."
+msgstr "ここにブランチを作成..."
+
+msgid "Created branch {0}."
+msgstr "ブランチ {0} を作成しました。"
+
+msgid "Checkout Commit (detached)"
+msgstr "コミットをチェックアウト（デタッチド）"
+
+msgid "Checkout Commit (working tree not clean)"
+msgstr "コミットをチェックアウト（作業ツリーがクリーンではありません）"
+
+msgid "Copy Hash"
+msgstr "ハッシュをコピー"
+
+msgid "Git"
+msgstr "Git"

@@ -64,7 +64,7 @@ with the host project.
 | 0.12.3 — auto-map polish (per-room colours, from-node arrows, obstacle routing, zoom, revealed objects/connectors ◇, ▲/▼ up-down, grid push+relaxation layout; issues #34–#35; published 2026-07-29) | Done |
 | New-features campaign (newfeatures.md) Phase 0: #region fold+nav, Find-All-References filter, Edit-menu submenus, Settings sections (2026-07-30, unreleased) | Done |
 | New-features campaign Phase 1: IntelliSense (ISemanticCompletion), error underlines (ISemanticDiagnostics), read/write occurrence highlighting (ISemanticOccurrences) — all headless-verified (2026-07-30, unreleased) | Done |
-| New-features campaign Phases 2–6 (plan + statuses: [[New Features Plan]]): snippets ✓, History window ✓; generators, Find/Replace in Files, play-mode inspection, full Git + branch tree, spell check, JSON/Shader coloring | In progress |
+| New-features campaign Phases 2–6 COMPLETE (plan + statuses: [[New Features Plan]]): snippets, History window, generators, JSON/Shader coloring, auto-save, Find/Replace in Files (+global undo), reflection inspector (live values + run statics), full Git (markers/blame/history/stage/commit/push + interactive V⇄H branch tree), spell check (SCOWL). ALL 21 newfeatures.md items done 2026-07-30, unreleased — ships as 0.13.0 | Done |
 | More languages; custom themes | Future (roadmap) |
 
 ## Current work area

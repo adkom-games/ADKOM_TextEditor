@@ -1280,3 +1280,90 @@ msgstr "將 '{0}' 加入使用者字典"
 
 msgid "Add '{0}' to Project Dictionary"
 msgstr "將 '{0}' 加入專案字典"
+
+msgid "Git Panel..."
+msgstr "Git 面板..."
+
+msgid "Blame Current File"
+msgstr "目前檔案 Blame"
+
+msgid "File History..."
+msgstr "檔案歷史..."
+
+msgid "Not inside a git repository."
+msgstr "不在 git 存放庫內。"
+
+msgid "Running git blame…"
+msgstr "正在執行 git blame…"
+
+msgid "No blame available (not in a git repository?)."
+msgstr "無法取得 blame（不在 git 存放庫中？）。"
+
+msgid "Blame {0}"
+msgstr "Blame {0}"
+
+msgid "Reading history…"
+msgstr "正在讀取歷史…"
+
+msgid "No history available (not in a git repository?)."
+msgstr "無法取得歷史（不在 git 存放庫中？）。"
+
+msgid "Could not read that revision."
+msgstr "無法讀取該修訂版本。"
+
+msgid "Changes"
+msgstr "變更"
+
+msgid "Commit message"
+msgstr "認可訊息"
+
+msgid "Commit"
+msgstr "認可"
+
+msgid "Push"
+msgstr "推送"
+
+msgid "Branch History"
+msgstr "分支歷史"
+
+msgid "Toggle vertical / horizontal layout"
+msgstr "切換垂直/水平配置"
+
+msgid "Working…"
+msgstr "處理中…"
+
+msgid "Working tree clean."
+msgstr "工作樹是乾淨的。"
+
+msgid "{0} changed file(s)."
+msgstr "{0} 個檔案已變更。"
+
+msgid "Staged for commit"
+msgstr "已暫存以供認可"
+
+msgid "Enter a commit message."
+msgstr "請輸入認可訊息。"
+
+msgid "Checkout {0}"
+msgstr "簽出 {0}"
+
+msgid "Checkout {0} (working tree not clean)"
+msgstr "簽出 {0}（工作樹不乾淨）"
+
+msgid "Create Branch Here..."
+msgstr "在此建立分支..."
+
+msgid "Created branch {0}."
+msgstr "已建立分支 {0}。"
+
+msgid "Checkout Commit (detached)"
+msgstr "簽出認可（分離）"
+
+msgid "Checkout Commit (working tree not clean)"
+msgstr "簽出認可（工作樹不乾淨）"
+
+msgid "Copy Hash"
+msgstr "複製雜湊"
+
+msgid "Git"
+msgstr "Git"
