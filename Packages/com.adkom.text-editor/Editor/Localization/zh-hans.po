@@ -60,6 +60,33 @@ msgstr "撤销"
 msgid "Redo"
 msgstr "重做"
 
+msgid "History..."
+msgstr "历史记录..."
+
+msgid "Edit History"
+msgstr "编辑历史"
+
+msgid "{0}-caret edit"
+msgstr "{0} 光标编辑"
+
+msgid "Original (before recorded edits)"
+msgstr "原始状态（记录的编辑之前）"
+
+msgid "Restore to This Point"
+msgstr "恢复到此点"
+
+msgid "Open as New Tab"
+msgstr "在新标签页中打开"
+
+msgid "Copy to Clipboard"
+msgstr "复制到剪贴板"
+
+msgid "No edits recorded for this document yet."
+msgstr "此文档尚未记录任何编辑。"
+
+msgid "{0} past / {1} future edit steps"
+msgstr "过去 {0} / 未来 {1} 个编辑步骤"
+
 msgid "Cut"
 msgstr "剪切"
 

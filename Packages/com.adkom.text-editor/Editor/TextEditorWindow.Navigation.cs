@@ -114,6 +114,31 @@ namespace ADKOM.TextEditor
             Active.Bookmarks = shifted;
         }
 
+        // ---- History window plumbing ----
+
+        internal CodeView HistoryView => CanEditDoc ? _code : null;
+        internal object HistoryDocToken => CanEditDoc ? Active : null;
+        internal string HistoryDocName => HasDocs ? Active.DisplayName : string.Empty;
+
+        /// <summary>Walks the undo/redo stacks to a point on the timeline —
+        /// through the normal Undo()/Redo(), so the move itself stays
+        /// reversible.</summary>
+        internal void HistoryStep(int undoSteps, int redoSteps)
+        {
+            if (!CanEditDoc) return;
+            for (int i = 0; i < undoSteps; i++) _code.Undo();
+            for (int i = 0; i < redoSteps; i++) _code.Redo();
+        }
+
+        /// <summary>Opens a history snapshot as a read-only-ish virtual tab
+        /// (same C# highlighting as the source document when applicable).</summary>
+        internal void HistoryOpenSnapshot(string title, string content)
+        {
+            bool csharp = HasDocs && Active.HasFile &&
+                Active.FilePath.EndsWith(".cs", System.StringComparison.OrdinalIgnoreCase);
+            OpenVirtualDoc(title, content, csharp);
+        }
+
         void JumpTo(NavLoc loc)
         {
             int i = _docs.IndexOf(loc.Doc);

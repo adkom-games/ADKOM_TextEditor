@@ -62,6 +62,33 @@ msgstr "Undo"
 msgid "Redo"
 msgstr "Redo"
 
+msgid "History..."
+msgstr "History..."
+
+msgid "Edit History"
+msgstr "Edit History"
+
+msgid "{0}-caret edit"
+msgstr "{0}-caret edit"
+
+msgid "Original (before recorded edits)"
+msgstr "Original (before recorded edits)"
+
+msgid "Restore to This Point"
+msgstr "Restore to This Point"
+
+msgid "Open as New Tab"
+msgstr "Open as New Tab"
+
+msgid "Copy to Clipboard"
+msgstr "Copy to Clipboard"
+
+msgid "No edits recorded for this document yet."
+msgstr "No edits recorded for this document yet."
+
+msgid "{0} past / {1} future edit steps"
+msgstr "{0} past / {1} future edit steps"
+
 msgid "Cut"
 msgstr "Cut"
 

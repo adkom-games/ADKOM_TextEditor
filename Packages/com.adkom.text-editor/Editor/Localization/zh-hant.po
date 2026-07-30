@@ -60,6 +60,33 @@ msgstr "復原"
 msgid "Redo"
 msgstr "重做"
 
+msgid "History..."
+msgstr "歷史記錄..."
+
+msgid "Edit History"
+msgstr "編輯歷史"
+
+msgid "{0}-caret edit"
+msgstr "{0} 游標編輯"
+
+msgid "Original (before recorded edits)"
+msgstr "原始狀態（記錄的編輯之前）"
+
+msgid "Restore to This Point"
+msgstr "還原到此點"
+
+msgid "Open as New Tab"
+msgstr "在新分頁中開啟"
+
+msgid "Copy to Clipboard"
+msgstr "複製到剪貼簿"
+
+msgid "No edits recorded for this document yet."
+msgstr "此文件尚未記錄任何編輯。"
+
+msgid "{0} past / {1} future edit steps"
+msgstr "過去 {0} / 未來 {1} 個編輯步驟"
+
 msgid "Cut"
 msgstr "剪下"
 

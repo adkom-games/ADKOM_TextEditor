@@ -60,6 +60,33 @@ msgstr "元に戻す"
 msgid "Redo"
 msgstr "やり直し"
 
+msgid "History..."
+msgstr "履歴..."
+
+msgid "Edit History"
+msgstr "編集履歴"
+
+msgid "{0}-caret edit"
+msgstr "{0} キャレット編集"
+
+msgid "Original (before recorded edits)"
+msgstr "元の状態（記録された編集の前）"
+
+msgid "Restore to This Point"
+msgstr "この時点に戻す"
+
+msgid "Open as New Tab"
+msgstr "新しいタブで開く"
+
+msgid "Copy to Clipboard"
+msgstr "クリップボードにコピー"
+
+msgid "No edits recorded for this document yet."
+msgstr "このドキュメントにはまだ編集が記録されていません。"
+
+msgid "{0} past / {1} future edit steps"
+msgstr "過去 {0} / 未来 {1} の編集ステップ"
+
 msgid "Cut"
 msgstr "切り取り"
 
