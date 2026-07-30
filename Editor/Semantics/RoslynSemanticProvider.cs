@@ -809,8 +809,57 @@ namespace ADKOM.TextEditor.Semantics
             int currentLine = 0;
             void Line(string s) { sb.Append(s).Append('\n'); currentLine++; }
 
+            // The stub prints minimally-qualified names, so it must carry the
+            // using directives that make them RESOLVE — otherwise navigating
+            // FROM the stub (F12 on ScriptableObject inside "EditorWindow
+            // [metadata]") finds nothing (issue #37).
+            var usings = new SortedSet<string>(StringComparer.Ordinal);
+            void AddNs(ITypeSymbol t)
+            {
+                switch (t)
+                {
+                    case null: return;
+                    case IArrayTypeSymbol arr: AddNs(arr.ElementType); return;
+                    case IPointerTypeSymbol ptr: AddNs(ptr.PointedAtType); return;
+                }
+                if (t is INamedTypeSymbol g)
+                    foreach (var ta in g.TypeArguments) AddNs(ta);
+                var ns = t.ContainingNamespace;
+                if (ns != null && !ns.IsGlobalNamespace) usings.Add(ns.ToDisplayString());
+            }
+
+            var members = type.GetMembers()
+                .Where(m => !m.IsImplicitlyDeclared &&
+                    (m.DeclaredAccessibility == Accessibility.Public ||
+                     m.DeclaredAccessibility == Accessibility.Protected))
+                .Where(m => !(m is IMethodSymbol ms &&
+                    (ms.MethodKind == MethodKind.PropertyGet || ms.MethodKind == MethodKind.PropertySet ||
+                     ms.MethodKind == MethodKind.EventAdd || ms.MethodKind == MethodKind.EventRemove)))
+                .OrderBy(m => m.Kind).ThenBy(m => m.Name, StringComparer.Ordinal)
+                .ToList();
+
+            // Pass 1: every namespace the printed signatures will name.
+            if (type.BaseType != null) AddNs(type.BaseType);
+            foreach (var m in members)
+            {
+                switch (m)
+                {
+                    case IMethodSymbol mm:
+                        AddNs(mm.ReturnType);
+                        foreach (var pa in mm.Parameters) AddNs(pa.Type);
+                        break;
+                    case IPropertySymbol pp: AddNs(pp.Type); break;
+                    case IFieldSymbol ff: AddNs(ff.Type); break;
+                    case IEventSymbol ee: AddNs(ee.Type); break;
+                }
+            }
+            usings.Remove(type.ContainingNamespace?.IsGlobalNamespace == false
+                ? type.ContainingNamespace.ToDisplayString() : "");
+
             Line("// From metadata: " + (type.ContainingAssembly?.Name ?? "?") + ".dll — signatures only.");
             Line("");
+            foreach (var u in usings) Line("using " + u + ";");
+            if (usings.Count > 0) Line("");
             if (!type.ContainingNamespace.IsGlobalNamespace)
             {
                 Line("namespace " + type.ContainingNamespace.ToDisplayString());
@@ -832,15 +881,6 @@ namespace ADKOM.TextEditor.Semantics
             if (SymbolEqualityComparer.Default.Equals(type, symbol)) line = currentLine;
             Line(indent + "public " + kind + " " + type.ToDisplayString(fmt) + bases);
             Line(indent + "{");
-
-            var members = type.GetMembers()
-                .Where(m => !m.IsImplicitlyDeclared &&
-                    (m.DeclaredAccessibility == Accessibility.Public ||
-                     m.DeclaredAccessibility == Accessibility.Protected))
-                .Where(m => !(m is IMethodSymbol ms &&
-                    (ms.MethodKind == MethodKind.PropertyGet || ms.MethodKind == MethodKind.PropertySet ||
-                     ms.MethodKind == MethodKind.EventAdd || ms.MethodKind == MethodKind.EventRemove)))
-                .OrderBy(m => m.Kind).ThenBy(m => m.Name, StringComparer.Ordinal);
 
             foreach (var m in members)
             {
