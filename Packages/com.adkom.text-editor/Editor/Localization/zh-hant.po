@@ -741,6 +741,33 @@ msgstr "跳至"
 msgid "Bookmarks"
 msgstr "書籤"
 
+msgid "Appearance"
+msgstr "外觀"
+
+msgid "Editor"
+msgstr "編輯器"
+
+msgid "Fonts"
+msgstr "字型"
+
+msgid "Language & Tools"
+msgstr "語言與工具"
+
+msgid "Display"
+msgstr "顯示"
+
+msgid "Editing"
+msgstr "編輯"
+
+msgid "AI"
+msgstr "AI"
+
+msgid "Files & Saving"
+msgstr "檔案與儲存"
+
+msgid "Updates"
+msgstr "更新"
+
 msgid "{0}  ({1} of {2} shown)"
 msgstr "{0}  (顯示 {2} 項中的 {1} 項)"
 

@@ -741,6 +741,33 @@ msgstr "이동"
 msgid "Bookmarks"
 msgstr "북마크"
 
+msgid "Appearance"
+msgstr "모양"
+
+msgid "Editor"
+msgstr "편집기"
+
+msgid "Fonts"
+msgstr "글꼴"
+
+msgid "Language & Tools"
+msgstr "언어 및 도구"
+
+msgid "Display"
+msgstr "표시"
+
+msgid "Editing"
+msgstr "편집"
+
+msgid "AI"
+msgstr "AI"
+
+msgid "Files & Saving"
+msgstr "파일 및 저장"
+
+msgid "Updates"
+msgstr "업데이트"
+
 msgid "{0}  ({1} of {2} shown)"
 msgstr "{0}  ({2}개 중 {1}개 표시)"
 

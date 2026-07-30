@@ -741,6 +741,33 @@ msgstr "移動"
 msgid "Bookmarks"
 msgstr "ブックマーク"
 
+msgid "Appearance"
+msgstr "外観"
+
+msgid "Editor"
+msgstr "エディター"
+
+msgid "Fonts"
+msgstr "フォント"
+
+msgid "Language & Tools"
+msgstr "言語とツール"
+
+msgid "Display"
+msgstr "表示"
+
+msgid "Editing"
+msgstr "編集"
+
+msgid "AI"
+msgstr "AI"
+
+msgid "Files & Saving"
+msgstr "ファイルと保存"
+
+msgid "Updates"
+msgstr "アップデート"
+
 msgid "{0}  ({1} of {2} shown)"
 msgstr "{0}  ({2} 件中 {1} 件を表示)"
 
