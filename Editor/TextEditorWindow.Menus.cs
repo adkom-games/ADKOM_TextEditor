@@ -88,6 +88,7 @@ namespace ADKOM.TextEditor
             Item(WithSc("Paste", Dsp("paste")), edit && !string.IsNullOrEmpty(EditorGUIUtility.systemCopyBuffer), _code.Paste);
             Item(WithSc("Select All", Dsp("select-all")), edit, _code.SelectAll);
             Item(WithSc("Goto Line...", Dsp("goto-line")), edit, GotoLineCommand);
+            Item(WithSc("Go to #region...", Dsp("goto-region")), edit, GoToRegionCommand);
             m.AddSeparator("");
             Item(WithSc("Duplicate Line", Dsp("duplicate-line")), edit, DuplicateLine);
             Item(WithSc("Delete Line", Dsp("delete-line")), edit, DeleteLine);

@@ -1223,10 +1223,14 @@ namespace ADKOM.TextEditor
                 }
                 else label.text = _lines[line].Substring(sc, ec - sc);
 
-                // Folded header: show the whole collapsed shape "{ ⋯ }" so the
-                // region reads as closed (Defects round 2026-07-27, item 4).
+                // Folded header: show the collapsed shape so the region reads as
+                // closed — "⋯ }" for a brace block, just "⋯" for a #region
+                // (Defects round 2026-07-27, item 4).
                 if (ec == _lines[line].Length && IsFoldedHeader(line))
-                    label.text += rich ? " <color=#9A9A9A>⋯ }</color>" : " ⋯ }";
+                {
+                    string glyph = IsRegionHeader(line) ? "⋯" : "⋯ }";
+                    label.text += rich ? " <color=#9A9A9A>" + glyph + "</color>" : " " + glyph;
+                }
 
                 if (!_wordWrap)
                 {

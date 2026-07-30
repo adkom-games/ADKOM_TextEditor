@@ -246,6 +246,9 @@ namespace ADKOM.TextEditor
                     VSCode = All(K(KeyCode.RightBracket, ctrl: true, shift: true, d: "Ctrl+Shift+]")),
                     Rider = All(K(KeyCode.RightBracket, ctrl: true, shift: true, d: "Ctrl+Shift+]")),
                     Run = _ => True(() => _code.UnfoldAtCaret()) },
+                new AteCommand { Id = "goto-region", Scope = CmdScope.Editor,
+                    VS = All(), VSCode = All(), Rider = All(),
+                    Run = _ => True(GoToRegionCommand) },
 
                                 new AteCommand { Id = "quick-open", Scope = CmdScope.Global,
                     VS = All(K(KeyCode.Comma, ctrl: true, d: "Ctrl+,")),

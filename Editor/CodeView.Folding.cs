@@ -41,11 +41,14 @@ namespace ADKOM.TextEditor
             return false;
         }
 
-        /// <summary>A line is foldable when it opens a brace whose match sits
-        /// on a later line. Returns the region's end line, or -1.</summary>
+        /// <summary>A line is foldable when it opens a `#region` (matched by its
+        /// `#endregion`) or a brace whose match sits on a later line. Returns the
+        /// region's end line, or -1.</summary>
         internal int FoldEndLine(int line)
         {
             if (line < 0 || line >= _lines.Count) return -1;
+            int rgn = RegionEndLine(line);
+            if (rgn >= 0) return rgn;
             string text = _lines[line];
             int col = text.LastIndexOf('{');
             if (col < 0) return -1;
@@ -53,6 +56,44 @@ namespace ADKOM.TextEditor
             if (m < 0) return -1;
             IndexToLineCol(m, out int endLine, out _);
             return endLine > line ? endLine : -1;
+        }
+
+        internal bool IsRegionHeader(int line) =>
+            line >= 0 && line < _lines.Count && _lines[line].TrimStart().StartsWith("#region");
+
+        /// <summary>The `#endregion` that closes the `#region` on <paramref
+        /// name="line"/>, honoring nesting; -1 if not a region header or unclosed.</summary>
+        internal int RegionEndLine(int line)
+        {
+            if (!IsRegionHeader(line)) return -1;
+            int depth = 0;
+            for (int l = line; l < _lines.Count; l++)
+            {
+                string t = _lines[l].TrimStart();
+                if (t.StartsWith("#region")) depth++;
+                else if (t.StartsWith("#endregion")) { if (--depth == 0) return l > line ? l : -1; }
+            }
+            return -1;
+        }
+
+        /// <summary>All `#region` headers in document order, with each region's
+        /// display name and nesting depth — for the region navigator.</summary>
+        internal List<(int line, string name, int depth)> RegionList()
+        {
+            var list = new List<(int, string, int)>();
+            int depth = 0;
+            for (int l = 0; l < _lines.Count; l++)
+            {
+                string t = _lines[l].TrimStart();
+                if (t.StartsWith("#region"))
+                {
+                    string name = t.Substring("#region".Length).Trim();
+                    list.Add((l, name.Length == 0 ? "region" : name, depth));
+                    depth++;
+                }
+                else if (t.StartsWith("#endregion") && depth > 0) depth--;
+            }
+            return list;
         }
 
         /// <summary>Double-click folding gestures. On a folded header's

@@ -122,6 +122,35 @@ namespace ADKOM.TextEditor
             _code.IndexToLineCol(Mathf.Clamp(loc.Index, 0, _code.value.Length), out int l, out int c);
             _code.GoToLine(l + 1, c + 1);
         }
+
+        /// <summary>Pops a menu of the file's #regions (nested, with line
+        /// numbers); picking one jumps to it and centres it.</summary>
+        internal void GoToRegionCommand()
+        {
+            if (!CanEditDoc) return;
+            var regions = _code.RegionList();
+            if (regions.Count == 0)
+            {
+                AteConsole.Info("[ADKOM Text Editor] " + L10n.Tr("No #regions in this file."));
+                return;
+            }
+            var menu = new GenericMenu();
+            foreach (var r in regions)
+            {
+                int line = r.line;
+                // GenericMenu treats '/' as a submenu separator — swap it out; em
+                // spaces show nesting depth.
+                string label = new string(' ', r.depth) + r.name.Replace('/', '∕')
+                             + "   (" + (line + 1) + ")";
+                menu.AddItem(new GUIContent(label), false, () =>
+                {
+                    PushNavLocation();
+                    _code.GoToLine(line + 1, 1);
+                    _code.CenterOnLine(line);
+                });
+            }
+            menu.ShowAsContext();
+        }
     }
 }
 #endif
