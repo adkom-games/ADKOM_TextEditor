@@ -1229,3 +1229,42 @@ msgstr "{1} ファイルで {0} 件の置換"
 
 msgid "Invalid regex: {0}"
 msgstr "無効な正規表現: {0}"
+
+msgid "Inspect Symbol..."
+msgstr "シンボルを検査..."
+
+msgid "Inspect Type"
+msgstr "型を検査"
+
+msgid "Type not found: {0}"
+msgstr "型が見つかりません: {0}"
+
+msgid "Static Fields & Properties"
+msgstr "静的フィールドとプロパティ"
+
+msgid "Static Methods (parameterless)"
+msgstr "静的メソッド（引数なし）"
+
+msgid "Scene Instances"
+msgstr "シーン内のインスタンス"
+
+msgid "(none)"
+msgstr "（なし）"
+
+msgid "(no instances in the loaded scenes)"
+msgstr "（読み込まれたシーンにインスタンスはありません）"
+
+msgid "Run"
+msgstr "実行"
+
+msgid "Refresh"
+msgstr "更新"
+
+msgid "Ran {0}.{1}() → {2}"
+msgstr "{0}.{1}() を実行 → {2}"
+
+msgid "{0} threw: {1}"
+msgstr "{0} が例外を送出: {1}"
+
+msgid "No type at the caret."
+msgstr "キャレット位置に型がありません。"

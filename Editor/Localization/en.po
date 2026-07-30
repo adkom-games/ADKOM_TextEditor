@@ -1231,3 +1231,42 @@ msgstr "{0} replacement(s) in {1} file(s)"
 
 msgid "Invalid regex: {0}"
 msgstr "Invalid regex: {0}"
+
+msgid "Inspect Symbol..."
+msgstr "Inspect Symbol..."
+
+msgid "Inspect Type"
+msgstr "Inspect Type"
+
+msgid "Type not found: {0}"
+msgstr "Type not found: {0}"
+
+msgid "Static Fields & Properties"
+msgstr "Static Fields & Properties"
+
+msgid "Static Methods (parameterless)"
+msgstr "Static Methods (parameterless)"
+
+msgid "Scene Instances"
+msgstr "Scene Instances"
+
+msgid "(none)"
+msgstr "(none)"
+
+msgid "(no instances in the loaded scenes)"
+msgstr "(no instances in the loaded scenes)"
+
+msgid "Run"
+msgstr "Run"
+
+msgid "Refresh"
+msgstr "Refresh"
+
+msgid "Ran {0}.{1}() → {2}"
+msgstr "Ran {0}.{1}() → {2}"
+
+msgid "{0} threw: {1}"
+msgstr "{0} threw: {1}"
+
+msgid "No type at the caret."
+msgstr "No type at the caret."

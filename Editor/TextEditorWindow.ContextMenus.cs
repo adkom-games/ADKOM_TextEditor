@@ -61,6 +61,8 @@ namespace ADKOM.TextEditor
             {
                 m.AddItem(new GUIContent(WithSc("Rename Symbol...", Dsp("rename-symbol"))), false, RenameSymbolAtCaret);
                 m.AddItem(new GUIContent(WithSc("Find All References", Dsp("find-references"))), false, FindAllReferences);
+                m.AddItem(new GUIContent(L10n.Tr("Inspect Symbol...")), false,
+                    () => InspectSymbolAtCaret(line, col));
             }
             if (query != null)
             {

@@ -28,9 +28,9 @@ for the release snapshot and [[Project Log]] for per-item history.
 | 3 | Unity magic-method generator | 2 | **Done** (with #4) |
 | 4 | Override-method generator | 2 | **Done** (with #3) |
 | 5 | Automated saving and reloading | 0 | **Done** (auto-save on focus loss; auto-reload existed) |
-| 6–7 | Static fields/properties inspection popup | 4 | Pending |
-| 8–9 | MonoBehaviour fields/properties inspection popup | 4 | Pending |
-| 10 | Execute parameterless static methods | 4 | Pending |
+| 6–7 | Static fields/properties inspection popup | 4 | **Done** (AteInspectorWindow) |
+| 8–9 | MonoBehaviour fields/properties inspection popup | 4 | **Done** (scene-instance picker in the same window) |
+| 10 | Execute parameterless static methods | 4 | **Done** (Run buttons in the same window) |
 | 11 | Code #region navigation | 0 | **Done** (f9b87a3) |
 | 12 | Find All References with filtering | 0 | **Done** (cef5ae2) |
 | 13 | Find/Replace in Files (+preview/selections, global undo) | 3 | **Done** (dedicated window, not the console tab — better checkbox/preview UX) |

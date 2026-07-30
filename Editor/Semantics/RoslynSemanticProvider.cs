@@ -21,7 +21,7 @@ namespace ADKOM.TextEditor.Semantics
     public sealed class RoslynSemanticProvider : ADKOM.TextEditor.ISemanticProvider,
         ADKOM.TextEditor.ISemanticRefactorings, ADKOM.TextEditor.ISemanticCompletion,
         ADKOM.TextEditor.ISemanticDiagnostics, ADKOM.TextEditor.ISemanticOccurrences,
-        ADKOM.TextEditor.ISemanticGeneration
+        ADKOM.TextEditor.ISemanticGeneration, ADKOM.TextEditor.ISemanticSymbolInfo
     {
         public string Name => "Roslyn";
 
@@ -344,6 +344,33 @@ namespace ADKOM.TextEditor.Semantics
             result.Sort((x, y) => x.Item1.CompareTo(y.Item1));
             spans = result;
             symbolName = target.Name;
+            return true;
+        }
+
+        // --- Symbol → runtime type (for the reflection inspector) ---
+
+        public bool TryGetTypeAt(string path, string text, int offset,
+            out string metadataName, out string assemblyName)
+        {
+            metadataName = null;
+            assemblyName = null;
+            var (model, tree) = GetModel(path, text);
+            if (model == null) return false;
+            var sym = SymbolAt(model, tree, offset);
+            var type = sym as INamedTypeSymbol ?? sym?.ContainingType;
+            if (type == null) return false;
+            type = type.OriginalDefinition;
+
+            var parts = new List<string>();
+            for (var cur = type; cur != null; cur = cur.ContainingType)
+                parts.Add(cur.MetadataName);
+            parts.Reverse();
+            var outer = type;
+            while (outer.ContainingType != null) outer = outer.ContainingType;
+            string ns = outer.ContainingNamespace != null && !outer.ContainingNamespace.IsGlobalNamespace
+                ? outer.ContainingNamespace.ToDisplayString() + "." : "";
+            metadataName = ns + string.Join("+", parts);
+            assemblyName = type.ContainingAssembly?.Name;
             return true;
         }
 
