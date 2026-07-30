@@ -726,6 +726,21 @@ msgstr "（尚無搜尋結果）"
 msgid "Filter"
 msgstr "篩選"
 
+msgid "Selection"
+msgstr "選取"
+
+msgid "Line"
+msgstr "行"
+
+msgid "Code"
+msgstr "程式碼"
+
+msgid "Go To"
+msgstr "跳至"
+
+msgid "Bookmarks"
+msgstr "書籤"
+
 msgid "{0}  ({1} of {2} shown)"
 msgstr "{0}  (顯示 {2} 項中的 {1} 項)"
 

@@ -728,6 +728,21 @@ msgstr "(no search results yet)"
 msgid "Filter"
 msgstr "Filter"
 
+msgid "Selection"
+msgstr "Selection"
+
+msgid "Line"
+msgstr "Line"
+
+msgid "Code"
+msgstr "Code"
+
+msgid "Go To"
+msgstr "Go To"
+
+msgid "Bookmarks"
+msgstr "Bookmarks"
+
 msgid "{0}  ({1} of {2} shown)"
 msgstr "{0}  ({1} of {2} shown)"
 

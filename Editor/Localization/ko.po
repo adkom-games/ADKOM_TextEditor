@@ -726,6 +726,21 @@ msgstr "(아직 검색 결과 없음)"
 msgid "Filter"
 msgstr "필터"
 
+msgid "Selection"
+msgstr "선택"
+
+msgid "Line"
+msgstr "줄"
+
+msgid "Code"
+msgstr "코드"
+
+msgid "Go To"
+msgstr "이동"
+
+msgid "Bookmarks"
+msgstr "북마크"
+
 msgid "{0}  ({1} of {2} shown)"
 msgstr "{0}  ({2}개 중 {1}개 표시)"
 

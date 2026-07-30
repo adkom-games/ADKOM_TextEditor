@@ -726,6 +726,21 @@ msgstr "（検索結果はまだありません）"
 msgid "Filter"
 msgstr "フィルター"
 
+msgid "Selection"
+msgstr "選択"
+
+msgid "Line"
+msgstr "行"
+
+msgid "Code"
+msgstr "コード"
+
+msgid "Go To"
+msgstr "移動"
+
+msgid "Bookmarks"
+msgstr "ブックマーク"
+
 msgid "{0}  ({1} of {2} shown)"
 msgstr "{0}  ({2} 件中 {1} 件を表示)"
 
