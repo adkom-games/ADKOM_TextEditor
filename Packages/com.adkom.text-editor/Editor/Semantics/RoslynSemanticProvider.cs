@@ -86,7 +86,7 @@ namespace ADKOM.TextEditor.Semantics
             var asms = _assemblies;
             if (asms == null) return null;
             var asm = asms.FirstOrDefault(a => a.Sources.Contains(norm));
-            if (asm == null) return null;
+            if (asm == null) return GetFallbackCompilation(norm, asms);
 
             lock (_lock)
             {
@@ -120,6 +120,66 @@ namespace ADKOM.TextEditor.Semantics
                 new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, allowUnsafe: true));
             var cached = new Cached { Comp = comp, Trees = trees, Parse = parse };
             lock (_lock) _cache[asm.Name] = cached;
+            return cached;
+        }
+
+        /// <summary>Semantics for a .cs OUTSIDE every Unity assembly — addon
+        /// files in the shared folder, Samples~ sources, external files. The
+        /// file's DIRECTORY becomes the source set (so multi-file addons see
+        /// their siblings) and the references/defines come from the richest
+        /// UNITY_EDITOR assembly we captured, which includes the engine
+        /// modules, the BCL, and every compiled ScriptAssemblies dll (so
+        /// AteApi & friends resolve too). Cached per directory; the cache is
+        /// dropped with the others whenever Unity recompiles.</summary>
+        Cached GetFallbackCompilation(string norm, List<AsmInfo> asms)
+        {
+            string dir = Path.GetDirectoryName(norm)?.Replace('\\', '/');
+            if (string.IsNullOrEmpty(dir)) return null;
+            string key = "fallback::" + dir;
+            lock (_lock)
+            {
+                if (_cache.TryGetValue(key, out var hit)) return hit;
+            }
+            var rich = asms.Where(a => Array.IndexOf(a.Defines, "UNITY_EDITOR") >= 0)
+                           .OrderByDescending(a => a.References.Length)
+                           .FirstOrDefault()
+                       ?? asms.OrderByDescending(a => a.References.Length).FirstOrDefault();
+            if (rich == null) return null;
+
+            var parse = new CSharpParseOptions(LanguageVersion.Latest,
+                preprocessorSymbols: rich.Defines);
+            var trees = new Dictionary<string, SyntaxTree>();
+            try
+            {
+                var files = Directory.GetFiles(dir, "*.cs", SearchOption.TopDirectoryOnly);
+                foreach (var src in files.Take(200))
+                {
+                    try
+                    {
+                        string full = Norm(src);
+                        trees[full] = CSharpSyntaxTree.ParseText(File.ReadAllText(full), parse, full);
+                    }
+                    catch (Exception) { }
+                }
+            }
+            catch (Exception) { }
+            if (!trees.ContainsKey(norm))
+            {
+                // Unreadable/new-on-disk file: still give it a compilation —
+                // GetModel adds the live buffer's tree on top.
+                try { trees[norm] = CSharpSyntaxTree.ParseText(string.Empty, parse, norm); }
+                catch (Exception) { return null; }
+            }
+            var refs = new List<MetadataReference>();
+            foreach (var r in rich.References.Distinct())
+            {
+                try { if (File.Exists(r)) refs.Add(MetadataReference.CreateFromFile(r)); }
+                catch (Exception) { }
+            }
+            var comp = CSharpCompilation.Create("AteFallback", trees.Values, refs,
+                new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, allowUnsafe: true));
+            var cached = new Cached { Comp = comp, Trees = trees, Parse = parse };
+            lock (_lock) _cache[key] = cached;
             return cached;
         }
 
