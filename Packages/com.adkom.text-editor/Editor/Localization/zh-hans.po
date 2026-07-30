@@ -726,6 +726,21 @@ msgstr "（尚无搜索结果）"
 msgid "Filter"
 msgstr "筛选"
 
+msgid "Selection"
+msgstr "选择"
+
+msgid "Line"
+msgstr "行"
+
+msgid "Code"
+msgstr "代码"
+
+msgid "Go To"
+msgstr "转到"
+
+msgid "Bookmarks"
+msgstr "书签"
+
 msgid "{0}  ({1} of {2} shown)"
 msgstr "{0}  (显示 {2} 项中的 {1} 项)"
 

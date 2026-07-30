@@ -78,64 +78,75 @@ namespace ADKOM.TextEditor
                 if (enabled) m.AddItem(new GUIContent(label), false, () => a());
                 else m.AddDisabledItem(new GUIContent(label));
             }
+            bool sel = edit && _code.HasSelectionPublic;
+            bool paste = edit && !string.IsNullOrEmpty(EditorGUIUtility.systemCopyBuffer);
+
+            // ---- Common (flat) ----
             Item(WithSc("Undo", Dsp("undo")), edit && _code.CanUndo, _code.Undo);
             Item(WithSc("Redo", Dsp("redo")), edit && _code.CanRedo, _code.Redo);
             m.AddSeparator("");
-            // Enabled without a selection: empty-selection Cut/Copy act on
-            // the whole current line (VS / VS Code / Rider standard).
+            // Empty-selection Cut/Copy act on the whole line (VS/VSCode/Rider).
             Item(WithSc("Cut", Dsp("cut")), edit, _code.Cut);
             Item(WithSc("Copy", Dsp("copy")), edit, _code.Copy);
-            Item(WithSc("Paste", Dsp("paste")), edit && !string.IsNullOrEmpty(EditorGUIUtility.systemCopyBuffer), _code.Paste);
+            Item(WithSc("Paste", Dsp("paste")), paste, _code.Paste);
             Item(WithSc("Select All", Dsp("select-all")), edit, _code.SelectAll);
-            Item(WithSc("Goto Line...", Dsp("goto-line")), edit, GotoLineCommand);
-            Item(WithSc("Go to #region...", Dsp("goto-region")), edit, GoToRegionCommand);
             m.AddSeparator("");
-            Item(WithSc("Duplicate Line", Dsp("duplicate-line")), edit, DuplicateLine);
-            Item(WithSc("Delete Line", Dsp("delete-line")), edit, DeleteLine);
-            Item(WithSc("Move Line Up", Dsp("move-line-up")), edit, () => MoveLine(-1));
-            Item(WithSc("Move Line Down", Dsp("move-line-down")), edit, () => MoveLine(1));
-            Item(WithSc("Toggle Comment", Dsp("toggle-comment")), edit, ToggleComment);
-            Item(WithSc("Toggle Block Comment", Dsp("block-comment")), edit, ToggleBlockComment);
-            Item(WithSc("Go to Matching Bracket", Dsp("goto-bracket")), edit, () => _code.GoToMatchingBracket());
-            Item(WithSc("Expand Selection", Dsp("expand-selection")), edit, () => _code.ExpandSelection());
-            Item(WithSc("Shrink Selection", Dsp("shrink-selection")), edit, () => _code.ShrinkSelection());
-            Item(WithSc("Add Next Occurrence", Dsp("add-next-occurrence")), edit, () => _code.AddNextOccurrence());
-            Item(WithSc("Select All Occurrences", Dsp("select-all-occurrences")), edit, () => _code.SelectAllOccurrences());
-            Item(WithSc("Add Caret Above", Dsp("add-caret-above")), edit, () => _code.AddCaretOnAdjacentLine(-1));
-            Item(WithSc("Add Caret Below", Dsp("add-caret-below")), edit, () => _code.AddCaretOnAdjacentLine(1));
-            Item(WithSc("Autocomplete", "Ctrl+Space"), edit, () => _code.ShowCompletion(true));
+            Item(WithSc("Find...", Dsp("find")), true, () => FindReplaceWindow.Open(this, false, false));
+            Item(WithSc("Replace...", Dsp("replace")), true, () => FindReplaceWindow.Open(this, true, false));
             m.AddSeparator("");
-            Item(WithSc("Rename Symbol...", Dsp("rename-symbol")), edit, RenameSymbolAtCaret);
-            Item(WithSc("Find All References", Dsp("find-references")), edit, FindAllReferences);
-            Item(WithSc("Format Document", Dsp("format-document")), edit, FormatDocument);
-            m.AddSeparator("");
-            Item(WithSc("Toggle Bookmark", Dsp("toggle-bookmark")), edit, ToggleBookmark);
-            Item(WithSc("Next Bookmark", Dsp("next-bookmark")), edit, () => JumpBookmark(1));
-            Item(WithSc("Previous Bookmark", Dsp("prev-bookmark")), edit, () => JumpBookmark(-1));
-            Item(WithSc("Clear Bookmarks", null), edit, ClearBookmarks);
-            Item(WithSc("Indent", Dsp("indent")), edit, InsertTab);
-            Item(WithSc("Unindent", Dsp("unindent")), edit, UnindentSelection);
-            m.AddSeparator("");
-            Item(WithSc("Insert Line Above", Dsp("insert-line-above")), edit, () => _code.InsertLineAbove());
-            Item(WithSc("Insert Line Below", Dsp("insert-line-below")), edit, () => _code.InsertLineBelow());
-            Item(WithSc("Join Lines", Dsp("join-lines")), edit, () => _code.JoinLines());
-            Item(WithSc("Select Line", Dsp("select-line")), edit, () => _code.SelectCurrentLine());
-            bool sel = edit && _code.HasSelectionPublic;
-            Item(L10n.Tr("Transform") + "/" + L10n.Tr("UPPERCASE"), sel,
+
+            // ---- Grouped submenus ----
+            string find = L10n.Tr("Find") + "/";
+            Item(find + WithSc("Find in Tabs...", Dsp("find-in-tabs")), true, () => FindReplaceWindow.Open(this, false, true));
+            Item(find + WithSc("Replace in Tabs...", Dsp("replace-in-tabs")), true, () => FindReplaceWindow.Open(this, true, true));
+            Item(find + WithSc("Find Next", Dsp("find-next")), true, () => FindReplaceWindow.FindAgain(this, false));
+            Item(find + WithSc("Find Previous", Dsp("find-previous")), true, () => FindReplaceWindow.FindAgain(this, true));
+
+            string selg = L10n.Tr("Selection") + "/";
+            Item(selg + WithSc("Expand Selection", Dsp("expand-selection")), edit, () => _code.ExpandSelection());
+            Item(selg + WithSc("Shrink Selection", Dsp("shrink-selection")), edit, () => _code.ShrinkSelection());
+            Item(selg + WithSc("Add Next Occurrence", Dsp("add-next-occurrence")), edit, () => _code.AddNextOccurrence());
+            Item(selg + WithSc("Select All Occurrences", Dsp("select-all-occurrences")), edit, () => _code.SelectAllOccurrences());
+            Item(selg + WithSc("Add Caret Above", Dsp("add-caret-above")), edit, () => _code.AddCaretOnAdjacentLine(-1));
+            Item(selg + WithSc("Add Caret Below", Dsp("add-caret-below")), edit, () => _code.AddCaretOnAdjacentLine(1));
+
+            string lineg = L10n.Tr("Line") + "/";
+            Item(lineg + WithSc("Duplicate Line", Dsp("duplicate-line")), edit, DuplicateLine);
+            Item(lineg + WithSc("Delete Line", Dsp("delete-line")), edit, DeleteLine);
+            Item(lineg + WithSc("Move Line Up", Dsp("move-line-up")), edit, () => MoveLine(-1));
+            Item(lineg + WithSc("Move Line Down", Dsp("move-line-down")), edit, () => MoveLine(1));
+            Item(lineg + WithSc("Insert Line Above", Dsp("insert-line-above")), edit, () => _code.InsertLineAbove());
+            Item(lineg + WithSc("Insert Line Below", Dsp("insert-line-below")), edit, () => _code.InsertLineBelow());
+            Item(lineg + WithSc("Join Lines", Dsp("join-lines")), edit, () => _code.JoinLines());
+            Item(lineg + WithSc("Select Line", Dsp("select-line")), edit, () => _code.SelectCurrentLine());
+            Item(lineg + WithSc("Sort Selected Lines", null), sel, () => _code.SortSelectedLines());
+            Item(lineg + L10n.Tr("Transform") + "/" + L10n.Tr("UPPERCASE"), sel,
                 () => _code.TransformSelection(s => s.ToUpperInvariant()));
-            Item(L10n.Tr("Transform") + "/" + L10n.Tr("lowercase"), sel,
+            Item(lineg + L10n.Tr("Transform") + "/" + L10n.Tr("lowercase"), sel,
                 () => _code.TransformSelection(s => s.ToLowerInvariant()));
-            Item(WithSc("Sort Selected Lines", null), sel, () => _code.SortSelectedLines());
-            m.AddSeparator("");
-            m.AddItem(new GUIContent(WithSc("Find...", Dsp("find"))), false, () => FindReplaceWindow.Open(this, false, false));
-            m.AddItem(new GUIContent(WithSc("Find in Tabs...", Dsp("find-in-tabs"))), false, () => FindReplaceWindow.Open(this, false, true));
-            m.AddItem(new GUIContent(WithSc("Replace...", Dsp("replace"))), false, () => FindReplaceWindow.Open(this, true, false));
-            m.AddItem(new GUIContent(WithSc("Replace in Tabs...", Dsp("replace-in-tabs"))), false, () => FindReplaceWindow.Open(this, true, true));
-            m.AddItem(new GUIContent(WithSc("Find Next", Dsp("find-next"))), false, () => FindReplaceWindow.FindAgain(this, false));
-            m.AddItem(new GUIContent(WithSc("Find Previous", Dsp("find-previous"))), false, () => FindReplaceWindow.FindAgain(this, true));
-            m.AddSeparator("");
-            m.AddItem(new GUIContent(WithSc("Navigate Back", Dsp("nav-back"))), false, NavigateBack);
-            m.AddItem(new GUIContent(WithSc("Navigate Forward", Dsp("nav-forward"))), false, NavigateForward);
+
+            string codeg = L10n.Tr("Code") + "/";
+            Item(codeg + WithSc("Toggle Comment", Dsp("toggle-comment")), edit, ToggleComment);
+            Item(codeg + WithSc("Toggle Block Comment", Dsp("block-comment")), edit, ToggleBlockComment);
+            Item(codeg + WithSc("Indent", Dsp("indent")), edit, InsertTab);
+            Item(codeg + WithSc("Unindent", Dsp("unindent")), edit, UnindentSelection);
+            Item(codeg + WithSc("Format Document", Dsp("format-document")), edit, FormatDocument);
+            Item(codeg + WithSc("Autocomplete", "Ctrl+Space"), edit, () => _code.ShowCompletion(true));
+            Item(codeg + WithSc("Rename Symbol...", Dsp("rename-symbol")), edit, RenameSymbolAtCaret);
+            Item(codeg + WithSc("Find All References", Dsp("find-references")), edit, FindAllReferences);
+
+            string gog = L10n.Tr("Go To") + "/";
+            Item(gog + WithSc("Goto Line...", Dsp("goto-line")), edit, GotoLineCommand);
+            Item(gog + WithSc("Go to #region...", Dsp("goto-region")), edit, GoToRegionCommand);
+            Item(gog + WithSc("Go to Matching Bracket", Dsp("goto-bracket")), edit, () => _code.GoToMatchingBracket());
+            Item(gog + WithSc("Navigate Back", Dsp("nav-back")), true, NavigateBack);
+            Item(gog + WithSc("Navigate Forward", Dsp("nav-forward")), true, NavigateForward);
+
+            string bmg = L10n.Tr("Bookmarks") + "/";
+            Item(bmg + WithSc("Toggle Bookmark", Dsp("toggle-bookmark")), edit, ToggleBookmark);
+            Item(bmg + WithSc("Next Bookmark", Dsp("next-bookmark")), edit, () => JumpBookmark(1));
+            Item(bmg + WithSc("Previous Bookmark", Dsp("prev-bookmark")), edit, () => JumpBookmark(-1));
+            Item(bmg + WithSc("Clear Bookmarks", null), edit, ClearBookmarks);
         }
 
         void FillViewMenu(GenericMenu m)
