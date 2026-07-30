@@ -4,7 +4,7 @@ tags: [plan, new-features]
 
 # New Features Plan — newfeatures.md campaign
 
-Implementation plan for the feature list in the repo root's `newfeatures.md`
+Implementation plan for the feature list in `Documentation~/newfeatures.md`
 (started 2026-07-30). Statuses updated as items land. See [[Project State]]
 for the release snapshot and [[Project Log]] for per-item history.
 
@@ -41,7 +41,7 @@ for the release snapshot and [[Project Log]] for per-item history.
 | 18 | Clean up the Edit menu | 0 | **Done** (be4139e, approved) |
 | 19 | Organize Settings | 0 | **Done** (27e7047, approved) |
 | 20 | Optional spell checking | 6 | Pending |
-| 21 | Syntax coloring: JSON, Shaders | 2.5 | Pending |
+| 21 | Syntax coloring: JSON, Shaders | 2.5 | **Done** (08b6c8a) |
 
 All completed items are on `main`, unreleased as of 2026-07-30 — they ship
 with the next release (working name: 0.13.0, "the IDE release").
@@ -124,7 +124,8 @@ with the next release (working name: 0.13.0, "the IDE release").
 - **Branch-history tree**: `git log --graph`-style visual (Painter2D lanes),
   **interactive**: click a branch head to checkout, context menu to create a
   branch at a commit. Guard rails: refuses with dirty working tree unless
-  stashing is confirmed.
+  stashing is confirmed. Layout is switchable **vertical ⇄ horizontal** with a
+  toggle button in the view (newfeatures.md addition, 2026-07-30).
 
 ### 20. Spell checking — Phase 6 (optional, off by default)
 - **Default dictionary**: bundled SCOWL-derived English word list
