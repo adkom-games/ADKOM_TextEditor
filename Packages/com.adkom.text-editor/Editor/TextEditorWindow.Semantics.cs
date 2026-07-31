@@ -254,6 +254,11 @@ namespace ADKOM.TextEditor
             int offset = _code.LineColToIndex(line, col);
             var ctx = _mainCtx;
             PostStatus(L10n.Tr("Resolving symbol…"));
+            // L10n.Tr is main-thread-only: resolve every string the worker
+            // might need BEFORE the task starts.
+            string trDefinedIn = L10n.Tr("Defined in ");
+            string trNotFound = L10n.Tr("Definition not found.");
+            string trFailed = L10n.Tr("Go to Definition failed: ");
             System.Threading.Tasks.Task.Run(() =>
             {
                 string status = null;
@@ -270,12 +275,12 @@ namespace ADKOM.TextEditor
                             if (provider.TryGetMetadataSource(path, text, offset, out metaTitle, out metaSource, out metaLine))
                                 status = null;
                             else
-                                status = L10n.Tr("Defined in ") + origin;
+                                status = trDefinedIn + origin;
                         }
                     }
-                    else status = L10n.Tr("Definition not found.");
+                    else status = trNotFound;
                 }
-                catch (System.Exception ex) { status = L10n.Tr("Go to Definition failed: ") + ex.Message; }
+                catch (System.Exception ex) { status = trFailed + ex.Message; }
                 ctx.Post(_ =>
                 {
                     if (this == null) return; // window destroyed mid-resolve
