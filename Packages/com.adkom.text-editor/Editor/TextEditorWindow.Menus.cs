@@ -148,6 +148,7 @@ namespace ADKOM.TextEditor
             Item(gog + WithSc("Goto Line...", Dsp("goto-line")), edit, GotoLineCommand);
             Item(gog + WithSc("Go to #region...", Dsp("goto-region")), edit, GoToRegionCommand);
             Item(gog + WithSc("Go to Matching Bracket", Dsp("goto-bracket")), edit, () => _code.GoToMatchingBracket());
+            Item(gog + WithSc("Match Previous Bracket", Dsp("goto-bracket-prev")), edit, () => _code.GoToMatchingBracketPrev());
             Item(gog + WithSc("Navigate Back", Dsp("nav-back")), true, NavigateBack);
             Item(gog + WithSc("Navigate Forward", Dsp("nav-forward")), true, NavigateForward);
 

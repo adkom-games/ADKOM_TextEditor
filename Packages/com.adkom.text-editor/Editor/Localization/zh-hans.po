@@ -1367,3 +1367,6 @@ msgstr "复制哈希"
 
 msgid "Git"
 msgstr "Git"
+
+msgid "Match Previous Bracket"
+msgstr "匹配上一个括号"

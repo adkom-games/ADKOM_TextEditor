@@ -2493,9 +2493,16 @@ namespace ADKOM.TextEditor
         }
 
         /// <summary>Jumps the caret to the bracket matching the caret's one.</summary>
-        internal void GoToMatchingBracket()
+        internal void GoToMatchingBracket() => GoToMatchingBracketCore(backward: false);
+
+        /// <summary>Ctrl+[ counterpart: character brackets jump to their match
+        /// (a pair is symmetric), directive chains cycle BACKWARD
+        /// (#endif → #else → #elif → #if → #endif).</summary>
+        internal void GoToMatchingBracketPrev() => GoToMatchingBracketCore(backward: true);
+
+        void GoToMatchingBracketCore(bool backward)
         {
-            if (TryGoToMatchingDirective()) return;
+            if (TryGoToMatchingDirective(backward)) return;
             string v = GetValueInternal();
             int at = BracketAtCaret(v, cursorIndex);
             int m = at >= 0 ? FindMatchingBracket(at) : -1;
@@ -2518,7 +2525,7 @@ namespace ADKOM.TextEditor
             t.StartsWith("#else", System.StringComparison.Ordinal);
         static bool IsEndDirective(string t) => t.StartsWith("#endif", System.StringComparison.Ordinal);
 
-        bool TryGoToMatchingDirective()
+        bool TryGoToMatchingDirective(bool backward = false)
         {
             string t = DirectiveAt(_caretLine);
             int target = -1;
@@ -2528,7 +2535,8 @@ namespace ADKOM.TextEditor
                 if (chain == null) return false;
                 int idx = chain.IndexOf(_caretLine);
                 if (idx < 0) return false;
-                target = chain[(idx + 1) % chain.Count]; // cycle: if → elif/else → endif → if
+                int n = chain.Count; // cycle: if → elif/else → endif → if (reversed with backward)
+                target = chain[backward ? (idx - 1 + n) % n : (idx + 1) % n];
             }
             else if (t.StartsWith("#region", System.StringComparison.Ordinal))
             {
