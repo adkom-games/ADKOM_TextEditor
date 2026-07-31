@@ -2495,12 +2495,103 @@ namespace ADKOM.TextEditor
         /// <summary>Jumps the caret to the bracket matching the caret's one.</summary>
         internal void GoToMatchingBracket()
         {
+            if (TryGoToMatchingDirective()) return;
             string v = GetValueInternal();
             int at = BracketAtCaret(v, cursorIndex);
             int m = at >= 0 ? FindMatchingBracket(at) : -1;
             if (m < 0) return;
             IndexToLineCol(m + 1, out int l, out int c);
             GoToLine(l + 1, c + 1);
+        }
+
+        // ---- Preprocessor-directive matching (#if / #elif / #else / #endif
+        // cycle through their chain, nesting-aware; #region ⇄ #endregion pair)
+        // — the Go to Matching Bracket command covers them when the caret sits
+        // on a directive line.
+
+        string DirectiveAt(int line) =>
+            line >= 0 && line < _lines.Count ? _lines[line].TrimStart() : "";
+
+        static bool IsIfDirective(string t) => t.StartsWith("#if", System.StringComparison.Ordinal);
+        static bool IsMidDirective(string t) =>
+            t.StartsWith("#elif", System.StringComparison.Ordinal) ||
+            t.StartsWith("#else", System.StringComparison.Ordinal);
+        static bool IsEndDirective(string t) => t.StartsWith("#endif", System.StringComparison.Ordinal);
+
+        bool TryGoToMatchingDirective()
+        {
+            string t = DirectiveAt(_caretLine);
+            int target = -1;
+            if (IsIfDirective(t) || IsMidDirective(t) || IsEndDirective(t))
+            {
+                var chain = DirectiveChain(_caretLine);
+                if (chain == null) return false;
+                int idx = chain.IndexOf(_caretLine);
+                if (idx < 0) return false;
+                target = chain[(idx + 1) % chain.Count]; // cycle: if → elif/else → endif → if
+            }
+            else if (t.StartsWith("#region", System.StringComparison.Ordinal))
+            {
+                target = RegionEndLine(_caretLine);
+            }
+            else if (t.StartsWith("#endregion", System.StringComparison.Ordinal))
+            {
+                int depth = 0;
+                for (int l = _caretLine - 1; l >= 0 && target < 0; l--)
+                {
+                    string s = DirectiveAt(l);
+                    if (s.StartsWith("#endregion", System.StringComparison.Ordinal)) depth++;
+                    else if (s.StartsWith("#region", System.StringComparison.Ordinal))
+                    {
+                        if (depth == 0) target = l;
+                        else depth--;
+                    }
+                }
+            }
+            else return false;
+            if (target < 0) return false;
+            int col = _lines[target].IndexOf('#');
+            GoToLine(target + 1, Mathf.Max(0, col) + 1);
+            return true;
+        }
+
+        /// <summary>The ordered directive lines of the #if chain containing
+        /// <paramref name="line"/> — [#if, #elif..., #else?, #endif] — with
+        /// nested chains skipped. Null when the chain is unterminated.</summary>
+        List<int> DirectiveChain(int line)
+        {
+            int ifLine = line;
+            if (!IsIfDirective(DirectiveAt(line)))
+            {
+                // Walk up to the #if that owns this #elif/#else/#endif.
+                int depth = 0, l = line - 1;
+                for (; l >= 0; l--)
+                {
+                    string s = DirectiveAt(l);
+                    if (IsEndDirective(s)) depth++;
+                    else if (IsIfDirective(s))
+                    {
+                        if (depth == 0) break;
+                        depth--;
+                    }
+                }
+                if (l < 0) return null;
+                ifLine = l;
+            }
+            var chain = new List<int> { ifLine };
+            int d = 0;
+            for (int l = ifLine + 1; l < _lines.Count; l++)
+            {
+                string s = DirectiveAt(l);
+                if (IsIfDirective(s)) d++;
+                else if (IsEndDirective(s))
+                {
+                    if (d == 0) { chain.Add(l); return chain; }
+                    d--;
+                }
+                else if (IsMidDirective(s) && d == 0) chain.Add(l);
+            }
+            return null; // unterminated
         }
 
         /// <summary>Highlights the caret-adjacent bracket and its match on
