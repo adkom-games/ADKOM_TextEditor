@@ -38,6 +38,18 @@ namespace ADKOM.TextEditor
         static double _nextRearmTime;
         static bool _checkInFlight;
 
+        /// <summary>The newer version a check discovered, or null when current.
+        /// Windows show a green update icon by the settings gear while set.</summary>
+        public static string AvailableVersion { get; private set; }
+        public static event Action<string> onAvailableVersionChanged;
+
+        static void SetAvailable(string version)
+        {
+            if (AvailableVersion == version) return;
+            AvailableVersion = version;
+            onAvailableVersionChanged?.Invoke(version);
+        }
+
         static UpdateChecker()
         {
             EditorApplication.update += OnEditorUpdate;
@@ -89,6 +101,8 @@ namespace ADKOM.TextEditor
             return info != null ? info.version : "0.0.0";
         }
 
+        internal static bool IsEmbeddedPackage => IsEmbedded();
+
         static bool IsEmbedded()
         {
             var info = UnityEditor.PackageManager.PackageInfo.FindForAssembly(typeof(UpdateChecker).Assembly);
@@ -132,10 +146,12 @@ namespace ADKOM.TextEditor
                                 ? "This copy is embedded for development — update manually via git."
                                 : "You will be offered the update when the editor is idle."));
                         onResult?.Invoke("New version available: " + latest);
+                        SetAvailable(latest);
                         if (!IsEmbedded()) PromptWhenIdle(current, latest);
                     }
                     else
                     {
+                        SetAvailable(null);
                         if (manual) AteConsole.Info($"[ADKOM Text Editor] Up to date ({current}).");
                         onResult?.Invoke("Up to date (" + current + ").");
                     }

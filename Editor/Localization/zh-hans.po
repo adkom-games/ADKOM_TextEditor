@@ -1370,3 +1370,9 @@ msgstr "Git"
 
 msgid "Match Previous Bracket"
 msgstr "匹配上一个括号"
+
+msgid "Update available: {0} (installed: {1})"
+msgstr "有可用更新：{0}（已安装：{1}）"
+
+msgid "New version available: {0}. This copy is embedded for development — update manually via git."
+msgstr "有新版本：{0}。此副本为开发用嵌入式安装 — 请通过 git 手动更新。"

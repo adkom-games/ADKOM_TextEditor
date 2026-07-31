@@ -51,6 +51,7 @@ namespace ADKOM.TextEditor
         VisualElement _editorArea;
         MarkdownView _mdView;
         UnityEditor.UIElements.ToolbarButton _mdToggle;
+        UnityEditor.UIElements.ToolbarButton _updateBtn;
         VisualElement _mdFormatBar;
         Label _emptyHint;
         VisualElement _settingsPane;
@@ -292,6 +293,26 @@ namespace ADKOM.TextEditor
             _mdToggle = new ToolbarButton(ToggleMdMode);
             _mdToggle.style.display = DisplayStyle.None; // transient: .md tabs only
             toolbar.Add(_mdToggle);
+            // Update-available icon: pinned immediately left of the gear —
+            // transient bars (MD toolbar etc.) are added BEFORE it above, so
+            // they appear to its left and never displace it.
+            _updateBtn = new ToolbarButton(OnUpdateIconClicked);
+            var dlTex = EditorGUIUtility.IconContent("Download-Available").image;
+            if (dlTex != null)
+            {
+                var dlIcon = new Image { image = dlTex, scaleMode = ScaleMode.ScaleToFit };
+                dlIcon.style.width = 16;
+                dlIcon.style.height = 16;
+                dlIcon.tintColor = new Color(0.35f, 0.9f, 0.35f);
+                _updateBtn.Add(dlIcon);
+            }
+            else
+            {
+                _updateBtn.text = "⭳";
+                _updateBtn.style.color = new Color(0.35f, 0.9f, 0.35f);
+            }
+            RefreshUpdateIcon(UpdateChecker.AvailableVersion);
+            toolbar.Add(_updateBtn);
             var gear = new ToolbarButton(OpenSettings) { tooltip = L10n.Tr("Settings") };
             var gearTex = EditorGUIUtility.IconContent("SettingsIcon").image;
             if (gearTex != null)
@@ -425,6 +446,7 @@ namespace ADKOM.TextEditor
 
             UpdateChecker.onInstallStateChanged += SetUpdatingOverlay;
             if (UpdateChecker.InstallInProgress) SetUpdatingOverlay(true);
+            UpdateChecker.onAvailableVersionChanged += RefreshUpdateIcon;
 
             // --- Status bar ---
             var status = new VisualElement { name = "status-bar" };
@@ -1407,7 +1429,32 @@ namespace ADKOM.TextEditor
         void OnDisable()
         {
             UpdateChecker.onInstallStateChanged -= SetUpdatingOverlay;
+            UpdateChecker.onAvailableVersionChanged -= RefreshUpdateIcon;
             CopilotService.onStatusChanged -= OnCopilotStatus;
+        }
+
+        /// <summary>Shows/hides the green update icon by the settings gear.</summary>
+        void RefreshUpdateIcon(string version)
+        {
+            if (_updateBtn == null) return;
+            bool show = !string.IsNullOrEmpty(version);
+            _updateBtn.style.display = show ? DisplayStyle.Flex : DisplayStyle.None;
+            if (show)
+                _updateBtn.tooltip = string.Format(
+                    L10n.Tr("Update available: {0} (installed: {1})"),
+                    version, UpdateChecker.CurrentVersion());
+        }
+
+        void OnUpdateIconClicked()
+        {
+            string latest = UpdateChecker.AvailableVersion;
+            if (string.IsNullOrEmpty(latest)) return;
+            if (UpdateChecker.IsEmbeddedPackage)
+                AteConsole.Info("[ADKOM Text Editor] " + string.Format(
+                    L10n.Tr("New version available: {0}. This copy is embedded for development — update manually via git."),
+                    latest));
+            else
+                UpdatePromptWindow.Open(UpdateChecker.CurrentVersion(), latest);
         }
 
 
