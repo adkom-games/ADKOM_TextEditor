@@ -66,6 +66,7 @@ namespace ADKOM.TextEditor
             _rowScroll = new ScrollView(ScrollViewMode.Vertical)
             { style = { width = 250, flexShrink = 0, borderRightWidth = 1,
                         borderRightColor = new Color(0.5f, 0.5f, 0.5f, 0.4f) } };
+            _rowScroll.focusable = true; // arrow keys walk the timeline
             split.Add(_rowScroll);
 
             _preview = new CodeView { readOnly = true, style = { flexGrow = 1 } };
@@ -87,9 +88,44 @@ namespace ADKOM.TextEditor
             buttons.Add(_copy);
             root.Add(buttons);
 
+            // Keyboard: Up/Down (and Home/End) walk the timeline, Enter
+            // restores the selected point — unless the read-only preview has
+            // focus, which keeps its own caret navigation.
+            root.RegisterCallback<KeyDownEvent>(OnKey, TrickleDown.TrickleDown);
+
             root.schedule.Execute(Poll).Every(400);
             _lastUndo = -1; // force first rebuild
             Poll();
+            _rowScroll.schedule.Execute(() => _rowScroll.Focus());
+        }
+
+        void OnKey(KeyDownEvent e)
+        {
+            if (_preview != null && e.target is VisualElement ve &&
+                (ve == _preview || _preview.Contains(ve)))
+                return; // preview owns its keys while focused
+            if (_rows.Count == 0) return;
+            int target = e.keyCode switch
+            {
+                KeyCode.UpArrow => Mathf.Max(0, _sel - 1),
+                KeyCode.DownArrow => Mathf.Min(_rows.Count - 1, _sel + 1),
+                KeyCode.Home => 0,
+                KeyCode.End => _rows.Count - 1,
+                _ => -1
+            };
+            if (target >= 0)
+            {
+                Select(target);
+                if (_sel >= 0 && _sel < _rowLabels.Count)
+                    _rowScroll.ScrollTo(_rowLabels[_sel]);
+                e.StopPropagation();
+                return;
+            }
+            if ((e.keyCode == KeyCode.Return || e.keyCode == KeyCode.KeypadEnter) && _sel >= 0)
+            {
+                RestoreSelected();
+                e.StopPropagation();
+            }
         }
 
         void Poll()
@@ -131,7 +167,8 @@ namespace ADKOM.TextEditor
                     l.style.paddingLeft = 4;
                     l.style.whiteSpace = WhiteSpace.NoWrap;
                     int idx = i;
-                    l.RegisterCallback<PointerDownEvent>(e => { Select(idx); e.StopPropagation(); });
+                    l.RegisterCallback<PointerDownEvent>(e =>
+                    { Select(idx); _rowScroll.Focus(); e.StopPropagation(); });
                     _rowScroll.Add(l);
                     _rowLabels.Add(l);
                 }
