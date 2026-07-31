@@ -1370,3 +1370,9 @@ msgstr "Git"
 
 msgid "Match Previous Bracket"
 msgstr "이전 대응 괄호로 이동"
+
+msgid "Update available: {0} (installed: {1})"
+msgstr "업데이트 가능: {0} (설치됨: {1})"
+
+msgid "New version available: {0}. This copy is embedded for development — update manually via git."
+msgstr "새 버전이 있습니다: {0}. 이 사본은 개발용으로 임베드되어 있습니다 — git으로 수동 업데이트하세요."
