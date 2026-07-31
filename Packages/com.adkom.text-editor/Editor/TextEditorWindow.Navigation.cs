@@ -120,6 +120,24 @@ namespace ADKOM.TextEditor
         internal object HistoryDocToken => CanEditDoc ? Active : null;
         internal string HistoryDocName => HasDocs ? Active.DisplayName : string.Empty;
 
+        /// <summary>Dresses an auxiliary CodeView (the History preview) like
+        /// the main editor: same theme palette, font, line numbers, and the
+        /// active document's syntax classifier.</summary>
+        internal void StyleAuxView(CodeView view)
+        {
+            view.SetPalette(CurrentTheme.Current);
+            view.ApplyFontConfig();
+            view.showLineNumbers = true;
+            string classifierPath = null;
+            if (HasDocs && !Active.IsSettings)
+            {
+                if (Active.HasFile) classifierPath = Active.FilePath;
+                else if (Active.VirtualCSharp) classifierPath = "virtual.cs";
+                else if (Active.VirtualMarkdown) classifierPath = "virtual.md";
+            }
+            view.SetClassifier(SyntaxClassifiers.ForPath(classifierPath));
+        }
+
         /// <summary>Walks the undo/redo stacks to a point on the timeline —
         /// through the normal Undo()/Redo(), so the move itself stays
         /// reversible.</summary>

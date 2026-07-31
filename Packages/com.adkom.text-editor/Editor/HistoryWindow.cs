@@ -22,8 +22,8 @@ namespace ADKOM.TextEditor
 
         TextEditorWindow _owner;
         ScrollView _rowScroll;
-        ScrollView _previewScroll;
-        Label _preview;
+        CodeView _preview;   // the REAL editor view, read-only — full syntax
+                             // coloring, line numbers, themes, selection/copy
         Label _header;
         Button _restore, _openTab, _copy;
         readonly List<Label> _rowLabels = new List<Label>();
@@ -68,13 +68,9 @@ namespace ADKOM.TextEditor
                         borderRightColor = new Color(0.5f, 0.5f, 0.5f, 0.4f) } };
             split.Add(_rowScroll);
 
-            _previewScroll = new ScrollView(ScrollViewMode.VerticalAndHorizontal) { style = { flexGrow = 1 } };
-            _preview = new Label { enableRichText = true };
-            _preview.AddToClassList("code-line");
-            _preview.style.whiteSpace = WhiteSpace.Pre;
-            _preview.style.paddingLeft = 6;
-            _previewScroll.Add(_preview);
-            split.Add(_previewScroll);
+            _preview = new CodeView { readOnly = true, style = { flexGrow = 1 } };
+            _owner.StyleAuxView(_preview);
+            split.Add(_preview);
             root.Add(split);
 
             var buttons = new VisualElement
@@ -162,36 +158,26 @@ namespace ADKOM.TextEditor
             for (int i = 0; i < _rows.Count && i < _rowLabels.Count; i++)
                 _rowLabels[i].style.backgroundColor = i == _sel
                     ? new Color(0.25f, 0.42f, 0.6f, 0.45f) : Color.clear;
-            if (idx < 0 || idx >= _rows.Count) { _preview.text = ""; _selText = null; return; }
+            if (idx < 0 || idx >= _rows.Count) { _preview.value = ""; _selText = null; return; }
 
             var r = _rows[idx];
             var view = _owner.HistoryView;
             _selText = view.HistoryStateAt(r.UndoSteps, r.RedoSteps, out int changeLine);
             if (r.IsCurrent) changeLine = r.Line;
 
-            // Highlight the changed line; keep literal '<' literal elsewhere.
-            static string Np(string s) => s.IndexOf('<') >= 0 ? "<noparse>" + s + "</noparse>" : s;
-            var lines = _selText.Split('\n');
-            var sb = new System.Text.StringBuilder(_selText.Length + 64);
-            for (int i = 0; i < lines.Length; i++)
-            {
-                if (i > 0) sb.Append('\n');
-                if (i == changeLine) sb.Append("<color=#FFD75A>").Append(Np(lines[i])).Append("</color>");
-                else sb.Append(Np(lines[i]));
-            }
-            _preview.text = sb.ToString();
+            _owner.StyleAuxView(_preview); // the active doc (theme/language) may have changed
+            _preview.value = _selText;
+            // Select the changed line — the editor's own selection highlight
+            // marks it — and center it.
+            _preview.GoToLine(changeLine + 1, 1);
+            int lineStart = _preview.LineColToIndex(changeLine, 0);
+            int lineEnd = changeLine + 1 < _selText.Split('\n').Length
+                ? _preview.LineColToIndex(changeLine + 1, 0) : _selText.Length;
+            _preview.selectIndex = lineStart;
+            _preview.cursorIndex = lineEnd;
+            _preview.CenterOnLine(changeLine);
 
             _restore.SetEnabled(!r.IsCurrent);
-            // Scroll the preview to the changed line once it has a layout.
-            int cl = changeLine, total = lines.Length;
-            _previewScroll.schedule.Execute(() =>
-            {
-                float h = _preview.layout.height;
-                if (float.IsNaN(h) || h <= 0 || total == 0) return;
-                float y = h * cl / total - _previewScroll.contentViewport.layout.height * 0.5f;
-                _previewScroll.verticalScroller.value =
-                    Mathf.Clamp(y, _previewScroll.verticalScroller.lowValue, _previewScroll.verticalScroller.highValue);
-            });
         }
 
         void RestoreSelected()

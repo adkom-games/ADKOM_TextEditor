@@ -1691,8 +1691,16 @@ namespace ADKOM.TextEditor
             => ReplaceRangeInternal(start, end, replacement, caret,
                 typing ? EditKind.TypeChar : EditKind.Programmatic);
 
+        /// <summary>Read-only mode (History previews, revision views): every
+        /// edit funnels through ReplaceRangeInternal / MultiReplace, so gating
+        /// them blocks typing, paste, drops, and commands — while navigation,
+        /// selection, and copy keep working. value/SetValueWithoutNotify (the
+        /// LOAD path) is deliberately not gated.</summary>
+        internal bool readOnly;
+
         internal void ReplaceRangeInternal(int start, int end, string replacement, int caret, EditKind kind)
         {
+            if (readOnly) return;
             string v = GetValueInternal();
             start = Mathf.Clamp(start, 0, v.Length);
             end = Mathf.Clamp(end, start, v.Length);
@@ -1743,7 +1751,7 @@ namespace ADKOM.TextEditor
 
         public void Undo()
         {
-            if (_gameMode || _undo.Count == 0) return;
+            if (_gameMode || readOnly || _undo.Count == 0) return;
             var op = _undo[_undo.Count - 1];
             _undo.RemoveAt(_undo.Count - 1);
             CollapseExtraCarets();
@@ -1776,7 +1784,7 @@ namespace ADKOM.TextEditor
 
         public void Redo()
         {
-            if (_gameMode || _redo.Count == 0) return;
+            if (_gameMode || readOnly || _redo.Count == 0) return;
             var op = _redo[_redo.Count - 1];
             _redo.RemoveAt(_redo.Count - 1);
             CollapseExtraCarets();
@@ -2291,6 +2299,7 @@ namespace ADKOM.TextEditor
         internal void MultiReplace(List<(int s, int e)> regions, List<string> texts,
             int backspace = 0, int forwardDelete = 0)
         {
+            if (readOnly) return;
             string v = GetValueInternal();
             var op = new UndoOp
             {
