@@ -1367,3 +1367,6 @@ msgstr "ハッシュをコピー"
 
 msgid "Git"
 msgstr "Git"
+
+msgid "Match Previous Bracket"
+msgstr "前の対応括弧へ移動"

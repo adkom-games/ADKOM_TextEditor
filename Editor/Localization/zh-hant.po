@@ -1367,3 +1367,6 @@ msgstr "複製雜湊"
 
 msgid "Git"
 msgstr "Git"
+
+msgid "Match Previous Bracket"
+msgstr "比對上一個括號"
