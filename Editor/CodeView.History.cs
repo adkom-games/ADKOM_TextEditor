@@ -5,10 +5,13 @@ using UnityEditor;
 
 namespace ADKOM.TextEditor
 {
-    // History navigation: read-only views over the undo/redo stacks for the
+    // History navigation: read-only views over undo/redo stacks for the
     // History window — a summary row per undo step (the unit one Undo()
     // reverts) and full document reconstruction at any point, computed from
     // the stored deltas (never stored snapshots, so memory stays flat).
+    // The static ...For variants work over ANY document's detached UndoWorld
+    // (the History window's per-tab browsing); the instance methods serve the
+    // live view's attached world.
     public partial class CodeView
     {
         internal struct HistoryRow
@@ -24,38 +27,48 @@ namespace ADKOM.TextEditor
         internal int UndoDepth => _undo.Count;
         internal int RedoDepth => _redo.Count;
 
+        /// <summary>The ACTIVE document's world (attached to this view) — the
+        /// History window reads inactive documents' worlds off TextDocument.</summary>
+        internal UndoWorld LiveUndoWorld => _world;
+
+        internal List<HistoryRow> HistoryRows() => HistoryRowsFor(_world, GetValueInternal());
+
+        internal string HistoryStateAt(int undoSteps, int redoSteps, out int changeLine) =>
+            HistoryStateFor(_world, GetValueInternal(), undoSteps, redoSteps, out changeLine);
+
         /// <summary>The timeline, newest-future first: redo entries (furthest
         /// future at the top), then the current state, then past entries, then
         /// the reachable original. Empty when nothing is recorded.</summary>
-        internal List<HistoryRow> HistoryRows()
+        internal static List<HistoryRow> HistoryRowsFor(UndoWorld world, string current)
         {
-            var rows = new List<HistoryRow>(_undo.Count + _redo.Count + 1);
-            if (_undo.Count == 0 && _redo.Count == 0) return rows;
+            var undo = world.Undo;
+            var redo = world.Redo;
+            var rows = new List<HistoryRow>(undo.Count + redo.Count + 1);
+            if (undo.Count == 0 && redo.Count == 0) return rows;
 
-            // Future: redo all the way lands after _redo[0], so walk from the
+            // Future: redo all the way lands after redo[0], so walk from the
             // far end. State evolves forward as we go, giving exact lines.
             var futures = new List<HistoryRow>();
-            string t = GetValueInternal();
-            for (int i = _redo.Count - 1; i >= 0; i--)
+            string t = current;
+            for (int i = redo.Count - 1; i >= 0; i--)
             {
-                t = ApplyForward(t, _redo[i]);
+                t = ApplyForward(t, redo[i]);
                 futures.Add(new HistoryRow
                 {
-                    Summary = Describe(_redo[i]),
-                    Line = LineOfOffset(t, _redo[i].Start),
-                    RedoSteps = _redo.Count - i
+                    Summary = Describe(redo[i]),
+                    Line = LineOfOffset(t, redo[i].Start),
+                    RedoSteps = redo.Count - i
                 });
             }
             for (int i = futures.Count - 1; i >= 0; i--) rows.Add(futures[i]); // furthest first
 
             // Current: the newest undo entry's after-state is the buffer itself.
-            string cur = GetValueInternal();
-            if (_undo.Count > 0)
+            if (undo.Count > 0)
             {
                 rows.Add(new HistoryRow
                 {
-                    Summary = Describe(_undo[_undo.Count - 1]),
-                    Line = LineOfOffset(cur, _undo[_undo.Count - 1].Start),
+                    Summary = Describe(undo[undo.Count - 1]),
+                    Line = LineOfOffset(current, undo[undo.Count - 1].Start),
                     IsCurrent = true
                 });
             }
@@ -63,45 +76,46 @@ namespace ADKOM.TextEditor
 
             // Past: walking back through the undo stack, reverting as we go so
             // each row's line is exact in ITS state.
-            string p = cur;
-            for (int i = _undo.Count - 1; i >= 1; i--)
+            string p = current;
+            for (int i = undo.Count - 1; i >= 1; i--)
             {
-                p = ApplyRevert(p, _undo[i]);
+                p = ApplyRevert(p, undo[i]);
                 rows.Add(new HistoryRow
                 {
-                    Summary = Describe(_undo[i - 1]),
-                    Line = LineOfOffset(p, _undo[i - 1].Start),
-                    UndoSteps = _undo.Count - i
+                    Summary = Describe(undo[i - 1]),
+                    Line = LineOfOffset(p, undo[i - 1].Start),
+                    UndoSteps = undo.Count - i
                 });
             }
-            if (_undo.Count > 0)
-                rows.Add(new HistoryRow { IsOriginal = true, UndoSteps = _undo.Count });
+            if (undo.Count > 0)
+                rows.Add(new HistoryRow { IsOriginal = true, UndoSteps = undo.Count });
             return rows;
         }
 
         /// <summary>The document text at a point on the timeline: undoSteps
         /// back, or redoSteps forward (one of them 0). changeLine is the line
         /// of the last change between here and that state, for scrolling.</summary>
-        internal string HistoryStateAt(int undoSteps, int redoSteps, out int changeLine)
+        internal static string HistoryStateFor(UndoWorld world, string current,
+            int undoSteps, int redoSteps, out int changeLine)
         {
-            string t = GetValueInternal();
+            string t = current;
             changeLine = 0;
-            for (int i = 0; i < undoSteps && i < _undo.Count; i++)
+            for (int i = 0; i < undoSteps && i < world.Undo.Count; i++)
             {
-                var op = _undo[_undo.Count - 1 - i];
+                var op = world.Undo[world.Undo.Count - 1 - i];
                 t = ApplyRevert(t, op);
                 changeLine = LineOfOffset(t, op.Start);
             }
-            for (int i = 0; i < redoSteps && i < _redo.Count; i++)
+            for (int i = 0; i < redoSteps && i < world.Redo.Count; i++)
             {
-                var op = _redo[_redo.Count - 1 - i];
+                var op = world.Redo[world.Redo.Count - 1 - i];
                 t = ApplyForward(t, op);
                 changeLine = LineOfOffset(t, op.Start);
             }
             return t;
         }
 
-        static string ApplyRevert(string text, UndoOp op)
+        internal static string ApplyRevert(string text, UndoOp op)
         {
             var sb = new StringBuilder(text);
             if (op.Segments != null)
@@ -118,7 +132,7 @@ namespace ADKOM.TextEditor
             return sb.ToString();
         }
 
-        static string ApplyForward(string text, UndoOp op)
+        internal static string ApplyForward(string text, UndoOp op)
         {
             var sb = new StringBuilder(text);
             if (op.Segments != null)

@@ -115,45 +115,126 @@ namespace ADKOM.TextEditor
         }
 
         // ---- History window plumbing ----
+        // The History window carries its OWN document selection (an unsynced
+        // tab bar), so everything here is parameterized by TextDocument. The
+        // ACTIVE doc's undo world lives attached to _code; every other doc's
+        // world sits detached on doc.UndoWorld with the text in doc.Content.
 
-        internal CodeView HistoryView => CanEditDoc ? _code : null;
-        internal object HistoryDocToken => CanEditDoc ? Active : null;
-        internal string HistoryDocName => HasDocs ? Active.DisplayName : string.Empty;
+        /// <summary>Documents eligible for history browsing (settings tabs
+        /// keep their pseudo-doc out of it).</summary>
+        internal List<TextDocument> HistoryDocs()
+        {
+            var list = new List<TextDocument>(_docs.Count);
+            foreach (var d in _docs) if (!d.IsSettings) list.Add(d);
+            return list;
+        }
+
+        internal TextDocument HistoryActiveDoc =>
+            CanEditDoc ? Active : null;
+
+        bool HistoryIsActive(TextDocument d) =>
+            d != null && HasDocs && !Active.IsSettings && ReferenceEquals(Active, d);
+
+        CodeView.UndoWorld HistoryWorldOf(TextDocument d) =>
+            HistoryIsActive(d) ? _code.LiveUndoWorld
+                               : d.UndoWorld as CodeView.UndoWorld;
+
+        string HistoryTextOf(TextDocument d) =>
+            HistoryIsActive(d) ? _code.value : (d.Content ?? string.Empty);
+
+        /// <summary>Cheap change signature for the window's poll: stack depths
+        /// plus a content stamp (live doc version, or background text hash).</summary>
+        internal (int undo, int redo, int stamp) HistoryCountsFor(TextDocument d)
+        {
+            var w = HistoryWorldOf(d);
+            int u = w?.Undo.Count ?? 0, r = w?.Redo.Count ?? 0;
+            int stamp = HistoryIsActive(d) ? _code.DocVersion
+                : (d.Content != null ? d.Content.GetHashCode() : 0);
+            return (u, r, stamp);
+        }
+
+        internal List<CodeView.HistoryRow> HistoryRowsFor(TextDocument d)
+        {
+            var w = HistoryWorldOf(d);
+            if (w == null) return new List<CodeView.HistoryRow>();
+            return CodeView.HistoryRowsFor(w, HistoryTextOf(d));
+        }
+
+        internal string HistoryStateFor(TextDocument d, int undoSteps, int redoSteps,
+            out int changeLine)
+        {
+            var w = HistoryWorldOf(d);
+            if (w == null) { changeLine = 0; return HistoryTextOf(d); }
+            return CodeView.HistoryStateFor(w, HistoryTextOf(d), undoSteps, redoSteps,
+                out changeLine);
+        }
 
         /// <summary>Dresses an auxiliary CodeView (the History preview) like
         /// the main editor: same theme palette, font, line numbers, and the
-        /// active document's syntax classifier.</summary>
-        internal void StyleAuxView(CodeView view)
+        /// given document's syntax classifier.</summary>
+        internal void StyleAuxView(CodeView view, TextDocument doc = null)
         {
             view.SetPalette(CurrentTheme.Current);
             view.ApplyFontConfig();
             view.showLineNumbers = true;
+            if (doc == null && HasDocs && !Active.IsSettings) doc = Active;
             string classifierPath = null;
-            if (HasDocs && !Active.IsSettings)
+            if (doc != null)
             {
-                if (Active.HasFile) classifierPath = Active.FilePath;
-                else if (Active.VirtualCSharp) classifierPath = "virtual.cs";
-                else if (Active.VirtualMarkdown) classifierPath = "virtual.md";
+                if (doc.HasFile) classifierPath = doc.FilePath;
+                else if (doc.VirtualCSharp) classifierPath = "virtual.cs";
+                else if (doc.VirtualMarkdown) classifierPath = "virtual.md";
             }
             view.SetClassifier(SyntaxClassifiers.ForPath(classifierPath));
         }
 
-        /// <summary>Walks the undo/redo stacks to a point on the timeline —
-        /// through the normal Undo()/Redo(), so the move itself stays
-        /// reversible.</summary>
-        internal void HistoryStep(int undoSteps, int redoSteps)
+        /// <summary>Walks a document's undo/redo stacks to a point on the
+        /// timeline. The active doc goes through the normal Undo()/Redo() so
+        /// the move itself stays reversible; a background doc gets the same
+        /// bookkeeping applied to its detached world and stored Content.</summary>
+        internal void HistoryStepFor(TextDocument d, int undoSteps, int redoSteps)
         {
-            if (!CanEditDoc) return;
-            for (int i = 0; i < undoSteps; i++) _code.Undo();
-            for (int i = 0; i < redoSteps; i++) _code.Redo();
+            if (d == null) return;
+            if (HistoryIsActive(d))
+            {
+                for (int i = 0; i < undoSteps; i++) _code.Undo();
+                for (int i = 0; i < redoSteps; i++) _code.Redo();
+                return;
+            }
+            var w = d.UndoWorld as CodeView.UndoWorld;
+            if (w == null) return;
+            string text = d.Content ?? string.Empty;
+            bool moved = false;
+            for (int i = 0; i < undoSteps && w.Undo.Count > 0; i++)
+            {
+                var op = w.Undo[w.Undo.Count - 1];
+                w.Undo.RemoveAt(w.Undo.Count - 1);
+                text = CodeView.ApplyRevert(text, op);
+                w.Redo.Add(op);
+                moved = true;
+            }
+            for (int i = 0; i < redoSteps && w.Redo.Count > 0; i++)
+            {
+                var op = w.Redo[w.Redo.Count - 1];
+                w.Redo.RemoveAt(w.Redo.Count - 1);
+                text = CodeView.ApplyForward(text, op);
+                w.Undo.Add(op);
+                moved = true;
+            }
+            if (!moved) return;
+            d.Content = text;
+            d.IsDirty = true;
+            RebuildTabs();
+            SaveSessionNow();
         }
 
         /// <summary>Opens a history snapshot as a read-only-ish virtual tab
         /// (same C# highlighting as the source document when applicable).</summary>
-        internal void HistoryOpenSnapshot(string title, string content)
+        internal void HistoryOpenSnapshot(string title, string content, TextDocument like)
         {
-            bool csharp = HasDocs && Active.HasFile &&
-                Active.FilePath.EndsWith(".cs", System.StringComparison.OrdinalIgnoreCase);
+            bool csharp = like != null && like.HasFile &&
+                like.FilePath.EndsWith(".cs", System.StringComparison.OrdinalIgnoreCase);
+            csharp |= like != null && like.VirtualCSharp;
             OpenVirtualDoc(title, content, csharp);
         }
 
