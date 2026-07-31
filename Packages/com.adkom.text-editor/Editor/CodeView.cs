@@ -2902,6 +2902,13 @@ namespace ADKOM.TextEditor
         bool _lineDrag;
         int _lineDragLine;
 
+        // Own click-chain counter: Unity's PointerDownEvent.clickCount caps at
+        // 2 on some platforms (Windows among them), so a third click never
+        // reports as 3 — count consecutive nearby clicks ourselves.
+        double _chainTime;
+        Vector2 _chainPos;
+        int _chainClicks;
+
         void OnPointerDown(PointerDownEvent e)
         {
             // Addon mouse hook (API 1.1): text-coordinate event first; a
@@ -2937,10 +2944,19 @@ namespace ADKOM.TextEditor
             if (e.button == 0 && !e.altKey) CollapseExtraCarets();
             if (e.button != 0) return;
             Focus();
+            // Count the click chain ourselves (see _chainClicks note).
+            double now = EditorApplication.timeSinceStartup;
+            if (now - _chainTime < 0.5 && ((Vector2)(Vector3)e.position - _chainPos).sqrMagnitude < 36f)
+                _chainClicks++;
+            else
+                _chainClicks = 1;
+            _chainTime = now;
+            _chainPos = (Vector2)(Vector3)e.position;
+            int clicks = Mathf.Max(e.clickCount, _chainClicks);
             // Pressing INSIDE the selection starts a potential text drag
             // (must-have #19c): the selection is preserved until we know
             // whether this is a drag or a plain caret-placing click.
-            if (HasSelection && e.clickCount == 1 && !e.shiftKey && !(e.ctrlKey || e.commandKey))
+            if (HasSelection && clicks == 1 && !e.shiftKey && !(e.ctrlKey || e.commandKey))
             {
                 HitTest(e.position, out int hl, out int hc);
                 int hitIdx = LineColToIndex(hl, hc);
@@ -2967,7 +2983,7 @@ namespace ADKOM.TextEditor
                 e.StopPropagation();
                 return; // no drag-select from a navigate gesture
             }
-            if (e.clickCount >= 3)
+            if (clicks >= 3)
             {
                 // Triple-click: select the whole line; dragging from here
                 // extends the selection a whole line at a time.
@@ -2976,7 +2992,7 @@ namespace ADKOM.TextEditor
                 _lineDragLine = _caretLine;
                 SelectCurrentLine();
             }
-            else if (e.clickCount >= 2)
+            else if (clicks >= 2)
             {
                 // Double-click folding gestures (before word selection):
                 // - on a folded header's "⋯ }" indicator (past the real end of
