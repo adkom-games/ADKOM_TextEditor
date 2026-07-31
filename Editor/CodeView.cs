@@ -3030,6 +3030,7 @@ namespace ADKOM.TextEditor
                 if (!_textDragging &&
                     ((Vector2)e.position - _textDragOrigin).sqrMagnitude > 16f)
                     _textDragging = true;
+                if (_textDragging) UpdateDropCaret(e.position);
                 return;
             }
             if (!_dragging)
@@ -3082,6 +3083,7 @@ namespace ADKOM.TextEditor
                 bool wasDragging = _textDragging;
                 _textDragPending = false;
                 _textDragging = false;
+                HideDropCaret();
                 this.ReleasePointer(e.pointerId);
                 if (wasDragging) DropSelectionAt(e.position, e.ctrlKey || e.commandKey);
                 else
@@ -3103,6 +3105,35 @@ namespace ADKOM.TextEditor
 
         bool _textDragPending, _textDragging;
         Vector2 _textDragOrigin;
+        VisualElement _dropCaret; // insertion-point indicator during the drag
+
+        /// <summary>Shows the insertion point under the mouse while dragging
+        /// the selection (a solid bar, distinct from the blinking caret which
+        /// stays on the dragged text until the drop commits).</summary>
+        void UpdateDropCaret(Vector2 worldPos)
+        {
+            if (_dropCaret == null)
+            {
+                _dropCaret = new VisualElement { name = "drop-caret" };
+                _dropCaret.style.position = Position.Absolute;
+                _dropCaret.style.width = 2;
+                _dropCaret.pickingMode = PickingMode.Ignore;
+                _content.Add(_dropCaret);
+            }
+            HitTest(worldPos, out int line, out int col);
+            int sub = SubRowOfCol(line, col);
+            RowBounds(line, sub, out int rs, out _);
+            _dropCaret.style.backgroundColor = _textColor;
+            _dropCaret.style.left = MeasureRange(line, rs, col);
+            _dropCaret.style.top = (RowOfLine(line) + sub) * _lineHeight;
+            _dropCaret.style.height = _lineHeight;
+            _dropCaret.style.display = DisplayStyle.Flex;
+        }
+
+        void HideDropCaret()
+        {
+            if (_dropCaret != null) _dropCaret.style.display = DisplayStyle.None;
+        }
 
         /// <summary>Moves (or, with Ctrl, copies) the selected text to the
         /// drop position — one undo step via the multi-edit machinery.</summary>
