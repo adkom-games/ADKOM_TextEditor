@@ -2898,6 +2898,10 @@ namespace ADKOM.TextEditor
         bool _wordDrag;
         int _wordDragLine, _wordDragStart, _wordDragEnd;
 
+        // Line-snap drag state: set by TRIPLE-click, extends by whole lines.
+        bool _lineDrag;
+        int _lineDragLine;
+
         void OnPointerDown(PointerDownEvent e)
         {
             // Addon mouse hook (API 1.1): text-coordinate event first; a
@@ -2963,7 +2967,16 @@ namespace ADKOM.TextEditor
                 e.StopPropagation();
                 return; // no drag-select from a navigate gesture
             }
-            if (e.clickCount >= 2)
+            if (e.clickCount >= 3)
+            {
+                // Triple-click: select the whole line; dragging from here
+                // extends the selection a whole line at a time.
+                _wordDrag = false;
+                _lineDrag = true;
+                _lineDragLine = _caretLine;
+                SelectCurrentLine();
+            }
+            else if (e.clickCount >= 2)
             {
                 // Double-click folding gestures (before word selection):
                 // - on a folded header's "⋯ }" indicator (past the real end of
@@ -3008,8 +3021,37 @@ namespace ADKOM.TextEditor
                 UpdateLinkHover(e.position); // plain hover: link tooltip
                 return;
             }
-            if (_wordDrag) WordSnapSelectTo(e.position);
+            if (_lineDrag) LineSnapSelectTo(e.position);
+            else if (_wordDrag) WordSnapSelectTo(e.position);
             else PlaceCaretAt(e.position, true);
+        }
+
+        /// <summary>Extends a triple-click selection by WHOLE lines: the block
+        /// always spans from the originally-clicked line to the line under the
+        /// pointer, newline included (mirrors WordSnapSelectTo).</summary>
+        void LineSnapSelectTo(Vector3 pos)
+        {
+            HitTest(pos, out int line, out _);
+            line = Mathf.Clamp(line, 0, _lines.Count - 1);
+            if (line >= _lineDragLine)
+            {
+                _anchorLine = _lineDragLine;
+                _anchorCol = 0;
+                if (line + 1 < _lines.Count) { _caretLine = line + 1; _caretCol = 0; }
+                else { _caretLine = line; _caretCol = _lines[line].Length; }
+            }
+            else
+            {
+                // Extending upward: anchor at the END of the original line's
+                // block so it stays fully selected.
+                if (_lineDragLine + 1 < _lines.Count) { _anchorLine = _lineDragLine + 1; _anchorCol = 0; }
+                else { _anchorLine = _lineDragLine; _anchorCol = _lines[_lineDragLine].Length; }
+                _caretLine = line;
+                _caretCol = 0;
+            }
+            _preferredCol = -1;
+            EnsureCaretVisible();
+            RefreshVisible();
         }
 
         void OnPointerUp(PointerUpEvent e)
@@ -3037,6 +3079,7 @@ namespace ADKOM.TextEditor
             if (!_dragging) return;
             _dragging = false;
             _wordDrag = false;
+            _lineDrag = false;
             this.ReleasePointer(e.pointerId);
         }
 
