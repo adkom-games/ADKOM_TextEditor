@@ -7,14 +7,16 @@ using UnityEngine.UIElements;
 namespace ADKOM.TextEditor
 {
     /// <summary>
-    /// History navigation: a visual timeline of the active document's
-    /// undo/redo history. One row per undo step — future (redo) entries on
-    /// top, the current state, then past entries down to the original —
-    /// each showing a summary of the edit and its line. Selecting a row
-    /// previews the document EXACTLY as it looked at that point (changed
-    /// line highlighted); Restore walks Undo/Redo to return there (itself
-    /// still undoable), and a snapshot can be opened as a new tab or copied.
-    /// Modeless, and it follows the active tab.
+    /// History navigation: a visual timeline of a document's undo/redo
+    /// history. One row per undo step — future (redo) entries on top, the
+    /// current state, then past entries down to the original — each showing
+    /// a summary of the edit and its line. Selecting a row previews the
+    /// document EXACTLY as it looked at that point (changed line
+    /// highlighted); Restore walks Undo/Redo to return there (itself still
+    /// undoable for the active doc), and a snapshot can be opened as a new
+    /// tab or copied. A tab bar above the preview picks WHICH document's
+    /// history to browse — deliberately NOT synced with the editor's active
+    /// tab, so histories can be inspected without switching the editor.
     /// </summary>
     public class HistoryWindow : EditorWindow
     {
@@ -22,19 +24,26 @@ namespace ADKOM.TextEditor
 
         TextEditorWindow _owner;
         ScrollView _rowScroll;
+        ScrollView _tabScroll; // the window's OWN document tab bar
         CodeView _preview;   // the REAL editor view, read-only — full syntax
                              // coloring, line numbers, themes, selection/copy
         Label _header;
         Button _restore, _openTab, _copy;
         readonly List<Label> _rowLabels = new List<Label>();
+        readonly List<Label> _tabLabels = new List<Label>();
 
         List<CodeView.HistoryRow> _rows = new List<CodeView.HistoryRow>();
         int _sel = -1;
         string _selText;    // reconstructed state of the selected row
 
+        // The window's own document selection — independent of the editor's
+        // active tab by design.
+        TextDocument _doc;
+
         // Rebuild detection.
         object _lastDoc;
-        int _lastUndo = -1, _lastRedo = -1, _lastVersion = -1;
+        int _lastUndo = -1, _lastRedo = -1, _lastStamp = -1;
+        string _lastTabSig;
 
         public static void Open(TextEditorWindow owner)
         {
@@ -46,6 +55,7 @@ namespace ADKOM.TextEditor
                 _instance.ShowUtility();
             }
             _instance._owner = owner;
+            _instance._doc = owner.HistoryActiveDoc; // starting point only
             _instance.BuildUI();
             _instance.Focus();
         }
@@ -69,9 +79,18 @@ namespace ADKOM.TextEditor
             _rowScroll.focusable = true; // arrow keys walk the timeline
             split.Add(_rowScroll);
 
+            // Right pane: the window's own tab bar above the text buffer.
+            var right = new VisualElement { style = { flexGrow = 1, flexDirection = FlexDirection.Column } };
+            _tabScroll = new ScrollView(ScrollViewMode.Horizontal)
+            { style = { flexShrink = 0, marginLeft = 2, borderBottomWidth = 1,
+                        borderBottomColor = new Color(0.5f, 0.5f, 0.5f, 0.4f) } };
+            _tabScroll.contentContainer.style.flexDirection = FlexDirection.Row;
+            right.Add(_tabScroll);
+
             _preview = new CodeView { readOnly = true, style = { flexGrow = 1 } };
-            _owner.StyleAuxView(_preview);
-            split.Add(_preview);
+            _owner.StyleAuxView(_preview, _doc);
+            right.Add(_preview);
+            split.Add(right);
             root.Add(split);
 
             var buttons = new VisualElement
@@ -95,6 +114,7 @@ namespace ADKOM.TextEditor
 
             root.schedule.Execute(Poll).Every(400);
             _lastUndo = -1; // force first rebuild
+            _lastTabSig = null;
             Poll();
             _rowScroll.schedule.Execute(() => _rowScroll.Focus());
         }
@@ -131,30 +151,104 @@ namespace ADKOM.TextEditor
         void Poll()
         {
             if (_owner == null) { Close(); return; }
-            var view = _owner.HistoryView;
-            object doc = _owner.HistoryDocToken;
-            if (view == null || doc == null)
+            var docs = _owner.HistoryDocs();
+
+            // Our doc may have been closed in the editor — fall back to its
+            // active doc (or the first). We never follow the editor's tab
+            // switches otherwise.
+            if (_doc == null || !docs.Contains(_doc))
+                _doc = _owner.HistoryActiveDoc ?? (docs.Count > 0 ? docs[0] : null);
+
+            RefreshTabBar(docs);
+
+            if (_doc == null)
             {
                 _header.text = L10n.Tr("No edits recorded for this document yet.");
+                _lastDoc = null;
                 return;
             }
-            if (doc == _lastDoc && view.UndoDepth == _lastUndo &&
-                view.RedoDepth == _lastRedo && view.DocVersion == _lastVersion) return;
-            _lastDoc = doc;
-            _lastUndo = view.UndoDepth;
-            _lastRedo = view.RedoDepth;
-            _lastVersion = view.DocVersion;
-            Rebuild();
+            var (undo, redo, stamp) = _owner.HistoryCountsFor(_doc);
+            if (ReferenceEquals(_doc, _lastDoc) && undo == _lastUndo &&
+                redo == _lastRedo && stamp == _lastStamp) return;
+            _lastDoc = _doc;
+            _lastUndo = undo;
+            _lastRedo = redo;
+            _lastStamp = stamp;
+            Rebuild(undo, redo);
         }
 
-        void Rebuild()
+        /// <summary>Mirrors the editor's document tabs (names + dirty stars),
+        /// with OUR selection highlighted — clicking switches only which
+        /// history this window shows, never the editor's active tab.</summary>
+        void RefreshTabBar(List<TextDocument> docs)
         {
-            var view = _owner.HistoryView;
-            _rows = view.HistoryRows();
+            // Cheap signature so we only rebuild the strip when it changed.
+            var sb = new System.Text.StringBuilder();
+            foreach (var d in docs)
+                sb.Append(d.DisplayName).Append(d.IsDirty ? '*' : ' ').Append('');
+            sb.Append('#').Append(docs.IndexOf(_doc));
+            string sig = sb.ToString();
+            if (sig == _lastTabSig) return;
+            _lastTabSig = sig;
+
+            for (int i = 0; i < docs.Count; i++)
+            {
+                if (i >= _tabLabels.Count)
+                {
+                    var l = new Label();
+                    l.style.paddingLeft = l.style.paddingRight = 8;
+                    l.style.paddingTop = 3;
+                    l.style.paddingBottom = 3;
+                    l.style.whiteSpace = WhiteSpace.NoWrap;
+                    l.style.borderRightWidth = 1;
+                    l.style.borderRightColor = new Color(0.5f, 0.5f, 0.5f, 0.3f);
+                    _tabScroll.Add(l);
+                    _tabLabels.Add(l);
+                }
+                var lab = _tabLabels[i];
+                var doc = docs[i];
+                lab.text = doc.DisplayName + (doc.IsDirty ? " *" : "");
+                bool selected = ReferenceEquals(doc, _doc);
+                lab.style.backgroundColor = selected
+                    ? new Color(0.25f, 0.42f, 0.6f, 0.45f) : Color.clear;
+                lab.style.unityFontStyleAndWeight = selected ? FontStyle.Bold : FontStyle.Normal;
+                lab.style.display = DisplayStyle.Flex;
+                // Re-register cheaply: one shared handler reading the label's
+                // userData avoids stale index captures across rebuilds.
+                lab.userData = doc;
+                if (!_wired.Contains(lab))
+                {
+                    _wired.Add(lab);
+                    lab.RegisterCallback<PointerDownEvent>(e =>
+                    {
+                        if (lab.userData is TextDocument d) SelectDoc(d);
+                        e.StopPropagation();
+                    });
+                }
+            }
+            for (int i = docs.Count; i < _tabLabels.Count; i++)
+                _tabLabels[i].style.display = DisplayStyle.None;
+        }
+
+        readonly HashSet<Label> _wired = new HashSet<Label>();
+
+        void SelectDoc(TextDocument d)
+        {
+            if (ReferenceEquals(d, _doc)) return;
+            _doc = d;
+            _lastUndo = -1;    // force rebuild
+            _lastTabSig = null; // repaint selection highlight
+            Poll();
+            _rowScroll.Focus();
+        }
+
+        void Rebuild(int undo, int redo)
+        {
+            _rows = _owner.HistoryRowsFor(_doc);
             _header.text = _rows.Count == 0
                 ? L10n.Tr("No edits recorded for this document yet.")
-                : _owner.HistoryDocName + "   —   " +
-                  string.Format(L10n.Tr("{0} past / {1} future edit steps"), view.UndoDepth, view.RedoDepth);
+                : _doc.DisplayName + "   —   " +
+                  string.Format(L10n.Tr("{0} past / {1} future edit steps"), undo, redo);
 
             for (int i = 0; i < _rows.Count; i++)
             {
@@ -198,11 +292,10 @@ namespace ADKOM.TextEditor
             if (idx < 0 || idx >= _rows.Count) { _preview.value = ""; _selText = null; return; }
 
             var r = _rows[idx];
-            var view = _owner.HistoryView;
-            _selText = view.HistoryStateAt(r.UndoSteps, r.RedoSteps, out int changeLine);
+            _selText = _owner.HistoryStateFor(_doc, r.UndoSteps, r.RedoSteps, out int changeLine);
             if (r.IsCurrent) changeLine = r.Line;
 
-            _owner.StyleAuxView(_preview); // the active doc (theme/language) may have changed
+            _owner.StyleAuxView(_preview, _doc); // theme/language may have changed
             _preview.value = _selText;
             // Select the changed line — the editor's own selection highlight
             // marks it — and center it.
@@ -222,7 +315,7 @@ namespace ADKOM.TextEditor
             if (_sel < 0 || _sel >= _rows.Count || _owner == null) return;
             var r = _rows[_sel];
             if (r.IsCurrent) return;
-            _owner.HistoryStep(r.UndoSteps, r.RedoSteps);
+            _owner.HistoryStepFor(_doc, r.UndoSteps, r.RedoSteps);
             Poll(); // reflect the new stacks immediately
         }
 
@@ -232,7 +325,7 @@ namespace ADKOM.TextEditor
             var r = _rows[_sel];
             string suffix = r.IsCurrent ? "" : r.RedoSteps > 0 ? " (+" + r.RedoSteps + ")" : " (−" + r.UndoSteps + ")";
             _owner.HistoryOpenSnapshot(
-                "History " + _owner.HistoryDocName + suffix, _selText);
+                "History " + _doc.DisplayName + suffix, _selText, _doc);
         }
     }
 }
