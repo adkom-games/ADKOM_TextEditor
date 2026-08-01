@@ -29,6 +29,9 @@ namespace ADKOM.TextEditor
         {
             public string Query, Replace;
             public bool Regex, MatchCase, WholeWord;
+            public bool DotNL;     // regex '.' also matches newline
+            public bool NoRecurse; // top-level files of each root only
+            public bool Hidden;    // descend into dot-folders too
             public string Root;   // empty = Assets + Packages
             public string Glob;   // file-name wildcard, empty = all
         }
@@ -69,7 +72,9 @@ namespace ADKOM.TextEditor
 
             Regex rx = null;
             if (o.Regex)
-                rx = new Regex(o.Query, o.MatchCase ? RegexOptions.None : RegexOptions.IgnoreCase);
+                rx = new Regex(o.Query,
+                    (o.MatchCase ? RegexOptions.None : RegexOptions.IgnoreCase) |
+                    (o.DotNL ? RegexOptions.Singleline : RegexOptions.None));
             Regex glob = string.IsNullOrEmpty(o.Glob) || o.Glob.Trim() == "*" ? null
                 : new Regex("^" + Regex.Escape(o.Glob.Trim()).Replace(@"\*", ".*").Replace(@"\?", ".") + "$",
                     RegexOptions.IgnoreCase);
@@ -77,7 +82,7 @@ namespace ADKOM.TextEditor
             foreach (var root in roots)
             {
                 if (!Directory.Exists(root)) continue;
-                foreach (var file in EnumerateFiles(root))
+                foreach (var file in EnumerateFiles(root, !o.NoRecurse, o.Hidden))
                 {
                     if (glob != null && !glob.IsMatch(Path.GetFileName(file))) continue;
                     string norm = Norm(file);
@@ -103,23 +108,26 @@ namespace ADKOM.TextEditor
             return result;
         }
 
-        static IEnumerable<string> EnumerateFiles(string root)
+        static IEnumerable<string> EnumerateFiles(string root, bool recurse, bool hidden)
         {
             var dirs = new Stack<string>();
             dirs.Push(root);
             while (dirs.Count > 0)
             {
                 string dir = dirs.Pop();
-                string name = Path.GetFileName(dir);
-                if (name.StartsWith(".", StringComparison.Ordinal) ||
-                    name == "Library" || name == "Temp" || name == "Logs" || name == "obj")
-                    continue;
+                if (dir != root) // the chosen root is searched unconditionally
+                {
+                    string name = Path.GetFileName(dir);
+                    if ((!hidden && name.StartsWith(".", StringComparison.Ordinal)) ||
+                        name == "Library" || name == "Temp" || name == "Logs" || name == "obj")
+                        continue;
+                }
                 string[] files;
                 string[] subs;
                 try
                 {
                     files = Directory.GetFiles(dir);
-                    subs = Directory.GetDirectories(dir);
+                    subs = recurse ? Directory.GetDirectories(dir) : System.Array.Empty<string>();
                 }
                 catch (Exception) { continue; }
                 foreach (var f in files)

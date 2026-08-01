@@ -67,9 +67,7 @@ namespace ADKOM.TextEditor
             if (query != null)
             {
                 m.AddItem(new GUIContent(string.Format(L10n.Tr("Find Occurrences of '{0}'"), Truncate(query, 24))), false,
-                    () => FindReplaceWindow.OpenWithQuery(this, query, allTabs: false));
-                m.AddItem(new GUIContent(string.Format(L10n.Tr("Find in Tabs '{0}'"), Truncate(query, 24))), false,
-                    () => FindReplaceWindow.OpenWithQuery(this, query, allTabs: true));
+                    () => FindReplaceWindow.OpenWithQuery(this, query));
             }
             else if (!isCs)
                 m.AddDisabledItem(new GUIContent(L10n.Tr("Find Occurrences")));
@@ -115,8 +113,8 @@ namespace ADKOM.TextEditor
             AddOrDisable(m, L10n.Tr("Show in File Explorer"), Active.HasFile,
                 () => EditorUtility.RevealInFinder(Path.GetFullPath(Active.FilePath)));
             m.AddSeparator("");
-            m.AddItem(new GUIContent(WithSc("Find...", Dsp("find"))), false, () => FindReplaceWindow.Open(this, false, false));
-            m.AddItem(new GUIContent(WithSc("Replace...", Dsp("replace"))), false, () => FindReplaceWindow.Open(this, true, false));
+            m.AddItem(new GUIContent(WithSc("Find...", Dsp("find"))), false, () => FindReplaceWindow.Open(this, FindReplaceWindow.FrTab.Find));
+            m.AddItem(new GUIContent(WithSc("Replace...", Dsp("replace"))), false, () => FindReplaceWindow.Open(this, FindReplaceWindow.FrTab.Replace));
             m.AddItem(new GUIContent(WithSc("Goto Line...", Dsp("goto-line"))), false, GotoLineCommand);
 
             // --- Language-specific ---
