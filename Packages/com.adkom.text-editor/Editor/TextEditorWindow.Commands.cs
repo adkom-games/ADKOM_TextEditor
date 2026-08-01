@@ -67,13 +67,14 @@ namespace ADKOM.TextEditor
             _commands = new List<AteCommand>
             {
                 // ---- Global scope ----
+                // Shift opens the Find in Files tab (Ctrl+Shift+F / Ctrl+Shift+H).
                 new AteCommand { Id = "find", Scope = CmdScope.Global, VS = find, VSCode = find, Rider = find,
-                    Run = shift => True(() => FindReplaceWindow.Open(this, replaceFocus: false, allTabs: shift)) },
+                    Run = shift => True(() => FindReplaceWindow.Open(this, shift ? FindReplaceWindow.FrTab.InFiles : FindReplaceWindow.FrTab.Find)) },
                 new AteCommand { Id = "replace", Scope = CmdScope.Global,
                     VS = All(K(KeyCode.H, ctrl: true, d: "Ctrl+H", shiftArg: true)),
                     VSCode = All(K(KeyCode.H, ctrl: true, d: "Ctrl+H", shiftArg: true)),
                     Rider = All(K(KeyCode.R, ctrl: true, d: "Ctrl+R", shiftArg: true)),
-                    Run = shift => True(() => FindReplaceWindow.Open(this, replaceFocus: true, allTabs: shift)) },
+                    Run = shift => True(() => FindReplaceWindow.Open(this, shift ? FindReplaceWindow.FrTab.InFiles : FindReplaceWindow.FrTab.Replace)) },
                 new AteCommand { Id = "goto-line", Scope = CmdScope.Global, VS = gotoLine, VSCode = gotoLine, Rider = gotoLine,
                     Run = _ => True(GotoLineCommand) },
                 new AteCommand { Id = "find-next", Scope = CmdScope.Global, VS = findNext, VSCode = findNext, Rider = findNext,
@@ -259,7 +260,7 @@ namespace ADKOM.TextEditor
                     Run = _ => True(() => HistoryWindow.Open(this)) },
                 new AteCommand { Id = "find-in-files", Scope = CmdScope.Global,
                     VS = All(), VSCode = All(), Rider = All(),
-                    Run = _ => True(() => FindInFilesWindow.Open(this)) },
+                    Run = _ => True(() => FindReplaceWindow.Open(this, FindReplaceWindow.FrTab.InFiles)) },
 
                                 new AteCommand { Id = "quick-open", Scope = CmdScope.Global,
                     VS = All(K(KeyCode.Comma, ctrl: true, d: "Ctrl+,")),
