@@ -3,6 +3,15 @@
 All notable changes to this package are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com); versions follow semver.
 
+## [0.13.2] - 2026-08-01
+
+### Fixed
+- Copilot language-server install failed with MODULE_NOT_FOUND
+  (`…copilot\node_modules\npm\bin\npm-prefix.js`) on npm 10.9+ — the
+  npm.cmd shim's `%~dp0` degrades to the working directory when the
+  batch file is started by bare name; the install now routes through
+  `cmd.exe /d /s /c` on Windows and plain `npm` elsewhere (issue #40).
+
 ## [0.13.1] - 2026-08-01
 
 ### Added

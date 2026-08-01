@@ -519,3 +519,20 @@ in the per-item commits):
   the manual is updated in the same session as any feature change.
 - Every stage verified headlessly via MCP script-execute against the
   live editor (window structure, searches, menus, jumps quoted per step).
+
+## 2026-08-01 — 0.13.2 hotfix: Copilot npm install (issue #40)
+
+- Field report from a second project: enabling Copilot spammed
+  `Cannot find module '…copilot\node_modules\npm\bin\npm-prefix.js'`
+  (console + Settings row). Root cause: npm 10.9+ ships a cmd shim that
+  runs `node %~dp0\node_modules\npm\bin\npm-prefix.js`, and a batch file
+  started by BARE NAME via CreateProcess resolves %~dp0 to the WORKING
+  DIRECTORY (Library/.../copilot). Older shims had no npm-prefix.js —
+  the bug lay dormant until a Node upgrade.
+- Fix: route the installer through `cmd.exe /d /s /c "npm …"` on
+  Windows (cmd's PATH lookup keeps %~dp0 correct); exec plain `npm`
+  elsewhere (the old unconditional npm.cmd could never work off
+  Windows). Verified on the affected machine via MCP: bare npm.cmd
+  reproduces; the routed real install command dry-runs clean (npm
+  11.13.0). Lesson: never launch .cmd shims by bare name from
+  CreateProcess.
