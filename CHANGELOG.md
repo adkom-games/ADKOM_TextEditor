@@ -3,6 +3,62 @@
 All notable changes to this package are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com); versions follow semver.
 
+## [0.13.1] - 2026-08-01
+
+### Added
+- Tabbed Find/Replace dialog (Notepad++-style): Find, Replace, Find in
+  Files, and Bookmark tabs in one fixed-size parameter window. New
+  search powers: Search Modes (Normal / extended escapes `\n \r \t \0
+  \xHH` / regex with ". matches newline"), Count, In-selection scoping,
+  Find All in Current / All Opened Documents, swap button, and
+  Find-in-Files filters, directory picker, follow-current-doc,
+  sub-folder and hidden-folder switches.
+- All Find All results land in the Search Results console tab as
+  clickable rows (untitled tabs included); the dialog itself never
+  shows results.
+- Bookmarks view: Edit → Bookmarks → View Bookmarks lists every open
+  document's bookmarks in a console tab — grouped per file behind
+  disclosure triangles, sorted by file, filterable. The dialog's
+  Bookmark tab bulk-bookmarks matches (Bookmark All / Clear all
+  bookmarks / Copy Matched Text).
+- Section menu (after Window): the current tab's Classes, Properties,
+  and Methods — sorted, rebuilt on every click, jump-to-declaration.
+- Help → Open Manual + a full 18-section user manual (Manual.md); the
+  first-run welcome now opens README, Manual, and Release Notes.
+- Tooltips on every control across the entire UI, localized in all
+  five catalogs.
+- Triple-click selects the line; dragging extends by whole lines.
+- Go to Matching Bracket handles preprocessor directives; Match
+  Previous Bracket (Ctrl+[) cycles them in reverse.
+- History window: read-only real-editor preview, arrow-key timeline
+  navigation, per-document tab bar.
+- Text drag-and-drop shows an insertion-point caret; green
+  update-available icon pinned left of the settings gear.
+
+### Changed
+- Console: per-line rows with alternating tones, row selection, and
+  Ctrl+C line copying (was one selectable text block); Console, Search
+  Results, and Bookmarks views toggle independently from the View menu.
+- Console-area views share one look: framed subview, monospace font,
+  zebra rows; every jump from results/bookmarks/menus lands centered
+  in the view.
+- Replace in Files applies every found match as one journaled,
+  undoable operation (per-match checkboxes removed).
+- Edit and View menus offer a single "Find ∕ Replace" toggle; the
+  Window menu lists tabs alphabetically; Ctrl+Shift+F/H open the Find
+  in Files tab.
+
+### Fixed
+- Semantics fallback for files outside Unity assemblies (issue #36).
+- Metadata stubs carry using directives so F12 works inside them
+  (issue #37).
+- Triple-click reliably fires (click chain counted internally,
+  issue #38).
+- Go to Definition resolves L10n strings before the background task
+  (issue #39).
+- "All Tabs" search scope did not persist on non-English editors
+  (locale-dependent comparison; superseded by the tabbed dialog).
+
 ## [0.13.0] - 2026-07-30
 
 The IDE release — every item of the new-features campaign.

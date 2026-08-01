@@ -477,3 +477,45 @@ in the per-item commits):
   fix commit + shipped version; two umbrellas for the 0.10.0 defects
   round and the 14 code-review defects). Issue #4 closed retroactively
   (en.po fix shipped 0.9.0). Only #6 (wrap freeze) remains open.
+
+## 2026-07-31 / 08-01 — Find/Replace rework, console views, Section menu, Manual (0.13.1)
+
+- Docker dev container for running Claude Code against the project
+  (`Tools/claude-docker.sh` + `Dockerfile.claude`, install-anywhere from
+  `~/bin`; per-project `.mcp.docker.json` shadows `.mcp.json`; named
+  volumes `claude-home`/`claude-gh` carry Claude + gh auth across projects).
+- **Find/Replace rebuilt** as one fixed-size tabbed parameter dialog
+  (Notepad++ layout: Find / Replace / Find in Files / Bookmark). Search
+  Modes: Normal, extended escapes (`\n \r \t \0 \xHH`), regex with
+  ". matches newline"; In-selection scoping; Count; per-tab button
+  stacks; swap button. The dialog shows NO results: every Find All lands
+  in the Search Results console tab (PickLocation rows; untitled tabs
+  jump via DocId=index+1). FindInFiles engine gained
+  NoRecurse/Hidden/DotNL; Replace in Files applies all matches as one
+  journaled operation (per-match checkboxes removed). F3 core preserved.
+- **Console area**: console converted to a per-line ListView (row
+  selection, Ctrl+C copies selected lines); shared AteViewStyle
+  (frame + monospace + zebra) across Console, Search Results, Scanner,
+  and the new Bookmarks view; View menu toggles each tab INDEPENDENTLY
+  (serialized per-tab visibility; pane hides when no tab is offered).
+- **Bookmarks**: Edit → Bookmarks → View Bookmarks fills a Bookmarks
+  console tab — per-file disclosure groups sorted by file, filter box,
+  jump rows; the dialog's Bookmark tab does bulk Bookmark All / Clear /
+  Copy Matched Text (MarkBookmarkLines API).
+- **Section menu** (after Window): Classes/Properties/Methods of the
+  current tab via a regex outline scan, sorted, rebuilt per click,
+  jumps to declarations. ALL GoToLine-based jumps now CENTER the target
+  (CenterOnLine reuse; game mode untouched).
+- **Menus**: GenericMenu treats '/' in item labels as submenu separator —
+  bit us with "Find / Replace" nesting a bogus submenu; fixed via U+2215
+  lookalike substitution (MenuSafe). Edit + View gained a single
+  "Find ∕ Replace" toggle; Window menu tab list sorted; Help → Open
+  Manual.
+- **Tooltips on every control** (dialog, console tabs, tab strip, status
+  bar, menu bar, Settings gaps, History, Git, Quick Open, inspector) —
+  ~90 new localized strings this cycle across all five catalogs.
+- **Manual.md** — 18-section user manual at the package root; first-run
+  welcome order is now README → Manual → RELEASE-NOTES. Standing rule:
+  the manual is updated in the same session as any feature change.
+- Every stage verified headlessly via MCP script-execute against the
+  live editor (window structure, searches, menus, jumps quoted per step).
