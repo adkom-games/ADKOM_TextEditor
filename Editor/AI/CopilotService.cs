@@ -101,10 +101,20 @@ namespace ADKOM.TextEditor
                 try
                 {
                     Directory.CreateDirectory(ServerDir);
+                    // Windows: npm is a .cmd shim, and npm 10.9+ shims run
+                    // `node %~dp0\node_modules\npm\bin\npm-prefix.js`. A batch
+                    // file started by BARE NAME via CreateProcess resolves
+                    // %~dp0 to the WORKING DIRECTORY, so the shim hunted for
+                    // npm's own files under Library/.../copilot and died with
+                    // MODULE_NOT_FOUND (issue #40). Routing through
+                    // `cmd.exe /d /s /c "npm …"` makes cmd do the PATH lookup,
+                    // which keeps %~dp0 = npm's real install directory.
+                    bool win = Environment.OSVersion.Platform == PlatformID.Win32NT;
+                    const string npmArgs = "install @github/copilot-language-server --no-audit --no-fund";
                     var psi = new ProcessStartInfo
                     {
-                        FileName = "npm.cmd",
-                        Arguments = "install @github/copilot-language-server --no-audit --no-fund",
+                        FileName = win ? "cmd.exe" : "npm",
+                        Arguments = win ? "/d /s /c \"npm " + npmArgs + "\"" : npmArgs,
                         WorkingDirectory = ServerDir,
                         UseShellExecute = false,
                         CreateNoWindow = true,
