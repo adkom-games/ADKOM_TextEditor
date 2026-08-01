@@ -80,11 +80,14 @@ namespace ADKOM.TextEditor
             _changes = new ScrollView(ScrollViewMode.Vertical) { style = { flexGrow = 1 } };
             left.Add(_changes);
             left.Add(new Label(L10n.Tr("Commit message")) { style = { marginTop = 4 } });
-            _commitMsg = new TextField { multiline = true, style = { height = 56 } };
+            _commitMsg = new TextField { multiline = true, style = { height = 56 },
+                tooltip = L10n.Tr("The message for the next commit.") };
             left.Add(_commitMsg);
             var btnRow = new VisualElement { style = { flexDirection = FlexDirection.Row, justifyContent = Justify.FlexEnd, marginTop = 4 } };
-            _commitBtn = new Button(Commit) { text = L10n.Tr("Commit") };
-            _pushBtn = new Button(Push) { text = L10n.Tr("Push") };
+            _commitBtn = new Button(Commit) { text = L10n.Tr("Commit"),
+                tooltip = L10n.Tr("Commit the checked files with the message above.") };
+            _pushBtn = new Button(Push) { text = L10n.Tr("Push"),
+                tooltip = L10n.Tr("Push the current branch to its remote.") };
             btnRow.Add(_commitBtn);
             btnRow.Add(_pushBtn);
             left.Add(btnRow);
@@ -97,7 +100,8 @@ namespace ADKOM.TextEditor
             _orientBtn = new Button(() => { _horizontal = !_horizontal; RebuildGraph(); })
             { text = _horizontal ? "⇋" : "⇅", tooltip = L10n.Tr("Toggle vertical / horizontal layout") };
             graphBar.Add(_orientBtn);
-            var refresh = new Button(Refresh) { text = L10n.Tr("Refresh") };
+            var refresh = new Button(Refresh) { text = L10n.Tr("Refresh"),
+                tooltip = L10n.Tr("Re-read the repository status and branch history.") };
             graphBar.Add(refresh);
             right.Add(graphBar);
             _graphScroll = new ScrollView(ScrollViewMode.VerticalAndHorizontal) { style = { flexGrow = 1 } };

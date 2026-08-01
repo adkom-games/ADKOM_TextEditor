@@ -90,14 +90,16 @@ namespace ADKOM.TextEditor
             if (HasDocs) _active = Mathf.Clamp(activeIndex, 0, _docs.Count - 1);
 
             // First run in this project (fresh install, nothing to restore):
-            // open the package README and release notes as a welcome. The
-            // flag is set either way so the welcome never reappears.
+            // open README, Manual, and release notes as a welcome — each
+            // Insert(0) prepends, so the reversed list yields README (1st),
+            // Manual (2nd), RELEASE-NOTES (3rd). The flag is set either way
+            // so the welcome never reappears.
             if (!EditorConfig.WelcomeShown)
             {
                 EditorConfig.WelcomeShown = true;
                 if (!HasDocs)
                 {
-                    foreach (var name in new[] { "RELEASE-NOTES.md", "README.md" })
+                    foreach (var name in new[] { "RELEASE-NOTES.md", "Manual.md", "README.md" })
                     {
                         try
                         {

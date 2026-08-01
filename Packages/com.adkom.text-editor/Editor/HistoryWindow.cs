@@ -96,12 +96,15 @@ namespace ADKOM.TextEditor
             var buttons = new VisualElement
             { style = { flexDirection = FlexDirection.Row, justifyContent = Justify.FlexEnd,
                         marginTop = 6, marginBottom = 6, flexShrink = 0 } };
-            _restore = new Button(RestoreSelected) { text = L10n.Tr("Restore to This Point") };
-            _openTab = new Button(OpenSnapshotTab) { text = L10n.Tr("Open as New Tab") };
+            _restore = new Button(RestoreSelected) { text = L10n.Tr("Restore to This Point"),
+                tooltip = L10n.Tr("Rewind the document to this step. The restore is itself undoable.") };
+            _openTab = new Button(OpenSnapshotTab) { text = L10n.Tr("Open as New Tab"),
+                tooltip = L10n.Tr("Open this snapshot as a new untitled tab, leaving the document as is.") };
             _copy = new Button(() =>
             {
                 if (_selText != null) EditorGUIUtility.systemCopyBuffer = _selText;
-            }) { text = L10n.Tr("Copy to Clipboard") };
+            }) { text = L10n.Tr("Copy to Clipboard"),
+                tooltip = L10n.Tr("Copy this snapshot's full text to the clipboard.") };
             buttons.Add(_restore);
             buttons.Add(_openTab);
             buttons.Add(_copy);

@@ -63,7 +63,7 @@ namespace ADKOM.TextEditor
             _qoOverlay.style.paddingTop = _qoOverlay.style.paddingBottom = 6;
             _qoOverlay.style.display = DisplayStyle.None;
 
-            _qoField = new TextField();
+            _qoField = new TextField { tooltip = L10n.Tr("Type to filter project files; Enter opens the selected one, Escape closes.") };
             _qoField.RegisterValueChangedCallback(e => RefreshQuickOpen(e.newValue));
             _qoField.RegisterCallback<KeyDownEvent>(e =>
             {

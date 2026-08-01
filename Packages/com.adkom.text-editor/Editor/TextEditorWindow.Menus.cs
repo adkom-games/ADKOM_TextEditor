@@ -81,6 +81,11 @@ namespace ADKOM.TextEditor
             bool sel = edit && _code.HasSelectionPublic;
             bool paste = edit && !string.IsNullOrEmpty(EditorGUIUtility.systemCopyBuffer);
 
+            // GenericMenu treats '/' in an item name as a submenu separator;
+            // swap it for a lookalike (U+2215 division slash) at display time
+            // so "Find / Replace" renders as ONE item.
+            string MenuSafe(string s) => s.Replace('/', '∕');
+
             // ---- Common (flat) ----
             Item(WithSc("Undo", Dsp("undo")), edit && _code.CanUndo, _code.Undo);
             Item(WithSc("Redo", Dsp("redo")), edit && _code.CanRedo, _code.Redo);
@@ -92,15 +97,16 @@ namespace ADKOM.TextEditor
             Item(WithSc("Paste", Dsp("paste")), paste, _code.Paste);
             Item(WithSc("Select All", Dsp("select-all")), edit, _code.SelectAll);
             m.AddSeparator("");
-            Item(WithSc("Find...", Dsp("find")), true, () => FindReplaceWindow.Open(this, false, false));
-            Item(WithSc("Replace...", Dsp("replace")), true, () => FindReplaceWindow.Open(this, true, false));
-            Item(WithSc("Find in Files...", Dsp("find-in-files")), true, () => FindInFilesWindow.Open(this));
+            Item(WithSc("Find in Files...", Dsp("find-in-files")), true, () => FindReplaceWindow.Open(this, FindReplaceWindow.FrTab.InFiles));
             m.AddSeparator("");
 
             // ---- Grouped submenus ----
+            // (All-tabs find/replace live in the dialog now: "... in All
+            // Opened Documents" on the Find and Replace tabs.)
             string find = L10n.Tr("Find") + "/";
-            Item(find + WithSc("Find in Tabs...", Dsp("find-in-tabs")), true, () => FindReplaceWindow.Open(this, false, true));
-            Item(find + WithSc("Replace in Tabs...", Dsp("replace-in-tabs")), true, () => FindReplaceWindow.Open(this, true, true));
+            // One toggle for the whole tabbed dialog (checkmark = open).
+            m.AddItem(new GUIContent(find + MenuSafe(WithSc("Find / Replace", Dsp("find")))), FindReplaceWindow.IsOpen,
+                () => FindReplaceWindow.ToggleVisible(this));
             Item(find + WithSc("Find Next", Dsp("find-next")), true, () => FindReplaceWindow.FindAgain(this, false));
             Item(find + WithSc("Find Previous", Dsp("find-previous")), true, () => FindReplaceWindow.FindAgain(this, true));
 
@@ -156,20 +162,20 @@ namespace ADKOM.TextEditor
             Item(bmg + WithSc("Toggle Bookmark", Dsp("toggle-bookmark")), edit, ToggleBookmark);
             Item(bmg + WithSc("Next Bookmark", Dsp("next-bookmark")), edit, () => JumpBookmark(1));
             Item(bmg + WithSc("Previous Bookmark", Dsp("prev-bookmark")), edit, () => JumpBookmark(-1));
+            Item(bmg + WithSc("View Bookmarks", null), true, ShowBookmarksTab);
             Item(bmg + WithSc("Clear Bookmarks", null), edit, ClearBookmarks);
         }
 
         void FillViewMenu(GenericMenu m)
         {
-            // Alphabetical: Console, Line Numbers, Minimap, Word Wrap.
-            m.AddItem(new GUIContent(L10n.Tr("Console")), _consoleVisible, () => SetConsoleVisible(!_consoleVisible));
-            m.AddItem(new GUIContent(L10n.Tr("Search Results")),
-                _consoleVisible && _activeConsoleTab == 1,
-                () =>
-                {
-                    if (_consoleVisible && _activeConsoleTab == 1) SetConsoleVisible(false);
-                    else { SetConsoleVisible(true); SelectConsoleTab(1); }
-                });
+            // Console-area tabs: each item independently toggles ITS tab's
+            // visibility (checkmark = the tab is offered in the strip).
+            m.AddItem(new GUIContent(L10n.Tr("Console")), _consoleTabVisible, () => ToggleConsoleAreaTab(0));
+            // '/' would nest a submenu — display with the lookalike slash.
+            m.AddItem(new GUIContent(L10n.Tr("Find / Replace").Replace('/', '∕')), FindReplaceWindow.IsOpen,
+                () => FindReplaceWindow.ToggleVisible(this));
+            m.AddItem(new GUIContent(L10n.Tr("Search Results")), _searchTabVisible, () => ToggleConsoleAreaTab(1));
+            m.AddItem(new GUIContent(L10n.Tr("Bookmarks")), _bmTabVisible, () => ToggleConsoleAreaTab(4));
             m.AddItem(new GUIContent(L10n.Tr("Line Numbers")), _showLineNumbers, () =>
             {
                 _showLineNumbers = !_showLineNumbers;
@@ -356,16 +362,27 @@ namespace ADKOM.TextEditor
                 m.AddDisabledItem(new GUIContent(L10n.Tr("(no open tabs)")));
                 return;
             }
-            for (int i = 0; i < _docs.Count; i++)
+            // Tabs listed alphabetically (ties in tab order), not strip order.
+            var order = new System.Collections.Generic.List<int>();
+            for (int i = 0; i < _docs.Count; i++) order.Add(i);
+            order.Sort((a, b) =>
+            {
+                int byName = string.Compare(_docs[a].DisplayName, _docs[b].DisplayName,
+                    System.StringComparison.OrdinalIgnoreCase);
+                return byName != 0 ? byName : a.CompareTo(b);
+            });
+            foreach (int i in order)
             {
                 int idx = i;
-                m.AddItem(new GUIContent((_docs[i].IsDirty ? "*" : "") + _docs[i].DisplayName),
+                m.AddItem(new GUIContent((_docs[i].IsDirty ? "*" : "") + _docs[i].DisplayName.Replace('/', '∕')),
                     i == _active, () => SwitchTo(idx));
             }
         }
 
         void FillHelpMenu(GenericMenu m)
         {
+            m.AddItem(new GUIContent(L10n.Tr("Open Manual")), false, OpenManual);
+            m.AddSeparator("");
             m.AddItem(new GUIContent(L10n.Tr("About ADKOM Text Editor...")), false, () =>
             {
                 var info = UnityEditor.PackageManager.PackageInfo.FindForAssembly(GetType().Assembly);
@@ -382,6 +399,20 @@ namespace ADKOM.TextEditor
                 () => Application.OpenURL("https://github.com/adkom-games/ADKOM_TextEditor/blob/main/Packages/com.adkom.text-editor/RELEASE-NOTES.md"));
             m.AddItem(new GUIContent("Report an Issue"), false,
                 () => Application.OpenURL("https://github.com/adkom-games/ADKOM_TextEditor/issues"));
+        }
+
+        /// <summary>Help > Open Manual: opens the package's Manual.md in a
+        /// regular tab (rendered per the Markdown default-view setting).</summary>
+        void OpenManual()
+        {
+            var pkg = UnityEditor.PackageManager.PackageInfo.FindForAssembly(GetType().Assembly);
+            string path = pkg != null ? System.IO.Path.Combine(pkg.resolvedPath, "Manual.md") : null;
+            if (path != null && System.IO.File.Exists(path))
+            {
+                PushNavLocation();
+                OpenPath(System.IO.Path.GetFullPath(path));
+            }
+            else PostStatus(L10n.Tr("Manual.md not found."));
         }
 
         static string WithSc(string label, string sc) =>

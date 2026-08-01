@@ -423,6 +423,9 @@ msgstr "目前分頁"
 msgid "All Tabs"
 msgstr "所有分頁"
 
+msgid "Project"
+msgstr "專案"
+
 msgid "Replace All"
 msgstr "全部取代"
 
@@ -1376,3 +1379,372 @@ msgstr "有可用更新：{0}（已安裝：{1}）"
 
 msgid "New version available: {0}. This copy is embedded for development — update manually via git."
 msgstr "有新版本：{0}。此副本為開發用嵌入式安裝 — 請透過 git 手動更新。"
+
+msgid "Mark"
+msgstr "標記"
+
+msgid "Find what:"
+msgstr "尋找目標:"
+
+msgid "Replace with:"
+msgstr "取代為:"
+
+msgid "Swap Find and Replace"
+msgstr "交換尋找與取代內容"
+
+msgid "Filters:"
+msgstr "篩選器:"
+
+msgid "Directory:"
+msgstr "目錄:"
+
+msgid "Backward direction"
+msgstr "反向尋找"
+
+msgid "Match whole word only"
+msgstr "全字匹配"
+
+msgid "In selection"
+msgstr "在選取範圍中"
+
+msgid "Purge for each search"
+msgstr "每次搜尋前清除標記"
+
+msgid "Follow current doc."
+msgstr "跟隨目前文件"
+
+msgid "In all sub-folders"
+msgstr "包含所有子資料夾"
+
+msgid "In hidden folders"
+msgstr "包含隱藏資料夾"
+
+msgid "Search Mode"
+msgstr "搜尋模式"
+
+msgid "Normal"
+msgstr "一般"
+
+msgid "Extended (\\n, \\r, \\t, \\0, \\x...)"
+msgstr "延伸 (\\n, \\r, \\t, \\0, \\x...)"
+
+msgid "Regular expression"
+msgstr "正規表示式"
+
+msgid ". matches newline"
+msgstr ". 符合換行字元"
+
+msgid "Count"
+msgstr "計數"
+
+msgid "Find All in Current Document"
+msgstr "在目前文件中全部尋找"
+
+msgid "Find All in All Opened Documents"
+msgstr "在所有開啟的文件中全部尋找"
+
+msgid "Replace All in All Opened Documents"
+msgstr "在所有開啟的文件中全部取代"
+
+msgid "Find All"
+msgstr "全部尋找"
+
+msgid "Replace in Files"
+msgstr "在檔案中取代"
+
+msgid "{0} match(es)."
+msgstr "{0} 個相符項目。"
+
+msgid "'{0}' — {1} match(es) in {2} file(s)"
+msgstr "「{0}」 — {2} 個檔案中有 {1} 個相符項目"
+
+msgid "Marked {0} line(s)."
+msgstr "已標記 {0} 行。"
+
+msgid "Marks cleared."
+msgstr "已清除標記。"
+
+msgid "Mark All"
+msgstr "全部標記"
+
+msgid "Clear all marks"
+msgstr "清除所有標記"
+
+msgid "Copy Marked Text"
+msgstr "複製標記的文字"
+
+msgid "Also search every folder below the chosen one."
+msgstr "同時搜尋所選資料夾下的所有子資料夾。"
+
+msgid "Also search folders whose name starts with a dot."
+msgstr "同時搜尋名稱以點開頭的資料夾。"
+
+msgid "Bookmark every line of the active document that contains a match."
+msgstr "為使用中文件內含相符項目的每一行加上書籤。"
+
+msgid "Bookmark every line that matches"
+msgstr "為每個相符的行加上書籤"
+
+msgid "Caret position, and the document's indentation, line-ending, and encoding info."
+msgstr "游標位置，以及文件的縮排、行尾與編碼資訊。"
+
+msgid "Choose the folder to search"
+msgstr "選擇要搜尋的資料夾"
+
+msgid "Clear existing marks before marking the new matches."
+msgstr "標記新相符項目前先清除現有標記。"
+
+msgid "Close this dialog. Reopen it from the Edit or View menu."
+msgstr "關閉此對話方塊。可從「編輯」或「檢視」選單重新開啟。"
+
+msgid "Close this tab (or middle-click the tab)."
+msgstr "關閉此分頁（也可用滑鼠中鍵點擊分頁）。"
+
+msgid "Commit the checked files with the message above."
+msgstr "使用上方訊息提交勾選的檔案。"
+
+msgid "Continue from the other end when the search hits the end of the document."
+msgstr "搜尋到達文件末端時從另一端繼續。"
+
+msgid "Copy the text of every match to the clipboard, one per line."
+msgstr "將每個相符的文字逐行複製到剪貼簿。"
+
+msgid "Copy this snapshot's full text to the clipboard."
+msgstr "將此快照的全部文字複製到剪貼簿。"
+
+msgid "Count the occurrences in the active document."
+msgstr "統計使用中文件內的相符數。"
+
+msgid "Documentation, release notes, and support."
+msgstr "文件、版本資訊與支援。"
+
+msgid "Drag to resize the console pane."
+msgstr "拖曳以調整主控台面板大小。"
+
+msgid "Editing, search, selection, and navigation commands."
+msgstr "編輯、搜尋、選取與導覽命令。"
+
+msgid "Editor font, from the fonts installed on this machine. Default is the bundled monospace."
+msgstr "編輯器字型（來自本機已安裝的字型）。預設為內建等寬字型。"
+
+msgid "Every ATE message, timestamped. Rows are selectable; Ctrl+C copies them."
+msgstr "所有帶時間戳記的 ATE 訊息。行可選取；Ctrl+C 複製所選行。"
+
+msgid "File-name wildcard, e.g. *.cs. * matches every file."
+msgstr "檔名萬用字元，如 *.cs。* 符合所有檔案。"
+
+msgid "Find Next searches toward the start of the document."
+msgstr "「尋找下一個」朝文件開頭方向搜尋。"
+
+msgid "Findings from the addon security scanner."
+msgstr "附加元件安全掃描器的發現項目。"
+
+msgid "Follow the Unity Editor skin, or force the light or dark variant."
+msgstr "跟隨 Unity 編輯器外觀，或強制使用淺色/深色。"
+
+msgid "Hide the console pane (View menu shows it again)."
+msgstr "隱藏主控台面板（可從「檢視」選單再次顯示）。"
+
+msgid "Hits from Find All, Find in Files, and Find All References. Click a row to jump to it."
+msgstr "全部尋找、在檔案中尋找與尋找所有參考的結果。點擊行即可跳轉。"
+
+msgid "In regular expressions, '.' also matches line breaks."
+msgstr "在正規表示式中，「.」也符合換行字元。"
+
+msgid "Invoke this static method now; its return value lands in the console."
+msgstr "立即呼叫此靜態方法；傳回值會顯示在主控台中。"
+
+msgid "Language tools, snippets, add-ons, and utilities."
+msgstr "語言工具、程式碼片段、附加元件與公用程式。"
+
+msgid "Limit Count, Find All, Replace All, and Mark All to the current selection."
+msgstr "將計數、全部尋找、全部取代與全部標記限制在目前選取範圍內。"
+
+msgid "List every occurrence in the Search Results tab of the console pane."
+msgstr "在主控台面板的搜尋結果分頁中列出每個相符項目。"
+
+msgid "List occurrences from every open tab in the Search Results tab."
+msgstr "在搜尋結果分頁中列出所有開啟分頁的相符項目。"
+
+msgid "Live value — edit and press Enter to write it to the running object."
+msgstr "即時值 — 編輯後按 Enter 寫入執行中的物件。"
+
+msgid "Match only when not embedded in a longer word."
+msgstr "僅當不是較長單字的一部分時才符合。"
+
+msgid "New unsaved document — protected by the session, saved to disk on Save."
+msgstr "新的未儲存文件 — 受工作階段保護，儲存時寫入磁碟。"
+
+msgid "Normal: literal text. Extended: escape sequences like \\n and \\t are interpreted. Regular expression: .NET regex syntax."
+msgstr "一般：按字面文字比對。延伸：解讀 \\n、\\t 等逸出序列。正規表示式：.NET 正規語法。"
+
+msgid "Open this snapshot as a new untitled tab, leaving the document as is."
+msgstr "將此快照開啟為新的未命名分頁（文件保持不變）。"
+
+msgid "Open, save, and manage files and recent documents."
+msgstr "開啟、儲存與管理檔案及最近的文件。"
+
+msgid "Push the current branch to its remote."
+msgstr "將目前分支推送到遠端。"
+
+msgid "Re-apply the last undone Replace in Files."
+msgstr "重新套用上次復原的「在檔案中取代」。"
+
+msgid "Re-read the repository status and branch history."
+msgstr "重新讀取存放庫狀態與分支歷史。"
+
+msgid "Remove every bookmark from the active document."
+msgstr "移除使用中文件的所有書籤。"
+
+msgid "Replace every match on disk and in open buffers — one journaled operation, undoable below."
+msgstr "取代磁碟與開啟緩衝區中的每個相符項目 — 作為一次記錄的作業，可在下方復原。"
+
+msgid "Replace every occurrence in every open tab."
+msgstr "取代所有開啟分頁中的每個相符項目。"
+
+msgid "Replace every occurrence in the active document (one undo step)."
+msgstr "取代使用中文件的每個相符項目（一步復原）。"
+
+msgid "Replace the selected match, then find the next one."
+msgstr "取代選取的相符項目，然後尋找下一個。"
+
+msgid "Rescan the loaded scenes for instances of this component."
+msgstr "重新掃描已載入場景中此元件的執行個體。"
+
+msgid "Restore all files touched by the last Replace in Files."
+msgstr "還原上次「在檔案中取代」修改的所有檔案。"
+
+msgid "Rewind the document to this step. The restore is itself undoable."
+msgstr "將文件回復到此步驟。還原作業本身也可復原。"
+
+msgid "Search and replace across the files on disk"
+msgstr "在磁碟檔案中搜尋與取代"
+
+msgid "Search and replace in open documents"
+msgstr "在開啟的文件中搜尋與取代"
+
+msgid "Search the active document"
+msgstr "搜尋使用中文件"
+
+msgid "Search the active document's folder instead of the Directory field."
+msgstr "搜尋使用中文件所在的資料夾，而非「目錄」欄。"
+
+msgid "Search the files and list every match in the Search Results tab."
+msgstr "搜尋檔案並在搜尋結果分頁中列出每個相符項目。"
+
+msgid "Select the next occurrence in the active document (F3)."
+msgstr "選取使用中文件的下一個相符項目（F3）。"
+
+msgid "Show line numbers in the gutter."
+msgstr "在行號欄顯示行號。"
+
+msgid "Show only rows whose file name, path, or text contains this."
+msgstr "僅顯示檔名、路徑或文字包含此內容的行。"
+
+msgid "Status messages. Everything shown here is also kept in the Console pane."
+msgstr "狀態訊息。此處顯示的內容也會保留在主控台面板中。"
+
+msgid "Switch tabs and open ATE windows."
+msgstr "切換分頁並開啟 ATE 視窗。"
+
+msgid "Syntax color palette: Visual Studio, VS Code, or Rider styles."
+msgstr "語法配色：Visual Studio、VS Code 或 Rider 風格。"
+
+msgid "The Z-Machine game's automatic map."
+msgstr "Z-Machine 遊戲的自動地圖。"
+
+msgid "The message for the next commit."
+msgstr "下次提交的訊息。"
+
+msgid "The replacement text. Regular expression mode expands $1-style group references."
+msgstr "取代文字。正規表示式模式會展開 $1 形式的群組參考。"
+
+msgid "The text or pattern to search for. Enter runs this tab's main action."
+msgstr "要搜尋的文字或模式。Enter 執行此分頁的主要動作。"
+
+msgid "Toggle editor views, folding, and themes."
+msgstr "切換編輯器檢視、摺疊與主題。"
+
+msgid "Type to filter project files; Enter opens the selected one, Escape closes."
+msgstr "輸入以篩選專案檔案；Enter 開啟所選檔案，Escape 關閉。"
+
+msgid "Uppercase and lowercase must match exactly."
+msgstr "大小寫必須完全一致。"
+
+msgid "Which scene instance the live values below come from."
+msgstr "下方即時值來自哪個場景執行個體。"
+
+msgid "Wrap long lines at the viewport edge instead of scrolling horizontally."
+msgstr "將長行在檢視區邊緣換行，而非水平捲動。"
+
+msgid "Type a value and press Enter; Escape cancels."
+msgstr "輸入值後按 Enter 確認；Escape 取消。"
+
+msgid "Switch this Markdown tab between rendered and source view."
+msgstr "在轉譯檢視與原始碼檢視之間切換此 Markdown 分頁。"
+
+msgid "A new ATE version is available — click to update."
+msgstr "有新的 ATE 版本可用 — 點擊更新。"
+
+msgid "Query GitHub for a newer ATE release immediately."
+msgstr "立即向 GitHub 查詢較新的 ATE 版本。"
+
+msgid "Sign in to GitHub Copilot with the device-flow code, or sign out of the current account."
+msgstr "使用裝置流程代碼登入 GitHub Copilot，或登出目前帳戶。"
+
+msgid "View Bookmarks"
+msgstr "檢視書籤"
+
+msgid "(no bookmarks)"
+msgstr "（無書籤）"
+
+msgid "{0} bookmark(s) in {1} document(s)"
+msgstr "{1} 個文件中有 {0} 個書籤"
+
+msgid "The bookmarked lines of every open document. Click a row to jump to it."
+msgstr "所有開啟文件的書籤行。點擊行即可跳轉。"
+
+msgid "Bookmark"
+msgstr "書籤"
+
+msgid "Bookmark All"
+msgstr "全部加入書籤"
+
+msgid "Clear all bookmarks"
+msgstr "清除所有書籤"
+
+msgid "Copy Matched Text"
+msgstr "複製相符的文字"
+
+msgid "Bookmarks cleared."
+msgstr "已清除書籤。"
+
+msgid "Bookmarked {0} line(s)."
+msgstr "已為 {0} 行加入書籤。"
+
+msgid "Limit Count, Find All, Replace All, and Bookmark All to the current selection."
+msgstr "將計數、全部尋找、全部取代與全部加入書籤限制在目前選取範圍內。"
+
+msgid "Clear existing bookmarks before bookmarking the new matches."
+msgstr "為新相符項目加入書籤前先清除現有書籤。"
+
+msgid "Section"
+msgstr "區段"
+
+msgid "Classes"
+msgstr "類別"
+
+msgid "Properties"
+msgstr "屬性"
+
+msgid "Methods"
+msgstr "方法"
+
+msgid "Jump to a class, property, or method in the current tab."
+msgstr "跳轉到目前分頁中的類別、屬性或方法。"
+
+msgid "Open Manual"
+msgstr "開啟手冊"
+
+msgid "Manual.md not found."
+msgstr "找不到 Manual.md。"

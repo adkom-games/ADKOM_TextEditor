@@ -152,11 +152,12 @@ namespace ADKOM.TextEditor
 
                 var label = new Label((doc.IsDirty ? "*" : "") + doc.DisplayName)
                 {
-                    tooltip = doc.HasFile ? doc.FilePath : "New unsaved document"
+                    tooltip = doc.HasFile ? doc.FilePath : L10n.Tr("New unsaved document — protected by the session, saved to disk on Save.")
                 };
                 tab.Add(label);
 
-                var close = new Button(() => CloseTab(index)) { text = "×" };
+                var close = new Button(() => CloseTab(index))
+                { text = "×", tooltip = L10n.Tr("Close this tab (or middle-click the tab).") };
                 close.AddToClassList("tab__close");
                 tab.Add(close);
 

@@ -177,7 +177,7 @@ namespace ADKOM.TextEditor
             _miniPrompt = new Label();
             _miniPrompt.style.unityFontStyleAndWeight = FontStyle.Bold;
             _miniPrompt.style.marginRight = 4;
-            _miniInput = new TextField();
+            _miniInput = new TextField { tooltip = L10n.Tr("Type a value and press Enter; Escape cancels.") };
             _miniInput.style.minWidth = 80;
             _miniInput.style.marginTop = -2;
             _miniInput.style.marginBottom = -2;

@@ -125,7 +125,8 @@ namespace ADKOM.TextEditor
             {
                 var mi = m;
                 var row = RowBox();
-                var run = new Button(() => RunStatic(mi)) { text = L10n.Tr("Run") };
+                var run = new Button(() => RunStatic(mi)) { text = L10n.Tr("Run"),
+                    tooltip = L10n.Tr("Invoke this static method now; its return value lands in the console.") };
                 row.Add(run);
                 row.Add(new Label(mi.Name + "()") { style = { unityTextAlign = TextAnchor.MiddleLeft } });
                 _scroll.Add(row);
@@ -138,7 +139,8 @@ namespace ADKOM.TextEditor
                 Section(L10n.Tr("Scene Instances"));
                 var pickRow = RowBox();
                 _instancePicker = null;
-                var refresh = new Button(() => { RefreshInstances(); BuildUI(); }) { text = L10n.Tr("Refresh") };
+                var refresh = new Button(() => { RefreshInstances(); BuildUI(); }) { text = L10n.Tr("Refresh"),
+                    tooltip = L10n.Tr("Rescan the loaded scenes for instances of this component.") };
                 RefreshInstances();
                 if (_instances.Count == 0)
                 {
@@ -150,7 +152,8 @@ namespace ADKOM.TextEditor
                 {
                     var names = _instances.Select((o, i) => i + ": " + (o != null ? o.name : "?")).ToList();
                     if (_target == null || !_instances.Contains(_target)) _target = _instances[0];
-                    _instancePicker = new PopupField<string>(names, Mathf.Max(0, _instances.IndexOf(_target)));
+                    _instancePicker = new PopupField<string>(names, Mathf.Max(0, _instances.IndexOf(_target)))
+                    { tooltip = L10n.Tr("Which scene instance the live values below come from.") };
                     _instancePicker.RegisterValueChangedCallback(_ =>
                     {
                         int idx = names.IndexOf(_instancePicker.value);
@@ -219,7 +222,8 @@ namespace ADKOM.TextEditor
                 var r = new Row { Member = member, Static = isStatic };
                 if (IsEditable(member))
                 {
-                    r.Edit = new TextField { isDelayed = true, style = { flexGrow = 1 } };
+                    r.Edit = new TextField { isDelayed = true, style = { flexGrow = 1 },
+                        tooltip = L10n.Tr("Live value — edit and press Enter to write it to the running object.") };
                     r.Edit.RegisterValueChangedCallback(e => TrySet(member, isStatic ? null : _target, e.newValue));
                     row.Add(r.Edit);
                 }

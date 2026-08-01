@@ -423,6 +423,9 @@ msgstr "현재 탭"
 msgid "All Tabs"
 msgstr "모든 탭"
 
+msgid "Project"
+msgstr "프로젝트"
+
 msgid "Replace All"
 msgstr "모두 바꾸기"
 
@@ -1376,3 +1379,372 @@ msgstr "업데이트 가능: {0} (설치됨: {1})"
 
 msgid "New version available: {0}. This copy is embedded for development — update manually via git."
 msgstr "새 버전이 있습니다: {0}. 이 사본은 개발용으로 임베드되어 있습니다 — git으로 수동 업데이트하세요."
+
+msgid "Mark"
+msgstr "마크"
+
+msgid "Find what:"
+msgstr "찾을 내용:"
+
+msgid "Replace with:"
+msgstr "바꿀 내용:"
+
+msgid "Swap Find and Replace"
+msgstr "찾기/바꾸기 내용 교체"
+
+msgid "Filters:"
+msgstr "필터:"
+
+msgid "Directory:"
+msgstr "디렉터리:"
+
+msgid "Backward direction"
+msgstr "역방향 검색"
+
+msgid "Match whole word only"
+msgstr "단어 단위로 일치"
+
+msgid "In selection"
+msgstr "선택 영역에서"
+
+msgid "Purge for each search"
+msgstr "검색마다 마크 지우기"
+
+msgid "Follow current doc."
+msgstr "현재 문서 폴더 사용"
+
+msgid "In all sub-folders"
+msgstr "모든 하위 폴더 포함"
+
+msgid "In hidden folders"
+msgstr "숨김 폴더 포함"
+
+msgid "Search Mode"
+msgstr "검색 모드"
+
+msgid "Normal"
+msgstr "일반"
+
+msgid "Extended (\\n, \\r, \\t, \\0, \\x...)"
+msgstr "확장 (\\n, \\r, \\t, \\0, \\x...)"
+
+msgid "Regular expression"
+msgstr "정규식"
+
+msgid ". matches newline"
+msgstr "'.'이 줄바꿈과도 일치"
+
+msgid "Count"
+msgstr "개수 세기"
+
+msgid "Find All in Current Document"
+msgstr "현재 문서에서 모두 찾기"
+
+msgid "Find All in All Opened Documents"
+msgstr "열린 모든 문서에서 모두 찾기"
+
+msgid "Replace All in All Opened Documents"
+msgstr "열린 모든 문서에서 모두 바꾸기"
+
+msgid "Find All"
+msgstr "모두 찾기"
+
+msgid "Replace in Files"
+msgstr "파일에서 바꾸기"
+
+msgid "{0} match(es)."
+msgstr "{0}개 일치합니다."
+
+msgid "'{0}' — {1} match(es) in {2} file(s)"
+msgstr "'{0}' — {2}개 파일에서 {1}개 일치"
+
+msgid "Marked {0} line(s)."
+msgstr "{0}개 줄을 마크했습니다."
+
+msgid "Marks cleared."
+msgstr "마크를 지웠습니다."
+
+msgid "Mark All"
+msgstr "모두 마크"
+
+msgid "Clear all marks"
+msgstr "모든 마크 지우기"
+
+msgid "Copy Marked Text"
+msgstr "마크된 텍스트 복사"
+
+msgid "Also search every folder below the chosen one."
+msgstr "선택한 폴더 아래의 모든 폴더도 검색합니다."
+
+msgid "Also search folders whose name starts with a dot."
+msgstr "이름이 점으로 시작하는 폴더도 검색합니다."
+
+msgid "Bookmark every line of the active document that contains a match."
+msgstr "활성 문서에서 일치가 포함된 모든 줄을 북마크합니다."
+
+msgid "Bookmark every line that matches"
+msgstr "일치하는 모든 줄을 북마크"
+
+msgid "Caret position, and the document's indentation, line-ending, and encoding info."
+msgstr "캐럿 위치와 문서의 들여쓰기·줄 끝·인코딩 정보."
+
+msgid "Choose the folder to search"
+msgstr "검색할 폴더 선택"
+
+msgid "Clear existing marks before marking the new matches."
+msgstr "새 일치를 마크하기 전에 기존 마크를 지웁니다."
+
+msgid "Close this dialog. Reopen it from the Edit or View menu."
+msgstr "이 대화 상자를 닫습니다. 편집 또는 보기 메뉴에서 다시 열 수 있습니다."
+
+msgid "Close this tab (or middle-click the tab)."
+msgstr "이 탭을 닫습니다(탭 가운데 클릭도 가능)."
+
+msgid "Commit the checked files with the message above."
+msgstr "체크한 파일을 위의 메시지로 커밋합니다."
+
+msgid "Continue from the other end when the search hits the end of the document."
+msgstr "검색이 문서 끝에 도달하면 반대쪽에서 계속합니다."
+
+msgid "Copy the text of every match to the clipboard, one per line."
+msgstr "모든 일치 텍스트를 한 줄에 하나씩 클립보드로 복사합니다."
+
+msgid "Copy this snapshot's full text to the clipboard."
+msgstr "이 스냅샷의 전체 텍스트를 클립보드로 복사합니다."
+
+msgid "Count the occurrences in the active document."
+msgstr "활성 문서의 일치 수를 셉니다."
+
+msgid "Documentation, release notes, and support."
+msgstr "문서, 릴리스 노트, 지원."
+
+msgid "Drag to resize the console pane."
+msgstr "드래그하여 콘솔 창 크기를 조절합니다."
+
+msgid "Editing, search, selection, and navigation commands."
+msgstr "편집·검색·선택·탐색 명령."
+
+msgid "Editor font, from the fonts installed on this machine. Default is the bundled monospace."
+msgstr "에디터 글꼴(이 컴퓨터에 설치된 글꼴 중 선택). 기본값은 번들된 고정폭 글꼴입니다."
+
+msgid "Every ATE message, timestamped. Rows are selectable; Ctrl+C copies them."
+msgstr "타임스탬프가 있는 모든 ATE 메시지. 줄을 선택하고 Ctrl+C로 복사할 수 있습니다."
+
+msgid "File-name wildcard, e.g. *.cs. * matches every file."
+msgstr "파일 이름 와일드카드(예: *.cs). *는 모든 파일과 일치합니다."
+
+msgid "Find Next searches toward the start of the document."
+msgstr "'다음 찾기'가 문서 시작 방향으로 검색합니다."
+
+msgid "Findings from the addon security scanner."
+msgstr "애드온 보안 스캐너의 발견 항목."
+
+msgid "Follow the Unity Editor skin, or force the light or dark variant."
+msgstr "Unity 에디터 스킨을 따르거나 라이트/다크를 강제합니다."
+
+msgid "Hide the console pane (View menu shows it again)."
+msgstr "콘솔 창을 숨깁니다(보기 메뉴에서 다시 표시)."
+
+msgid "Hits from Find All, Find in Files, and Find All References. Click a row to jump to it."
+msgstr "모두 찾기·파일에서 찾기·모든 참조 찾기의 결과. 줄을 클릭하면 이동합니다."
+
+msgid "In regular expressions, '.' also matches line breaks."
+msgstr "정규식에서 '.'이 줄바꿈과도 일치합니다."
+
+msgid "Invoke this static method now; its return value lands in the console."
+msgstr "이 정적 메서드를 지금 실행합니다. 반환값은 콘솔에 표시됩니다."
+
+msgid "Language tools, snippets, add-ons, and utilities."
+msgstr "언어 도구, 스니펫, 애드온, 유틸리티."
+
+msgid "Limit Count, Find All, Replace All, and Mark All to the current selection."
+msgstr "개수 세기·모두 찾기·모두 바꾸기·모두 마크를 현재 선택 영역으로 제한합니다."
+
+msgid "List every occurrence in the Search Results tab of the console pane."
+msgstr "콘솔 창의 검색 결과 탭에 모든 일치를 나열합니다."
+
+msgid "List occurrences from every open tab in the Search Results tab."
+msgstr "열린 모든 탭의 일치를 검색 결과 탭에 나열합니다."
+
+msgid "Live value — edit and press Enter to write it to the running object."
+msgstr "라이브 값 — 편집 후 Enter를 누르면 실행 중인 객체에 기록됩니다."
+
+msgid "Match only when not embedded in a longer word."
+msgstr "더 긴 단어의 일부가 아닐 때만 일치합니다."
+
+msgid "New unsaved document — protected by the session, saved to disk on Save."
+msgstr "새 미저장 문서 — 세션이 보호하며 저장 시 디스크에 기록됩니다."
+
+msgid "Normal: literal text. Extended: escape sequences like \\n and \\t are interpreted. Regular expression: .NET regex syntax."
+msgstr "일반: 문자 그대로의 텍스트. 확장: \\n, \\t 같은 이스케이프를 해석. 정규식: .NET 정규식 문법."
+
+msgid "Open this snapshot as a new untitled tab, leaving the document as is."
+msgstr "이 스냅샷을 새 무제 탭으로 엽니다(문서는 그대로 유지)."
+
+msgid "Open, save, and manage files and recent documents."
+msgstr "파일 열기·저장 및 최근 문서 관리."
+
+msgid "Push the current branch to its remote."
+msgstr "현재 브랜치를 원격에 푸시합니다."
+
+msgid "Re-apply the last undone Replace in Files."
+msgstr "마지막으로 취소한 '파일에서 바꾸기'를 다시 적용합니다."
+
+msgid "Re-read the repository status and branch history."
+msgstr "리포지토리 상태와 브랜치 기록을 다시 읽습니다."
+
+msgid "Remove every bookmark from the active document."
+msgstr "활성 문서의 모든 북마크를 제거합니다."
+
+msgid "Replace every match on disk and in open buffers — one journaled operation, undoable below."
+msgstr "디스크와 열린 버퍼의 모든 일치를 바꿉니다 — 기록되는 한 번의 작업으로, 아래에서 취소할 수 있습니다."
+
+msgid "Replace every occurrence in every open tab."
+msgstr "열린 모든 탭의 모든 일치를 바꿉니다."
+
+msgid "Replace every occurrence in the active document (one undo step)."
+msgstr "활성 문서의 모든 일치를 바꿉니다(실행 취소 한 번)."
+
+msgid "Replace the selected match, then find the next one."
+msgstr "선택된 일치를 바꾼 뒤 다음을 찾습니다."
+
+msgid "Rescan the loaded scenes for instances of this component."
+msgstr "로드된 씬에서 이 컴포넌트의 인스턴스를 다시 검색합니다."
+
+msgid "Restore all files touched by the last Replace in Files."
+msgstr "마지막 '파일에서 바꾸기'가 수정한 모든 파일을 복원합니다."
+
+msgid "Rewind the document to this step. The restore is itself undoable."
+msgstr "문서를 이 단계로 되돌립니다. 복원 자체도 실행 취소할 수 있습니다."
+
+msgid "Search and replace across the files on disk"
+msgstr "디스크의 파일을 대상으로 검색 및 바꾸기"
+
+msgid "Search and replace in open documents"
+msgstr "열린 문서를 대상으로 검색 및 바꾸기"
+
+msgid "Search the active document"
+msgstr "활성 문서 검색"
+
+msgid "Search the active document's folder instead of the Directory field."
+msgstr "디렉터리 칸 대신 활성 문서의 폴더를 검색합니다."
+
+msgid "Search the files and list every match in the Search Results tab."
+msgstr "파일을 검색해 모든 일치를 검색 결과 탭에 나열합니다."
+
+msgid "Select the next occurrence in the active document (F3)."
+msgstr "활성 문서의 다음 일치를 선택합니다(F3)."
+
+msgid "Show line numbers in the gutter."
+msgstr "거터에 줄 번호를 표시합니다."
+
+msgid "Show only rows whose file name, path, or text contains this."
+msgstr "파일 이름·경로·텍스트에 이 내용이 포함된 줄만 표시합니다."
+
+msgid "Status messages. Everything shown here is also kept in the Console pane."
+msgstr "상태 메시지. 여기 표시된 내용은 콘솔 창에도 보관됩니다."
+
+msgid "Switch tabs and open ATE windows."
+msgstr "탭 전환 및 ATE 창 열기."
+
+msgid "Syntax color palette: Visual Studio, VS Code, or Rider styles."
+msgstr "구문 색상 팔레트: Visual Studio·VS Code·Rider 스타일."
+
+msgid "The Z-Machine game's automatic map."
+msgstr "Z-Machine 게임의 자동 지도."
+
+msgid "The message for the next commit."
+msgstr "다음 커밋의 메시지."
+
+msgid "The replacement text. Regular expression mode expands $1-style group references."
+msgstr "대체 텍스트. 정규식 모드에서는 $1 형식의 그룹 참조를 확장합니다."
+
+msgid "The text or pattern to search for. Enter runs this tab's main action."
+msgstr "검색할 텍스트 또는 패턴. Enter로 이 탭의 기본 동작을 실행합니다."
+
+msgid "Toggle editor views, folding, and themes."
+msgstr "에디터 보기·접기·테마 전환."
+
+msgid "Type to filter project files; Enter opens the selected one, Escape closes."
+msgstr "입력하여 프로젝트 파일을 필터링합니다. Enter로 선택한 파일을 열고 Escape로 닫습니다."
+
+msgid "Uppercase and lowercase must match exactly."
+msgstr "대문자와 소문자가 정확히 일치해야 합니다."
+
+msgid "Which scene instance the live values below come from."
+msgstr "아래 라이브 값을 가져올 씬 인스턴스."
+
+msgid "Wrap long lines at the viewport edge instead of scrolling horizontally."
+msgstr "긴 줄을 가로 스크롤 대신 뷰포트 가장자리에서 줄 바꿈합니다."
+
+msgid "Type a value and press Enter; Escape cancels."
+msgstr "값을 입력하고 Enter로 확정, Escape로 취소합니다."
+
+msgid "Switch this Markdown tab between rendered and source view."
+msgstr "이 Markdown 탭을 렌더링 보기와 소스 보기로 전환합니다."
+
+msgid "A new ATE version is available — click to update."
+msgstr "새 ATE 버전이 있습니다 — 클릭하여 업데이트하세요."
+
+msgid "Query GitHub for a newer ATE release immediately."
+msgstr "GitHub에 새 ATE 릴리스를 즉시 조회합니다."
+
+msgid "Sign in to GitHub Copilot with the device-flow code, or sign out of the current account."
+msgstr "디바이스 플로 코드로 GitHub Copilot에 로그인하거나 현재 계정에서 로그아웃합니다."
+
+msgid "View Bookmarks"
+msgstr "북마크 보기"
+
+msgid "(no bookmarks)"
+msgstr "(북마크 없음)"
+
+msgid "{0} bookmark(s) in {1} document(s)"
+msgstr "{1}개 문서에 {0}개 북마크"
+
+msgid "The bookmarked lines of every open document. Click a row to jump to it."
+msgstr "열려 있는 모든 문서의 북마크된 줄. 줄을 클릭하면 이동합니다."
+
+msgid "Bookmark"
+msgstr "북마크"
+
+msgid "Bookmark All"
+msgstr "모두 북마크"
+
+msgid "Clear all bookmarks"
+msgstr "모든 북마크 지우기"
+
+msgid "Copy Matched Text"
+msgstr "일치 텍스트 복사"
+
+msgid "Bookmarks cleared."
+msgstr "북마크를 지웠습니다."
+
+msgid "Bookmarked {0} line(s)."
+msgstr "{0}개 줄을 북마크했습니다."
+
+msgid "Limit Count, Find All, Replace All, and Bookmark All to the current selection."
+msgstr "개수 세기·모두 찾기·모두 바꾸기·모두 북마크를 현재 선택 영역으로 제한합니다."
+
+msgid "Clear existing bookmarks before bookmarking the new matches."
+msgstr "새 일치를 북마크하기 전에 기존 북마크를 지웁니다."
+
+msgid "Section"
+msgstr "섹션"
+
+msgid "Classes"
+msgstr "클래스"
+
+msgid "Properties"
+msgstr "속성"
+
+msgid "Methods"
+msgstr "메서드"
+
+msgid "Jump to a class, property, or method in the current tab."
+msgstr "현재 탭의 클래스·속성·메서드로 이동합니다."
+
+msgid "Open Manual"
+msgstr "매뉴얼 열기"
+
+msgid "Manual.md not found."
+msgstr "Manual.md를 찾을 수 없습니다."
