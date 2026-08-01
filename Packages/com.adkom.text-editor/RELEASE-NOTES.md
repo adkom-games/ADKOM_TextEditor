@@ -3,6 +3,57 @@
 **☕ Enjoying ATE? Support development on Ko-fi:**
 [https://ko-fi.com/adkomgames](https://ko-fi.com/adkomgames)
 
+## 0.13.1 — 2026-08-01
+
+The search release: one dialog to find everything, results where they
+belong, and a user manual.
+
+### Find & replace, reworked
+- **One tabbed dialog** (Notepad++-style): Find, Replace, Find in
+  Files, and Bookmark tabs sharing the query and options in a
+  fixed-size window — toggled from Edit, View, or Ctrl+F.
+- **Search Modes**: plain text, extended escapes (`\n`, `\t`, `\x41`),
+  or regular expressions with $1 replacements and ". matches newline".
+- **Count**, **In selection** scoping, Find All in Current / All
+  Opened Documents, a Find/Replace swap button — and Find in Files
+  filters, directory picker, follow-current-doc, sub-folder and
+  hidden-folder switches.
+- **Results live in the Search Results tab** — the dialog shows
+  parameters only; every hit is a clickable row and every jump lands
+  **centered** in the view. Replace in Files applies all matches as
+  one journaled, undoable operation.
+
+### Bookmarks
+- **View Bookmarks** (Edit → Bookmarks): every open document's
+  bookmarks in a console tab, grouped per file behind disclosure
+  triangles, sorted and filterable.
+- The dialog's **Bookmark tab** bulk-bookmarks every match — with
+  purge, Clear all bookmarks, and Copy Matched Text.
+
+### Around the editor
+- **Section menu**: the current tab's classes, properties, and methods
+  — sorted, always fresh, one click to jump.
+- **Console, rebuilt**: per-line rows with alternating tones, row
+  selection, Ctrl+C copies lines; Console / Search Results / Bookmarks
+  toggle independently from the View menu; all bottom views share a
+  framed, monospace, zebra-striped look.
+- **Tooltips on every control**, fully localized.
+- **Help → Open Manual**: a complete 18-section user manual, also part
+  of the first-run welcome (README → Manual → Release Notes).
+- Triple-click selects the line (drag extends by lines); bracket
+  matching cycles `#if/#elif/#else/#endif` both directions; History
+  window: real-editor preview, arrow-key navigation, per-document
+  tabs; drag-and-drop insertion caret; green update icon by the gear;
+  Window menu tabs sorted.
+
+### Fixed
+- Semantics fallback for files outside Unity assemblies (issue #36).
+- Metadata stubs carry using directives so F12 works inside them (issue #37).
+- Triple-click reliably fires (issue #38).
+- Go to Definition resolves L10n strings before the background task (issue #39).
+- "All Tabs" search scope did not persist on non-English editors
+  (locale-dependent comparison; superseded by the tabbed dialog).
+
 ## 0.13.0 — 2026-07-30
 
 The IDE release. Twenty-one features — ATE now edits like a full IDE.

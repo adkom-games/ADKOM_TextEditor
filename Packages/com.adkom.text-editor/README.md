@@ -65,8 +65,8 @@ Choose your keyboard layout — **Visual Studio**, **VS Code**, or
 | Duplicate line | Ctrl+D | Shift+Alt+Up/Down | Ctrl+D |
 | Delete line | Ctrl+L | Ctrl+Shift+K | Ctrl+Y |
 | Move line up / down | Alt+Up / Alt+Down | Alt+Up / Alt+Down | Alt+Shift+Up / Alt+Shift+Down |
-| Find / Find in tabs | Ctrl+F / Ctrl+Shift+F | Ctrl+F / Ctrl+Shift+F | Ctrl+F / Ctrl+Shift+F |
-| Replace / Replace in tabs | Ctrl+H / Ctrl+Shift+H | Ctrl+H / Ctrl+Shift+H | Ctrl+R / Ctrl+Shift+R |
+| Find / Find in Files | Ctrl+F / Ctrl+Shift+F | Ctrl+F / Ctrl+Shift+F | Ctrl+F / Ctrl+Shift+F |
+| Replace / Find in Files | Ctrl+H / Ctrl+Shift+H | Ctrl+H / Ctrl+Shift+H | Ctrl+R / Ctrl+Shift+R |
 | Find next / previous | F3 / Shift+F3 | F3 / Shift+F3 | F3 / Shift+F3 |
 | Zoom in / out / reset | Ctrl+'+' / Ctrl+'-' / Ctrl+0 | Ctrl+'+' / Ctrl+'-' / Ctrl+0 | Ctrl+'+' / Ctrl+'-' / Ctrl+0 |
 | Toggle line comment | Ctrl+/ | Ctrl+/ | Ctrl+/ |
@@ -126,7 +126,9 @@ through your caret history round it out. **Rename Symbol** (F2),
 **Find All References**, and **Format Document** ride the same Roslyn
 semantics as Go to Definition. **Quick Open** (Ctrl+P in VS Code
 layout) fuzzy-finds any project file; per-document **bookmarks**
-(Ctrl+Alt+K) mark lines in the gutter with next/previous jumps; and
+(Ctrl+Alt+K) mark lines in the gutter with next/previous jumps, a
+**View Bookmarks** console tab listing every open document's bookmarks
+(grouped per file), and bulk bookmarking from the Find/Replace dialog; and
 selected text **drags and drops** to a new location (Ctrl to copy).
 Optional save cleanups trim trailing whitespace and ensure a final
 newline, and **Auto-Save on Focus Loss** can save every dirty file the
@@ -217,15 +219,21 @@ and the first use offers one-click setup (bundled MIT-licensed Roslyn,
 notices included; an existing project Roslyn is used as-is).
 
 ### 🔍 Find & replace, everywhere
-Search the current file or every open tab at once — match case, whole
-word, plain text or full regular expressions (with $1 group
-replacements), wrap-around, and backwards search, all from a compact
-modeless dialog. F3 repeats your last search without reopening it.
-**Find in Files** goes further: search the whole project (Assets +
-Packages, or any folder), open buffers searched as you see them, each
-match with a checkbox and a before → after preview — and **Replace
-Selected** applies as one operation you can undo across every touched
-file, open or closed, with a single click.
+One fixed-size, tabbed dialog (Notepad++-style) drives every search:
+**Find**, **Replace**, **Find in Files**, and **Bookmark** tabs share
+the query and options — match case, whole word, and a **Search Mode**
+of plain text, extended escapes (`\n`, `\t`, `\x41`), or full regular
+expressions with $1 group replacements. The dialog holds parameters
+only: every **Find All** (current document, all open documents, or the
+whole project) lists its hits in the console's **Search Results** tab
+as clickable rows, and every jump lands **centered** in the view. F3
+repeats the last search without the dialog. **Find in Files** searches
+Assets + Packages or any folder (file-name filters, sub-folder and
+hidden-folder switches, follow-current-doc), with open buffers searched
+as you see them; **Replace in Files** applies every match as ONE
+journaled operation with global Undo/Redo across all touched files,
+open or closed. The **Bookmark** tab bookmarks every matching line —
+Count, In-selection scoping, and Copy Matched Text included.
 
 ### 📝 Markdown, both ways
 Open a `.md` file and a toggle appears next to the settings gear:
@@ -244,21 +252,28 @@ text as caption, placeholder when missing), and a settings option picks which vi
 ### 🗺 See the whole file
 A **syntax-colorized minimap** runs along the right edge — the shape of
 your whole document at a glance, with a viewport indicator; click or
-drag it to jump anywhere. A **console pane** at the bottom collects
-every ATE message with timestamps — selectable, copyable (Ctrl+C), and
-**resizable** by dragging the divider above it (the height sticks) —
-plus a **Search Results tab**: Find All References lists its hits as
-clickable rows that jump straight to the location. Both close away cleanly and come back
-from the View menu — and both are on by default, along with line
-numbers and word wrap.
+drag it to jump anywhere. A **console area** at the bottom — resizable
+by dragging the divider (the height sticks) — hosts framed, monospace,
+zebra-striped views as tabs: the **Console** (every ATE message,
+timestamped, row-selectable, Ctrl+C copies), **Search Results** (hits
+from Find All, Find in Files, and Find All References — filterable,
+click to jump), **Bookmarks** (every open document's bookmarks, grouped
+per file behind disclosure triangles), plus the addon scanner and game
+map when active. The View menu toggles each tab **independently**, and
+line numbers and word wrap live there too.
 
 ### 🖱 Feels like an application
-A real **menu bar** — File, Edit, View, Tools, Window, Help — rendered
-with your platform's native menus, plus right-click context menus on
-file tabs (Save, Save As, Close, Close Other Tabs), and ATE appears in every
-dock's **Add Tab** menu and in the Window menu (with its shortcut). Pick any installed
-**font** and size, zoom with Ctrl+MouseWheel or Ctrl+'+'/'-' (Ctrl+0
-resets), and enjoy **smooth scrolling** (toggleable).
+A real **menu bar** — File, Edit, View, Tools, Window, Section, Help —
+rendered with your platform's native menus, plus right-click context
+menus on file tabs (Save, Save As, Close, Close Other Tabs), and ATE
+appears in every dock's **Add Tab** menu and in the Window menu (with
+its shortcut). The **Section menu** lists the current tab's classes,
+properties, and methods — sorted, rebuilt on every click — and jumps to
+the declaration. The Window menu lists open tabs alphabetically. Every
+control carries a **tooltip**, and **Help → Open Manual** opens the
+full user manual as a tab. Pick any installed **font** and size, zoom
+with Ctrl+MouseWheel or Ctrl+'+'/'-' (Ctrl+0 resets), and enjoy
+**smooth scrolling** (toggleable).
 
 ### 🌏 Speaks your language
 The entire interface follows Unity's **Editor Language** setting:
@@ -340,7 +355,7 @@ https://github.com/adkom-games/ADKOM_TextEditor.git#upm
 Prefer a pinned version?
 
 ```
-https://github.com/adkom-games/ADKOM_TextEditor.git#0.13.0
+https://github.com/adkom-games/ADKOM_TextEditor.git#0.13.1
 ```
 
 Semantic Features (compiler-accurate colors + Go to Definition) are

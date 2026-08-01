@@ -42,15 +42,16 @@ feature pitch.
 - **Word-based autocomplete** (current doc + open tabs + language keywords, Ctrl+Space)
 - Auto-closing brackets/quotes, brace matching with jump, **code folding** (clickable gutter arrows, `{ ⋯ }` headers, double-click a brace to fold), indentation guides
 - **Rename Symbol** (F2), **Find All References**, **Format Document** — on the same Roslyn semantics as Go to Definition
-- **Quick Open** (Ctrl+, / Ctrl+P / Ctrl+T), per-document **bookmarks** with gutter markers, **drag-and-drop of selected text** (Ctrl to copy)
+- **Quick Open** (Ctrl+, / Ctrl+P / Ctrl+T), per-document **bookmarks** with gutter markers and a **Bookmarks view** (all open documents, grouped per file), **drag-and-drop of selected text** (Ctrl to copy)
 - Expand/shrink selection, insert line above/below, join lines, case transforms, sort lines, block comments, word-wise delete, whole-line cut/copy, navigate back/forward through caret history
 - Save cleanups: trim trailing whitespace, ensure final newline
 
 **IDE comfort**
-- Native menu bar (File/Edit/View/Tools/Window/Help) with **per-layout shortcut hints** on every item; right-click context menu inside the document (Go to Definition, Find Occurrences, clipboard, file ops, Show in File Explorer, language commands)
+- Native menu bar (File/Edit/View/Tools/Window/Section/Help) with **per-layout shortcut hints** on every item; the **Section menu** jumps to any class/property/method of the current tab; right-click context menu inside the document (Go to Definition, Find Occurrences, clipboard, file ops, Show in File Explorer, language commands)
 - **Keyboard layouts** and **color themes** (dark + light) matching Visual Studio, VS Code, and JetBrains Rider; follows the Unity Editor skin or forced Dark/Light
-- Find/replace (regex with $1 groups, whole-word, case, backwards, wrap-around) across the current file or **all open tabs**, in a modeless dialog
-- Bottom **console pane** collecting all ATE messages, timestamped, selectable and copyable
+- **Tabbed Find/Replace dialog** (Notepad++-style: Find / Replace / Find in Files / Bookmark) with Normal, extended-escape, and regex search modes — all Find Alls list hits in the Search Results tab, and every jump lands centered
+- Bottom **console area** with independently toggleable views — Console (row-selectable, Ctrl+C), Search Results, Bookmarks — framed, monospace, zebra-striped
+- Tooltips on every control, and a full **user manual** (Help → Open Manual)
 - Non-modal by design: ATE's prompts never freeze the Unity editor or background tooling
 
 **AI**
@@ -70,7 +71,7 @@ feature pitch.
 - **Read/write reference highlighting**: caret on a symbol highlights every use — writes in amber
 - **Customizable snippets** (plain-text file, live tab-stop sessions) + **code generators** for Unity magic methods (33, duplicate-aware) and overrides (full stubs with base calls)
 - **Visual edit history**: an undo/redo timeline showing the document at any point — restore, open as tab, or copy
-- **Find/Replace in Files**: project-wide, buffer-aware, per-match selection with preview, and **global undo** across all touched files
+- **Find/Replace in Files**: project-wide, buffer-aware, filters/root/sub-folder options, and **global undo** across all touched files
 - **Reflection inspector**: live static/instance values (play mode included), editable primitives, run parameterless static methods
 - **Git integration**: gutter diff markers, blame, file history, stage/commit/push panel, and an **interactive branch-history tree** (vertical ⇄ horizontal)
 - **Optional spell checking**: 115k-word SCOWL dictionary, Hunspell imports, user + per-project dictionaries
@@ -98,7 +99,7 @@ https://github.com/adkom-games/ADKOM_TextEditor.git#upm
 Pinned release:
 
 ```
-https://github.com/adkom-games/ADKOM_TextEditor.git#0.13.0
+https://github.com/adkom-games/ADKOM_TextEditor.git#0.13.1
 ```
 
 The `upm` branch contains only the package, so consumer downloads stay
