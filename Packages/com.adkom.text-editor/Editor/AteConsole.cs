@@ -46,6 +46,17 @@ namespace ADKOM.TextEditor
                 return sb.ToString();
             }
         }
+
+        /// <summary>Snapshots the lines into <paramref name="into"/> (cleared
+        /// first) — the console pane's per-row view binds to this list.</summary>
+        public static void CopyLinesInto(List<string> into)
+        {
+            lock (_lock)
+            {
+                into.Clear();
+                into.AddRange(_lines);
+            }
+        }
     }
 }
 #endif
