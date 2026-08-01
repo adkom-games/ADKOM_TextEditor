@@ -423,6 +423,9 @@ msgstr "現在のタブ"
 msgid "All Tabs"
 msgstr "すべてのタブ"
 
+msgid "Project"
+msgstr "プロジェクト"
+
 msgid "Replace All"
 msgstr "すべて置換"
 
@@ -1376,3 +1379,372 @@ msgstr "アップデートがあります: {0}（インストール済み: {1}�
 
 msgid "New version available: {0}. This copy is embedded for development — update manually via git."
 msgstr "新しいバージョンがあります: {0}。このコピーは開発用に埋め込まれています — git で手動更新してください。"
+
+msgid "Mark"
+msgstr "マーク"
+
+msgid "Find what:"
+msgstr "検索文字列:"
+
+msgid "Replace with:"
+msgstr "置換文字列:"
+
+msgid "Swap Find and Replace"
+msgstr "検索と置換を入れ替え"
+
+msgid "Filters:"
+msgstr "フィルター:"
+
+msgid "Directory:"
+msgstr "ディレクトリ:"
+
+msgid "Backward direction"
+msgstr "逆方向に検索"
+
+msgid "Match whole word only"
+msgstr "単語単位で検索"
+
+msgid "In selection"
+msgstr "選択範囲内"
+
+msgid "Purge for each search"
+msgstr "検索ごとにマークを解除"
+
+msgid "Follow current doc."
+msgstr "現在のドキュメントに追従"
+
+msgid "In all sub-folders"
+msgstr "すべてのサブフォルダーを含む"
+
+msgid "In hidden folders"
+msgstr "隠しフォルダーを含む"
+
+msgid "Search Mode"
+msgstr "検索モード"
+
+msgid "Normal"
+msgstr "標準"
+
+msgid "Extended (\\n, \\r, \\t, \\0, \\x...)"
+msgstr "拡張 (\\n, \\r, \\t, \\0, \\x...)"
+
+msgid "Regular expression"
+msgstr "正規表現"
+
+msgid ". matches newline"
+msgstr "「.」を改行にも一致させる"
+
+msgid "Count"
+msgstr "カウント"
+
+msgid "Find All in Current Document"
+msgstr "現在のドキュメントですべて検索"
+
+msgid "Find All in All Opened Documents"
+msgstr "開いているすべてのドキュメントですべて検索"
+
+msgid "Replace All in All Opened Documents"
+msgstr "開いているすべてのドキュメントですべて置換"
+
+msgid "Find All"
+msgstr "すべて検索"
+
+msgid "Replace in Files"
+msgstr "ファイル内で置換"
+
+msgid "{0} match(es)."
+msgstr "{0} 件一致しました。"
+
+msgid "'{0}' — {1} match(es) in {2} file(s)"
+msgstr "「{0}」 — {2} ファイルに {1} 件"
+
+msgid "Marked {0} line(s)."
+msgstr "{0} 行をマークしました。"
+
+msgid "Marks cleared."
+msgstr "マークを解除しました。"
+
+msgid "Mark All"
+msgstr "すべてマーク"
+
+msgid "Clear all marks"
+msgstr "すべてのマークを解除"
+
+msgid "Copy Marked Text"
+msgstr "マークした文字列をコピー"
+
+msgid "Also search every folder below the chosen one."
+msgstr "選択したフォルダーの下位フォルダーもすべて検索します。"
+
+msgid "Also search folders whose name starts with a dot."
+msgstr "名前がドットで始まるフォルダーも検索します。"
+
+msgid "Bookmark every line of the active document that contains a match."
+msgstr "アクティブなドキュメントで一致を含むすべての行をブックマークします。"
+
+msgid "Bookmark every line that matches"
+msgstr "一致するすべての行をブックマーク"
+
+msgid "Caret position, and the document's indentation, line-ending, and encoding info."
+msgstr "キャレット位置と、ドキュメントのインデント・改行コード・エンコーディング情報。"
+
+msgid "Choose the folder to search"
+msgstr "検索するフォルダーを選択"
+
+msgid "Clear existing marks before marking the new matches."
+msgstr "新しい一致をマークする前に既存のマークを解除します。"
+
+msgid "Close this dialog. Reopen it from the Edit or View menu."
+msgstr "このダイアログを閉じます。編集メニューまたは表示メニューから再表示できます。"
+
+msgid "Close this tab (or middle-click the tab)."
+msgstr "このタブを閉じます(タブの中クリックでも可)。"
+
+msgid "Commit the checked files with the message above."
+msgstr "チェックしたファイルを上のメッセージでコミットします。"
+
+msgid "Continue from the other end when the search hits the end of the document."
+msgstr "検索がドキュメントの端に達したら反対側から続けます。"
+
+msgid "Copy the text of every match to the clipboard, one per line."
+msgstr "すべての一致テキストを 1 行ずつクリップボードにコピーします。"
+
+msgid "Copy this snapshot's full text to the clipboard."
+msgstr "このスナップショットの全文をクリップボードにコピーします。"
+
+msgid "Count the occurrences in the active document."
+msgstr "アクティブなドキュメント内の一致数を数えます。"
+
+msgid "Documentation, release notes, and support."
+msgstr "ドキュメント、リリースノート、サポート。"
+
+msgid "Drag to resize the console pane."
+msgstr "ドラッグしてコンソールペインのサイズを変更します。"
+
+msgid "Editing, search, selection, and navigation commands."
+msgstr "編集・検索・選択・ナビゲーションのコマンド。"
+
+msgid "Editor font, from the fonts installed on this machine. Default is the bundled monospace."
+msgstr "エディターのフォント(このマシンにインストール済みのフォントから)。既定は同梱のモノスペースです。"
+
+msgid "Every ATE message, timestamped. Rows are selectable; Ctrl+C copies them."
+msgstr "すべての ATE メッセージ(タイムスタンプ付き)。行を選択して Ctrl+C でコピーできます。"
+
+msgid "File-name wildcard, e.g. *.cs. * matches every file."
+msgstr "ファイル名のワイルドカード(例: *.cs)。* はすべてのファイルに一致します。"
+
+msgid "Find Next searches toward the start of the document."
+msgstr "「次を検索」がドキュメントの先頭方向に検索します。"
+
+msgid "Findings from the addon security scanner."
+msgstr "アドオンセキュリティスキャナーの検出結果。"
+
+msgid "Follow the Unity Editor skin, or force the light or dark variant."
+msgstr "Unity エディターのスキンに従うか、ライト/ダークを強制します。"
+
+msgid "Hide the console pane (View menu shows it again)."
+msgstr "コンソールペインを隠します(表示メニューで再表示)。"
+
+msgid "Hits from Find All, Find in Files, and Find All References. Click a row to jump to it."
+msgstr "すべて検索・ファイル内検索・すべての参照の検索の結果。行をクリックでジャンプします。"
+
+msgid "In regular expressions, '.' also matches line breaks."
+msgstr "正規表現で「.」を改行にも一致させます。"
+
+msgid "Invoke this static method now; its return value lands in the console."
+msgstr "この静的メソッドを今すぐ実行します。戻り値はコンソールに表示されます。"
+
+msgid "Language tools, snippets, add-ons, and utilities."
+msgstr "言語ツール、スニペット、アドオン、ユーティリティ。"
+
+msgid "Limit Count, Find All, Replace All, and Mark All to the current selection."
+msgstr "カウント・すべて検索・すべて置換・すべてマークを現在の選択範囲に限定します。"
+
+msgid "List every occurrence in the Search Results tab of the console pane."
+msgstr "コンソールペインの検索結果タブにすべての一致を一覧表示します。"
+
+msgid "List occurrences from every open tab in the Search Results tab."
+msgstr "開いているすべてのタブの一致を検索結果タブに一覧表示します。"
+
+msgid "Live value — edit and press Enter to write it to the running object."
+msgstr "ライブ値 — 編集して Enter で実行中のオブジェクトに書き込みます。"
+
+msgid "Match only when not embedded in a longer word."
+msgstr "より長い単語の一部でない場合のみ一致します。"
+
+msgid "New unsaved document — protected by the session, saved to disk on Save."
+msgstr "新しい未保存ドキュメント — セッションで保護され、保存でディスクに書き込まれます。"
+
+msgid "Normal: literal text. Extended: escape sequences like \\n and \\t are interpreted. Regular expression: .NET regex syntax."
+msgstr "標準: 文字どおりのテキスト。拡張: \\n や \\t などのエスケープを解釈。正規表現: .NET の正規表現構文。"
+
+msgid "Open this snapshot as a new untitled tab, leaving the document as is."
+msgstr "このスナップショットを新しい無題タブとして開きます(ドキュメントはそのまま)。"
+
+msgid "Open, save, and manage files and recent documents."
+msgstr "ファイルを開く・保存・最近使ったドキュメントの管理。"
+
+msgid "Push the current branch to its remote."
+msgstr "現在のブランチをリモートにプッシュします。"
+
+msgid "Re-apply the last undone Replace in Files."
+msgstr "最後に元に戻した「ファイル内で置換」を再適用します。"
+
+msgid "Re-read the repository status and branch history."
+msgstr "リポジトリの状態とブランチ履歴を再読み込みします。"
+
+msgid "Remove every bookmark from the active document."
+msgstr "アクティブなドキュメントからすべてのブックマークを削除します。"
+
+msgid "Replace every match on disk and in open buffers — one journaled operation, undoable below."
+msgstr "ディスク上と開いているバッファーのすべての一致を置換します — 1 つの記録された操作として、下で元に戻せます。"
+
+msgid "Replace every occurrence in every open tab."
+msgstr "開いているすべてのタブのすべての一致を置換します。"
+
+msgid "Replace every occurrence in the active document (one undo step)."
+msgstr "アクティブなドキュメントのすべての一致を置換します(1 回の元に戻す操作)。"
+
+msgid "Replace the selected match, then find the next one."
+msgstr "選択中の一致を置換し、次を検索します。"
+
+msgid "Rescan the loaded scenes for instances of this component."
+msgstr "読み込まれたシーンからこのコンポーネントのインスタンスを再スキャンします。"
+
+msgid "Restore all files touched by the last Replace in Files."
+msgstr "最後の「ファイル内で置換」で変更されたすべてのファイルを復元します。"
+
+msgid "Rewind the document to this step. The restore is itself undoable."
+msgstr "ドキュメントをこのステップまで巻き戻します。復元自体も元に戻せます。"
+
+msgid "Search and replace across the files on disk"
+msgstr "ディスク上のファイルを対象に検索・置換"
+
+msgid "Search and replace in open documents"
+msgstr "開いているドキュメントを対象に検索・置換"
+
+msgid "Search the active document"
+msgstr "アクティブなドキュメントを検索"
+
+msgid "Search the active document's folder instead of the Directory field."
+msgstr "ディレクトリ欄の代わりにアクティブなドキュメントのフォルダーを検索します。"
+
+msgid "Search the files and list every match in the Search Results tab."
+msgstr "ファイルを検索し、すべての一致を検索結果タブに一覧表示します。"
+
+msgid "Select the next occurrence in the active document (F3)."
+msgstr "アクティブなドキュメント内の次の一致を選択します(F3)。"
+
+msgid "Show line numbers in the gutter."
+msgstr "ガターに行番号を表示します。"
+
+msgid "Show only rows whose file name, path, or text contains this."
+msgstr "ファイル名・パス・テキストにこれを含む行だけを表示します。"
+
+msgid "Status messages. Everything shown here is also kept in the Console pane."
+msgstr "ステータスメッセージ。ここに表示された内容はコンソールペインにも保存されます。"
+
+msgid "Switch tabs and open ATE windows."
+msgstr "タブの切り替えと ATE ウィンドウを開く。"
+
+msgid "Syntax color palette: Visual Studio, VS Code, or Rider styles."
+msgstr "構文カラーパレット: Visual Studio・VS Code・Rider スタイル。"
+
+msgid "The Z-Machine game's automatic map."
+msgstr "Z-Machine ゲームの自動マップ。"
+
+msgid "The message for the next commit."
+msgstr "次のコミットのメッセージ。"
+
+msgid "The replacement text. Regular expression mode expands $1-style group references."
+msgstr "置換テキスト。正規表現モードでは $1 形式のグループ参照を展開します。"
+
+msgid "The text or pattern to search for. Enter runs this tab's main action."
+msgstr "検索するテキストまたはパターン。Enter でこのタブの主要な操作を実行します。"
+
+msgid "Toggle editor views, folding, and themes."
+msgstr "エディタービュー・折りたたみ・テーマの切り替え。"
+
+msgid "Type to filter project files; Enter opens the selected one, Escape closes."
+msgstr "入力してプロジェクトファイルを絞り込みます。Enter で選択したファイルを開き、Escape で閉じます。"
+
+msgid "Uppercase and lowercase must match exactly."
+msgstr "大文字と小文字が正確に一致する必要があります。"
+
+msgid "Which scene instance the live values below come from."
+msgstr "下のライブ値の取得元となるシーンインスタンス。"
+
+msgid "Wrap long lines at the viewport edge instead of scrolling horizontally."
+msgstr "長い行を横スクロールせずビューポート端で折り返します。"
+
+msgid "Type a value and press Enter; Escape cancels."
+msgstr "値を入力して Enter で確定、Escape でキャンセルします。"
+
+msgid "Switch this Markdown tab between rendered and source view."
+msgstr "この Markdown タブをレンダリング表示とソース表示で切り替えます。"
+
+msgid "A new ATE version is available — click to update."
+msgstr "新しい ATE バージョンがあります — クリックで更新します。"
+
+msgid "Query GitHub for a newer ATE release immediately."
+msgstr "GitHub に新しい ATE リリースを今すぐ問い合わせます。"
+
+msgid "Sign in to GitHub Copilot with the device-flow code, or sign out of the current account."
+msgstr "デバイスフローコードで GitHub Copilot にサインイン、または現在のアカウントからサインアウトします。"
+
+msgid "View Bookmarks"
+msgstr "ブックマークを表示"
+
+msgid "(no bookmarks)"
+msgstr "(ブックマークなし)"
+
+msgid "{0} bookmark(s) in {1} document(s)"
+msgstr "{1} ドキュメントに {0} 件のブックマーク"
+
+msgid "The bookmarked lines of every open document. Click a row to jump to it."
+msgstr "開いているすべてのドキュメントのブックマーク行。行をクリックでジャンプします。"
+
+msgid "Bookmark"
+msgstr "ブックマーク"
+
+msgid "Bookmark All"
+msgstr "すべてブックマーク"
+
+msgid "Clear all bookmarks"
+msgstr "すべてのブックマークを解除"
+
+msgid "Copy Matched Text"
+msgstr "一致テキストをコピー"
+
+msgid "Bookmarks cleared."
+msgstr "ブックマークを解除しました。"
+
+msgid "Bookmarked {0} line(s)."
+msgstr "{0} 行をブックマークしました。"
+
+msgid "Limit Count, Find All, Replace All, and Bookmark All to the current selection."
+msgstr "カウント・すべて検索・すべて置換・すべてブックマークを現在の選択範囲に限定します。"
+
+msgid "Clear existing bookmarks before bookmarking the new matches."
+msgstr "新しい一致をブックマークする前に既存のブックマークを解除します。"
+
+msgid "Section"
+msgstr "セクション"
+
+msgid "Classes"
+msgstr "クラス"
+
+msgid "Properties"
+msgstr "プロパティ"
+
+msgid "Methods"
+msgstr "メソッド"
+
+msgid "Jump to a class, property, or method in the current tab."
+msgstr "現在のタブのクラス・プロパティ・メソッドへ移動します。"
+
+msgid "Open Manual"
+msgstr "マニュアルを開く"
+
+msgid "Manual.md not found."
+msgstr "Manual.md が見つかりません。"

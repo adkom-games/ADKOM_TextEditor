@@ -425,6 +425,9 @@ msgstr "Current Tab"
 msgid "All Tabs"
 msgstr "All Tabs"
 
+msgid "Project"
+msgstr "Project"
+
 msgid "Replace All"
 msgstr "Replace All"
 
@@ -1378,3 +1381,372 @@ msgstr "Update available: {0} (installed: {1})"
 
 msgid "New version available: {0}. This copy is embedded for development — update manually via git."
 msgstr "New version available: {0}. This copy is embedded for development — update manually via git."
+
+msgid "Mark"
+msgstr "Mark"
+
+msgid "Find what:"
+msgstr "Find what:"
+
+msgid "Replace with:"
+msgstr "Replace with:"
+
+msgid "Swap Find and Replace"
+msgstr "Swap Find and Replace"
+
+msgid "Filters:"
+msgstr "Filters:"
+
+msgid "Directory:"
+msgstr "Directory:"
+
+msgid "Backward direction"
+msgstr "Backward direction"
+
+msgid "Match whole word only"
+msgstr "Match whole word only"
+
+msgid "In selection"
+msgstr "In selection"
+
+msgid "Purge for each search"
+msgstr "Purge for each search"
+
+msgid "Follow current doc."
+msgstr "Follow current doc."
+
+msgid "In all sub-folders"
+msgstr "In all sub-folders"
+
+msgid "In hidden folders"
+msgstr "In hidden folders"
+
+msgid "Search Mode"
+msgstr "Search Mode"
+
+msgid "Normal"
+msgstr "Normal"
+
+msgid "Extended (\\n, \\r, \\t, \\0, \\x...)"
+msgstr "Extended (\\n, \\r, \\t, \\0, \\x...)"
+
+msgid "Regular expression"
+msgstr "Regular expression"
+
+msgid ". matches newline"
+msgstr ". matches newline"
+
+msgid "Count"
+msgstr "Count"
+
+msgid "Find All in Current Document"
+msgstr "Find All in Current Document"
+
+msgid "Find All in All Opened Documents"
+msgstr "Find All in All Opened Documents"
+
+msgid "Replace All in All Opened Documents"
+msgstr "Replace All in All Opened Documents"
+
+msgid "Find All"
+msgstr "Find All"
+
+msgid "Replace in Files"
+msgstr "Replace in Files"
+
+msgid "{0} match(es)."
+msgstr "{0} match(es)."
+
+msgid "'{0}' — {1} match(es) in {2} file(s)"
+msgstr "'{0}' — {1} match(es) in {2} file(s)"
+
+msgid "Marked {0} line(s)."
+msgstr "Marked {0} line(s)."
+
+msgid "Marks cleared."
+msgstr "Marks cleared."
+
+msgid "Mark All"
+msgstr "Mark All"
+
+msgid "Clear all marks"
+msgstr "Clear all marks"
+
+msgid "Copy Marked Text"
+msgstr "Copy Marked Text"
+
+msgid "Also search every folder below the chosen one."
+msgstr "Also search every folder below the chosen one."
+
+msgid "Also search folders whose name starts with a dot."
+msgstr "Also search folders whose name starts with a dot."
+
+msgid "Bookmark every line of the active document that contains a match."
+msgstr "Bookmark every line of the active document that contains a match."
+
+msgid "Bookmark every line that matches"
+msgstr "Bookmark every line that matches"
+
+msgid "Caret position, and the document's indentation, line-ending, and encoding info."
+msgstr "Caret position, and the document's indentation, line-ending, and encoding info."
+
+msgid "Choose the folder to search"
+msgstr "Choose the folder to search"
+
+msgid "Clear existing marks before marking the new matches."
+msgstr "Clear existing marks before marking the new matches."
+
+msgid "Close this dialog. Reopen it from the Edit or View menu."
+msgstr "Close this dialog. Reopen it from the Edit or View menu."
+
+msgid "Close this tab (or middle-click the tab)."
+msgstr "Close this tab (or middle-click the tab)."
+
+msgid "Commit the checked files with the message above."
+msgstr "Commit the checked files with the message above."
+
+msgid "Continue from the other end when the search hits the end of the document."
+msgstr "Continue from the other end when the search hits the end of the document."
+
+msgid "Copy the text of every match to the clipboard, one per line."
+msgstr "Copy the text of every match to the clipboard, one per line."
+
+msgid "Copy this snapshot's full text to the clipboard."
+msgstr "Copy this snapshot's full text to the clipboard."
+
+msgid "Count the occurrences in the active document."
+msgstr "Count the occurrences in the active document."
+
+msgid "Documentation, release notes, and support."
+msgstr "Documentation, release notes, and support."
+
+msgid "Drag to resize the console pane."
+msgstr "Drag to resize the console pane."
+
+msgid "Editing, search, selection, and navigation commands."
+msgstr "Editing, search, selection, and navigation commands."
+
+msgid "Editor font, from the fonts installed on this machine. Default is the bundled monospace."
+msgstr "Editor font, from the fonts installed on this machine. Default is the bundled monospace."
+
+msgid "Every ATE message, timestamped. Rows are selectable; Ctrl+C copies them."
+msgstr "Every ATE message, timestamped. Rows are selectable; Ctrl+C copies them."
+
+msgid "File-name wildcard, e.g. *.cs. * matches every file."
+msgstr "File-name wildcard, e.g. *.cs. * matches every file."
+
+msgid "Find Next searches toward the start of the document."
+msgstr "Find Next searches toward the start of the document."
+
+msgid "Findings from the addon security scanner."
+msgstr "Findings from the addon security scanner."
+
+msgid "Follow the Unity Editor skin, or force the light or dark variant."
+msgstr "Follow the Unity Editor skin, or force the light or dark variant."
+
+msgid "Hide the console pane (View menu shows it again)."
+msgstr "Hide the console pane (View menu shows it again)."
+
+msgid "Hits from Find All, Find in Files, and Find All References. Click a row to jump to it."
+msgstr "Hits from Find All, Find in Files, and Find All References. Click a row to jump to it."
+
+msgid "In regular expressions, '.' also matches line breaks."
+msgstr "In regular expressions, '.' also matches line breaks."
+
+msgid "Invoke this static method now; its return value lands in the console."
+msgstr "Invoke this static method now; its return value lands in the console."
+
+msgid "Language tools, snippets, add-ons, and utilities."
+msgstr "Language tools, snippets, add-ons, and utilities."
+
+msgid "Limit Count, Find All, Replace All, and Mark All to the current selection."
+msgstr "Limit Count, Find All, Replace All, and Mark All to the current selection."
+
+msgid "List every occurrence in the Search Results tab of the console pane."
+msgstr "List every occurrence in the Search Results tab of the console pane."
+
+msgid "List occurrences from every open tab in the Search Results tab."
+msgstr "List occurrences from every open tab in the Search Results tab."
+
+msgid "Live value — edit and press Enter to write it to the running object."
+msgstr "Live value — edit and press Enter to write it to the running object."
+
+msgid "Match only when not embedded in a longer word."
+msgstr "Match only when not embedded in a longer word."
+
+msgid "New unsaved document — protected by the session, saved to disk on Save."
+msgstr "New unsaved document — protected by the session, saved to disk on Save."
+
+msgid "Normal: literal text. Extended: escape sequences like \\n and \\t are interpreted. Regular expression: .NET regex syntax."
+msgstr "Normal: literal text. Extended: escape sequences like \\n and \\t are interpreted. Regular expression: .NET regex syntax."
+
+msgid "Open this snapshot as a new untitled tab, leaving the document as is."
+msgstr "Open this snapshot as a new untitled tab, leaving the document as is."
+
+msgid "Open, save, and manage files and recent documents."
+msgstr "Open, save, and manage files and recent documents."
+
+msgid "Push the current branch to its remote."
+msgstr "Push the current branch to its remote."
+
+msgid "Re-apply the last undone Replace in Files."
+msgstr "Re-apply the last undone Replace in Files."
+
+msgid "Re-read the repository status and branch history."
+msgstr "Re-read the repository status and branch history."
+
+msgid "Remove every bookmark from the active document."
+msgstr "Remove every bookmark from the active document."
+
+msgid "Replace every match on disk and in open buffers — one journaled operation, undoable below."
+msgstr "Replace every match on disk and in open buffers — one journaled operation, undoable below."
+
+msgid "Replace every occurrence in every open tab."
+msgstr "Replace every occurrence in every open tab."
+
+msgid "Replace every occurrence in the active document (one undo step)."
+msgstr "Replace every occurrence in the active document (one undo step)."
+
+msgid "Replace the selected match, then find the next one."
+msgstr "Replace the selected match, then find the next one."
+
+msgid "Rescan the loaded scenes for instances of this component."
+msgstr "Rescan the loaded scenes for instances of this component."
+
+msgid "Restore all files touched by the last Replace in Files."
+msgstr "Restore all files touched by the last Replace in Files."
+
+msgid "Rewind the document to this step. The restore is itself undoable."
+msgstr "Rewind the document to this step. The restore is itself undoable."
+
+msgid "Search and replace across the files on disk"
+msgstr "Search and replace across the files on disk"
+
+msgid "Search and replace in open documents"
+msgstr "Search and replace in open documents"
+
+msgid "Search the active document"
+msgstr "Search the active document"
+
+msgid "Search the active document's folder instead of the Directory field."
+msgstr "Search the active document's folder instead of the Directory field."
+
+msgid "Search the files and list every match in the Search Results tab."
+msgstr "Search the files and list every match in the Search Results tab."
+
+msgid "Select the next occurrence in the active document (F3)."
+msgstr "Select the next occurrence in the active document (F3)."
+
+msgid "Show line numbers in the gutter."
+msgstr "Show line numbers in the gutter."
+
+msgid "Show only rows whose file name, path, or text contains this."
+msgstr "Show only rows whose file name, path, or text contains this."
+
+msgid "Status messages. Everything shown here is also kept in the Console pane."
+msgstr "Status messages. Everything shown here is also kept in the Console pane."
+
+msgid "Switch tabs and open ATE windows."
+msgstr "Switch tabs and open ATE windows."
+
+msgid "Syntax color palette: Visual Studio, VS Code, or Rider styles."
+msgstr "Syntax color palette: Visual Studio, VS Code, or Rider styles."
+
+msgid "The Z-Machine game's automatic map."
+msgstr "The Z-Machine game's automatic map."
+
+msgid "The message for the next commit."
+msgstr "The message for the next commit."
+
+msgid "The replacement text. Regular expression mode expands $1-style group references."
+msgstr "The replacement text. Regular expression mode expands $1-style group references."
+
+msgid "The text or pattern to search for. Enter runs this tab's main action."
+msgstr "The text or pattern to search for. Enter runs this tab's main action."
+
+msgid "Toggle editor views, folding, and themes."
+msgstr "Toggle editor views, folding, and themes."
+
+msgid "Type to filter project files; Enter opens the selected one, Escape closes."
+msgstr "Type to filter project files; Enter opens the selected one, Escape closes."
+
+msgid "Uppercase and lowercase must match exactly."
+msgstr "Uppercase and lowercase must match exactly."
+
+msgid "Which scene instance the live values below come from."
+msgstr "Which scene instance the live values below come from."
+
+msgid "Wrap long lines at the viewport edge instead of scrolling horizontally."
+msgstr "Wrap long lines at the viewport edge instead of scrolling horizontally."
+
+msgid "Type a value and press Enter; Escape cancels."
+msgstr "Type a value and press Enter; Escape cancels."
+
+msgid "Switch this Markdown tab between rendered and source view."
+msgstr "Switch this Markdown tab between rendered and source view."
+
+msgid "A new ATE version is available — click to update."
+msgstr "A new ATE version is available — click to update."
+
+msgid "Query GitHub for a newer ATE release immediately."
+msgstr "Query GitHub for a newer ATE release immediately."
+
+msgid "Sign in to GitHub Copilot with the device-flow code, or sign out of the current account."
+msgstr "Sign in to GitHub Copilot with the device-flow code, or sign out of the current account."
+
+msgid "View Bookmarks"
+msgstr "View Bookmarks"
+
+msgid "(no bookmarks)"
+msgstr "(no bookmarks)"
+
+msgid "{0} bookmark(s) in {1} document(s)"
+msgstr "{0} bookmark(s) in {1} document(s)"
+
+msgid "The bookmarked lines of every open document. Click a row to jump to it."
+msgstr "The bookmarked lines of every open document. Click a row to jump to it."
+
+msgid "Bookmark"
+msgstr "Bookmark"
+
+msgid "Bookmark All"
+msgstr "Bookmark All"
+
+msgid "Clear all bookmarks"
+msgstr "Clear all bookmarks"
+
+msgid "Copy Matched Text"
+msgstr "Copy Matched Text"
+
+msgid "Bookmarks cleared."
+msgstr "Bookmarks cleared."
+
+msgid "Bookmarked {0} line(s)."
+msgstr "Bookmarked {0} line(s)."
+
+msgid "Limit Count, Find All, Replace All, and Bookmark All to the current selection."
+msgstr "Limit Count, Find All, Replace All, and Bookmark All to the current selection."
+
+msgid "Clear existing bookmarks before bookmarking the new matches."
+msgstr "Clear existing bookmarks before bookmarking the new matches."
+
+msgid "Section"
+msgstr "Section"
+
+msgid "Classes"
+msgstr "Classes"
+
+msgid "Properties"
+msgstr "Properties"
+
+msgid "Methods"
+msgstr "Methods"
+
+msgid "Jump to a class, property, or method in the current tab."
+msgstr "Jump to a class, property, or method in the current tab."
+
+msgid "Open Manual"
+msgstr "Open Manual"
+
+msgid "Manual.md not found."
+msgstr "Manual.md not found."
