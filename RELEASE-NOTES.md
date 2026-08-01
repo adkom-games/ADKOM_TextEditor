@@ -3,6 +3,18 @@
 **☕ Enjoying ATE? Support development on Ko-fi:**
 [https://ko-fi.com/adkomgames](https://ko-fi.com/adkomgames)
 
+## 0.13.2 — 2026-08-01
+
+Hotfix.
+
+### Fixed
+- **Copilot install failed on newer Node/npm** (npm 10.9+): enabling
+  Copilot died with `Cannot find module '…npm-prefix.js'` repeated in
+  the console and the Settings row. The npm.cmd shim resolves its own
+  files via `%~dp0`, which degrades to the working directory when the
+  batch file is launched by bare name — the installer now routes
+  through `cmd.exe` on Windows (plain `npm` elsewhere). Issue #40.
+
 ## 0.13.1 — 2026-08-01
 
 The search release: one dialog to find everything, results where they
