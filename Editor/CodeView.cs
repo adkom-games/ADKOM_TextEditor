@@ -418,8 +418,9 @@ namespace ADKOM.TextEditor
         static Font _monoFont;
 
         /// <summary>The editor's bundled RobotoMono (Console font), falling
-        /// back to common OS monospace fonts per platform.</summary>
-        static Font MonoFont()
+        /// back to common OS monospace fonts per platform. Internal so the
+        /// result/log subviews (AteViewStyle) share the same monospace.</summary>
+        internal static Font MonoFont()
         {
             if (_monoFont != null) return _monoFont;
             _monoFont = EditorGUIUtility.Load("Fonts/RobotoMono/RobotoMono-Regular.ttf") as Font;
@@ -2053,6 +2054,15 @@ namespace ADKOM.TextEditor
             // maximum and leave the newest line just out of view. Re-run it once
             // layout settles. (Issue #29)
             if (_gameMode) schedule.Execute(() => { if (_gameMode) EnsureCaretVisible(); });
+            else
+            {
+                // Jumps (search results, bookmarks, Section menu, Goto Line,
+                // …) land CENTERED in the viewport, not merely scrolled into
+                // view. Re-center once layout settles for the just-opened-tab
+                // case, where the scroller's max is still stale.
+                CenterOnLine(line);
+                schedule.Execute(() => { if (!_gameMode) CenterOnLine(line); });
+            }
         }
 
         public void SelectAll()

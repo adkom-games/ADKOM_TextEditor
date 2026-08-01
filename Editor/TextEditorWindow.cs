@@ -40,6 +40,11 @@ namespace ADKOM.TextEditor
         [SerializeField] bool _showLineNumbers = true;
         [SerializeField] bool _wordWrap = true;
         [SerializeField] bool _consoleVisible = true;
+        // Per-tab visibility of the console AREA's views — each View menu
+        // toggle flips exactly one of these, independently.
+        [SerializeField] bool _consoleTabVisible = true;
+        [SerializeField] bool _searchTabVisible = true;
+        [SerializeField] bool _bmTabVisible;
         [SerializeField] bool _minimapVisible = true;
         [SerializeField] bool _indentGuides = true;
 
@@ -90,8 +95,8 @@ namespace ADKOM.TextEditor
         Label _notifyLabel;
         VisualElement _notifyButtons;
         VisualElement _consolePane;
-        ScrollView _consoleScroll;
-        Label _consoleOutput;
+        ListView _consoleList;
+        readonly System.Collections.Generic.List<string> _consoleLines = new System.Collections.Generic.List<string>();
         int _consoleVersionShown = -1;
         double _statusHoldUntil;
 
@@ -280,23 +285,30 @@ namespace ADKOM.TextEditor
             // every platform (Windows/macOS/Linux), and building the menu on
             // click keeps item state (checks, enables, tab list) live. ---
             var toolbar = new Toolbar();
-            toolbar.Add(MenuButton(L10n.Tr("File"), FillFileMenu));
-            toolbar.Add(MenuButton(L10n.Tr("Edit"), FillEditMenu));
-            toolbar.Add(MenuButton(L10n.Tr("View"), FillViewMenu));
-            toolbar.Add(MenuButton(L10n.Tr("Tools"), FillToolsMenu));
-            toolbar.Add(MenuButton(L10n.Tr("Window"), FillWindowMenu));
-            toolbar.Add(MenuButton(L10n.Tr("Help"), FillHelpMenu));
+            VisualElement Menu(string title, System.Action<GenericMenu> fill, string tip)
+            { var b = MenuButton(title, fill); b.tooltip = tip; return b; }
+            toolbar.Add(Menu(L10n.Tr("File"), FillFileMenu, L10n.Tr("Open, save, and manage files and recent documents.")));
+            toolbar.Add(Menu(L10n.Tr("Edit"), FillEditMenu, L10n.Tr("Editing, search, selection, and navigation commands.")));
+            toolbar.Add(Menu(L10n.Tr("View"), FillViewMenu, L10n.Tr("Toggle editor views, folding, and themes.")));
+            toolbar.Add(Menu(L10n.Tr("Tools"), FillToolsMenu, L10n.Tr("Language tools, snippets, add-ons, and utilities.")));
+            toolbar.Add(Menu(L10n.Tr("Window"), FillWindowMenu, L10n.Tr("Switch tabs and open ATE windows.")));
+            // Built on click like every menu, so the symbol lists are always
+            // fresh for the current tab.
+            toolbar.Add(Menu(L10n.Tr("Section"), FillSectionMenu, L10n.Tr("Jump to a class, property, or method in the current tab.")));
+            toolbar.Add(Menu(L10n.Tr("Help"), FillHelpMenu, L10n.Tr("Documentation, release notes, and support.")));
             toolbar.Add(new ToolbarSpacer { flex = true });
             _mdFormatBar = BuildMdFormatBar();
             _mdFormatBar.style.display = DisplayStyle.None; // transient: rendered MD mode only
             toolbar.Add(_mdFormatBar);
-            _mdToggle = new ToolbarButton(ToggleMdMode);
+            _mdToggle = new ToolbarButton(ToggleMdMode)
+            { tooltip = L10n.Tr("Switch this Markdown tab between rendered and source view.") };
             _mdToggle.style.display = DisplayStyle.None; // transient: .md tabs only
             toolbar.Add(_mdToggle);
             // Update-available icon: pinned immediately left of the gear —
             // transient bars (MD toolbar etc.) are added BEFORE it above, so
             // they appear to its left and never displace it.
-            _updateBtn = new ToolbarButton(OnUpdateIconClicked);
+            _updateBtn = new ToolbarButton(OnUpdateIconClicked)
+            { tooltip = L10n.Tr("A new ATE version is available — click to update.") };
             var dlTex = EditorGUIUtility.IconContent("Download-Available").image;
             if (dlTex != null)
             {
@@ -452,8 +464,8 @@ namespace ADKOM.TextEditor
             var status = new VisualElement { name = "status-bar" };
             status.style.flexDirection = FlexDirection.Row;
             status.style.justifyContent = Justify.SpaceBetween;
-            _statusLeft = new Label();
-            _statusRight = new Label();
+            _statusLeft = new Label { tooltip = L10n.Tr("Status messages. Everything shown here is also kept in the Console pane.") };
+            _statusRight = new Label { tooltip = L10n.Tr("Caret position, and the document's indentation, line-ending, and encoding info.") };
             status.Add(_statusLeft);
             BuildMiniBuffer(status); // emacs-style prompt, between left and right
             status.Add(_statusRight);
@@ -704,7 +716,8 @@ namespace ADKOM.TextEditor
         void BuildConsolePane(VisualElement root)
         {
             // Drag handle above the console: resizes the pane (persisted).
-            _consoleSplitter = new VisualElement { name = "console-splitter" };
+            _consoleSplitter = new VisualElement { name = "console-splitter",
+                tooltip = L10n.Tr("Drag to resize the console pane.") };
             _consoleSplitter.style.height = 5;
             _consoleSplitter.style.flexShrink = 0;
             float dragStartY = 0, dragStartH = 0;
@@ -738,22 +751,30 @@ namespace ADKOM.TextEditor
             _consolePane.style.height = Mathf.Max(60f, EditorConfig.ConsoleHeight);
 
             var tabs = new VisualElement { name = "console-tabs" };
-            _consoleTab = new VisualElement();
+            _consoleTab = new VisualElement { tooltip = L10n.Tr("Every ATE message, timestamped. Rows are selectable; Ctrl+C copies them.") };
             _consoleTab.AddToClassList("console-tab");
             _consoleTab.Add(new Label(L10n.Tr("Console")));
             _consoleTab.RegisterCallback<PointerDownEvent>(e => { SelectConsoleTab(0); e.StopPropagation(); });
-            var close = new Button(() => SetConsoleVisible(false)) { text = "×" };
+            var close = new Button(() => SetConsoleVisible(false))
+            { text = "×", tooltip = L10n.Tr("Hide the console pane (View menu shows it again).") };
             close.AddToClassList("tab__close");
             _consoleTab.Add(close);
             tabs.Add(_consoleTab);
-            _searchTab = new VisualElement();
+            _searchTab = new VisualElement { tooltip = L10n.Tr("Hits from Find All, Find in Files, and Find All References. Click a row to jump to it.") };
             _searchTab.AddToClassList("console-tab");
             _searchTab.Add(new Label(L10n.Tr("Search Results")));
             _searchTab.RegisterCallback<PointerDownEvent>(e => { SelectConsoleTab(1); e.StopPropagation(); });
             tabs.Add(_searchTab);
+            // Bookmarks: hidden by default; View Bookmarks (or the View menu
+            // toggle) reveals it.
+            _bmTab = new VisualElement { tooltip = L10n.Tr("The bookmarked lines of every open document. Click a row to jump to it.") };
+            _bmTab.AddToClassList("console-tab");
+            _bmTab.Add(new Label(L10n.Tr("Bookmarks")));
+            _bmTab.RegisterCallback<PointerDownEvent>(e => { SelectConsoleTab(4); e.StopPropagation(); });
+            tabs.Add(_bmTab);
             // Scanner Results: appears only when the addon security scanner
             // has findings to show; its label carries the script's name.
-            _scannerTab = new VisualElement();
+            _scannerTab = new VisualElement { tooltip = L10n.Tr("Findings from the addon security scanner.") };
             _scannerTab.AddToClassList("console-tab");
             _scannerTabLabel = new Label(L10n.Tr("Scanner Results"));
             _scannerTab.Add(_scannerTabLabel);
@@ -762,7 +783,7 @@ namespace ADKOM.TextEditor
             tabs.Add(_scannerTab);
             // Map: appears only while the built-in Z-Machine game runs with the
             // auto-mapper on. Hosts the game's map view.
-            _mapTab = new VisualElement();
+            _mapTab = new VisualElement { tooltip = L10n.Tr("The Z-Machine game's automatic map.") };
             _mapTab.AddToClassList("console-tab");
             _mapTab.Add(new Label(L10n.Tr("Map")));
             _mapTab.RegisterCallback<PointerDownEvent>(e => { SelectConsoleTab(3); e.StopPropagation(); });
@@ -770,37 +791,65 @@ namespace ADKOM.TextEditor
             tabs.Add(_mapTab);
             _consolePane.Add(tabs);
 
-            _consoleScroll = new ScrollView(ScrollViewMode.Vertical) { name = "console-scroll" };
-            _consoleOutput = new Label { name = "console-output" };
-            _consoleOutput.AddToClassList("code-line");
-            _consoleOutput.focusable = true;
-            _consoleOutput.selection.isSelectable = true;
+            // Per-line rows in a framed monospace subview with alternating
+            // background tones. Row selection: click / Shift+Click /
+            // Ctrl+Click; Ctrl+C copies the selected lines.
+            _consoleList = new ListView
+            {
+                name = "console-list",
+                itemsSource = _consoleLines,
+                fixedItemHeight = 16,
+                selectionType = SelectionType.Multiple,
+                makeItem = () =>
+                {
+                    var l = new Label();
+                    l.AddToClassList("code-line");
+                    l.style.fontSize = 11;
+                    l.style.paddingLeft = 6;
+                    l.style.unityTextAlign = TextAnchor.MiddleLeft;
+                    l.style.whiteSpace = WhiteSpace.NoWrap;
+                    l.style.overflow = Overflow.Hidden;
+                    return l;
+                },
+            };
+            _consoleList.bindItem = (e, i) =>
+            {
+                var l = (Label)e;
+                l.text = i < _consoleLines.Count ? _consoleLines[i] : "";
+                // Zebra on the label itself: the wrapper element carries the
+                // selection highlight, which must stay visible underneath.
+                AteViewStyle.Zebra(l, i);
+            };
+            _consoleList.style.flexGrow = 1;
+            AteViewStyle.Frame(_consoleList);
+            AteViewStyle.Mono(_consoleList);
             // Explicit Ctrl+C: the window-level key handling must never eat a
-            // copy from the console, and older UIToolkit builds do not copy
-            // selectable-label selections natively.
-            _consoleOutput.RegisterCallback<KeyDownEvent>(e =>
+            // copy from the console.
+            _consoleList.RegisterCallback<KeyDownEvent>(e =>
             {
                 if ((e.ctrlKey || e.commandKey) && e.keyCode == KeyCode.C)
                 {
-                    var sel = _consoleOutput.selection;
-                    int a2 = Mathf.Min(sel.cursorIndex, sel.selectIndex);
-                    int b2 = Mathf.Max(sel.cursorIndex, sel.selectIndex);
-                    string txt = _consoleOutput.text ?? "";
-                    if (b2 > a2 && b2 <= txt.Length)
+                    var picked = new System.Collections.Generic.List<int>();
+                    foreach (int i in _consoleList.selectedIndices) picked.Add(i);
+                    picked.Sort();
+                    var sb = new System.Text.StringBuilder();
+                    foreach (int i in picked)
+                        if (i >= 0 && i < _consoleLines.Count)
+                            sb.Append(_consoleLines[i]).Append('\n');
+                    if (sb.Length > 0)
                     {
-                        EditorGUIUtility.systemCopyBuffer = txt.Substring(a2, b2 - a2);
+                        EditorGUIUtility.systemCopyBuffer = sb.ToString();
                         PostStatus(L10n.Tr("Copied."));
                     }
                     e.StopImmediatePropagation();
                 }
             }, TrickleDown.TrickleDown);
-            _consoleScroll.Add(_consoleOutput);
-            _consolePane.Add(_consoleScroll);
+            _consolePane.Add(_consoleList);
 
             _searchPane = new VisualElement { name = "search-results-pane",
                 style = { display = DisplayStyle.None, flexGrow = 1, flexDirection = FlexDirection.Column } };
             var searchTop = new VisualElement { style = { flexDirection = FlexDirection.Row, alignItems = Align.Center, flexShrink = 0 } };
-            _searchHeader = new Label(L10n.Tr("(no search results yet)"));
+            _searchHeader = new Label(); // empty until the first result set lands
             _searchHeader.style.unityFontStyleAndWeight = FontStyle.Bold;
             _searchHeader.style.paddingLeft = 4;
             _searchHeader.style.flexGrow = 1;
@@ -808,15 +857,22 @@ namespace ADKOM.TextEditor
             _searchHeader.style.overflow = Overflow.Hidden;
             searchTop.Add(_searchHeader);
             searchTop.Add(new Label(L10n.Tr("Filter")) { style = { marginRight = 2 } });
-            _searchFilter = new TextField { name = "search-filter", style = { width = 160, marginRight = 4 } };
+            _searchFilter = new TextField { name = "search-filter", style = { width = 160, marginRight = 4 },
+                tooltip = L10n.Tr("Show only rows whose file name, path, or text contains this.") };
             _searchFilter.RegisterValueChangedCallback(_ => RenderSearchResults());
             searchTop.Add(_searchFilter);
             _searchPane.Add(searchTop);
             _searchScroll = new ScrollView(ScrollViewMode.Vertical) { name = "search-results-scroll", style = { flexGrow = 1 } };
+            AteViewStyle.Frame(_searchScroll);
+            AteViewStyle.Mono(_searchScroll);
             _searchPane.Add(_searchScroll);
             _consolePane.Add(_searchPane);
 
+            BuildBookmarksPane(_consolePane); // mirror of the search pane
+
             _scannerScroll = new ScrollView(ScrollViewMode.Vertical) { name = "scanner-results-scroll" };
+            AteViewStyle.Frame(_scannerScroll);
+            AteViewStyle.Mono(_scannerScroll);
             _scannerScroll.style.display = DisplayStyle.None;
             _scannerHeader = new Label();
             _scannerHeader.style.unityFontStyleAndWeight = FontStyle.Bold;
@@ -829,25 +885,91 @@ namespace ADKOM.TextEditor
             SelectConsoleTab(0);
 
             root.Add(_consolePane);
+            ApplyConsoleTabVisibility();
             SetConsoleVisible(_consoleVisible);
         }
 
-        VisualElement _consoleTab, _searchTab, _scannerTab, _mapTab, _mapHost;
+        /// <summary>True when the console-area tab at <paramref name="index"/>
+        /// is currently offered in the tab strip. Scanner and Map are
+        /// content-driven; the rest follow their View menu toggle.</summary>
+        bool ConsoleTabOffered(int index)
+        {
+            switch (index)
+            {
+                case 0: return _consoleTabVisible;
+                case 1: return _searchTabVisible;
+                case 2: return _scannerTab != null && _scannerTab.style.display.value == DisplayStyle.Flex;
+                case 3: return _mapTab != null && _mapTab.style.display.value == DisplayStyle.Flex;
+                case 4: return _bmTabVisible;
+                default: return false;
+            }
+        }
+
+        int FirstOfferedConsoleTab()
+        {
+            foreach (int i in new[] { 0, 1, 4, 2, 3 })
+                if (ConsoleTabOffered(i)) return i;
+            return -1;
+        }
+
+        /// <summary>Applies the per-tab visibility flags to the tab strip.
+        /// When the active tab just went hidden, the first offered tab takes
+        /// over; with none left the whole pane hides.</summary>
+        void ApplyConsoleTabVisibility()
+        {
+            if (_consoleTab == null) return;
+            _consoleTab.style.display = _consoleTabVisible ? DisplayStyle.Flex : DisplayStyle.None;
+            _searchTab.style.display = _searchTabVisible ? DisplayStyle.Flex : DisplayStyle.None;
+            _bmTab.style.display = _bmTabVisible ? DisplayStyle.Flex : DisplayStyle.None;
+            if (!ConsoleTabOffered(_activeConsoleTab))
+            {
+                int first = FirstOfferedConsoleTab();
+                if (first >= 0) SelectConsoleTab(first);
+                else SetConsoleVisible(false);
+            }
+        }
+
+        /// <summary>View menu: independently toggles one console-area tab
+        /// (0 = Console, 1 = Search Results, 4 = Bookmarks).</summary>
+        void ToggleConsoleAreaTab(int index)
+        {
+            bool on;
+            switch (index)
+            {
+                case 0: on = _consoleTabVisible = !_consoleTabVisible; break;
+                case 1: on = _searchTabVisible = !_searchTabVisible; break;
+                case 4: on = _bmTabVisible = !_bmTabVisible; break;
+                default: return;
+            }
+            ApplyConsoleTabVisibility();
+            if (!on) return;
+            if (index == 4) ShowBookmarksTab(); // fresh snapshot + selects
+            else
+            {
+                SetConsoleVisible(true);
+                SelectConsoleTab(index);
+            }
+        }
+
+        VisualElement _consoleTab, _searchTab, _scannerTab, _mapTab, _mapHost, _bmTab;
         Label _scannerTabLabel;
         int _activeConsoleTab;
 
-        /// <summary>0 = Console, 1 = Search Results, 2 = Scanner Results, 3 = Map.</summary>
+        /// <summary>0 = Console, 1 = Search Results, 2 = Scanner Results,
+        /// 3 = Map, 4 = Bookmarks.</summary>
         void SelectConsoleTab(int index)
         {
             _activeConsoleTab = index;
-            if (_consoleScroll != null)
-                _consoleScroll.style.display = index == 0 ? DisplayStyle.Flex : DisplayStyle.None;
+            if (_consoleList != null)
+                _consoleList.style.display = index == 0 ? DisplayStyle.Flex : DisplayStyle.None;
             if (_searchPane != null)
                 _searchPane.style.display = index == 1 ? DisplayStyle.Flex : DisplayStyle.None;
             if (_scannerScroll != null)
                 _scannerScroll.style.display = index == 2 ? DisplayStyle.Flex : DisplayStyle.None;
             if (_mapHost != null)
                 _mapHost.style.display = index == 3 ? DisplayStyle.Flex : DisplayStyle.None;
+            if (_bmPane != null)
+                _bmPane.style.display = index == 4 ? DisplayStyle.Flex : DisplayStyle.None;
             var active = new Color(0.5f, 0.5f, 0.5f, 0.25f);
             if (_consoleTab != null)
                 _consoleTab.style.backgroundColor = index == 0 ? active : Color.clear;
@@ -857,6 +979,8 @@ namespace ADKOM.TextEditor
                 _scannerTab.style.backgroundColor = index == 2 ? active : Color.clear;
             if (_mapTab != null)
                 _mapTab.style.backgroundColor = index == 3 ? active : Color.clear;
+            if (_bmTab != null)
+                _bmTab.style.backgroundColor = index == 4 ? active : Color.clear;
         }
 
         /// <summary>Built-in game map: host a map view in the Map console tab,
@@ -889,14 +1013,17 @@ namespace ADKOM.TextEditor
 
         void PollConsole()
         {
-            if (!_consoleVisible || _consoleOutput == null) return;
+            if (!_consoleVisible || _consoleList == null) return;
             if (_consoleVersionShown == AteConsole.Version) return;
             _consoleVersionShown = AteConsole.Version;
-            _consoleOutput.text = AteConsole.GetText();
+            AteConsole.CopyLinesInto(_consoleLines);
+            _consoleList.RefreshItems();
             // Stick to the bottom once the new content has been laid out.
-            _consoleScroll.schedule.Execute(() =>
-                _consoleScroll.verticalScroller.value = _consoleScroll.verticalScroller.highValue)
-                .ExecuteLater(30);
+            _consoleList.schedule.Execute(() =>
+            {
+                if (_consoleLines.Count > 0)
+                    _consoleList.ScrollToItem(_consoleLines.Count - 1);
+            }).ExecuteLater(30);
         }
 
         /// <summary>Status-bar messages also land in the console, and are held
@@ -939,9 +1066,11 @@ namespace ADKOM.TextEditor
                 CurrentTheme = HighlightTheme.ByName(e.newValue);
                 ApplyTheme();
             });
+            _settingsTheme.tooltip = L10n.Tr("Syntax color palette: Visual Studio, VS Code, or Rider styles.");
             _settingsPane.Add(_settingsTheme);
 
             _settingsMode = new EnumField(L10n.Tr("Light/Dark Mode"), CurrentThemeMode);
+            _settingsMode.tooltip = L10n.Tr("Follow the Unity Editor skin, or force the light or dark variant.");
             _settingsMode.RegisterValueChangedCallback(e =>
             {
                 CurrentThemeMode = (ThemeMode)e.newValue;
@@ -949,7 +1078,8 @@ namespace ADKOM.TextEditor
             });
             _settingsPane.Add(_settingsMode);
 
-            _settingsLines = new Toggle(L10n.Tr("Line Numbers")) { value = _showLineNumbers };
+            _settingsLines = new Toggle(L10n.Tr("Line Numbers")) { value = _showLineNumbers,
+                tooltip = L10n.Tr("Show line numbers in the gutter.") };
             _settingsLines.RegisterValueChangedCallback(e =>
             {
                 _showLineNumbers = e.newValue;
@@ -957,7 +1087,8 @@ namespace ADKOM.TextEditor
             });
             _settingsPane.Add(_settingsLines);
 
-            _settingsWrap = new Toggle(L10n.Tr("Word Wrap")) { value = _wordWrap };
+            _settingsWrap = new Toggle(L10n.Tr("Word Wrap")) { value = _wordWrap,
+                tooltip = L10n.Tr("Wrap long lines at the viewport edge instead of scrolling horizontally.") };
             _settingsWrap.RegisterValueChangedCallback(e =>
             {
                 _wordWrap = e.newValue;
@@ -987,7 +1118,8 @@ namespace ADKOM.TextEditor
             string currentFont = string.IsNullOrEmpty(EditorConfig.FontName) ? fontNames[0]
                 : (fontNames.Contains(EditorConfig.FontName) ? EditorConfig.FontName : fontNames[0]);
             Section("Fonts");
-            _settingsFont = new PopupField<string>(L10n.Tr("Font"), fontNames, currentFont);
+            _settingsFont = new PopupField<string>(L10n.Tr("Font"), fontNames, currentFont)
+            { tooltip = L10n.Tr("Editor font, from the fonts installed on this machine. Default is the bundled monospace.") };
             _settingsFont.RegisterValueChangedCallback(e =>
             {
                 EditorConfig.FontName = e.newValue == fontNames[0] ? string.Empty : e.newValue;
@@ -1095,7 +1227,7 @@ namespace ADKOM.TextEditor
             {
                 if (CopilotService.Status == CopilotService.State.Ready) CopilotService.SignOut();
                 else CopilotService.SignIn();
-            });
+            }) { tooltip = L10n.Tr("Sign in to GitHub Copilot with the device-flow code, or sign out of the current account.") };
             _settingsCopilotRow.Add(_settingsCopilotSignIn);
             _settingsCopilotRow.Add(_settingsCopilotStatus);
             _settingsPane.Add(_settingsCopilotRow);
@@ -1166,7 +1298,8 @@ namespace ADKOM.TextEditor
             {
                 updateStatus.text = L10n.Tr("Checking…");
                 UpdateChecker.CheckNow(manual: true, r => updateStatus.text = r);
-            }) { text = L10n.Tr("Check for Updates Now") };
+            }) { text = L10n.Tr("Check for Updates Now"),
+                tooltip = L10n.Tr("Query GitHub for a newer ATE release immediately.") };
             checkNowRow.Add(checkNow);
             checkNowRow.Add(updateStatus);
             _settingsPane.Add(checkNowRow);
@@ -1796,6 +1929,23 @@ namespace ADKOM.TextEditor
         public int DocCount => _docs.Count;
         public int ActiveIndex => _active;
         public bool IsSettingsTab(int i) => _docs[i].IsSettings;
+
+        /// <summary>The document's file path, or null for untitled tabs.</summary>
+        public string GetDocPath(int i) => _docs[i].HasFile ? _docs[i].FilePath : null;
+
+        /// <summary>Mark tab support: bookmarks the given lines of the ACTIVE
+        /// document (0-based), optionally clearing existing bookmarks first.
+        /// Returns how many lines are newly marked.</summary>
+        internal int MarkBookmarkLines(System.Collections.Generic.IEnumerable<int> lines, bool purge)
+        {
+            if (!CanEditDoc) return 0;
+            if (purge) Active.Bookmarks.Clear();
+            int added = 0;
+            foreach (int l in lines)
+                if (Active.Bookmarks.Add(l)) added++;
+            _code.RefreshVisiblePublic();
+            return added;
+        }
 
         // --- AteApi plumbing (the stable facade lives in Scripting/AteApi.cs;
         // these internals are its only touchpoints). ---
