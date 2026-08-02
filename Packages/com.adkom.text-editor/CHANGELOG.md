@@ -4,6 +4,10 @@ All notable changes to this package are documented here. Format follows [Keep a 
 
 ## [Unreleased]
 
+### Fixed
+- "Copilot is ready." appeared twice in the console: the sign-in check and the server's own status notification both report Ready (with different detail texts), and each fired the announcement. The console line now prints only on a real state change; detail-only updates still refresh the Settings row silently.
+- The macOS/Linux diff-tool shim's executable bit is set via File.SetUnixFileMode when the runtime provides it (chmod as fallback), and a failure is now reported in the console instead of silently leaving Unity's diff/merge invocations dead.
+
 ## [0.14.0] - 2026-08-02
 
 ### Added
