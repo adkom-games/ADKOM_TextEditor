@@ -4,6 +4,8 @@ All notable changes to this package are documented here. Format follows [Keep a 
 
 ## [Unreleased]
 
+## [0.14.0] - 2026-08-02
+
 ### Added
 - Diff / Merge tool (Tools → Diff / Merge…): first-class comparisons of files, folders (recursive, with per-file status and drill-down), and open tabs — aligned side-by-side view with intra-line change highlights, change-region navigation, and side swapping. Multiple diff windows can be open at once, and every window restores its full state — comparison, merge choices, and edited result — after a domain reload.
 - Two-way diffs are merge editors too: framed columns with a draggable center splitter, and per-change ◀ / ▶ gutter buttons (plus whole-side ◀◀ / ▶▶) copy changes across; edited sides are marked and saved with Save Left / Save Right. Works for git diffs as well — merge left on a working-tree diff and save to revert chosen regions.
