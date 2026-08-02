@@ -286,6 +286,7 @@ namespace ADKOM.TextEditor
                 m.AddDisabledItem(new GUIContent(gitRoot + L10n.Tr("File History...")));
             }
             m.AddSeparator("");
+            m.AddItem(new GUIContent(L10n.Tr("Diff / Merge...")), false, AteDiffWindow.OpenSetup);
             // Snippets are one plain-text file the user edits in ATE itself;
             // saving it hot-reloads the set (timestamp watch in SnippetStore).
             m.AddItem(new GUIContent(L10n.Tr("Edit Snippets...")), false, () =>

@@ -161,24 +161,33 @@ Enable **Semantic Features** in Settings. If the project has no Roslyn, ATE inst
 ## 11. Git Integration
 
 - **Gutter markers** show added/changed lines in file-backed documents of a git repository.
-- **Tools → Git** opens the Git window: working-tree changes with per-file staging checkboxes, a commit-message box, **Commit** and **Push** buttons, commit inspection (click a commit in the graph to see its files and message; on HEAD, edit the message and press **Amend** to rewrite it in place), and a **branch history graph** (vertical or horizontal, toggleable; each branch drawn in its own color) with hash/date/author/subject tooltips. The window survives domain reloads — the file list, graph, and your typed commit-message draft all come back (the draft also survives a commit-inspection round-trip).
+- **Tools → Git** opens the Git window: working-tree changes with per-file staging checkboxes, a commit-message box, **Commit** and **Push** buttons, commit inspection (click a commit in the graph to see its files and message; on HEAD, edit the message and press **Amend** to rewrite it in place), and a **branch history graph** (vertical or horizontal, toggleable; each branch drawn in its own color) with hash/date/author/subject tooltips. The window survives domain reloads — the file list, graph, and your typed commit-message draft all come back (the draft also survives a commit-inspection round-trip). **Double-click a file** in the Changes list to diff it against its previous version: the working-tree view diffs against HEAD, and an inspected commit diffs against its parent.
 
-## 12. History (Visual Undo Timeline)
+## 12. Diff / Merge
+
+**Tools → Diff / Merge…** opens the comparison tool. Pick what to compare — **Files**, **Folders**, or open **Tabs** — choose both sides, and press Compare. Multiple diff windows can be open at once, and every window restores its comparison (including an in-progress merge) after a domain reload.
+
+- **File / tab diffs** show an aligned side-by-side view in framed columns: added, removed and changed lines are tinted, changed line pairs highlight the exact changed span, and ▲ / ▼ step between change regions. ⇄ swaps the sides, and dragging the center gutter resizes the columns. The gutter also holds **per-change merge buttons**: ◀ copies that change into the left side, ▶ into the right (◀◀ / ▶▶ in the toolbar merge everything at once); edited sides are marked with * and saved with **Save Left** / **Save Right** — so a two-way diff doubles as a merge editor.
+- **Folder diffs** compare two folder trees recursively and list each file as *differs*, *left only*, *right only* or *same* (identical files are hidden by default). Double-click a row to open that pair as a file diff.
+- **Three-way merge** (Files mode, with the three-way toggle) takes a left, right and common base version. Changes from one side merge automatically; regions both sides changed differently become numbered conflict panels with **Take Left / Take Base / Take Right / Take Both** buttons (and All Left / All Right in the toolbar). The editable result pane updates live; **Save** writes it to the output file — unresolved conflicts are written as git-style `<<<<<<<` markers.
+- **Unity integration**: in Settings, **Use ATE for Unity Diff/Merge** registers ATE as Unity's Revision Control Diff/Merge tool (Preferences → External Tools). Version-control diffs and merges then open in this project's ATE. The button flips to restore the previous tool. Note the preference is per-user: the most recently configured project receives the requests.
+
+## 13. History (Visual Undo Timeline)
 
 **Edit → History…** opens the History window: the undo/redo timeline as rows (undo history survives domain reloads with the session) with edit summaries, a per-document tab bar, and arrow-key navigation. Selecting a point previews the document exactly as it was (read-only, in the real editor view, changed line highlighted). Actions: **Restore to This Point** (itself undoable), **Open as New Tab**, **Copy to Clipboard**.
 
-## 13. AI
+## 14. AI
 
 - **GitHub Copilot** (optional; bring your own subscription + Node.js): ghost-text inline suggestions with an alternatives cycler; Tab or Enter accepts, Escape dismisses. Works in unsaved buffers. One-time device-flow sign-in from Settings persists; sign out any time.
 - **Ask Unity AI** (when Unity's Assistant package is installed): right-click → *Ask Unity AI About Selection…/This File…* opens a prompt popup with your text attached — nothing is sent until you submit.
 
-## 14. Add-ons & Games
+## 15. Add-ons & Games
 
 - **Addons framework**: every subfolder of the shared addons folder (Tools → Addons → Open Addons Folder…) is ONE addon — all its C# files are Roslyn-compiled together, so it is always clear which files belong to which addon. Addons use the stable **AteApi** scripting facade (documented in the **Scripting Reference** and **AteApi Design** under Help → Documentation, with an importable every-member sample; **Game API Design** covers writing games). Leftover single-file addons are migrated into folders automatically.
 - **Security**: every addon is scanned for dangerous APIs before it runs; findings appear in the Scanner Results tab and a per-content consent gate asks before execution. Addons can be **signed**, and publishers endorsed; shipped samples are signed.
 - **Games** (the **Games** menu): **How to Play** opens the player's guide, the **Z-Machine interpreter** plays the Zork trilogy — several games at once if you like ("Zork I", "Zork I (1)", …), each with its own map tab in the console area (SVG export included), and running games **survive domain reloads and editor restarts** (snapshotted and resumed automatically) — and every installed addon game (**Snake**, the full **Rogue** 5.4.4 port) is listed below, sorted. Game mode hides editor chrome and uses a block cursor.
 
-## 15. Settings
+## 16. Settings
 
 Settings open as a document tab (gear icon, or Tools menu). Highlights — every control's tooltip explains the details:
 
@@ -190,15 +199,15 @@ Settings open as a document tab (gear icon, or Tools menu). Highlights — every
 
 Settings are stored per project where that makes sense (indicated in each tooltip).
 
-## 16. Themes & Keyboard Layouts
+## 17. Themes & Keyboard Layouts
 
 Color themes and light/dark mode live in both Settings and the View menu. Keyboard layouts (VS / VS Code / Rider) change every shortcut; menu items and tooltips always display the binding for the active layout.
 
-## 17. Updates
+## 18. Updates
 
 ATE checks GitHub for new releases (configurable frequency, or **Check for Updates Now** in Settings). When an update is available a green download icon appears next to the settings gear and **stays there — surviving script compiles and editor restarts — until the update is performed**. Clicking it opens the update dialog (Install Now / Later; embedded development copies see a manual-update hint instead of Install). During installation an ATE-only overlay blocks editor operations; afterwards the release notes open in a rendered tab.
 
-## 18. Support
+## 19. Support
 
 - **Help → Documentation** — every reference doc opens as a tab: the **Games** player guide on top, then (sorted) **Addon Signing**, **ATE Manual** (this manual), **AteApi Design** (the full scripting API with examples), **Game API Design** (writing games on AteApi 1.1), **Keyboard Shortcuts**, **Localization**, the **Scripting Reference** (AteApi quick start), **Snippets**, and **Troubleshooting**.
 - **Help → Repository** — source code and documentation.

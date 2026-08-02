@@ -1919,3 +1919,339 @@ msgstr "すべての ATE メッセージ（タイムスタンプ付き）。行�
 
 msgid "{0} of {1} shown"
 msgstr "{1} 件中 {0} 件を表示"
+
+msgid "(deleted)"
+msgstr "（削除済み）"
+
+msgid "(empty)"
+msgstr "（空）"
+
+msgid "(missing)"
+msgstr "（存在しません）"
+
+msgid "(new file)"
+msgstr "（新規ファイル）"
+
+msgid "(working)"
+msgstr "（作業ツリー）"
+
+msgid "+{0}  −{1}  ~{2}"
+msgstr "+{0}  −{1}  ~{2}"
+
+msgid "A file to compare."
+msgstr "比較するファイル。"
+
+msgid "A folder to compare recursively."
+msgstr "再帰的に比較するフォルダー。"
+
+msgid "ATE is now Unity's Revision Control Diff/Merge tool (Preferences → External Tools)."
+msgstr "ATE を Unity のリビジョン管理 Diff/Merge ツールに設定しました（Preferences → External Tools）。"
+
+msgid "Added, removed and changed line counts."
+msgstr "追加・削除・変更された行数。"
+
+msgid "Adds a base version: changes from both sides are merged; diverging changes become conflicts you resolve."
+msgstr "基準（ベース）バージョンを追加します。両側の変更はマージされ、食い違う変更は解決すべき競合になります。"
+
+msgid "All Left"
+msgstr "すべて左"
+
+msgid "All Right"
+msgstr "すべて右"
+
+msgid "Also list files that are the same in both folders."
+msgstr "両方のフォルダーで同一のファイルも一覧に表示します。"
+
+msgid "An open document tab."
+msgstr "開いているドキュメントのタブ。"
+
+msgid "BASE"
+msgstr "BASE"
+
+msgid "Back to the setup pane to pick different items."
+msgstr "設定画面に戻って別の項目を選びます。"
+
+msgid "Base file"
+msgstr "ベースファイル"
+
+msgid "Base: {0}"
+msgstr "ベース: {0}"
+
+msgid "Both sides changed this region differently."
+msgstr "両側がこの範囲を異なる形で変更しました。"
+
+msgid "Change {0} of {1}"
+msgstr "変更 {0} / {1}"
+
+msgid "Choose a file."
+msgstr "ファイルを選択します。"
+
+msgid "Choose a folder."
+msgstr "フォルダーを選択します。"
+
+msgid "Choose the output file."
+msgstr "出力ファイルを選択します。"
+
+msgid "Choose two existing folders."
+msgstr "存在するフォルダーを 2 つ選んでください。"
+
+msgid "Compare"
+msgstr "比較"
+
+msgid "Compare two files on disk (optionally three-way with a base and merge)."
+msgstr "ディスク上の 2 つのファイルを比較します（ベース付きの 3 方向マージも可能）。"
+
+msgid "Compare two folders recursively; open any differing file pair as a diff."
+msgstr "2 つのフォルダーを再帰的に比較し、差異のあるファイルのペアを差分として開けます。"
+
+msgid "Compare two open editor tabs."
+msgstr "開いている 2 つのエディタータブを比較します。"
+
+msgid "Compare:"
+msgstr "比較対象:"
+
+msgid "Comparison summary. Double-click a row to open the file diff."
+msgstr "比較の概要。行をダブルクリックするとファイル差分を開きます。"
+
+msgid "Conflict {0}"
+msgstr "競合 {0}"
+
+msgid "Could not configure the diff tool: {0}"
+msgstr "diff ツールを設定できませんでした: {0}"
+
+msgid "Diff"
+msgstr "差分"
+
+msgid "Diff / Merge"
+msgstr "差分 / マージ"
+
+msgid "Diff / Merge..."
+msgstr "差分 / マージ..."
+
+msgid "Double-click to open this pair as a file diff."
+msgstr "ダブルクリックでこのペアをファイル差分として開きます。"
+
+msgid "Double-click: diff against the previous version (HEAD)."
+msgstr "ダブルクリック: 前のバージョン（HEAD）との差分を表示します。"
+
+msgid "Double-click: diff this commit's version against its parent."
+msgstr "ダブルクリック: このコミットの内容を親コミットと比較します。"
+
+msgid "Folder Diff"
+msgstr "フォルダー差分"
+
+msgid "Folder scan capped at {0} files per side — results are incomplete."
+msgstr "フォルダースキャンは片側 {0} ファイルまでに制限されています — 結果は不完全です。"
+
+msgid "Folders"
+msgstr "フォルダー"
+
+msgid "Go to the next change."
+msgstr "次の変更へ移動します。"
+
+msgid "Go to the previous change."
+msgstr "前の変更へ移動します。"
+
+msgid "Keep the base (original) lines for this conflict."
+msgstr "この競合ではベース（元）の行を保持します。"
+
+msgid "LEFT"
+msgstr "LEFT"
+
+msgid "Left file"
+msgstr "左のファイル"
+
+msgid "Left folder"
+msgstr "左のフォルダー"
+
+msgid "Left tab"
+msgstr "左のタブ"
+
+msgid "Left: {0}"
+msgstr "左: {0}"
+
+msgid "Merge"
+msgstr "マージ"
+
+msgid "Merge output"
+msgstr "マージ出力"
+
+msgid "New Comparison…"
+msgstr "新しい比較…"
+
+msgid "No differences."
+msgstr "差異はありません。"
+
+msgid "No path chosen."
+msgstr "パスが選択されていません。"
+
+msgid "No previous tool recorded — pick one in Preferences → External Tools."
+msgstr "以前のツールの記録がありません — Preferences → External Tools で選択してください。"
+
+msgid "Open at least two documents in the text editor to compare tabs."
+msgstr "タブを比較するには、テキストエディターで少なくとも 2 つのドキュメントを開いてください。"
+
+msgid "Output"
+msgstr "出力"
+
+msgid "RIGHT"
+msgstr "RIGHT"
+
+msgid "Resolve every conflict by taking the left side."
+msgstr "すべての競合を左側の内容で解決します。"
+
+msgid "Resolve every conflict by taking the right side."
+msgstr "すべての競合を右側の内容で解決します。"
+
+msgid "Restore Previous Diff Tool"
+msgstr "以前の Diff ツールに戻す"
+
+msgid "Restored Unity's diff/merge tool to \"{0}\"."
+msgstr "Unity の diff/merge ツールを「{0}」に戻しました。"
+
+msgid "Result (editable)"
+msgstr "結果（編集可能）"
+
+msgid "Right file"
+msgstr "右のファイル"
+
+msgid "Right folder"
+msgstr "右のフォルダー"
+
+msgid "Right tab"
+msgstr "右のタブ"
+
+msgid "Right: {0}"
+msgstr "右: {0}"
+
+msgid "Run the comparison."
+msgstr "比較を実行します。"
+
+msgid "Save As…"
+msgstr "名前を付けて保存…"
+
+msgid "Save merged result"
+msgstr "マージ結果を保存"
+
+msgid "Saved {0} — {1} conflict(s) still contain <<<<<<< markers."
+msgstr "{0} を保存しました — {1} 件の競合に <<<<<<< マーカーが残っています。"
+
+msgid "Saved {0}."
+msgstr "{0} を保存しました。"
+
+msgid "Sets ATE as Unity's Revision Control Diff/Merge tool (Preferences → External Tools), or restores the previous tool. Diffs and merges from Unity's version control then open in ATE's Diff / Merge window of this project's editor."
+msgstr "ATE を Unity のリビジョン管理 Diff/Merge ツールに設定（または以前のツールに復元）します。Unity のバージョン管理からの diff とマージは、このプロジェクトのエディターの差分 / マージウィンドウで開かれます。"
+
+msgid "Show identical files"
+msgstr "同一ファイルを表示"
+
+msgid "Swap the two sides."
+msgstr "左右を入れ替えます。"
+
+msgid "Tab \"{0}\" is no longer open."
+msgstr "タブ「{0}」はすでに閉じられています。"
+
+msgid "Take Base"
+msgstr "ベースを採用"
+
+msgid "Take Both"
+msgstr "両方を採用"
+
+msgid "Take Left"
+msgstr "左を採用"
+
+msgid "Take Right"
+msgstr "右を採用"
+
+msgid "The merged output. Edit freely; choosing a conflict resolution rebuilds it from the choices (manual edits are replaced)."
+msgstr "マージ結果です。自由に編集できますが、競合の解決を選ぶと選択内容から再構築されます（手動編集は置き換えられます）。"
+
+msgid "Three-way (merge with a common base)"
+msgstr "3 方向（共通のベースとマージ）"
+
+msgid "Unity diff/merge tool: ATE (this project)."
+msgstr "Unity の diff/merge ツール: ATE（このプロジェクト）。"
+
+msgid "Unity diff/merge tool: {0}"
+msgstr "Unity の diff/merge ツール: {0}"
+
+msgid "Unresolved conflict count."
+msgstr "未解決の競合数。"
+
+msgid "Use ATE for Unity Diff/Merge"
+msgstr "Unity の Diff/Merge に ATE を使用"
+
+msgid "Use the left lines followed by the right lines."
+msgstr "左の行に続けて右の行を使用します。"
+
+msgid "Use the left side's lines for this conflict."
+msgstr "この競合では左側の行を使用します。"
+
+msgid "Use the right side's lines for this conflict."
+msgstr "この競合では右側の行を使用します。"
+
+msgid "What kind of items to compare."
+msgstr "比較する項目の種類。"
+
+msgid "Where Save writes the merged result."
+msgstr "保存時にマージ結果を書き込む場所。"
+
+msgid "Which application Unity currently launches for version-control diffs and merges."
+msgstr "Unity がバージョン管理の diff とマージに現在使用しているアプリケーション。"
+
+msgid "Write the merged result to a new file."
+msgstr "マージ結果を新しいファイルに書き込みます。"
+
+msgid "Write the merged result to the output file."
+msgstr "マージ結果を出力ファイルに書き込みます。"
+
+msgid "differs"
+msgstr "差異あり"
+
+msgid "left"
+msgstr "左のみ"
+
+msgid "right"
+msgstr "右のみ"
+
+msgid "same"
+msgstr "同一"
+
+msgid "{0} change region(s)."
+msgstr "{0} 件の変更領域。"
+
+msgid "{0} conflict(s), all resolved."
+msgstr "{0} 件の競合はすべて解決済みです。"
+
+msgid "{0} different, {1} only left, {2} only right, {3} identical"
+msgstr "差異 {0}、左のみ {1}、右のみ {2}、同一 {3}"
+
+msgid "{0} of {1} conflict(s) unresolved."
+msgstr "{1} 件中 {0} 件の競合が未解決です。"
+
+msgid "Copy this change to the left side."
+msgstr "この変更を左側にコピーします。"
+
+msgid "Copy this change to the right side."
+msgstr "この変更を右側にコピーします。"
+
+msgid "Drag to resize the columns."
+msgstr "ドラッグして列の幅を変更します。"
+
+msgid "Merge every change into the left side (it becomes a copy of the right)."
+msgstr "すべての変更を左側にマージします（左側は右側のコピーになります）。"
+
+msgid "Merge every change into the right side (it becomes a copy of the left)."
+msgstr "すべての変更を右側にマージします（右側は左側のコピーになります）。"
+
+msgid "Save Left"
+msgstr "左を保存"
+
+msgid "Save Right"
+msgstr "右を保存"
+
+msgid "Save the modified left side to its file."
+msgstr "変更された左側をファイルに保存します。"
+
+msgid "Save the modified right side to its file."
+msgstr "変更された右側をファイルに保存します。"

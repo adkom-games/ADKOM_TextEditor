@@ -1919,3 +1919,339 @@ msgstr "所有 ATE 訊息（含時間戳記）。點擊某行；Ctrl+C 或右鍵
 
 msgid "{0} of {1} shown"
 msgstr "顯示 {0} / {1} 條"
+
+msgid "(deleted)"
+msgstr "（已刪除）"
+
+msgid "(empty)"
+msgstr "（空）"
+
+msgid "(missing)"
+msgstr "（缺失）"
+
+msgid "(new file)"
+msgstr "（新檔案）"
+
+msgid "(working)"
+msgstr "（工作區）"
+
+msgid "+{0}  −{1}  ~{2}"
+msgstr "+{0}  −{1}  ~{2}"
+
+msgid "A file to compare."
+msgstr "要比較的檔案。"
+
+msgid "A folder to compare recursively."
+msgstr "要遞迴比較的資料夾。"
+
+msgid "ATE is now Unity's Revision Control Diff/Merge tool (Preferences → External Tools)."
+msgstr "ATE 現已成為 Unity 的版本控制 Diff/Merge 工具（Preferences → External Tools）。"
+
+msgid "Added, removed and changed line counts."
+msgstr "新增、刪除與變更的行數。"
+
+msgid "Adds a base version: changes from both sides are merged; diverging changes become conflicts you resolve."
+msgstr "新增基準版本：雙方的變更會被合併；相互衝突的變更將成為需要解決的衝突。"
+
+msgid "All Left"
+msgstr "全部取左側"
+
+msgid "All Right"
+msgstr "全部取右側"
+
+msgid "Also list files that are the same in both folders."
+msgstr "同時列出兩個資料夾中相同的檔案。"
+
+msgid "An open document tab."
+msgstr "一個已開啟的文件分頁。"
+
+msgid "BASE"
+msgstr "BASE"
+
+msgid "Back to the setup pane to pick different items."
+msgstr "返回設定面板以選擇其他項目。"
+
+msgid "Base file"
+msgstr "基準檔案"
+
+msgid "Base: {0}"
+msgstr "基準：{0}"
+
+msgid "Both sides changed this region differently."
+msgstr "雙方對此區域做了不同的變更。"
+
+msgid "Change {0} of {1}"
+msgstr "第 {0} 處變更，共 {1} 處"
+
+msgid "Choose a file."
+msgstr "選擇一個檔案。"
+
+msgid "Choose a folder."
+msgstr "選擇一個資料夾。"
+
+msgid "Choose the output file."
+msgstr "選擇輸出檔案。"
+
+msgid "Choose two existing folders."
+msgstr "請選擇兩個已存在的資料夾。"
+
+msgid "Compare"
+msgstr "比較"
+
+msgid "Compare two files on disk (optionally three-way with a base and merge)."
+msgstr "比較磁碟上的兩個檔案（可選擇帶基準的三方合併）。"
+
+msgid "Compare two folders recursively; open any differing file pair as a diff."
+msgstr "遞迴比較兩個資料夾；可將任何有差異的檔案對作為 diff 開啟。"
+
+msgid "Compare two open editor tabs."
+msgstr "比較兩個已開啟的編輯器分頁。"
+
+msgid "Compare:"
+msgstr "比較："
+
+msgid "Comparison summary. Double-click a row to open the file diff."
+msgstr "比較摘要。雙擊一列可開啟檔案 diff。"
+
+msgid "Conflict {0}"
+msgstr "衝突 {0}"
+
+msgid "Could not configure the diff tool: {0}"
+msgstr "無法設定 diff 工具：{0}"
+
+msgid "Diff"
+msgstr "差異"
+
+msgid "Diff / Merge"
+msgstr "差異 / 合併"
+
+msgid "Diff / Merge..."
+msgstr "差異 / 合併..."
+
+msgid "Double-click to open this pair as a file diff."
+msgstr "雙擊將此檔案對作為檔案 diff 開啟。"
+
+msgid "Double-click: diff against the previous version (HEAD)."
+msgstr "雙擊：與上一版本（HEAD）進行 diff。"
+
+msgid "Double-click: diff this commit's version against its parent."
+msgstr "雙擊：將此提交的版本與其父提交進行 diff。"
+
+msgid "Folder Diff"
+msgstr "資料夾差異"
+
+msgid "Folder scan capped at {0} files per side — results are incomplete."
+msgstr "資料夾掃描每側最多 {0} 個檔案 — 結果不完整。"
+
+msgid "Folders"
+msgstr "資料夾"
+
+msgid "Go to the next change."
+msgstr "前往下一處變更。"
+
+msgid "Go to the previous change."
+msgstr "前往上一處變更。"
+
+msgid "Keep the base (original) lines for this conflict."
+msgstr "此衝突保留基準（原始）行。"
+
+msgid "LEFT"
+msgstr "LEFT"
+
+msgid "Left file"
+msgstr "左側檔案"
+
+msgid "Left folder"
+msgstr "左側資料夾"
+
+msgid "Left tab"
+msgstr "左側分頁"
+
+msgid "Left: {0}"
+msgstr "左：{0}"
+
+msgid "Merge"
+msgstr "合併"
+
+msgid "Merge output"
+msgstr "合併輸出"
+
+msgid "New Comparison…"
+msgstr "新增比較…"
+
+msgid "No differences."
+msgstr "沒有差異。"
+
+msgid "No path chosen."
+msgstr "未選擇路徑。"
+
+msgid "No previous tool recorded — pick one in Preferences → External Tools."
+msgstr "未記錄先前的工具 — 請在 Preferences → External Tools 中選擇。"
+
+msgid "Open at least two documents in the text editor to compare tabs."
+msgstr "要比較分頁，請在文字編輯器中至少開啟兩個文件。"
+
+msgid "Output"
+msgstr "輸出"
+
+msgid "RIGHT"
+msgstr "RIGHT"
+
+msgid "Resolve every conflict by taking the left side."
+msgstr "全部衝突均採用左側內容解決。"
+
+msgid "Resolve every conflict by taking the right side."
+msgstr "全部衝突均採用右側內容解決。"
+
+msgid "Restore Previous Diff Tool"
+msgstr "還原先前的 Diff 工具"
+
+msgid "Restored Unity's diff/merge tool to \"{0}\"."
+msgstr "已將 Unity 的 diff/merge 工具還原為「{0}」。"
+
+msgid "Result (editable)"
+msgstr "結果（可編輯）"
+
+msgid "Right file"
+msgstr "右側檔案"
+
+msgid "Right folder"
+msgstr "右側資料夾"
+
+msgid "Right tab"
+msgstr "右側分頁"
+
+msgid "Right: {0}"
+msgstr "右：{0}"
+
+msgid "Run the comparison."
+msgstr "執行比較。"
+
+msgid "Save As…"
+msgstr "另存新檔…"
+
+msgid "Save merged result"
+msgstr "儲存合併結果"
+
+msgid "Saved {0} — {1} conflict(s) still contain <<<<<<< markers."
+msgstr "已儲存 {0} — {1} 個衝突仍含有 <<<<<<< 標記。"
+
+msgid "Saved {0}."
+msgstr "已儲存 {0}。"
+
+msgid "Sets ATE as Unity's Revision Control Diff/Merge tool (Preferences → External Tools), or restores the previous tool. Diffs and merges from Unity's version control then open in ATE's Diff / Merge window of this project's editor."
+msgstr "將 ATE 設為 Unity 的版本控制 Diff/Merge 工具（Preferences → External Tools），或還原先前的工具。此後 Unity 版本控制的 diff 與合併將在本專案編輯器的差異 / 合併視窗中開啟。"
+
+msgid "Show identical files"
+msgstr "顯示相同檔案"
+
+msgid "Swap the two sides."
+msgstr "交換兩側。"
+
+msgid "Tab \"{0}\" is no longer open."
+msgstr "分頁「{0}」已不再開啟。"
+
+msgid "Take Base"
+msgstr "採用基準"
+
+msgid "Take Both"
+msgstr "兩者都用"
+
+msgid "Take Left"
+msgstr "採用左側"
+
+msgid "Take Right"
+msgstr "採用右側"
+
+msgid "The merged output. Edit freely; choosing a conflict resolution rebuilds it from the choices (manual edits are replaced)."
+msgstr "合併輸出。可自由編輯；選擇衝突解決方式會根據選擇重建（手動編輯將被取代）。"
+
+msgid "Three-way (merge with a common base)"
+msgstr "三方（與共同基準合併）"
+
+msgid "Unity diff/merge tool: ATE (this project)."
+msgstr "Unity diff/merge 工具：ATE（本專案）。"
+
+msgid "Unity diff/merge tool: {0}"
+msgstr "Unity diff/merge 工具：{0}"
+
+msgid "Unresolved conflict count."
+msgstr "未解決的衝突數。"
+
+msgid "Use ATE for Unity Diff/Merge"
+msgstr "將 ATE 用於 Unity Diff/Merge"
+
+msgid "Use the left lines followed by the right lines."
+msgstr "先用左側行，再接右側行。"
+
+msgid "Use the left side's lines for this conflict."
+msgstr "此衝突使用左側的行。"
+
+msgid "Use the right side's lines for this conflict."
+msgstr "此衝突使用右側的行。"
+
+msgid "What kind of items to compare."
+msgstr "要比較的項目類型。"
+
+msgid "Where Save writes the merged result."
+msgstr "儲存時寫入合併結果的位置。"
+
+msgid "Which application Unity currently launches for version-control diffs and merges."
+msgstr "Unity 目前用於版本控制 diff 與合併的應用程式。"
+
+msgid "Write the merged result to a new file."
+msgstr "將合併結果寫入新檔案。"
+
+msgid "Write the merged result to the output file."
+msgstr "將合併結果寫入輸出檔案。"
+
+msgid "differs"
+msgstr "不同"
+
+msgid "left"
+msgstr "僅左側"
+
+msgid "right"
+msgstr "僅右側"
+
+msgid "same"
+msgstr "相同"
+
+msgid "{0} change region(s)."
+msgstr "{0} 處變更區域。"
+
+msgid "{0} conflict(s), all resolved."
+msgstr "{0} 個衝突，已全部解決。"
+
+msgid "{0} different, {1} only left, {2} only right, {3} identical"
+msgstr "{0} 個不同，{1} 個僅左側，{2} 個僅右側，{3} 個相同"
+
+msgid "{0} of {1} conflict(s) unresolved."
+msgstr "{1} 個衝突中有 {0} 個未解決。"
+
+msgid "Copy this change to the left side."
+msgstr "將此變更複製到左側。"
+
+msgid "Copy this change to the right side."
+msgstr "將此變更複製到右側。"
+
+msgid "Drag to resize the columns."
+msgstr "拖曳以調整欄寬。"
+
+msgid "Merge every change into the left side (it becomes a copy of the right)."
+msgstr "將所有變更合併到左側（左側將成為右側的副本）。"
+
+msgid "Merge every change into the right side (it becomes a copy of the left)."
+msgstr "將所有變更合併到右側（右側將成為左側的副本）。"
+
+msgid "Save Left"
+msgstr "儲存左側"
+
+msgid "Save Right"
+msgstr "儲存右側"
+
+msgid "Save the modified left side to its file."
+msgstr "將修改後的左側儲存到其檔案。"
+
+msgid "Save the modified right side to its file."
+msgstr "將修改後的右側儲存到其檔案。"
