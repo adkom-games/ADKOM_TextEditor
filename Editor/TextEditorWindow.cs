@@ -2482,8 +2482,17 @@ namespace ADKOM.TextEditor
             });
         }
 
+        // Last state this window announced — the service also fires its
+        // status event for DETAIL-only updates (e.g. checkStatus reports
+        // Ready with the username, then the server's didChangeStatus reports
+        // Ready with another message), and those must refresh Settings
+        // without re-printing "Copilot is ready." to the console.
+        [System.NonSerialized] CopilotService.State? _lastCopilotState;
+
         void OnCopilotStatus()
         {
+            bool stateChanged = _lastCopilotState != CopilotService.Status;
+            _lastCopilotState = CopilotService.Status;
             SyncSettingsControls();
             switch (CopilotService.Status)
             {
@@ -2495,9 +2504,11 @@ namespace ADKOM.TextEditor
                     break;
                 case CopilotService.State.Ready:
                     HideBanner(); // the sign-in code prompt is done with
-                    PostStatus(L10n.Tr("Copilot is ready."));
+                    if (stateChanged) PostStatus(L10n.Tr("Copilot is ready."));
                     break;
                 case CopilotService.State.Error:
+                    // Always posted: a repeated Error state can carry a NEW
+                    // detail message worth seeing.
                     PostStatus(L10n.Tr("Copilot: ") + CopilotService.StatusDetail);
                     break;
             }
