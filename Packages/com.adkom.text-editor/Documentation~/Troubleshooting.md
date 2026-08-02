@@ -40,6 +40,12 @@ Known issues and their fixes, plus answers to the questions that come up most. I
 
 **Are my unsaved changes safe?** Yes: open tabs — including unsaved buffer content — survive closing the window, domain reloads, and editor restarts, with a 30-second autosave guarding against crashes. Undo/redo history survives domain reloads too. If a file is deleted on disk you can keep the buffer, and one Save restores the file.
 
+## Diff / Merge
+
+**Unity doesn't open ATE for version-control diffs.** The External Tools preference is per-user, not per-project: the project that most recently pressed **Use ATE for Unity Diff/Merge** owns it, and its shim only reaches that project's editor. Re-press the button in the project you are working in, and check Preferences → External Tools shows "Custom Tool" pointing at `Library/ATE/ate-difftool`.
+
+**A merge saved with `<<<<<<<` markers.** Save is allowed with unresolved conflicts on purpose (the markers are the standard hand-off format). Reopen the merge, resolve the remaining numbered conflicts, and Save again — or edit the markers away directly in the result pane.
+
 ## Where ATE keeps things
 
 Machine-shared state lives under `%APPDATA%/ADKOM/TextEditor/`: `Addons/` (your addons, one folder each), `Snippets.txt`, `Keys/` (your signing identity), `AddonConsent.json`, and `TrustedKeys.json`. Sessions, recent files, and most settings are stored per project.

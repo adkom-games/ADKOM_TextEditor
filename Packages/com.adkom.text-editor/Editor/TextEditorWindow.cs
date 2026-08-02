@@ -89,6 +89,8 @@ namespace ADKOM.TextEditor
         Label _settingsUnityAiStatus;
         Label _settingsPragmaStatus;
         Button _settingsPragmaFix;
+        Label _settingsDiffToolStatus;
+        Button _settingsDiffToolBtn;
         Toggle _settingsTrimSave;
         Toggle _settingsFinalNewline;
         Toggle _settingsSemantics;
@@ -1457,6 +1459,28 @@ namespace ADKOM.TextEditor
             _settingsPane.Add(pragmaRow);
             SyncPragmaRow();
 
+            // ATE as Unity's Revision Control Diff/Merge tool (External
+            // Tools): a generated shim hands invocations to the running
+            // editor, which opens them in the Diff / Merge window.
+            var diffRow = new VisualElement();
+            diffRow.style.flexDirection = FlexDirection.Row;
+            diffRow.style.alignItems = Align.Center;
+            _settingsDiffToolBtn = new Button(() =>
+            {
+                PostStatus(AteDiffToolBridge.IsConfigured
+                    ? AteDiffToolBridge.Restore()
+                    : AteDiffToolBridge.Configure());
+                SyncDiffToolRow();
+            })
+            { tooltip = L10n.Tr("Sets ATE as Unity's Revision Control Diff/Merge tool (Preferences → External Tools), or restores the previous tool. Diffs and merges from Unity's version control then open in ATE's Diff / Merge window of this project's editor.") };
+            _settingsDiffToolStatus = new Label
+            { tooltip = L10n.Tr("Which application Unity currently launches for version-control diffs and merges.") };
+            _settingsDiffToolStatus.style.unityTextAlign = TextAnchor.MiddleLeft;
+            diffRow.Add(_settingsDiffToolBtn);
+            diffRow.Add(_settingsDiffToolStatus);
+            _settingsPane.Add(diffRow);
+            SyncDiffToolRow();
+
             Section("Display");
             _settingsSmooth = new Toggle(L10n.Tr("Smooth Scrolling")) { value = EditorConfig.SmoothScrolling };
             _settingsSmooth.RegisterValueChangedCallback(e => EditorConfig.SmoothScrolling = e.newValue);
@@ -1733,6 +1757,20 @@ namespace ADKOM.TextEditor
             _settingsPragmaFix.style.display = suppressed ? DisplayStyle.None : DisplayStyle.Flex;
         }
 
+        void SyncDiffToolRow()
+        {
+            if (_settingsDiffToolStatus == null) return;
+            bool ours = AteDiffToolBridge.IsConfigured;
+            _settingsDiffToolBtn.text = ours
+                ? L10n.Tr("Restore Previous Diff Tool")
+                : L10n.Tr("Use ATE for Unity Diff/Merge");
+            string current = UnityEditor.EditorPrefs.GetString("kDiffsDefaultApp", "");
+            _settingsDiffToolStatus.text = "  " + (ours
+                ? L10n.Tr("Unity diff/merge tool: ATE (this project).")
+                : string.Format(L10n.Tr("Unity diff/merge tool: {0}"),
+                    string.IsNullOrEmpty(current) ? L10n.Tr("(none)") : current));
+        }
+
         void SyncSettingsControls()
         {
             _settingsTheme?.SetValueWithoutNotify(CurrentTheme.Name);
@@ -1772,6 +1810,7 @@ namespace ADKOM.TextEditor
                     : L10n.Tr("Unity account: signed out");
             }
             SyncPragmaRow();
+            SyncDiffToolRow();
             _settingsTrimSave?.SetValueWithoutNotify(EditorConfig.TrimTrailingOnSave);
             _settingsFinalNewline?.SetValueWithoutNotify(EditorConfig.FinalNewlineOnSave);
         }
