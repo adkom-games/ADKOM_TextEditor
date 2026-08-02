@@ -198,3 +198,8 @@ Full campaign plan/statuses in [[New Features Plan]]. One-line map (details in t
 - Reload-recovery hardening from the 0.14 cycle, root causes worth remembering: Unity hot-serialization keeps PRIVATE fields (null strings revive as "", guard bools stick true — [NonSerialized] on every sentinel/guard); early post-reload SynchronizationContext swallows Posts (AteMainCtx.WhenReady polls update until UnitySynchronizationContext is current); a delayCall registered inside a UIToolkit scheduler callback never fires.
 - 114 new localized strings (5 catalogs, 752 entries each); Manual §12 (sections renumbered 13-19), README feature blurb, Troubleshooting Diff/Merge section.
 - All verified headlessly via MCP: engine unit probes, merge choice/result reload survival, bridge request consumption, pixel-exact gutter alignment (delta=0.0).
+
+## 2026-08-02 — 0.14.1 patch: shim exec-bit + single Copilot ready
+
+- Diff shim MakeExecutable: SetUnixFileMode via reflection (Unity Mono lacks it today — probe confirmed; ready for CoreCLR), chmod 755 fallback with exit-code check, failure surfaced in console (a non-executable shim = silently dead diff tool).
+- Copilot double "ready": SetStatus dedupes on (state, detail) but checkStatus(user) and didChangeStatus(message) differ in detail — window now announces on state transitions only ([NonSerialized] last-state tracker).

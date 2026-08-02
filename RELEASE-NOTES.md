@@ -2,6 +2,14 @@
 
 **☕ Enjoying ATE? Support development on Ko-fi:** [https://ko-fi.com/adkomgames](https://ko-fi.com/adkomgames)
 
+## 0.14.1 — 2026-08-02
+
+Patch.
+
+### Fixed
+- **One "Copilot is ready."** — the ready announcement printed twice in the console (two internal status reports both map to Ready); it now prints once, on the actual state change.
+- **macOS/Linux diff shim hardening** — the executable bit on the generated diff-tool shim is set more robustly, and if it cannot be set you now get a console warning telling you exactly what to chmod, instead of Unity's diff/merge invocations silently doing nothing.
+
 ## 0.14.0 — 2026-08-02
 
 A full diff & merge suite, read-only Markdown, visible invisibles, games and windows that survive compiles, a games menu, and a documentation shelf.
