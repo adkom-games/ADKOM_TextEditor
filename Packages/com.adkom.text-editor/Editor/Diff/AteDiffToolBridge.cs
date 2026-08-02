@@ -153,13 +153,46 @@ namespace ADKOM.TextEditor
                     "F=\"$DIR/req-$$-$(date +%s)\"\n" +
                     "printf '%s\\n' \"$1\" \"$2\" \"$3\" \"$4\" \"$5\" > \"$F.tmp\"\n" +
                     "mv \"$F.tmp\" \"$F.req\"\n");
-                try
+                MakeExecutable(ShimPath);
+            }
+        }
+
+        /// <summary>Sets the executable bit (rwxr-xr-x) on macOS/Linux. Uses
+        /// File.SetUnixFileMode when the runtime has it (.NET 7+, resolved by
+        /// reflection so this compiles on every Unity profile); otherwise
+        /// spawns chmod — and a failure is surfaced, not swallowed, because
+        /// a non-executable shim would make Unity's diff invocation a silent
+        /// no-op.</summary>
+        static void MakeExecutable(string path)
+        {
+            const int Mode755 = 0x1ED; // rwxr-xr-x as UnixFileMode flags
+            try
+            {
+                var modeType = Type.GetType("System.IO.UnixFileMode, System.Runtime")
+                            ?? Type.GetType("System.IO.UnixFileMode, mscorlib");
+                var set = modeType != null
+                    ? typeof(File).GetMethod("SetUnixFileMode", new[] { typeof(string), modeType })
+                    : null;
+                if (set != null)
                 {
-                    var chmod = new System.Diagnostics.ProcessStartInfo("chmod", "+x \"" + ShimPath + "\"")
-                    { UseShellExecute = false, CreateNoWindow = true };
-                    System.Diagnostics.Process.Start(chmod)?.WaitForExit(2000);
+                    set.Invoke(null, new object[] { path, Enum.ToObject(modeType, Mode755) });
+                    return;
                 }
-                catch (Exception) { }
+            }
+            catch (Exception) { /* fall through to chmod */ }
+            try
+            {
+                var chmod = new System.Diagnostics.ProcessStartInfo("chmod", "755 \"" + path + "\"")
+                { UseShellExecute = false, CreateNoWindow = true };
+                using (var p = System.Diagnostics.Process.Start(chmod))
+                {
+                    if (p != null && p.WaitForExit(2000) && p.ExitCode == 0) return;
+                }
+                AteConsole.Warn("[ADKOM Text Editor] Could not mark the diff shim executable (" + path + ") — Unity's diff/merge invocations will not reach ATE until it is (chmod 755 it manually).");
+            }
+            catch (Exception ex)
+            {
+                AteConsole.Warn("[ADKOM Text Editor] Could not mark the diff shim executable (" + path + "): " + ex.Message + " — chmod 755 it manually.");
             }
         }
     }
