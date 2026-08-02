@@ -1919,3 +1919,339 @@ msgstr "모든 ATE 메시지(타임스탬프 포함). 줄을 클릭한 뒤 Ctrl+
 
 msgid "{0} of {1} shown"
 msgstr "{1}개 중 {0}개 표시"
+
+msgid "(deleted)"
+msgstr "(삭제됨)"
+
+msgid "(empty)"
+msgstr "(비어 있음)"
+
+msgid "(missing)"
+msgstr "(누락)"
+
+msgid "(new file)"
+msgstr "(새 파일)"
+
+msgid "(working)"
+msgstr "(작업 사본)"
+
+msgid "+{0}  −{1}  ~{2}"
+msgstr "+{0}  −{1}  ~{2}"
+
+msgid "A file to compare."
+msgstr "비교할 파일입니다."
+
+msgid "A folder to compare recursively."
+msgstr "재귀적으로 비교할 폴더입니다."
+
+msgid "ATE is now Unity's Revision Control Diff/Merge tool (Preferences → External Tools)."
+msgstr "ATE가 Unity의 리비전 관리 Diff/Merge 도구로 설정되었습니다 (Preferences → External Tools)."
+
+msgid "Added, removed and changed line counts."
+msgstr "추가·삭제·변경된 줄 수입니다."
+
+msgid "Adds a base version: changes from both sides are merged; diverging changes become conflicts you resolve."
+msgstr "기준(베이스) 버전을 추가합니다. 양쪽의 변경은 병합되고, 서로 다른 변경은 해결해야 할 충돌이 됩니다."
+
+msgid "All Left"
+msgstr "모두 왼쪽"
+
+msgid "All Right"
+msgstr "모두 오른쪽"
+
+msgid "Also list files that are the same in both folders."
+msgstr "두 폴더에서 동일한 파일도 목록에 표시합니다."
+
+msgid "An open document tab."
+msgstr "열려 있는 문서 탭입니다."
+
+msgid "BASE"
+msgstr "BASE"
+
+msgid "Back to the setup pane to pick different items."
+msgstr "설정 화면으로 돌아가 다른 항목을 선택합니다."
+
+msgid "Base file"
+msgstr "베이스 파일"
+
+msgid "Base: {0}"
+msgstr "베이스: {0}"
+
+msgid "Both sides changed this region differently."
+msgstr "양쪽이 이 영역을 서로 다르게 변경했습니다."
+
+msgid "Change {0} of {1}"
+msgstr "변경 {0}/{1}"
+
+msgid "Choose a file."
+msgstr "파일을 선택합니다."
+
+msgid "Choose a folder."
+msgstr "폴더를 선택합니다."
+
+msgid "Choose the output file."
+msgstr "출력 파일을 선택합니다."
+
+msgid "Choose two existing folders."
+msgstr "존재하는 폴더 두 개를 선택하세요."
+
+msgid "Compare"
+msgstr "비교"
+
+msgid "Compare two files on disk (optionally three-way with a base and merge)."
+msgstr "디스크의 두 파일을 비교합니다(베이스를 포함한 3-way 병합도 가능)."
+
+msgid "Compare two folders recursively; open any differing file pair as a diff."
+msgstr "두 폴더를 재귀적으로 비교하고, 다른 파일 쌍을 diff로 열 수 있습니다."
+
+msgid "Compare two open editor tabs."
+msgstr "열려 있는 두 편집기 탭을 비교합니다."
+
+msgid "Compare:"
+msgstr "비교 대상:"
+
+msgid "Comparison summary. Double-click a row to open the file diff."
+msgstr "비교 요약입니다. 행을 더블 클릭하면 파일 diff가 열립니다."
+
+msgid "Conflict {0}"
+msgstr "충돌 {0}"
+
+msgid "Could not configure the diff tool: {0}"
+msgstr "diff 도구를 설정할 수 없습니다: {0}"
+
+msgid "Diff"
+msgstr "Diff"
+
+msgid "Diff / Merge"
+msgstr "Diff / 병합"
+
+msgid "Diff / Merge..."
+msgstr "Diff / 병합..."
+
+msgid "Double-click to open this pair as a file diff."
+msgstr "더블 클릭하면 이 쌍을 파일 diff로 엽니다."
+
+msgid "Double-click: diff against the previous version (HEAD)."
+msgstr "더블 클릭: 이전 버전(HEAD)과의 diff를 표시합니다."
+
+msgid "Double-click: diff this commit's version against its parent."
+msgstr "더블 클릭: 이 커밋의 버전을 부모 커밋과 비교합니다."
+
+msgid "Folder Diff"
+msgstr "폴더 Diff"
+
+msgid "Folder scan capped at {0} files per side — results are incomplete."
+msgstr "폴더 스캔이 한쪽당 {0}개 파일로 제한되어 결과가 불완전합니다."
+
+msgid "Folders"
+msgstr "폴더"
+
+msgid "Go to the next change."
+msgstr "다음 변경으로 이동합니다."
+
+msgid "Go to the previous change."
+msgstr "이전 변경으로 이동합니다."
+
+msgid "Keep the base (original) lines for this conflict."
+msgstr "이 충돌에서 베이스(원본) 줄을 유지합니다."
+
+msgid "LEFT"
+msgstr "LEFT"
+
+msgid "Left file"
+msgstr "왼쪽 파일"
+
+msgid "Left folder"
+msgstr "왼쪽 폴더"
+
+msgid "Left tab"
+msgstr "왼쪽 탭"
+
+msgid "Left: {0}"
+msgstr "왼쪽: {0}"
+
+msgid "Merge"
+msgstr "병합"
+
+msgid "Merge output"
+msgstr "병합 출력"
+
+msgid "New Comparison…"
+msgstr "새 비교…"
+
+msgid "No differences."
+msgstr "차이가 없습니다."
+
+msgid "No path chosen."
+msgstr "경로가 선택되지 않았습니다."
+
+msgid "No previous tool recorded — pick one in Preferences → External Tools."
+msgstr "이전 도구 기록이 없습니다. Preferences → External Tools에서 선택하세요."
+
+msgid "Open at least two documents in the text editor to compare tabs."
+msgstr "탭을 비교하려면 텍스트 편집기에서 문서를 두 개 이상 여세요."
+
+msgid "Output"
+msgstr "출력"
+
+msgid "RIGHT"
+msgstr "RIGHT"
+
+msgid "Resolve every conflict by taking the left side."
+msgstr "모든 충돌을 왼쪽 내용으로 해결합니다."
+
+msgid "Resolve every conflict by taking the right side."
+msgstr "모든 충돌을 오른쪽 내용으로 해결합니다."
+
+msgid "Restore Previous Diff Tool"
+msgstr "이전 Diff 도구 복원"
+
+msgid "Restored Unity's diff/merge tool to \"{0}\"."
+msgstr "Unity의 diff/merge 도구를 \"{0}\"(으)로 복원했습니다."
+
+msgid "Result (editable)"
+msgstr "결과(편집 가능)"
+
+msgid "Right file"
+msgstr "오른쪽 파일"
+
+msgid "Right folder"
+msgstr "오른쪽 폴더"
+
+msgid "Right tab"
+msgstr "오른쪽 탭"
+
+msgid "Right: {0}"
+msgstr "오른쪽: {0}"
+
+msgid "Run the comparison."
+msgstr "비교를 실행합니다."
+
+msgid "Save As…"
+msgstr "다른 이름으로 저장…"
+
+msgid "Save merged result"
+msgstr "병합 결과 저장"
+
+msgid "Saved {0} — {1} conflict(s) still contain <<<<<<< markers."
+msgstr "{0}을(를) 저장했습니다. {1}개의 충돌에 아직 <<<<<<< 마커가 남아 있습니다."
+
+msgid "Saved {0}."
+msgstr "{0}을(를) 저장했습니다."
+
+msgid "Sets ATE as Unity's Revision Control Diff/Merge tool (Preferences → External Tools), or restores the previous tool. Diffs and merges from Unity's version control then open in ATE's Diff / Merge window of this project's editor."
+msgstr "ATE를 Unity의 리비전 관리 Diff/Merge 도구로 설정하거나 이전 도구를 복원합니다. Unity 버전 관리의 diff와 병합은 이 프로젝트 편집기의 Diff / 병합 창에서 열립니다."
+
+msgid "Show identical files"
+msgstr "동일한 파일 표시"
+
+msgid "Swap the two sides."
+msgstr "양쪽을 서로 바꿉니다."
+
+msgid "Tab \"{0}\" is no longer open."
+msgstr "\"{0}\" 탭이 더 이상 열려 있지 않습니다."
+
+msgid "Take Base"
+msgstr "베이스 사용"
+
+msgid "Take Both"
+msgstr "둘 다 사용"
+
+msgid "Take Left"
+msgstr "왼쪽 사용"
+
+msgid "Take Right"
+msgstr "오른쪽 사용"
+
+msgid "The merged output. Edit freely; choosing a conflict resolution rebuilds it from the choices (manual edits are replaced)."
+msgstr "병합된 출력입니다. 자유롭게 편집할 수 있지만, 충돌 해결을 선택하면 선택 내용으로 다시 만들어집니다(수동 편집은 대체됩니다)."
+
+msgid "Three-way (merge with a common base)"
+msgstr "3-way(공통 베이스로 병합)"
+
+msgid "Unity diff/merge tool: ATE (this project)."
+msgstr "Unity diff/merge 도구: ATE(이 프로젝트)."
+
+msgid "Unity diff/merge tool: {0}"
+msgstr "Unity diff/merge 도구: {0}"
+
+msgid "Unresolved conflict count."
+msgstr "해결되지 않은 충돌 수입니다."
+
+msgid "Use ATE for Unity Diff/Merge"
+msgstr "Unity Diff/Merge에 ATE 사용"
+
+msgid "Use the left lines followed by the right lines."
+msgstr "왼쪽 줄 다음에 오른쪽 줄을 사용합니다."
+
+msgid "Use the left side's lines for this conflict."
+msgstr "이 충돌에서 왼쪽 줄을 사용합니다."
+
+msgid "Use the right side's lines for this conflict."
+msgstr "이 충돌에서 오른쪽 줄을 사용합니다."
+
+msgid "What kind of items to compare."
+msgstr "비교할 항목의 종류입니다."
+
+msgid "Where Save writes the merged result."
+msgstr "저장 시 병합 결과를 기록할 위치입니다."
+
+msgid "Which application Unity currently launches for version-control diffs and merges."
+msgstr "Unity가 버전 관리 diff와 병합에 현재 사용하는 애플리케이션입니다."
+
+msgid "Write the merged result to a new file."
+msgstr "병합 결과를 새 파일에 기록합니다."
+
+msgid "Write the merged result to the output file."
+msgstr "병합 결과를 출력 파일에 기록합니다."
+
+msgid "differs"
+msgstr "다름"
+
+msgid "left"
+msgstr "왼쪽만"
+
+msgid "right"
+msgstr "오른쪽만"
+
+msgid "same"
+msgstr "동일"
+
+msgid "{0} change region(s)."
+msgstr "변경 영역 {0}개."
+
+msgid "{0} conflict(s), all resolved."
+msgstr "충돌 {0}개, 모두 해결되었습니다."
+
+msgid "{0} different, {1} only left, {2} only right, {3} identical"
+msgstr "다름 {0}, 왼쪽만 {1}, 오른쪽만 {2}, 동일 {3}"
+
+msgid "{0} of {1} conflict(s) unresolved."
+msgstr "충돌 {1}개 중 {0}개가 해결되지 않았습니다."
+
+msgid "Copy this change to the left side."
+msgstr "이 변경을 왼쪽에 복사합니다."
+
+msgid "Copy this change to the right side."
+msgstr "이 변경을 오른쪽에 복사합니다."
+
+msgid "Drag to resize the columns."
+msgstr "드래그하여 열 크기를 조절합니다."
+
+msgid "Merge every change into the left side (it becomes a copy of the right)."
+msgstr "모든 변경을 왼쪽에 병합합니다(왼쪽이 오른쪽의 복사본이 됩니다)."
+
+msgid "Merge every change into the right side (it becomes a copy of the left)."
+msgstr "모든 변경을 오른쪽에 병합합니다(오른쪽이 왼쪽의 복사본이 됩니다)."
+
+msgid "Save Left"
+msgstr "왼쪽 저장"
+
+msgid "Save Right"
+msgstr "오른쪽 저장"
+
+msgid "Save the modified left side to its file."
+msgstr "수정된 왼쪽을 파일에 저장합니다."
+
+msgid "Save the modified right side to its file."
+msgstr "수정된 오른쪽을 파일에 저장합니다."

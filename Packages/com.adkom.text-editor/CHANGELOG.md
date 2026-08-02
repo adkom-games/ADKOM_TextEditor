@@ -5,6 +5,11 @@ All notable changes to this package are documented here. Format follows [Keep a 
 ## [Unreleased]
 
 ### Added
+- Diff / Merge tool (Tools → Diff / Merge…): first-class comparisons of files, folders (recursive, with per-file status and drill-down), and open tabs — aligned side-by-side view with intra-line change highlights, change-region navigation, and side swapping. Multiple diff windows can be open at once, and every window restores its full state — comparison, merge choices, and edited result — after a domain reload.
+- Two-way diffs are merge editors too: framed columns with a draggable center splitter, and per-change ◀ / ▶ gutter buttons (plus whole-side ◀◀ / ▶▶) copy changes across; edited sides are marked and saved with Save Left / Save Right. Works for git diffs as well — merge left on a working-tree diff and save to revert chosen regions.
+- Three-way merge: left / base / right columns, automatic merging of one-sided changes, numbered conflict panels with Take Left/Base/Right/Both (plus All Left / All Right), a live editable result pane, and Save with git-style conflict markers for anything left unresolved.
+- ATE can be Unity's Revision Control Diff/Merge tool: a Settings button registers it in Preferences → External Tools via a generated per-project shim, so version-control diffs and merges open in ATE; the previous tool can be restored with one click.
+- Git window: double-clicking a file now opens a diff against its previous version — working-tree files diff against HEAD, files of an inspected commit diff against the commit's parent.
 - View → Hidden Characters: renders non-printing characters as faint glyphs (spaces ·, tabs →, NBSP °, zero-width □, C0 control pictures, ¶ line ends). Display-only; per-window view state.
 - Find works in rendered Markdown: Find/F3 and Search Results jumps scroll the rendered view to the matching block and highlight it.
 - Console tab gained a Filter box (substring, with an "N of M shown" header), mirroring Search Results.

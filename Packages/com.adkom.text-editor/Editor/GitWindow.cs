@@ -270,11 +270,10 @@ namespace ADKOM.TextEditor
                 string state = ("" + entry.Index + entry.Work).Trim();
                 row.Add(new Label(state) { style = { width = 24, opacity = 0.7f } });
                 var lbl = new Label(entry.Path) { style = { overflow = Overflow.Hidden, whiteSpace = WhiteSpace.NoWrap } };
-                lbl.tooltip = entry.Path;
+                lbl.tooltip = entry.Path + "\n" + L10n.Tr("Double-click: diff against the previous version (HEAD).");
                 lbl.RegisterCallback<PointerDownEvent>(ev =>
                 {
-                    if (ev.clickCount >= 2)
-                        TextEditorWindow.OpenExternal(System.IO.Path.Combine(_root, entry.Path), 1, 1);
+                    if (ev.clickCount >= 2) DiffWorkingEntry(entry);
                 });
                 row.Add(lbl);
                 _changes.Add(row);
@@ -380,16 +379,40 @@ namespace ADKOM.TextEditor
                 var row = new VisualElement { style = { flexDirection = FlexDirection.Row, alignItems = Align.Center } };
                 row.Add(new Label(state) { style = { width = 32, opacity = 0.7f } });
                 var lbl = new Label(path) { style = { overflow = Overflow.Hidden, whiteSpace = WhiteSpace.NoWrap } };
-                lbl.tooltip = path;
+                lbl.tooltip = path + "\n" + L10n.Tr("Double-click: diff this commit's version against its parent.");
                 string p = path;
+                string hash = _inspectHash;
                 lbl.RegisterCallback<PointerDownEvent>(ev =>
                 {
-                    if (ev.clickCount >= 2)
-                        TextEditorWindow.OpenExternal(System.IO.Path.Combine(_root, p), 1, 1);
+                    if (ev.clickCount >= 2) DiffCommitEntry(p, hash);
                 });
                 row.Add(lbl);
                 _changes.Add(row);
             }
+        }
+
+        /// <summary>Double-click on a working-tree change: diff the previous
+        /// version (HEAD) against the file as it is now.</summary>
+        void DiffWorkingEntry(GitService.StatusEntry entry)
+        {
+            string abs = System.IO.Path.Combine(_root, entry.Path);
+            bool untracked = entry.Index == '?' || entry.Work == '?';
+            string prev = untracked ? "" : (GitService.ShowFileAt(abs, "HEAD") ?? "");
+            string prevLabel = entry.Path + " @ HEAD" + (untracked ? " " + L10n.Tr("(new file)") : "");
+            if (System.IO.File.Exists(abs))
+                AteDiffWindow.OpenTextVsFile(prevLabel, prev, abs, entry.Path + " " + L10n.Tr("(working)"));
+            else
+                AteDiffWindow.OpenTexts(prevLabel, prev, entry.Path + " " + L10n.Tr("(deleted)"), "");
+        }
+
+        /// <summary>Double-click on an inspected commit's file: diff the
+        /// parent's version against this commit's version.</summary>
+        void DiffCommitEntry(string relPath, string hash)
+        {
+            string abs = System.IO.Path.Combine(_root, relPath);
+            string before = GitService.ShowFileAt(abs, hash + "^") ?? "";
+            string after = GitService.ShowFileAt(abs, hash) ?? "";
+            AteDiffWindow.OpenTexts(relPath + " @ " + hash + "^", before, relPath + " @ " + hash, after);
         }
 
         void LeaveInspect()

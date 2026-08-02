@@ -87,6 +87,9 @@ Right-click a symbol → **Inspect Symbol…** and a reflection inspector opens 
 ### 🔀 Git, built in
 Gutter markers show **added/modified/deleted lines** against HEAD as you work. Tools → Git brings **Blame** (a read-only annotated view), **File History** (open any past revision of the file), and the **Git Panel**: stage and unstage with checkboxes, commit, push, inspect any commit (files + message; amend HEAD's message in place), and a **branch-history tree** — an interactive commit graph, switchable vertical ⇄ horizontal, where you can check out branches or create one at any commit (guarded while your tree is dirty). Uses your system git; no bundled VCS.
 
+### 🧬 Diff / Merge
+A first-class comparison tool (Tools → Diff / Merge…): side-by-side diffs of **files, folders, or open tabs** with intra-line change highlights and change-region navigation, plus a **three-way merge** with per-conflict Take Left/Base/Right/Both resolution and an editable, saveable result. Double-click any file in the Git Panel to diff it against its previous version. One Settings click makes ATE **Unity's Revision Control Diff/Merge tool** (Preferences → External Tools) — and every diff window survives domain reloads, merge-in-progress included.
+
 ### 🔤 Spell checking, optional
 Flip it on in Settings and unknown words get a soft blue underline — comments and strings in code, everything in markdown and plain text, camelCase split and judged per hump. Ships a 115k-word English dictionary (US + UK, SCOWL-derived, fully attributed); drop in Hunspell `.dic` files for other languages, and right-click any flagged word to add it to your **user or per-project dictionary**.
 

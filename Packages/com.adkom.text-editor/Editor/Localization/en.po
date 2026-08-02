@@ -1921,3 +1921,339 @@ msgstr "Every ATE message, timestamped. Click a row; Ctrl+C or right-click → C
 
 msgid "{0} of {1} shown"
 msgstr "{0} of {1} shown"
+
+msgid "(deleted)"
+msgstr "(deleted)"
+
+msgid "(empty)"
+msgstr "(empty)"
+
+msgid "(missing)"
+msgstr "(missing)"
+
+msgid "(new file)"
+msgstr "(new file)"
+
+msgid "(working)"
+msgstr "(working)"
+
+msgid "+{0}  −{1}  ~{2}"
+msgstr "+{0}  −{1}  ~{2}"
+
+msgid "A file to compare."
+msgstr "A file to compare."
+
+msgid "A folder to compare recursively."
+msgstr "A folder to compare recursively."
+
+msgid "ATE is now Unity's Revision Control Diff/Merge tool (Preferences → External Tools)."
+msgstr "ATE is now Unity's Revision Control Diff/Merge tool (Preferences → External Tools)."
+
+msgid "Added, removed and changed line counts."
+msgstr "Added, removed and changed line counts."
+
+msgid "Adds a base version: changes from both sides are merged; diverging changes become conflicts you resolve."
+msgstr "Adds a base version: changes from both sides are merged; diverging changes become conflicts you resolve."
+
+msgid "All Left"
+msgstr "All Left"
+
+msgid "All Right"
+msgstr "All Right"
+
+msgid "Also list files that are the same in both folders."
+msgstr "Also list files that are the same in both folders."
+
+msgid "An open document tab."
+msgstr "An open document tab."
+
+msgid "BASE"
+msgstr "BASE"
+
+msgid "Back to the setup pane to pick different items."
+msgstr "Back to the setup pane to pick different items."
+
+msgid "Base file"
+msgstr "Base file"
+
+msgid "Base: {0}"
+msgstr "Base: {0}"
+
+msgid "Both sides changed this region differently."
+msgstr "Both sides changed this region differently."
+
+msgid "Change {0} of {1}"
+msgstr "Change {0} of {1}"
+
+msgid "Choose a file."
+msgstr "Choose a file."
+
+msgid "Choose a folder."
+msgstr "Choose a folder."
+
+msgid "Choose the output file."
+msgstr "Choose the output file."
+
+msgid "Choose two existing folders."
+msgstr "Choose two existing folders."
+
+msgid "Compare"
+msgstr "Compare"
+
+msgid "Compare two files on disk (optionally three-way with a base and merge)."
+msgstr "Compare two files on disk (optionally three-way with a base and merge)."
+
+msgid "Compare two folders recursively; open any differing file pair as a diff."
+msgstr "Compare two folders recursively; open any differing file pair as a diff."
+
+msgid "Compare two open editor tabs."
+msgstr "Compare two open editor tabs."
+
+msgid "Compare:"
+msgstr "Compare:"
+
+msgid "Comparison summary. Double-click a row to open the file diff."
+msgstr "Comparison summary. Double-click a row to open the file diff."
+
+msgid "Conflict {0}"
+msgstr "Conflict {0}"
+
+msgid "Could not configure the diff tool: {0}"
+msgstr "Could not configure the diff tool: {0}"
+
+msgid "Diff"
+msgstr "Diff"
+
+msgid "Diff / Merge"
+msgstr "Diff / Merge"
+
+msgid "Diff / Merge..."
+msgstr "Diff / Merge..."
+
+msgid "Double-click to open this pair as a file diff."
+msgstr "Double-click to open this pair as a file diff."
+
+msgid "Double-click: diff against the previous version (HEAD)."
+msgstr "Double-click: diff against the previous version (HEAD)."
+
+msgid "Double-click: diff this commit's version against its parent."
+msgstr "Double-click: diff this commit's version against its parent."
+
+msgid "Folder Diff"
+msgstr "Folder Diff"
+
+msgid "Folder scan capped at {0} files per side — results are incomplete."
+msgstr "Folder scan capped at {0} files per side — results are incomplete."
+
+msgid "Folders"
+msgstr "Folders"
+
+msgid "Go to the next change."
+msgstr "Go to the next change."
+
+msgid "Go to the previous change."
+msgstr "Go to the previous change."
+
+msgid "Keep the base (original) lines for this conflict."
+msgstr "Keep the base (original) lines for this conflict."
+
+msgid "LEFT"
+msgstr "LEFT"
+
+msgid "Left file"
+msgstr "Left file"
+
+msgid "Left folder"
+msgstr "Left folder"
+
+msgid "Left tab"
+msgstr "Left tab"
+
+msgid "Left: {0}"
+msgstr "Left: {0}"
+
+msgid "Merge"
+msgstr "Merge"
+
+msgid "Merge output"
+msgstr "Merge output"
+
+msgid "New Comparison…"
+msgstr "New Comparison…"
+
+msgid "No differences."
+msgstr "No differences."
+
+msgid "No path chosen."
+msgstr "No path chosen."
+
+msgid "No previous tool recorded — pick one in Preferences → External Tools."
+msgstr "No previous tool recorded — pick one in Preferences → External Tools."
+
+msgid "Open at least two documents in the text editor to compare tabs."
+msgstr "Open at least two documents in the text editor to compare tabs."
+
+msgid "Output"
+msgstr "Output"
+
+msgid "RIGHT"
+msgstr "RIGHT"
+
+msgid "Resolve every conflict by taking the left side."
+msgstr "Resolve every conflict by taking the left side."
+
+msgid "Resolve every conflict by taking the right side."
+msgstr "Resolve every conflict by taking the right side."
+
+msgid "Restore Previous Diff Tool"
+msgstr "Restore Previous Diff Tool"
+
+msgid "Restored Unity's diff/merge tool to \"{0}\"."
+msgstr "Restored Unity's diff/merge tool to \"{0}\"."
+
+msgid "Result (editable)"
+msgstr "Result (editable)"
+
+msgid "Right file"
+msgstr "Right file"
+
+msgid "Right folder"
+msgstr "Right folder"
+
+msgid "Right tab"
+msgstr "Right tab"
+
+msgid "Right: {0}"
+msgstr "Right: {0}"
+
+msgid "Run the comparison."
+msgstr "Run the comparison."
+
+msgid "Save As…"
+msgstr "Save As…"
+
+msgid "Save merged result"
+msgstr "Save merged result"
+
+msgid "Saved {0} — {1} conflict(s) still contain <<<<<<< markers."
+msgstr "Saved {0} — {1} conflict(s) still contain <<<<<<< markers."
+
+msgid "Saved {0}."
+msgstr "Saved {0}."
+
+msgid "Sets ATE as Unity's Revision Control Diff/Merge tool (Preferences → External Tools), or restores the previous tool. Diffs and merges from Unity's version control then open in ATE's Diff / Merge window of this project's editor."
+msgstr "Sets ATE as Unity's Revision Control Diff/Merge tool (Preferences → External Tools), or restores the previous tool. Diffs and merges from Unity's version control then open in ATE's Diff / Merge window of this project's editor."
+
+msgid "Show identical files"
+msgstr "Show identical files"
+
+msgid "Swap the two sides."
+msgstr "Swap the two sides."
+
+msgid "Tab \"{0}\" is no longer open."
+msgstr "Tab \"{0}\" is no longer open."
+
+msgid "Take Base"
+msgstr "Take Base"
+
+msgid "Take Both"
+msgstr "Take Both"
+
+msgid "Take Left"
+msgstr "Take Left"
+
+msgid "Take Right"
+msgstr "Take Right"
+
+msgid "The merged output. Edit freely; choosing a conflict resolution rebuilds it from the choices (manual edits are replaced)."
+msgstr "The merged output. Edit freely; choosing a conflict resolution rebuilds it from the choices (manual edits are replaced)."
+
+msgid "Three-way (merge with a common base)"
+msgstr "Three-way (merge with a common base)"
+
+msgid "Unity diff/merge tool: ATE (this project)."
+msgstr "Unity diff/merge tool: ATE (this project)."
+
+msgid "Unity diff/merge tool: {0}"
+msgstr "Unity diff/merge tool: {0}"
+
+msgid "Unresolved conflict count."
+msgstr "Unresolved conflict count."
+
+msgid "Use ATE for Unity Diff/Merge"
+msgstr "Use ATE for Unity Diff/Merge"
+
+msgid "Use the left lines followed by the right lines."
+msgstr "Use the left lines followed by the right lines."
+
+msgid "Use the left side's lines for this conflict."
+msgstr "Use the left side's lines for this conflict."
+
+msgid "Use the right side's lines for this conflict."
+msgstr "Use the right side's lines for this conflict."
+
+msgid "What kind of items to compare."
+msgstr "What kind of items to compare."
+
+msgid "Where Save writes the merged result."
+msgstr "Where Save writes the merged result."
+
+msgid "Which application Unity currently launches for version-control diffs and merges."
+msgstr "Which application Unity currently launches for version-control diffs and merges."
+
+msgid "Write the merged result to a new file."
+msgstr "Write the merged result to a new file."
+
+msgid "Write the merged result to the output file."
+msgstr "Write the merged result to the output file."
+
+msgid "differs"
+msgstr "differs"
+
+msgid "left"
+msgstr "left"
+
+msgid "right"
+msgstr "right"
+
+msgid "same"
+msgstr "same"
+
+msgid "{0} change region(s)."
+msgstr "{0} change region(s)."
+
+msgid "{0} conflict(s), all resolved."
+msgstr "{0} conflict(s), all resolved."
+
+msgid "{0} different, {1} only left, {2} only right, {3} identical"
+msgstr "{0} different, {1} only left, {2} only right, {3} identical"
+
+msgid "{0} of {1} conflict(s) unresolved."
+msgstr "{0} of {1} conflict(s) unresolved."
+
+msgid "Copy this change to the left side."
+msgstr "Copy this change to the left side."
+
+msgid "Copy this change to the right side."
+msgstr "Copy this change to the right side."
+
+msgid "Drag to resize the columns."
+msgstr "Drag to resize the columns."
+
+msgid "Merge every change into the left side (it becomes a copy of the right)."
+msgstr "Merge every change into the left side (it becomes a copy of the right)."
+
+msgid "Merge every change into the right side (it becomes a copy of the left)."
+msgstr "Merge every change into the right side (it becomes a copy of the left)."
+
+msgid "Save Left"
+msgstr "Save Left"
+
+msgid "Save Right"
+msgstr "Save Right"
+
+msgid "Save the modified left side to its file."
+msgstr "Save the modified left side to its file."
+
+msgid "Save the modified right side to its file."
+msgstr "Save the modified right side to its file."

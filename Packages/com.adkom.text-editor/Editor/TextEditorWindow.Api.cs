@@ -14,6 +14,40 @@ namespace ADKOM.TextEditor
     {
         internal bool ApiContains(TextDocument d) => _docs.Contains(d);
 
+        /// <summary>Open document names the Diff / Merge tool can compare
+        /// (every tab except the Settings pane). Duplicate display names get
+        /// an index suffix so each tab stays addressable.</summary>
+        internal List<string> DiffableDocNames()
+        {
+            var names = new List<string>();
+            var seen = new Dictionary<string, int>();
+            foreach (var d in _docs)
+            {
+                if (d.IsSettings) continue;
+                string n = d.DisplayName;
+                if (seen.TryGetValue(n, out int c)) { seen[n] = c + 1; n = n + " (" + c + ")"; }
+                else seen[n] = 1;
+                names.Add(n);
+            }
+            return names;
+        }
+
+        /// <summary>Content of the named open document (names as produced by
+        /// DiffableDocNames), or null when no such tab is open.</summary>
+        internal string DiffableDocText(string name)
+        {
+            var seen = new Dictionary<string, int>();
+            foreach (var d in _docs)
+            {
+                if (d.IsSettings) continue;
+                string n = d.DisplayName;
+                if (seen.TryGetValue(n, out int c)) { seen[n] = c + 1; n = n + " (" + c + ")"; }
+                else seen[n] = 1;
+                if (n == name) return d.Content ?? "";
+            }
+            return null;
+        }
+
         /// <summary>If a tab holds <paramref name="path"/>, reloads its buffer
         /// from disk (used after ATE itself rewrites a file it may have open —
         /// e.g. a regenerated security report — where OpenExternal would
