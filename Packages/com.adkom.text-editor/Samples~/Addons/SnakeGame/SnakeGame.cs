@@ -1,20 +1,24 @@
-// ATE sample addon: Snake — a complete in-editor game on the AteApi 1.1
-// game surface. Demonstrates: the full addon lifecycle, game mode, the
-// 30 Hz-capped tick, consumable key events, key-state polling (hold Shift
-// for turbo), WriteAt/ReadAt drawing, fg+bg color overlay, and the
-// status-bar Prompt.
+// ATE sample addon: Snake — a complete in-editor game on the AteApi game
+// surface. Demonstrates: the STATEFUL addon lifecycle (API 1.2 — the game
+// survives domain reloads via SaveState/RestoreState and re-finds its board
+// document by StateTag), game mode, the 30 Hz-capped tick, consumable key
+// events, key-state polling (hold Shift for turbo), WriteAt/ReadAt drawing,
+// fg+bg color overlay, a pause mode, and the status-bar Prompt.
 //
-// Run it from Tools → Addons → Games → Snake. Arrows/WASD steer, Shift is
-// turbo, Space restarts after a crash, Escape quits.
+// Run it from Games → Snake. The game STARTS PAUSED — press Space to
+// begin. Arrows/WASD steer, Space pauses/resumes (and restarts after a
+// crash), Shift is turbo, Escape quits. After a domain reload the game
+// comes back paused too.
 using System;
 using ADKOM.TextEditor.Scripting;
 using UnityEngine;
 using Random = System.Random;
 
-[AteAddon(Name = "Snake", Category = "Games", ApiVersion = "1.1")]
-public class SnakeGame : IAteAddonLifecycle
+[AteAddon(Name = "Snake", Category = "Games", ApiVersion = "1.2")]
+public class SnakeGame : IAteAddonStateful
 {
     const int W = 40, H = 20;       // playfield including the border
+    const string Tag = "ate-snake"; // StateTag claiming our board document
     static readonly Color Border = new Color(0.45f, 0.45f, 0.45f);
     static readonly Color Head = new Color(0.4f, 1f, 0.4f);
     static readonly Color Body = new Color(0.1f, 0.6f, 0.1f);
@@ -27,7 +31,8 @@ public class SnakeGame : IAteAddonLifecycle
     int _len, _dx, _dy, _pendingDx, _pendingDy;
     (int x, int y) _food;
     int _score;
-    bool _running, _dead;
+    bool _running, _dead, _paused;
+    bool _persisting; // SaveState returned state: OnUnload must keep the doc
 
     // ---- Lifecycle ----
 
@@ -37,7 +42,20 @@ public class SnakeGame : IAteAddonLifecycle
         AteApi.documentClosed += d => { if (Equals(d, _doc)) StopGame(); };
     }
 
-    public void OnUnload() => StopGame();
+    public void OnUnload()
+    {
+        if (_persisting)
+        {
+            // The board document lives on in the session; RestoreState will
+            // re-claim it by its StateTag after the reload.
+            _tick?.Stop();
+            _tick = null;
+            _running = false;
+            _doc = null;
+            return;
+        }
+        StopGame();
+    }
 
     public void OnFocusGained() { }
     public void OnFocusLost() { } // ticks pause and key states reset automatically
@@ -47,11 +65,76 @@ public class SnakeGame : IAteAddonLifecycle
         if (_doc != null && _doc.IsValid) { _doc.Activate(); return; }
         _doc = AteApi.NewDocument(BuildBoardText());
         _doc.SetTitle("Snake");
+        _doc.StateTag = Tag;
         _doc.GameMode = true;
         PaintBorder();
         NewGame();
         _tick = AteApi.StartTick(10, Step);
         _running = true;
+    }
+
+    // ---- State persistence (AteApi 1.2) ----
+
+    [Serializable]
+    class State
+    {
+        public int len, dx, dy, pdx, pdy, fx, fy, score;
+        public bool dead;
+        public int[] sx, sy;
+    }
+
+    public string SaveState()
+    {
+        _persisting = false;
+        if (!_running || _doc == null || !_doc.IsValid) return null;
+        var st = new State
+        {
+            len = _len, dx = _dx, dy = _dy, pdx = _pendingDx, pdy = _pendingDy,
+            fx = _food.x, fy = _food.y, score = _score, dead = _dead,
+            sx = new int[_len], sy = new int[_len]
+        };
+        for (int i = 0; i < _len; i++) { st.sx[i] = _snake[i].x; st.sy[i] = _snake[i].y; }
+        _persisting = true;
+        return JsonUtility.ToJson(st);
+    }
+
+    public void RestoreState(string state)
+    {
+        if (_running) return;
+        var st = JsonUtility.FromJson<State>(state);
+        if (st == null || st.sx == null || st.sy == null || st.len < 1 || st.len > st.sx.Length) return;
+        AteDocument doc = null;
+        foreach (var d in AteApi.Documents)
+            if (d.IsValid && d.StateTag == Tag) { doc = d; break; }
+        if (doc == null) return; // the board tab is gone — start fresh via Run
+
+        _doc = doc;
+        _doc.SetTitle("Snake");
+        _doc.GameMode = true;
+        _len = Math.Min(st.len, _snake.Length);
+        for (int i = 0; i < _len; i++) _snake[i] = (st.sx[i], st.sy[i]);
+        _dx = st.dx; _dy = st.dy; _pendingDx = st.pdx; _pendingDy = st.pdy;
+        _food = (st.fx, st.fy);
+        _score = st.score;
+        _dead = st.dead;
+        RedrawAll();
+        _running = true;
+        _paused = !_dead; // resume PAUSED — a reload should never cost a life
+        DrawStatus();
+        _tick = AteApi.StartTick(10, Step);
+    }
+
+    /// <summary>Repaints the whole board from game state (the restore path —
+    /// the document's text survived the reload but colors did not).</summary>
+    void RedrawAll()
+    {
+        _doc.SetText(BuildBoardText());
+        _doc.ClearColors();
+        PaintBorder();
+        for (int i = _len - 1; i >= 0; i--) DrawCell(_snake[i], i == 0);
+        _doc.WriteAt(_food.y + 1, _food.x + 1, "o");
+        _doc.SetColor(_food.y + 1, _food.x + 1, _food.x + 2, Food, Food);
+        if (_dead) DrawGameOverBanner();
     }
 
     // ---- Game ----
@@ -63,6 +146,7 @@ public class SnakeGame : IAteAddonLifecycle
         _dx = _pendingDx = 1; _dy = _pendingDy = 0;
         _score = 0;
         _dead = false;
+        _paused = true; // every game starts paused — Space when you're ready
         _doc.SetText(BuildBoardText());
         _doc.ClearColors();
         PaintBorder();
@@ -73,7 +157,7 @@ public class SnakeGame : IAteAddonLifecycle
 
     void Step()
     {
-        if (!_running || _dead || _doc == null || !_doc.IsValid) return;
+        if (!_running || _dead || _paused || _doc == null || !_doc.IsValid) return;
         int steps = AteApi.IsKeyDown(KeyCode.LeftShift) || AteApi.IsKeyDown(KeyCode.RightShift) ? 2 : 1;
         for (int s = 0; s < steps && !_dead; s++) Advance();
     }
@@ -113,10 +197,8 @@ public class SnakeGame : IAteAddonLifecycle
     void GameOver()
     {
         _dead = true;
-        string msg = " GAME OVER — Space restarts, Esc quits ";
-        int col = Math.Max(1, (W - msg.Length) / 2);
-        _doc.WriteAt(H / 2 + 1, col + 1, msg);
-        _doc.SetColor(H / 2 + 1, col + 1, col + 1 + msg.Length, Color.white, new Color(0.5f, 0.1f, 0.1f));
+        _paused = false;
+        DrawGameOverBanner();
         DrawStatus();
         if (_score > UnityEditor.EditorPrefs.GetInt("ATE.Snake.HighScore", 0))
         {
@@ -130,15 +212,29 @@ public class SnakeGame : IAteAddonLifecycle
         }
     }
 
+    void DrawGameOverBanner()
+    {
+        string msg = " GAME OVER — Space restarts, Esc quits ";
+        int col = Math.Max(1, (W - msg.Length) / 2);
+        _doc.WriteAt(H / 2 + 1, col + 1, msg);
+        _doc.SetColor(H / 2 + 1, col + 1, col + 1 + msg.Length, Color.white, new Color(0.5f, 0.1f, 0.1f));
+    }
+
     void StopGame()
     {
         _running = false;
+        _paused = false;
+        _persisting = false;
         _tick?.Stop();
         _tick = null;
-        if (_doc != null && _doc.IsValid && _doc.GameMode)
+        if (_doc != null && _doc.IsValid)
         {
-            _doc.GameMode = false;
-            _doc.Close(discardChanges: true);
+            _doc.StateTag = null; // a quit game never resurrects
+            if (_doc.GameMode)
+            {
+                _doc.GameMode = false;
+                _doc.Close(discardChanges: true);
+            }
         }
         _doc = null;
     }
@@ -157,7 +253,10 @@ public class SnakeGame : IAteAddonLifecycle
             case KeyCode.LeftArrow: case KeyCode.A: Turn(-1, 0); e.Handled = true; break;
             case KeyCode.RightArrow: case KeyCode.D: Turn(1, 0); e.Handled = true; break;
             case KeyCode.Space:
-                if (_dead) { NewGame(); e.Handled = true; }
+                // Context-sensitive: restart when dead, pause/resume otherwise.
+                if (_dead) NewGame();
+                else { _paused = !_paused; DrawStatus(); }
+                e.Handled = true;
                 break;
             case KeyCode.Escape:
                 StopGame();
@@ -168,7 +267,7 @@ public class SnakeGame : IAteAddonLifecycle
 
     void Turn(int dx, int dy)
     {
-        if (dx == -_dx && dy == -_dy) return; // no instant reversal
+        if (_paused || (dx == -_dx && dy == -_dy)) return; // paused / no instant reversal
         _pendingDx = dx; _pendingDy = dy;
     }
 
@@ -223,7 +322,8 @@ public class SnakeGame : IAteAddonLifecycle
         int high = UnityEditor.EditorPrefs.GetInt("ATE.Snake.HighScore", 0);
         string holder = UnityEditor.EditorPrefs.GetString("ATE.Snake.HighName", "");
         string line = "Score: " + _score + "   High: " + high +
-            (holder.Length > 0 ? " (" + holder + ")" : "") + new string(' ', 20);
+            (holder.Length > 0 ? " (" + holder + ")" : "") +
+            (_paused ? "   || PAUSED (Space resumes)" : "") + new string(' ', 28);
         _doc.WriteAt(H + 1, 1, line);
     }
 }

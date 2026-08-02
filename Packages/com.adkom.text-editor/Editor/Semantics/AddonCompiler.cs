@@ -10,20 +10,17 @@ using ADKOM.TextEditor.Scripting;
 namespace ADKOM.TextEditor.Semantics
 {
     /// <summary>
-    /// Compiles one addon source file into an in-memory assembly with the
-    /// bundled Roslyn, referencing everything the current editor domain has
-    /// loaded (so addons can use AteApi, UnityEngine, UnityEditor, and the
-    /// BCL). Discovered by AteAddonManager via TypeCache.
+    /// Compiles an addon folder's source files into an in-memory assembly
+    /// with the bundled Roslyn, referencing everything the current editor
+    /// domain has loaded (so addons can use AteApi, UnityEngine, UnityEditor,
+    /// and the BCL). Discovered by AteAddonManager via TypeCache.
     /// </summary>
     public class AddonCompiler : IAddonCompiler
     {
         static List<MetadataReference> _refs;
 
-        public bool TryCompile(string path, out Assembly assembly, out string[] errors)
-            => TryCompileMany(new[] { path }, out assembly, out errors);
-
-        /// <summary>Folder addon: all files compile together into ONE
-        /// assembly (Multi-File Addons spec). Error lines keep file:line.</summary>
+        /// <summary>All files of the addon compile together into ONE
+        /// assembly. Error lines keep file:line.</summary>
         public bool TryCompileMany(string[] paths, out Assembly assembly, out string[] errors)
         {
             assembly = null;

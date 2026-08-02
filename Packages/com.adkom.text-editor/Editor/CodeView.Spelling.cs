@@ -27,7 +27,7 @@ namespace ADKOM.TextEditor
 
         bool _spellOn;
         Dictionary<int, List<(int start, int len)>> _spellLines;
-        readonly List<VisualElement> _spellPool = new List<VisualElement>();
+        readonly List<SquiggleElement> _spellPool = new List<SquiggleElement>();
         IVisualElementScheduledItem _spellPending;
         static readonly Color SpellCol = new Color(0.35f, 0.6f, 0.95f, 0.75f);
 
@@ -145,20 +145,19 @@ namespace ADKOM.TextEditor
                         if (ce <= cs) continue;
                         if (quad >= _spellPool.Count)
                         {
-                            var q = new VisualElement();
+                            var q = new SquiggleElement();
                             q.style.position = Position.Absolute;
-                            q.pickingMode = PickingMode.Ignore;
                             _content.Add(q);
                             _spellPool.Add(q);
                         }
                         var v = _spellPool[quad++];
                         v.style.display = DisplayStyle.Flex;
-                        v.style.backgroundColor = SpellCol;
+                        v.Color = SpellCol;
                         float x0 = MeasureRange(line, rs, cs);
                         v.style.left = x0;
-                        v.style.top = (row + 1) * _lineHeight - 2;
+                        v.style.top = (row + 1) * _lineHeight - 3; // 1px clear of the glyph bottoms
                         v.style.width = Mathf.Max(4, MeasureRange(line, rs, ce) - x0);
-                        v.style.height = 1.5f;
+                        v.style.height = 4;
                     }
                 }
             }

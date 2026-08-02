@@ -103,6 +103,89 @@ namespace AteZMachine
             Start();
         }
 
+        // ---- Domain-reload snapshots (not player saves) ----
+        //
+        // Distinct from DoSave: taken silently by the launcher when a domain
+        // reload (or editor quit) is imminent, at which point the machine is
+        // ALWAYS parked at WaitingInput (both run on the editor main thread,
+        // so a reload can never catch the VM mid-instruction). _pc is already
+        // past the sread, so the snapshot needs no instruction re-execution:
+        // resume restores memory/stack/PC plus the sread buffer addresses and
+        // simply re-arms the input line. RNG state is not captured — future
+        // die rolls differ after a resume, which is harmless.
+
+        const byte SnapshotMagic3 = (byte)'X'; // "AZX": context snapshot, not a player save
+
+        /// <summary>Writes a silent full-state snapshot. Only valid while
+        /// parked at WaitingInput; returns false otherwise (or on I/O error).</summary>
+        public bool SnapshotTo(string path)
+        {
+            if (State != ZState.WaitingInput) return false;
+            try
+            {
+                using (var w = new BinaryWriter(File.Create(path)))
+                {
+                    w.Write(new byte[] { (byte)'A', (byte)'Z', SnapshotMagic3, 3 });
+                    w.Write(_staticBase);
+                    w.Write(_m, 0, _staticBase);        // dynamic memory
+                    w.Write(_pc);                        // already past the sread
+                    w.Write(_readText);
+                    w.Write(_readParse);
+                    w.Write(_frames.Count);
+                    foreach (var f in _frames)
+                    {
+                        w.Write(f.RetPC); w.Write(f.StoreVar);
+                        w.Write(f.Locals.Length);
+                        foreach (var l in f.Locals) w.Write(l);
+                        w.Write(f.Eval.Count);
+                        foreach (var e in f.Eval) w.Write(e);
+                    }
+                }
+                return true;
+            }
+            catch (Exception) { return false; }
+        }
+
+        /// <summary>Resumes from a SnapshotTo file on a machine constructed
+        /// with the SAME story image — the Start() of the resume path. Ends
+        /// parked at WaitingInput with the input line re-armed; the next
+        /// CompleteInput continues exactly where the reload interrupted.</summary>
+        public bool ResumeFrom(string path)
+        {
+            try
+            {
+                InitHeader();
+                using (var r = new BinaryReader(File.OpenRead(path)))
+                {
+                    var magic = r.ReadBytes(4);
+                    if (magic.Length != 4 || magic[0] != 'A' || magic[1] != 'Z' || magic[2] != SnapshotMagic3)
+                        return false;
+                    int dyn = r.ReadInt32();
+                    var mem = r.ReadBytes(dyn);
+                    Array.Copy(mem, 0, _m, 0, Math.Min(dyn, _staticBase));
+                    _pc = r.ReadInt32();
+                    _readText = r.ReadInt32();
+                    _readParse = r.ReadInt32();
+                    int nf = r.ReadInt32();
+                    _frames.Clear();
+                    for (int i = 0; i < nf; i++)
+                    {
+                        int retpc = r.ReadInt32(), sv = r.ReadInt32(), nl = r.ReadInt32();
+                        var f = new Frame(nl) { RetPC = retpc, StoreVar = sv };
+                        for (int j = 0; j < nl; j++) f.Locals[j] = r.ReadUInt16();
+                        int ne = r.ReadInt32();
+                        for (int j = 0; j < ne; j++) f.Eval.Add(r.ReadUInt16());
+                        _frames.Add(f);
+                    }
+                }
+                if (_frames.Count == 0) _frames.Add(new Frame(0));
+                State = ZState.WaitingInput;
+                _screen.RequestLine();
+                return true;
+            }
+            catch (Exception) { return false; }
+        }
+
         /// <summary>The PC where execution continues if the save/restore
         /// SUCCEEDS (result = true) — accounting for branch polarity. For a
         /// branch-on-true it's the branch target; for branch-on-false (Zork's

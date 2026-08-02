@@ -9,17 +9,25 @@
 //
 // Folder addon: all .cs files in this folder compile together (Multi-File
 // Addons). Entry point + input routing + lifecycle live here; the game
-// itself is in the Rogue* modules.
+// itself is in the Rogue* modules. STATEFUL (AteApi 1.2): the running
+// dungeon survives domain reloads — RogueSave serializes the Game graph,
+// the host stores it, and RestoreState rebuilds the game around the screen
+// document that survived in the session (found by StateTag). A pending
+// prompt (--More--, direction, …) does not survive; play resumes in Play
+// mode on the same turn.
 using System;
 using ADKOM.TextEditor.Scripting;
 using UnityEngine;
 
 namespace AteRogue
 {
-    [AteAddon(Name = "Rogue", Category = "Games", ApiVersion = "1.1")]
-    public class RogueAddon : IAteAddonLifecycle
+    [AteAddon(Name = "Rogue", Category = "Games", ApiVersion = "1.2")]
+    public class RogueAddon : IAteAddonStateful
     {
+        const string Tag = "ate-rogue"; // StateTag claiming our screen document
+
         Game _game;
+        bool _persisting; // SaveState returned state: OnUnload must keep the doc
 
         public void OnLoad()
         {
@@ -30,7 +38,18 @@ namespace AteRogue
             };
         }
 
-        public void OnUnload() => Stop();
+        public void OnUnload()
+        {
+            if (_persisting)
+            {
+                // The screen document lives on in the session; RestoreState
+                // will re-claim it by its StateTag after the reload.
+                _game = null;
+                return;
+            }
+            Stop();
+        }
+
         public void OnFocusGained() { }
         public void OnFocusLost() { }
 
@@ -42,20 +61,69 @@ namespace AteRogue
                 return;
             }
             var term = new Term();
-            term.Attach(Term.NewScreenDocument());
+            var doc = Term.NewScreenDocument();
+            doc.StateTag = Tag;
+            term.Attach(doc);
             _game = new Game(term);
             _game.OnQuitRequested = Stop;
             _game.Start();
+        }
+
+        // ---- State persistence (AteApi 1.2) ----
+
+        public string SaveState()
+        {
+            _persisting = false;
+            var g = _game;
+            if (g == null || !g.Term.IsValid || g.GameOver || g.Mode == InputMode.EndScreen)
+                return null;
+            try
+            {
+                string data = RogueSave.Serialize(g);
+                _persisting = data != null;
+                return data;
+            }
+            catch (Exception) { return null; } // unsupported state → fresh game
+        }
+
+        public void RestoreState(string state)
+        {
+            if (_game != null || string.IsNullOrEmpty(state)) return;
+            AteDocument doc = null;
+            foreach (var d in AteApi.Documents)
+                if (d.IsValid && d.StateTag == Tag) { doc = d; break; }
+            if (doc == null) return; // the screen tab is gone — start fresh via Run
+
+            doc.SetTitle("Rogue");
+            doc.GameMode = true;
+            var term = new Term();
+            term.Attach(doc); // forces a full repaint on the next Flush
+            var g = new Game(term);
+            if (!RogueSave.Restore(state, g))
+            {
+                doc.GameMode = false; // could not rebuild — leave the tab as text
+                return;
+            }
+            g.OnQuitRequested = Stop;
+            g.Mode = InputMode.Play;              // pending prompts do not survive
+            Rnd.Seed(Environment.TickCount);      // fresh dice; documented divergence
+            _game = g;
+            g.Redraw();
         }
 
         void Stop()
         {
             var g = _game;
             _game = null;
-            if (g != null && g.Term.IsValid && g.Term.Doc.GameMode)
+            _persisting = false;
+            if (g != null && g.Term.IsValid)
             {
-                g.Term.Doc.GameMode = false;
-                g.Term.Doc.Close(discardChanges: true);
+                g.Term.Doc.StateTag = null; // a quit game never resurrects
+                if (g.Term.Doc.GameMode)
+                {
+                    g.Term.Doc.GameMode = false;
+                    g.Term.Doc.Close(discardChanges: true);
+                }
             }
         }
 

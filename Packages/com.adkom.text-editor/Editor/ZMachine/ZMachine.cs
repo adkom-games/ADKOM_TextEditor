@@ -71,6 +71,19 @@ namespace AteZMachine
 
         public void Start()
         {
+            InitHeader();
+            _pc = ReadWord(H_PC);
+            _frames.Clear();
+            // A dummy top frame so var 0 (stack) always has an eval stack.
+            _frames.Add(new Frame(0));
+            State = ZState.Running;
+            Run();
+        }
+
+        /// <summary>Header-derived setup shared by Start() and the snapshot
+        /// resume path (which must initialize WITHOUT running).</summary>
+        void InitHeader()
+        {
             if (Version != 3)
                 throw new NotSupportedException("This interpreter supports version 3 story files (.z3). This file is version " + Version + ".");
             _globals = ReadWord(H_GLOBALS);
@@ -83,12 +96,6 @@ namespace AteZMachine
             // Set interpreter capability flags: no status line unavailable,
             // fixed-pitch honored; clear "split available" niceties we don't do.
             WriteByte(H_FLAGS1, (byte)(ReadByte(H_FLAGS1) & ~0x10)); // status line IS available
-            _pc = ReadWord(H_PC);
-            _frames.Clear();
-            // A dummy top frame so var 0 (stack) always has an eval stack.
-            _frames.Add(new Frame(0));
-            State = ZState.Running;
-            Run();
         }
 
         // ---- Memory access (big-endian) ----
@@ -197,7 +204,9 @@ namespace AteZMachine
             }
         }
 
-        sealed class QuitSignal : Exception { public string Message; public QuitSignal(string m) { Message = m; } }
+        // Hides Exception.Message on purpose: the base property substitutes a
+        // default string for null, and Quit(null) must stay a silent quit.
+        sealed class QuitSignal : Exception { public new readonly string Message; public QuitSignal(string m) { Message = m; } }
 
         void Step()
         {

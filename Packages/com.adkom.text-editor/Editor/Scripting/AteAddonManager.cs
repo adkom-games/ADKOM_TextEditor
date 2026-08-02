@@ -8,14 +8,13 @@ using UnityEngine;
 
 namespace ADKOM.TextEditor.Scripting
 {
-    /// <summary>Compiles a single addon source file into an in-memory
+    /// <summary>Compiles an addon's source files into one in-memory
     /// assembly. Implemented in the Roslyn-gated semantics assembly and
     /// discovered via TypeCache (mirrors ISemanticProvider) so the core never
     /// hard-references Roslyn.</summary>
     public interface IAddonCompiler
     {
-        bool TryCompile(string path, out Assembly assembly, out string[] errors);
-        /// <summary>Folder addon: every file compiles into ONE assembly.</summary>
+        /// <summary>Every file of the addon folder compiles into ONE assembly.</summary>
         bool TryCompileMany(string[] paths, out Assembly assembly, out string[] errors);
     }
 
@@ -31,7 +30,7 @@ namespace ADKOM.TextEditor.Scripting
         {
             public string Name;        // display name (attribute or class name)
             public string Category;    // attribute category, "General" default
-            public string File;        // source file (full path)
+            public string File;        // addon folder (full path)
             public string ApiVersion;  // declared target version
             public Type Type;          // entry class (null when not loadable)
             public string Error;       // compile/compat/reflection failure
@@ -104,13 +103,14 @@ namespace ADKOM.TextEditor.Scripting
             _entries.Clear();
             EnsureFolder();
             if (!CompilerAvailable) return; // menu explains the requirement
-            // Top-level .cs files are single-file addons; each first-level
-            // subfolder (not starting with '.') is ONE folder addon whose
-            // .cs files (recursive) compile together (Multi-File Addons spec).
+            // Addons are FOLDER-based: each first-level subfolder (not
+            // starting with '.') is ONE addon whose .cs files (recursive)
+            // compile together — a folder makes it unambiguous which files
+            // belong to which addon. Top-level .cs files from the retired
+            // single-file era are migrated into folders of their own first.
             try
             {
-                foreach (var file in Directory.GetFiles(AddonsFolder, "*.cs", SearchOption.TopDirectoryOnly))
-                    LoadOne(new[] { file }, file);
+                MigrateSingleFileAddons();
                 foreach (var dir in Directory.GetDirectories(AddonsFolder))
                 {
                     if (Path.GetFileName(dir).StartsWith(".", StringComparison.Ordinal)) continue;
@@ -133,9 +133,43 @@ namespace ADKOM.TextEditor.Scripting
             OfferSampleReinstall();
         }
 
-        /// <summary>Loads one addon: a single top-level file, or a folder
-        /// whose files compile together. <paramref name="key"/> is the file
-        /// path (single) or folder path — the identity consent binds to.</summary>
+        /// <summary>Single-file addons are retired: any top-level .cs left in
+        /// the addons folder moves into a subfolder of its own name so it
+        /// keeps loading. The move changes the addon's identity hash (the
+        /// hash covers relative paths), so approval — and any signature —
+        /// must be renewed for the folder; old sidecar .atesig files are left
+        /// behind, since they could never verify against the new identity.</summary>
+        static void MigrateSingleFileAddons()
+        {
+            foreach (var file in Directory.GetFiles(AddonsFolder, "*.cs", SearchOption.TopDirectoryOnly))
+            {
+                string stem = Path.GetFileNameWithoutExtension(file);
+                string dir = Path.Combine(AddonsFolder, stem);
+                try
+                {
+                    if (Directory.Exists(dir))
+                    {
+                        AteConsole.Warn("[ADKOM Text Editor] Addon file not migrated (folder '" +
+                            stem + "' already exists — merge or remove by hand): " + file);
+                        continue;
+                    }
+                    Directory.CreateDirectory(dir);
+                    File.Move(file, Path.Combine(dir, Path.GetFileName(file)));
+                    AteConsole.Log(string.Format(
+                        L10n.Tr("Addon '{0}' moved into its own folder — addons are folder-based now. Approval (and any signature) must be renewed for the new folder identity."),
+                        stem));
+                }
+                catch (Exception ex)
+                {
+                    AteConsole.Warn("[ADKOM Text Editor] Could not migrate addon file " +
+                        file + ": " + ex.Message);
+                }
+            }
+        }
+
+        /// <summary>Loads one addon folder: all its .cs files compile
+        /// together. <paramref name="key"/> is the folder path — the
+        /// identity consent binds to.</summary>
         static void LoadOne(string[] files, string key)
         {
             var entry = new Entry
@@ -273,6 +307,7 @@ namespace ADKOM.TextEditor.Scripting
                 var inst = (IAteAddonResident)Activator.CreateInstance(e.Type);
                 _residents[e.Type] = inst;
                 inst.OnLoad();
+                MaybeQueueState(e);
             }
             catch (Exception ex)
             {
@@ -280,11 +315,33 @@ namespace ADKOM.TextEditor.Scripting
             }
         }
 
-        /// <summary>Tears down resident addons: OnUnload on every lifecycle
-        /// addon, then drop instances, running ticks, and input event
-        /// subscriptions so stale assemblies never keep acting.</summary>
+        /// <summary>Tears down resident addons: SaveState on every stateful
+        /// addon (API 1.2 — before OnUnload, mobile-style "this may be your
+        /// last callback"), OnUnload on every lifecycle addon, then drop
+        /// instances, running ticks, and input event subscriptions so stale
+        /// assemblies never keep acting.</summary>
         static void UnloadResidents()
         {
+            foreach (var kv in _residents)
+            {
+                if (!(kv.Value is IAteAddonStateful st)) continue;
+                string folder = FolderNameOf(kv.Key);
+                if (folder == null) continue;
+                try
+                {
+                    // A state that arrived but was never delivered (the ATE
+                    // window never opened this domain) outranks the addon's
+                    // current emptiness — put it back instead of wiping it.
+                    if (_pendingStates.TryGetValue(kv.Key, out string undelivered))
+                        WriteStateFile(folder, undelivered);
+                    else
+                        WriteStateFile(folder, st.SaveState());
+                }
+                catch (Exception ex)
+                {
+                    AteConsole.Warn("[ADKOM Text Editor] Addon SaveState failed: " + ex.Message);
+                }
+            }
             foreach (var inst in _residents.Values)
             {
                 if (!(inst is IAteAddonLifecycle lc)) continue;
@@ -297,6 +354,81 @@ namespace ADKOM.TextEditor.Scripting
             _residents.Clear();
             AteApi.StopAllTicks();
             AteApi.DropInputSubscribers();
+        }
+
+        // ---- Stateful-addon persistence (API 1.2) ----
+        // The HOST owns storage (addons never touch disk): one state file per
+        // addon folder name, written at teardown, read back at load, and
+        // delivered once the ATE window (with its restored session documents)
+        // exists.
+
+        static string StateFolder => Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            "ADKOM", "TextEditor", "AddonState");
+
+        static string StateFile(string folderName) =>
+            Path.Combine(StateFolder, folderName + ".state");
+
+        static readonly Dictionary<Type, string> _pendingStates = new Dictionary<Type, string>();
+
+        static string FolderNameOf(Type t)
+        {
+            foreach (var e in _entries)
+                if (e.Type == t) return Path.GetFileName(e.File);
+            return null;
+        }
+
+        static void WriteStateFile(string folderName, string state)
+        {
+            string f = StateFile(folderName);
+            if (string.IsNullOrEmpty(state))
+            {
+                if (File.Exists(f)) File.Delete(f);
+                return;
+            }
+            Directory.CreateDirectory(StateFolder);
+            File.WriteAllText(f, state);
+        }
+
+        /// <summary>Reads a stateful addon's stored state (if any) into the
+        /// pending set right after its OnLoad; delivery happens when the ATE
+        /// window is up.</summary>
+        static void MaybeQueueState(Entry e)
+        {
+            if (e.Type == null || !typeof(IAteAddonStateful).IsAssignableFrom(e.Type)) return;
+            try
+            {
+                string f = StateFile(Path.GetFileName(e.File));
+                if (!File.Exists(f)) return;
+                _pendingStates[e.Type] = File.ReadAllText(f);
+                File.Delete(f); // deliver-once; UnloadResidents re-persists undelivered state
+                EditorApplication.delayCall += DeliverPendingStates;
+            }
+            catch (Exception ex)
+            {
+                AteConsole.Warn("[ADKOM Text Editor] Addon state unreadable: " + ex.Message);
+            }
+        }
+
+        /// <summary>Hands stored state back to stateful residents — only once
+        /// an ATE window exists, so RestoreState can re-find its session
+        /// documents. Also invoked from the window's CreateGUI for the
+        /// window-opened-later case; idempotent.</summary>
+        internal static void DeliverPendingStates()
+        {
+            if (_pendingStates.Count == 0) return;
+            if (UnityEngine.Resources.FindObjectsOfTypeAll<TextEditorWindow>().Length == 0) return;
+            var pending = new List<KeyValuePair<Type, string>>(_pendingStates);
+            _pendingStates.Clear();
+            foreach (var kv in pending)
+            {
+                if (!_residents.TryGetValue(kv.Key, out var inst) || !(inst is IAteAddonStateful st)) continue;
+                try { st.RestoreState(kv.Value); }
+                catch (Exception ex)
+                {
+                    AteConsole.Warn("[ADKOM Text Editor] Addon RestoreState failed: " + ex.Message);
+                }
+            }
         }
 
         /// <summary>The ATE window's focus changed — forward to lifecycle addons.</summary>
@@ -532,25 +664,9 @@ namespace ADKOM.TextEditor.Scripting
                 return;
             }
             int copied = 0;
-            // Signature sidecars ship WITH the samples (AddonSigning): copying
-            // only .cs would land every shipped sample as "UNSIGNED".
-            foreach (var f in Directory.GetFiles(src, "*.cs"))
-            {
-                try
-                {
-                    File.Copy(f, Path.Combine(AddonsFolder, Path.GetFileName(f)), overwrite: true);
-                    foreach (var sc in Directory.GetFiles(src,
-                        Path.GetFileName(f) + ".*" + AddonSigning.SidecarExt, SearchOption.TopDirectoryOnly))
-                        File.Copy(sc, Path.Combine(AddonsFolder, Path.GetFileName(sc)), overwrite: true);
-                    copied++;
-                }
-                catch (Exception ex)
-                {
-                    AteConsole.Warn("[ADKOM Text Editor] Could not copy sample " +
-                        Path.GetFileName(f) + ": " + ex.Message);
-                }
-            }
-            // Folder addons ship as sample subfolders (Multi-File Addons spec).
+            // Every sample is a folder addon. Signature sidecars ship WITH
+            // the samples (AddonSigning): copying only .cs would land every
+            // shipped sample as "UNSIGNED".
             foreach (var dir in Directory.GetDirectories(src))
             {
                 try
@@ -590,13 +706,9 @@ namespace ADKOM.TextEditor.Scripting
                 Directory.CreateDirectory(AddonsFolder);
                 File.WriteAllText(Path.Combine(AddonsFolder, "README.md"),
 "# ATE Addons\n\n" +
-"Drop `.cs` addon files here — every ATE instance on this machine loads\n" +
-"them (no project changes; compiled in-memory by ATE's bundled Roslyn).\n" +
-"Semantic Features must be enabled in ATE's Settings.\n\n" +
-"An addon is one class with the [AteAddon] attribute implementing\n" +
-"IAteAddon (menu-invoked) or IAteAddonResident (also runs OnLoad at\n" +
-"startup — subscribe to AteApi events there). It appears under\n" +
-"ATE's Tools > Addons > {Category} > {Name}.\n\n" +
+"Each SUBFOLDER here is one addon: every `.cs` file inside it (recursive) compiles together into one in-memory assembly — the folder makes it unambiguous which files belong to which addon. Every ATE instance on this machine loads them (no project changes; compiled by ATE's bundled Roslyn). Semantic Features must be enabled in ATE's Settings. Folders starting with `.` are ignored.\n\n" +
+"Exactly one class in the folder carries the [AteAddon] attribute and implements IAteAddon (menu-invoked) or IAteAddonResident (also runs OnLoad at startup — subscribe to AteApi events there). The addon appears under ATE's Tools > Addons > {Category} > {Name}.\n\n" +
+"Example — save as `HelloAddon/HelloAddon.cs`:\n\n" +
 "```csharp\n" +
 "using ADKOM.TextEditor.Scripting;\n\n" +
 "[AteAddon(Name = \"Hello Addon\", Category = \"Samples\", ApiVersion = \"1.0\")]\n" +
@@ -613,9 +725,7 @@ namespace ADKOM.TextEditor.Scripting
 "    }\n" +
 "}\n" +
 "```\n\n" +
-"API compatibility follows semver: your ApiVersion's MAJOR must match\n" +
-"ATE's AteApi.ApiVersion (currently " + AteApi.ApiVersion + ") and its MINOR must not be\n" +
-"newer. Incompatible addons appear disabled in the menu with the reason.\n");
+"API compatibility follows semver: your ApiVersion's MAJOR must match ATE's AteApi.ApiVersion (currently " + AteApi.ApiVersion + ") and its MINOR must not be newer. Incompatible addons appear disabled in the menu with the reason.\n");
             }
             catch (Exception) { }
         }

@@ -1329,6 +1329,30 @@ msgstr "푸시"
 msgid "Branch History"
 msgstr "브랜치 히스토리"
 
+msgid "Working Tree"
+msgstr "작업 트리"
+
+msgid "HEAD — your working tree. Click to show the working-tree changes."
+msgstr "HEAD — 작업 트리입니다. 클릭하면 작업 트리 변경 목록을 표시합니다."
+
+msgid "Back to the working-tree changes."
+msgstr "작업 트리 변경 목록으로 돌아갑니다."
+
+msgid "Commit {0}"
+msgstr "커밋 {0}"
+
+msgid "Amend"
+msgstr "Amend"
+
+msgid "Rewrite this commit's message (message-only amend; staged files are not swept in)."
+msgstr "이 커밋의 메시지를 다시 작성합니다(메시지 전용 amend, 스테이징된 파일은 포함되지 않음)."
+
+msgid "Only the latest commit (HEAD) can be amended."
+msgstr "가장 최근 커밋(HEAD)만 수정(amend)할 수 있습니다."
+
+msgid "Message unchanged — nothing to amend."
+msgstr "메시지가 변경되지 않았습니다 — 수정할 내용이 없습니다."
+
 msgid "Toggle vertical / horizontal layout"
 msgstr "세로/가로 레이아웃 전환"
 
@@ -1740,11 +1764,158 @@ msgstr "속성"
 msgid "Methods"
 msgstr "메서드"
 
-msgid "Jump to a class, property, or method in the current tab."
-msgstr "현재 탭의 클래스·속성·메서드로 이동합니다."
+msgid "Jump to a class, property, method, or bookmark in the current tab."
+msgstr "현재 탭의 클래스·속성·메서드·북마크로 이동합니다."
 
-msgid "Open Manual"
-msgstr "매뉴얼 열기"
+msgid "ATE Manual"
+msgstr "ATE 매뉴얼"
 
-msgid "Manual.md not found."
-msgstr "Manual.md를 찾을 수 없습니다."
+msgid "{0} not found."
+msgstr "{0}을(를) 찾을 수 없습니다."
+
+msgid "Documentation"
+msgstr "문서"
+
+msgid "Scripting Reference"
+msgstr "스크립팅 참조"
+
+msgid "AteApi Design"
+msgstr "AteApi 설계"
+
+msgid "Game API Design"
+msgstr "게임 API 설계"
+
+msgid "Addon Signing"
+msgstr "애드온 서명"
+
+msgid "Games"
+msgstr "게임"
+
+msgid "How to Play"
+msgstr "플레이 방법"
+
+msgid "(no games installed)"
+msgstr "(설치된 게임 없음)"
+
+msgid "(unloaded)"
+msgstr "(언로드됨)"
+
+msgid "Z-Machine game '{0}' resumed after the reload."
+msgstr "Z-Machine 게임 '{0}'이(가) 리로드 후 재개되었습니다."
+
+msgid "This game's live state was lost to a domain reload (script compile, play mode, or an editor restart). The transcript remains as plain text; start a new game from the Games menu — a save made in-game can be restored there."
+msgstr "이 게임의 실행 상태는 도메인 리로드(스크립트 컴파일, 플레이 모드 또는 에디터 재시작)로 손실되었습니다. 기록은 일반 텍스트로 남아 있습니다. Games 메뉴에서 새 게임을 시작하세요 — 게임 내에서 만든 저장은 거기서 복원할 수 있습니다."
+
+msgid "Play Zork and the installed addon games."
+msgstr "Zork와 설치된 애드온 게임을 플레이합니다."
+
+msgid "Keyboard Shortcuts"
+msgstr "키보드 단축키"
+
+msgid "Localization"
+msgstr "현지화"
+
+msgid "Snippets"
+msgstr "스니펫"
+
+msgid "Troubleshooting"
+msgstr "문제 해결"
+
+msgid "Addon '{0}' moved into its own folder — addons are folder-based now. Approval (and any signature) must be renewed for the new folder identity."
+msgstr "애드온 '{0}'을(를) 전용 폴더로 이동했습니다 — 이제 애드온은 폴더 기반입니다. 새 폴더 식별 정보에 대해 승인(및 서명)을 다시 해야 합니다."
+
+msgid "Clear"
+msgstr "지우기"
+
+msgid "Hide this view (the View menu shows it again)."
+msgstr "이 보기를 숨깁니다(보기 메뉴에서 다시 표시할 수 있습니다)."
+
+msgid "Hide this view."
+msgstr "이 보기를 숨깁니다."
+
+msgid "Locked (read-only): clicks select text for copying — click to allow editing"
+msgstr "잠금(읽기 전용): 클릭하면 복사할 텍스트를 선택합니다 — 클릭하여 편집 허용"
+
+msgid "Unlocked: clicks open block editors — click to make this tab read-only"
+msgstr "잠금 해제: 클릭하면 블록 편집기가 열립니다 — 클릭하여 이 탭을 읽기 전용으로 전환"
+
+msgid "Open Markdown Locked"
+msgstr "Markdown을 잠금 상태로 열기"
+
+msgid "Rendered Markdown opens read-only: clicks select text for copying instead of opening block editors. The lock button in the toolbar still switches per tab."
+msgstr "렌더링된 Markdown을 읽기 전용으로 엽니다. 클릭 시 블록 편집기를 여는 대신 복사할 텍스트를 선택합니다. 도구 모음의 잠금 버튼으로 탭마다 전환할 수 있습니다."
+
+msgid "Copy Link URL"
+msgstr "링크 URL 복사"
+
+msgid "Copy Block as Text"
+msgstr "블록을 텍스트로 복사"
+
+msgid "Copy Selection as Text"
+msgstr "선택 영역을 텍스트로 복사"
+
+msgid "Copied the selected blocks as plain text."
+msgstr "선택한 블록을 일반 텍스트로 복사했습니다."
+
+msgid "Copy All as Text"
+msgstr "전체를 텍스트로 복사"
+
+msgid "Unlock (Allow Editing)"
+msgstr "잠금 해제(편집 허용)"
+
+msgid "Copied the rendered document as plain text."
+msgstr "렌더링된 문서를 일반 텍스트로 복사했습니다."
+
+msgid "Keep the current version. The update icon stays by the settings gear until you update."
+msgstr "현재 버전을 유지합니다. 업데이트할 때까지 설정 기어 옆에 업데이트 아이콘이 계속 표시됩니다."
+
+msgid "Install the new version now via the Unity Package Manager."
+msgstr "Unity Package Manager를 통해 지금 새 버전을 설치합니다."
+
+msgid "This copy is embedded for development — update manually via git."
+msgstr "이 복사본은 개발용으로 임베드되어 있습니다 — git으로 수동 업데이트하세요."
+
+msgid "Hidden Characters"
+msgstr "숨겨진 문자"
+
+msgid "Region"
+msgstr "영역"
+
+msgid "Suppress in This Project"
+msgstr "이 프로젝트에서 억제"
+
+msgid "Adds -nowarn:1633 to Assets/csc.rsp, Unity's project-wide compiler response file, so #pragma bookmark lines compile without the warning. Assemblies compiled from their own asmdef may need the flag in their own response file."
+msgstr "Assets/csc.rsp(Unity의 프로젝트 전역 컴파일러 응답 파일)에 -nowarn:1633을 추가하여 #pragma bookmark 줄이 경고 없이 컴파일되도록 합니다. 자체 asmdef로 컴파일되는 어셈블리는 자체 응답 파일에 이 플래그가 필요할 수 있습니다."
+
+msgid "#pragma bookmark lines in C# scripts trigger compiler warning CS1633 (unknown pragma) unless the project suppresses it."
+msgstr "C# 스크립트의 #pragma bookmark 줄은 프로젝트에서 억제하지 않는 한 컴파일러 경고 CS1633(알 수 없는 pragma)을 발생시킵니다."
+
+msgid "Added -nowarn:1633 to Assets/csc.rsp — scripts will recompile."
+msgstr "Assets/csc.rsp에 -nowarn:1633을 추가했습니다 — 스크립트가 다시 컴파일됩니다."
+
+msgid "Unknown-pragma warning (CS1633): suppressed in this project."
+msgstr "알 수 없는 pragma 경고(CS1633): 이 프로젝트에서 억제됨."
+
+msgid "Unknown-pragma warning (CS1633): not suppressed — #pragma bookmark lines will warn in C# scripts."
+msgstr "알 수 없는 pragma 경고(CS1633): 억제되지 않음 — #pragma bookmark 줄이 C# 스크립트에서 경고를 발생시킵니다."
+
+msgid "Hidden characters shown."
+msgstr "숨겨진 문자를 표시합니다."
+
+msgid "Hidden characters hidden."
+msgstr "숨겨진 문자를 숨겼습니다."
+
+msgid "Copy Line"
+msgstr "줄 복사"
+
+msgid "Copied the console line."
+msgstr "콘솔 줄을 복사했습니다."
+
+msgid "Show only console lines containing this text."
+msgstr "이 텍스트가 포함된 콘솔 줄만 표시합니다."
+
+msgid "Every ATE message, timestamped. Click a row; Ctrl+C or right-click → Copy Line copies it."
+msgstr "모든 ATE 메시지(타임스탬프 포함). 줄을 클릭한 뒤 Ctrl+C 또는 마우스 오른쪽 버튼 → 줄 복사로 복사합니다."
+
+msgid "{0} of {1} shown"
+msgstr "{1}개 중 {0}개 표시"

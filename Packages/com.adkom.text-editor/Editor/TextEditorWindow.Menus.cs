@@ -95,7 +95,7 @@ namespace ADKOM.TextEditor
             Item(WithSc("Cut", Dsp("cut")), edit, _code.Cut);
             Item(WithSc("Copy", Dsp("copy")), edit, _code.Copy);
             Item(WithSc("Paste", Dsp("paste")), paste, _code.Paste);
-            Item(WithSc("Select All", Dsp("select-all")), edit, _code.SelectAll);
+            Item(WithSc("Select All", Dsp("select-all")), edit, SelectAllCommand);
             m.AddSeparator("");
             Item(WithSc("Find in Files...", Dsp("find-in-files")), true, () => FindReplaceWindow.Open(this, FindReplaceWindow.FrTab.InFiles));
             m.AddSeparator("");
@@ -138,6 +138,10 @@ namespace ADKOM.TextEditor
             Item(codeg + WithSc("Toggle Block Comment", Dsp("block-comment")), edit, ToggleBlockComment);
             Item(codeg + WithSc("Indent", Dsp("indent")), edit, InsertTab);
             Item(codeg + WithSc("Unindent", Dsp("unindent")), edit, UnindentSelection);
+            string regg = codeg + L10n.Tr("Region") + "/";
+            Item(regg + WithSc("Fold Region", Dsp("fold-region")), edit, () => _code.FoldAtCaret());
+            Item(regg + WithSc("Unfold Region", Dsp("unfold-region")), edit, () => _code.UnfoldAtCaret());
+            Item(regg + WithSc("Unfold All", null), edit, () => _code.UnfoldAll());
             Item(codeg + WithSc("Format Document", Dsp("format-document")), edit, FormatDocument);
             Item(codeg + WithSc("Autocomplete", "Ctrl+Space"), edit, () => _code.ShowCompletion(true));
             Item(codeg + WithSc("Rename Symbol...", Dsp("rename-symbol")), edit, RenameSymbolAtCaret);
@@ -166,46 +170,74 @@ namespace ADKOM.TextEditor
             Item(bmg + WithSc("Clear Bookmarks", null), edit, ClearBookmarks);
         }
 
+        /// <summary>Select All: the rendered locked Markdown view selects the
+        /// whole DOCUMENT (view-level block selection, since native label
+        /// selection cannot span blocks); otherwise the code view.</summary>
+        void SelectAllCommand()
+        {
+            if (ActiveIsMarkdown && Active.MdRendered && Active.MdLocked && _mdView != null)
+                _mdView.SelectAllDoc();
+            else
+                _code.SelectAll();
+        }
+
+        /// <summary>View → Hidden Characters: renders non-printing
+        /// characters (spaces, tabs, NBSP, zero-width, line ends) as faint
+        /// glyphs. Per-window view state, like line numbers and word wrap.</summary>
+        void ToggleShowHiddenChars()
+        {
+            _showHiddenChars = !_showHiddenChars;
+            if (_code != null) _code.showHiddenChars = _showHiddenChars;
+            PostStatus(_showHiddenChars
+                ? L10n.Tr("Hidden characters shown.")
+                : L10n.Tr("Hidden characters hidden."));
+        }
+
         void FillViewMenu(GenericMenu m)
         {
-            // Console-area tabs: each item independently toggles ITS tab's
-            // visibility (checkmark = the tab is offered in the strip).
-            m.AddItem(new GUIContent(L10n.Tr("Console")), _consoleTabVisible, () => ToggleConsoleAreaTab(0));
+            // ---- Top group: every view toggle, sorted by localized label.
+            // Console-area tabs each toggle THEIR tab's visibility (checkmark
+            // = the tab is offered in the strip); the rest are view state, so
+            // all stay enabled even while the tab itself is read-only. ----
+            var toggles = new List<KeyValuePair<string, KeyValuePair<bool, System.Action>>>();
+            void Toggle(string label, bool on, System.Action act) =>
+                toggles.Add(new KeyValuePair<string, KeyValuePair<bool, System.Action>>(
+                    label, new KeyValuePair<bool, System.Action>(on, act)));
+            Toggle(L10n.Tr("Console"), _consoleTabVisible, () => ToggleConsoleAreaTab(0));
             // '/' would nest a submenu — display with the lookalike slash.
-            m.AddItem(new GUIContent(L10n.Tr("Find / Replace").Replace('/', '∕')), FindReplaceWindow.IsOpen,
+            Toggle(L10n.Tr("Find / Replace").Replace('/', '∕'), FindReplaceWindow.IsOpen,
                 () => FindReplaceWindow.ToggleVisible(this));
-            m.AddItem(new GUIContent(L10n.Tr("Search Results")), _searchTabVisible, () => ToggleConsoleAreaTab(1));
-            m.AddItem(new GUIContent(L10n.Tr("Bookmarks")), _bmTabVisible, () => ToggleConsoleAreaTab(4));
-            m.AddItem(new GUIContent(L10n.Tr("Line Numbers")), _showLineNumbers, () =>
+            Toggle(L10n.Tr("Search Results"), _searchTabVisible, () => ToggleConsoleAreaTab(1));
+            Toggle(L10n.Tr("Bookmarks"), _bmTabVisible, () => ToggleConsoleAreaTab(4));
+            Toggle(L10n.Tr("Line Numbers"), _showLineNumbers, () =>
             {
                 _showLineNumbers = !_showLineNumbers;
                 ApplyViewChrome();
                 SyncSettingsControls();
             });
-            m.AddItem(new GUIContent(L10n.Tr("Indentation Guides")), _indentGuides, () =>
+            Toggle(L10n.Tr("Indentation Guides"), _indentGuides, () =>
             {
                 _indentGuides = !_indentGuides;
                 ApplyViewChrome();
             });
-                        m.AddItem(new GUIContent(L10n.Tr("Minimap")), _minimapVisible, () =>
+            Toggle(L10n.Tr("Minimap"), _minimapVisible, () =>
             {
                 _minimapVisible = !_minimapVisible;
                 ApplyViewChrome();
             });
-            m.AddItem(new GUIContent(L10n.Tr("Word Wrap")), _wordWrap, () =>
+            Toggle(L10n.Tr("Word Wrap"), _wordWrap, () =>
             {
                 _wordWrap = !_wordWrap;
                 _code.wordWrap = _wordWrap;
                 SyncSettingsControls();
             });
-            m.AddSeparator("");
-            bool canFold = CanEditDoc;
-            if (canFold) m.AddItem(new GUIContent(WithSc("Fold Region", Dsp("fold-region"))), false, () => _code.FoldAtCaret());
-            else m.AddDisabledItem(new GUIContent(WithSc("Fold Region", Dsp("fold-region"))));
-            if (canFold) m.AddItem(new GUIContent(WithSc("Unfold Region", Dsp("unfold-region"))), false, () => _code.UnfoldAtCaret());
-            else m.AddDisabledItem(new GUIContent(WithSc("Unfold Region", Dsp("unfold-region"))));
-            if (canFold) m.AddItem(new GUIContent(L10n.Tr("Unfold All")), false, () => _code.UnfoldAll());
-            else m.AddDisabledItem(new GUIContent(L10n.Tr("Unfold All")));
+            Toggle(L10n.Tr("Hidden Characters"), _showHiddenChars, ToggleShowHiddenChars);
+            toggles.Sort((a, b) => string.Compare(a.Key, b.Key, System.StringComparison.CurrentCultureIgnoreCase));
+            foreach (var t in toggles)
+            {
+                var tt = t;
+                m.AddItem(new GUIContent(tt.Key), tt.Value.Key, () => tt.Value.Value());
+            }
             m.AddSeparator("");
             foreach (var theme in HighlightTheme.All)
             {
@@ -233,8 +265,6 @@ namespace ADKOM.TextEditor
                 m.AddItem(new GUIContent(L10n.Tr("Ask Unity AI About This File...")), false, AskUnityAiDocument);
                 m.AddSeparator("");
             }
-            AteZMachine.ZMachineGame.AddMenuItems(m, L10n.Tr("Z-Machine (Zork)") + "/", this);
-            m.AddSeparator("");
             string gitRoot = L10n.Tr("Git") + "/";
             m.AddItem(new GUIContent(gitRoot + L10n.Tr("Git Panel...")), false, () =>
             {
@@ -379,10 +409,49 @@ namespace ADKOM.TextEditor
             }
         }
 
+        /// <summary>Games menu: the player guide, the Z-Machine, then every
+        /// installed addon game (Category "Games") sorted by name.</summary>
+        void FillGamesMenu(GenericMenu m)
+        {
+            // A second link to the player guide on purpose — the Games menu
+            // is where a player looks first; Help > Documentation keeps its
+            // copy as part of the full reference shelf.
+            m.AddItem(new GUIContent(L10n.Tr("How to Play")), false,
+                () => OpenPackageDoc("Documentation~/Games.md"));
+            m.AddSeparator("");
+            AteZMachine.ZMachineGame.AddMenuItems(m, L10n.Tr("Z-Machine (Zork)") + "/", this);
+            m.AddSeparator("");
+            if (!Scripting.AteAddonManager.CompilerAvailable)
+            {
+                m.AddDisabledItem(new GUIContent(L10n.Tr("Addons need Semantic Features (enable in Settings)")));
+                return;
+            }
+            var games = new List<Scripting.AteAddonManager.Entry>();
+            foreach (var e in Scripting.AteAddonManager.Entries)
+                if (string.Equals(e.Category, "Games", System.StringComparison.OrdinalIgnoreCase))
+                    games.Add(e);
+            if (games.Count == 0)
+            {
+                m.AddDisabledItem(new GUIContent(L10n.Tr("(no games installed)")));
+                return;
+            }
+            games.Sort((a, b) => string.Compare(a.Name, b.Name, System.StringComparison.CurrentCultureIgnoreCase));
+            foreach (var g in games)
+            {
+                var entry = g;
+                string item = g.Name.Replace('/', '∕');
+                if (g.Compatible)
+                {
+                    if (!g.Approved) item += " ⚠"; // consent pending (AddonSecurity)
+                    m.AddItem(new GUIContent(item), false, () => Scripting.AteAddonManager.Run(entry));
+                }
+                else
+                    m.AddDisabledItem(new GUIContent(item + " — " + FirstLine(g.Error)));
+            }
+        }
+
         void FillHelpMenu(GenericMenu m)
         {
-            m.AddItem(new GUIContent(L10n.Tr("Open Manual")), false, OpenManual);
-            m.AddSeparator("");
             m.AddItem(new GUIContent(L10n.Tr("About ADKOM Text Editor...")), false, () =>
             {
                 var info = UnityEditor.PackageManager.PackageInfo.FindForAssembly(GetType().Assembly);
@@ -399,24 +468,58 @@ namespace ADKOM.TextEditor
                 () => Application.OpenURL("https://github.com/adkom-games/ADKOM_TextEditor/blob/main/Packages/com.adkom.text-editor/RELEASE-NOTES.md"));
             m.AddItem(new GUIContent("Report an Issue"), false,
                 () => Application.OpenURL("https://github.com/adkom-games/ADKOM_TextEditor/issues"));
+            m.AddSeparator("");
+            // Help > Documentation: the user-level Games guide pinned on
+            // top, then every reference doc sorted by its localized label.
+            string docg = L10n.Tr("Documentation") + "/";
+            m.AddItem(new GUIContent(docg + L10n.Tr("Games").Replace('/', '∕')), false,
+                () => OpenPackageDoc("Documentation~/Games.md"));
+            m.AddSeparator(docg);
+            var docs = new List<KeyValuePair<string, string>>
+            {
+                new KeyValuePair<string, string>(L10n.Tr("ATE Manual"), "Manual.md"),
+                new KeyValuePair<string, string>(L10n.Tr("Scripting Reference"), "Documentation~/Scripting.md"),
+                new KeyValuePair<string, string>(L10n.Tr("AteApi Design"), "Documentation~/ATEAPI Design.md"),
+                new KeyValuePair<string, string>(L10n.Tr("Game API Design"), "Documentation~/Game API Design.md"),
+                new KeyValuePair<string, string>(L10n.Tr("Addon Signing"), "Documentation~/Addon Signing.md"),
+                new KeyValuePair<string, string>(L10n.Tr("Keyboard Shortcuts"), "Documentation~/Keyboard Shortcuts.md"),
+                new KeyValuePair<string, string>(L10n.Tr("Localization"), "Documentation~/Localization.md"),
+                new KeyValuePair<string, string>(L10n.Tr("Snippets"), "Documentation~/Snippets.md"),
+                new KeyValuePair<string, string>(L10n.Tr("Troubleshooting"), "Documentation~/Troubleshooting.md"),
+            };
+            docs.Sort((a, b) => string.Compare(a.Key, b.Key, System.StringComparison.CurrentCultureIgnoreCase));
+            foreach (var d in docs)
+            {
+                var doc = d;
+                m.AddItem(new GUIContent(docg + doc.Key.Replace('/', '∕')), false,
+                    () => OpenPackageDoc(doc.Value));
+            }
         }
 
-        /// <summary>Help > Open Manual: opens the package's Manual.md in a
-        /// regular tab (rendered per the Markdown default-view setting).</summary>
-        void OpenManual()
+        /// <summary>Help > Documentation: opens a package-relative reference
+        /// doc in a regular tab (rendered per the Markdown default-view
+        /// setting).</summary>
+        void OpenPackageDoc(string relPath)
         {
             var pkg = UnityEditor.PackageManager.PackageInfo.FindForAssembly(GetType().Assembly);
-            string path = pkg != null ? System.IO.Path.Combine(pkg.resolvedPath, "Manual.md") : null;
+            string path = pkg != null ? System.IO.Path.Combine(pkg.resolvedPath, relPath) : null;
             if (path != null && System.IO.File.Exists(path))
             {
                 PushNavLocation();
                 OpenPath(System.IO.Path.GetFullPath(path));
             }
-            else PostStatus(L10n.Tr("Manual.md not found."));
+            else PostStatus(string.Format(L10n.Tr("{0} not found."),
+                System.IO.Path.GetFileName(relPath)));
         }
 
+        // GenericMenu treats '/' anywhere in an item name as a submenu
+        // separator — shortcut hints like "Ctrl+/" made Toggle Comment an
+        // EMPTY submenu. Escape to the U+2215 lookalike here so every menu
+        // label and hint is safe; submenu prefixes are appended by callers
+        // AFTER this, so real hierarchy still works.
         static string WithSc(string label, string sc) =>
-            string.IsNullOrEmpty(sc) ? L10n.Tr(label) : L10n.Tr(label) + "\t" + sc;
+            (string.IsNullOrEmpty(sc) ? L10n.Tr(label) : L10n.Tr(label) + "\t" + sc)
+            .Replace('/', '∕');
     }
 }
 #endif

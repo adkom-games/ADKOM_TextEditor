@@ -170,6 +170,9 @@ namespace ADKOM.TextEditor
             public bool dirty;
             public string content;   // only stored when dirty
             public bool mdRendered;
+            // Inverted (unlocked, not locked) so sessions saved before the
+            // lock existed deserialize to false = locked, today's default.
+            public bool mdUnlocked;
         }
 
         [System.Serializable]
@@ -366,6 +369,17 @@ namespace ADKOM.TextEditor
         {
             get => EditorPrefs.GetBool(MdOpenRenderedKey, false);
             set => EditorPrefs.SetBool(MdOpenRenderedKey, value);
+        }
+
+        const string MdLockByDefaultKey = "ADKOM.TextEditor.MdLockByDefault";
+
+        /// <summary>Rendered Markdown opens locked (read-only, default on):
+        /// clicks select text for copying instead of opening block editors.
+        /// Machine-wide; the toolbar lock button still switches per tab.</summary>
+        public static bool MdLockByDefault
+        {
+            get => EditorPrefs.GetBool(MdLockByDefaultKey, true);
+            set => EditorPrefs.SetBool(MdLockByDefaultKey, value);
         }
 
         const string AutoUpdateKey = "ADKOM.TextEditor.AutoUpdate";

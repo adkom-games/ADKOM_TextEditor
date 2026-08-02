@@ -376,7 +376,14 @@ namespace ADKOM.TextEditor
                 if (keys == null) continue;
                 foreach (var k in keys)
                     if (k.Code != KeyCode.None && k.Matches(e, ctrl))
+                    {
+                        // A shortcut doesn't move focus, so an open Markdown
+                        // block editor must commit first — otherwise Ctrl+S
+                        // would save the PRE-edit content (a menu click gets
+                        // the commit for free via the editor's FocusOut).
+                        _mdView?.CommitActiveEdit();
                         return c.Run(e.shiftKey);
+                    }
             }
             return false;
         }

@@ -43,7 +43,8 @@ namespace ADKOM.TextEditor
                     path = d.HasFile ? Path.GetFullPath(d.FilePath) : string.Empty,
                     dirty = d.IsDirty,
                     content = d.IsDirty ? d.Content : null,
-                    mdRendered = d.MdRendered
+                    mdRendered = d.MdRendered,
+                    mdUnlocked = !d.MdLocked
                 });
             }
             EditorConfig.SaveSession(tabs, activeIndex);
@@ -85,6 +86,7 @@ namespace ADKOM.TextEditor
                 }
                 else if (!hasFile) continue;
                 doc.MdRendered = t.mdRendered;
+                doc.MdLocked = !t.mdUnlocked;
                 _docs.Add(doc);
             }
             if (HasDocs) _active = Mathf.Clamp(activeIndex, 0, _docs.Count - 1);
