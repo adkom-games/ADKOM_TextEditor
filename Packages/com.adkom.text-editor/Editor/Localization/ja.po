@@ -2255,3 +2255,6 @@ msgstr "変更された左側をファイルに保存します。"
 
 msgid "Save the modified right side to its file."
 msgstr "変更された右側をファイルに保存します。"
+
+msgid "Copied the selection as plain text."
+msgstr "選択範囲をプレーンテキストとしてコピーしました。"

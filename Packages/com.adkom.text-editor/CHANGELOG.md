@@ -4,6 +4,10 @@ All notable changes to this package are documented here. Format follows [Keep a 
 
 ## [Unreleased]
 
+### Fixed
+- Copilot's routine request-cancellation responses ("Request was superseded by a new request", codes -32800/-32801/-32802 — one per fast keystroke) were dumped into the console as multi-line JSON, leaving garbage-looking fragments in the row list. They are silenced; real completion errors log as a single clean line with the error code.
+- Selections in locked rendered Markdown died the moment a menu was clicked (focus loss wipes the in-label selection), so menu commands could never act on them. The selection is now snapshotted as focus leaves and menu copy commands use it — Edit-menu and context-menu Copy both copy exactly what was highlighted.
+
 ## [0.14.1] - 2026-08-02
 
 ### Fixed

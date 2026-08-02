@@ -2255,3 +2255,6 @@ msgstr "수정된 왼쪽을 파일에 저장합니다."
 
 msgid "Save the modified right side to its file."
 msgstr "수정된 오른쪽을 파일에 저장합니다."
+
+msgid "Copied the selection as plain text."
+msgstr "선택 영역을 일반 텍스트로 복사했습니다."

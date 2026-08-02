@@ -365,7 +365,21 @@ namespace ADKOM.TextEditor
                 { ["tabSize"] = EditorConfig.TabSize, ["insertSpaces"] = true }
             }, (res, err) =>
             {
-                if (err != null) AteConsole.Warn("[Copilot] completion error: " + err.ToString());
+                if (err != null)
+                {
+                    // The cancellation family is ROUTINE while typing — each
+                    // keystroke's request supersedes the last, and the server
+                    // answers the old one with an error: -32800 request
+                    // cancelled, -32801 content modified, -32802 server
+                    // cancelled ("Request was superseded by a new request").
+                    // Only real failures reach the console, as ONE line (the
+                    // raw JSON dump was multi-line garbage in the row list).
+                    long code = 0;
+                    try { code = (long)(err["code"] ?? 0); } catch (Exception) { }
+                    if (code != -32800 && code != -32801 && code != -32802)
+                        AteConsole.Warn("[Copilot] completion error " + code + ": "
+                            + (err["message"]?.ToString() ?? err.ToString().Replace("\n", " ").Replace("\r", "")));
+                }
                 var result = new List<Suggestion>();
                 try
                 {

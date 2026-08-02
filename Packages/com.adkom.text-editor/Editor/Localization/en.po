@@ -2257,3 +2257,6 @@ msgstr "Save the modified left side to its file."
 
 msgid "Save the modified right side to its file."
 msgstr "Save the modified right side to its file."
+
+msgid "Copied the selection as plain text."
+msgstr "Copied the selection as plain text."

@@ -2255,3 +2255,6 @@ msgstr "將修改後的左側儲存到其檔案。"
 
 msgid "Save the modified right side to its file."
 msgstr "將修改後的右側儲存到其檔案。"
+
+msgid "Copied the selection as plain text."
+msgstr "已將所選內容複製為純文字。"

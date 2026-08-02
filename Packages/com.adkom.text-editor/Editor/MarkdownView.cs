@@ -146,8 +146,22 @@ namespace ADKOM.TextEditor
         bool _selAll, _selDragging;
         static readonly Color SelTint = new Color(0.25f, 0.45f, 0.85f, 0.30f);
 
+        // STICKY native selection: clicking a menu moves focus off the label
+        // and the engine wipes its in-label selection before the menu command
+        // runs — making "copy the selection" from a menu impossible. The
+        // FocusOut handler fires while the range is still readable (verified),
+        // so it is snapshotted here (display-space indices) and commands fall
+        // back to it when no live/doc selection exists.
+        Label _stickyLabel;
+        int _stickyStart, _stickyEnd;
+
         internal bool HasDocSelection =>
             _selAll || (_selAnchor >= 0 && _selFocus >= 0 && _selAnchor != _selFocus);
+
+        /// <summary>Anything a copy-the-selection command can act on: the
+        /// multi-block document selection, or the sticky snapshot of the last
+        /// in-label native selection (surviving the menu-click blur).</summary>
+        internal bool HasCopyableSelection => HasDocSelection || _stickyLabel != null;
 
         void HookDocSelection()
         {
@@ -155,6 +169,7 @@ namespace ADKOM.TextEditor
             {
                 if (!Locked || e.button != 0) return;
                 ClearDocSelection();
+                _stickyLabel = null; // a new click in the view starts over
                 _selAnchor = _selFocus = LabelIndexAt(e.position);
                 _selDragging = _selAnchor >= 0;
                 // No StopPropagation: the label under the pointer still does
@@ -213,6 +228,53 @@ namespace ADKOM.TextEditor
 
         void OnLabelPointerUp(PointerUpEvent e) => _selDragging = false;
 
+        /// <summary>Snapshot (or invalidate) the native in-label selection
+        /// the moment the label loses focus — the engine resets the range
+        /// right after this event. A focus-out WITHOUT a range clears the
+        /// snapshot: the user clicked away, deselecting.</summary>
+        void OnLabelFocusOut(FocusOutEvent e)
+        {
+            if (!(e.currentTarget is Label l)) return;
+            // Focus moving because of a click INSIDE the view (the pointer-
+            // down handler set _selDragging) is a new selection starting —
+            // never snapshot the old label's about-to-die range for that.
+            if (_selDragging) { _stickyLabel = null; return; }
+            int a = Mathf.Min(l.selection.cursorIndex, l.selection.selectIndex);
+            int b = Mathf.Max(l.selection.cursorIndex, l.selection.selectIndex);
+            if (b > a) { _stickyLabel = l; _stickyStart = a; _stickyEnd = b; }
+            else if (_stickyLabel == l) _stickyLabel = null;
+        }
+
+        /// <summary>The display string of a rich-text label — tags stripped,
+        /// noparse bodies kept literal. Selection indices live in THIS space
+        /// (verified: SelectAll's extent equals this string's length).</summary>
+        static string ParsedText(string raw)
+        {
+            var sb = new StringBuilder(raw.Length);
+            bool np = false;
+            for (int i = 0; i < raw.Length; i++)
+            {
+                if (!np && i + 9 <= raw.Length && string.CompareOrdinal(raw, i, "<noparse>", 0, 9) == 0) { np = true; i += 8; continue; }
+                if (np && i + 10 <= raw.Length && string.CompareOrdinal(raw, i, "</noparse>", 0, 10) == 0) { np = false; i += 9; continue; }
+                if (!np && raw[i] == '<')
+                {
+                    int close = raw.IndexOf('>', i);
+                    if (close > i) { i = close; continue; }
+                }
+                sb.Append(raw[i]);
+            }
+            return sb.ToString();
+        }
+
+        string StickyText()
+        {
+            if (_stickyLabel == null) return string.Empty;
+            string parsed = ParsedText(_stickyLabel.text);
+            int a = Mathf.Clamp(_stickyStart, 0, parsed.Length);
+            int b = Mathf.Clamp(_stickyEnd, 0, parsed.Length);
+            return b > a ? parsed.Substring(a, b - a) : string.Empty;
+        }
+
         /// <summary>Ctrl+A: the whole document is the selection.</summary>
         internal void SelectAllDoc()
         {
@@ -236,6 +298,7 @@ namespace ADKOM.TextEditor
         void ClearDocSelection()
         {
             foreach (var l in _selLabels) l.style.backgroundColor = StyleKeyword.Null;
+            _stickyLabel = null;
             _selAnchor = _selFocus = -1;
             _selAll = false;
         }
@@ -261,6 +324,9 @@ namespace ADKOM.TextEditor
         /// them included), joined like Copy All.</summary>
         internal string SelectedPlainText()
         {
+            // No multi-block selection: fall back to the sticky snapshot of
+            // the last in-label selection (kept across the menu-click blur).
+            if (!HasDocSelection && _stickyLabel != null) return StickyText();
             int a = Mathf.Min(_selAnchor, _selFocus), b = Mathf.Max(_selAnchor, _selFocus);
             if (a < 0 || _selLabels.Count == 0) return string.Empty;
             var ra = BlockRangeOf(_selLabels[a]);
@@ -294,6 +360,7 @@ namespace ADKOM.TextEditor
             _selLabels.Clear();
             _selAnchor = _selFocus = -1;
             _selAll = false;
+            _stickyLabel = null; // its label is discarded with the rebuild
             _segments.Clear();
             if (Locked)
             {
@@ -373,6 +440,7 @@ namespace ADKOM.TextEditor
                 _selLabels.Add(l);
                 l.RegisterCallback<PointerMoveEvent>(OnLabelPointerMove);
                 l.RegisterCallback<PointerUpEvent>(OnLabelPointerUp);
+                l.RegisterCallback<FocusOutEvent>(OnLabelFocusOut);
             });
         }
 

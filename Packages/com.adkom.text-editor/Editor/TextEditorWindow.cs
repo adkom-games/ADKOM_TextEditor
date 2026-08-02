@@ -2061,10 +2061,10 @@ namespace ADKOM.TextEditor
                     case KeyCode.C:
                         if (lockedMd && _mdView != null)
                         {
-                            if (_mdView.HasDocSelection)
+                            if (_mdView.HasCopyableSelection)
                             {
                                 EditorGUIUtility.systemCopyBuffer = _mdView.SelectedPlainText();
-                                PostStatus(L10n.Tr("Copied the selected blocks as plain text."));
+                                PostStatus(L10n.Tr("Copied the selection as plain text."));
                             }
                             else
                             {
