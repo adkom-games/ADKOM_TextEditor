@@ -2,11 +2,12 @@
 
 **☕ Enjoying ATE? Support development on Ko-fi:** [https://ko-fi.com/adkomgames](https://ko-fi.com/adkomgames)
 
-## Unreleased
+## 0.14.0 — 2026-08-02
 
-Read-only Markdown, visible invisibles, a sharper console, a games menu, a documentation menu, and an update icon that stays put.
+A full diff & merge suite, read-only Markdown, visible invisibles, games and windows that survive compiles, a games menu, and a documentation shelf.
 
 ### Added
+- **Diff / Merge** — a first-class comparison tool (**Tools → Diff / Merge…**): side-by-side diffs of **files, folders, or open tabs** in framed, splitter-resizable columns with exact changed-span highlighting and ▲/▼ change navigation. The center gutter holds **merge buttons** — copy any change (or everything) left or right, then **Save Left / Save Right** — so a diff doubles as a merge editor, including selective revert on git diffs. **Three-way merge** takes left/base/right, auto-merges one-sided changes, and gives every conflict Take Left/Base/Right/Both buttons with a live, editable, saveable result. **Double-click any file in the Git panel** to diff it against its previous version. And one Settings click makes ATE **Unity's Revision Control Diff/Merge tool** (Preferences → External Tools) — Unity's version-control diffs and merges then open right in ATE. Every diff window — merge-in-progress included — survives domain reloads.
 - **Documentation menu** — **Help → Documentation** now holds the whole reference shelf as tabs: the **Games** player guide pinned on top, then (sorted) **Addon Signing**, the **ATE Manual**, **AteApi Design** (the complete scripting API with examples), **Game API Design** (writing games, complete skeleton included), **Keyboard Shortcuts**, **Localization**, the **Scripting Reference**, **Snippets**, and **Troubleshooting** — six of them brand new.
 - **Section → Bookmarks** — the Section menu now also lists the current document's bookmarks (sorted by line, with a text preview); pick one to jump. Rebuilt on every open, so it is always current.
 - **`#pragma bookmark <label>`** — declare a bookmark in the source itself: the line shows up in Section → Bookmarks under its label, merged with your toggled bookmarks.
@@ -27,7 +28,7 @@ Read-only Markdown, visible invisibles, a sharper console, a games menu, a docum
 ### Fixed
 - **Rendered Markdown selects like a real document** — the locked rendered view now lays out as one continuous document: drag a selection from mid-heading through paragraphs, lists, quotes, and code, character-precise, and Ctrl+C copies clean plain text; Ctrl+A selects everything. Only tables and images (real layout, not text) interrupt the flow — selections across them snap to whole blocks.
 - **Colored branch graph** — the Git panel's branch history now colors every branch and its lines with its own hue, so parallel work reads at a glance; HEAD wears a green ring and the selected commit stays gold. The divider between the Changes list and the graph is now draggable and remembers its position — and clicking a commit shows its files and message; on the latest commit, edit the message and hit Amend to rewrite it in place. A HEAD node at the graph tip stands for your working tree — click it to get back to the staging checkboxes.
-- **Windows survive compiles** — the Git panel, Find/Replace dialog, History window, and every other ATE window now come back alive and working after a script compile or play mode, instead of going blank; Find/Replace even keeps your query and options for the whole session — and your undo history survives the reload too: Ctrl+Z works right through a script compile.
+- **Windows survive compiles** — the Git panel, Find/Replace dialog, History window, and every other ATE window now come back alive and working after a script compile or play mode, instead of going blank; Find/Replace even keeps your query and options for the whole session — and your undo history survives the reload too: Ctrl+Z works right through a script compile. The Git panel's file list reliably repopulates after a reload, your typed commit-message draft is preserved (even through a commit inspection), and Find/Replace restores text you had typed but not yet searched.
 - **Ctrl+S works mid-block-edit** — saving (and every other shortcut) while typing in a rendered-Markdown block editor now commits the edit first; previously the save wrote the pre-edit content and the tab stayed dirty.
 - **Squiggly underlines** — errors, warnings, and spelling flags now use the wavy underline every IDE uses, instead of thick solid bars — same colors, far less visual weight.
 - **"Approve Anyway" no longer loops** — approving an addon whose signature does not match (the type-its-name confirmation) could never finish: clicking anywhere cancelled the hidden status-bar prompt and the SIGNATURE INVALID banner instantly returned. The confirmation is now right in the banner: type the addon's name into the inline field and hit Approve and Run (or Enter) — one step, impossible to miss, immune to stray clicks, any capitalization.
@@ -35,6 +36,8 @@ Read-only Markdown, visible invisibles, a sharper console, a games menu, a docum
 - **Console spam** — the "Undid/Redid N characters" undo feedback (most visible when stepping through History) now stays in the status bar and no longer floods the console.
 - **Update icon disappearing** — the green update-available icon by the settings gear now survives script compiles, play mode, and editor restarts, staying visible until you actually update. Clicking it always opens the update dialog (embedded development copies get a manual-update hint instead of Install Now).
 - **Narrow windows** — the Markdown toolbar no longer pushes the update icon and settings gear out of view; it clips its own buttons instead.
+- **Status messages that catch the eye** — every new status-bar message flashes yellow briefly, so quick feedback (saves, git results, history loads) is no longer easy to miss.
+- **File History works again** — Git → File History… silently did nothing (the commit picker never appeared); the revision list now drops down over the editor and opens any past version, slashes in commit subjects intact.
 
 ## 0.13.2 — 2026-08-01
 
