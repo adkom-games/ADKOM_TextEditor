@@ -22,7 +22,7 @@ namespace ADKOM.TextEditor
     {
         static HistoryWindow _instance;
 
-        TextEditorWindow _owner;
+        [SerializeField] TextEditorWindow _owner; // an object ref survives reloads
         ScrollView _rowScroll;
         ScrollView _tabScroll; // the window's OWN document tab bar
         CodeView _preview;   // the REAL editor view, read-only — full syntax
@@ -61,6 +61,28 @@ namespace ADKOM.TextEditor
         }
 
         void OnDestroy() { if (_instance == this) _instance = null; }
+
+        void OnEnable() { if (_instance == null) _instance = this; }
+
+        /// <summary>Reload survivor: rebind to the main window and rebuild —
+        /// undo worlds are serialized with the documents now, so the timeline
+        /// comes back intact. Deferred so the normal Open() path (which
+        /// builds immediately) wins when both run.</summary>
+        void CreateGUI()
+        {
+            rootVisualElement.schedule.Execute(() =>
+            {
+                if (_rowScroll != null) return; // already built by Open()
+                if (_owner == null)
+                {
+                    var all = Resources.FindObjectsOfTypeAll<TextEditorWindow>();
+                    _owner = all.Length > 0 ? all[0] : null;
+                }
+                if (_owner == null) { Close(); return; }
+                if (_doc == null) _doc = _owner.HistoryActiveDoc;
+                BuildUI();
+            });
+        }
 
         void BuildUI()
         {

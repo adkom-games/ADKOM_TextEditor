@@ -23,7 +23,7 @@ namespace ADKOM.TextEditor.Scripting
     {
         /// <summary>The AteApi semantic version. Addons declare the version
         /// they target; MAJOR must match and their MINOR must not be newer.</summary>
-        public const string ApiVersion = "1.1.0";
+        public const string ApiVersion = "1.2.0";
 
         // ---- Events (VS Code-shaped) ----
 
@@ -147,8 +147,23 @@ namespace ADKOM.TextEditor.Scripting
             _doc = doc;
         }
 
+        /// <summary>Core-only escape hatch (NOT part of the stable surface):
+        /// the underlying document, for built-in features like the Z-Machine
+        /// marking its tab across domain reloads.</summary>
+        internal TextDocument InternalDoc => _doc;
+
         /// <summary>False once the tab has been closed (or the window died).</summary>
         public bool IsValid => _window != null && _doc != null && _window.ApiContains(_doc);
+
+        /// <summary>Addon-set tag persisted with the session (API 1.2):
+        /// stateful addons stamp their documents so RestoreState can find
+        /// them again after a reload (AteApi.Documents + StateTag). Null
+        /// when unset; clear it when the document stops being yours.</summary>
+        public string StateTag
+        {
+            get { EnsureValid(); return _doc.StateTag; }
+            set { EnsureValid(); _doc.StateTag = value; }
+        }
 
         /// <summary>Absolute file path, or null for untitled documents.</summary>
         public string Path => _doc.HasFile ? _doc.FilePath : null;

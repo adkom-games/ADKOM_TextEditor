@@ -172,5 +172,27 @@ namespace AteRogue
                 }
             }
         }
+
+        // ---- Persistence (AteApi 1.2 stateful lifecycle) ----
+        // Actions cannot serialize; slots round-trip as (name, time, daemon)
+        // descriptors and Import re-binds the actions by name.
+
+        public List<(string Name, int Time, bool Daemon)> Export()
+        {
+            var res = new List<(string, int, bool)>();
+            foreach (var s in _slots) res.Add((s.Name, s.Time, s.Daemon));
+            return res;
+        }
+
+        public void Import(List<(string Name, int Time, bool Daemon)> slots, Func<string, Action> resolve)
+        {
+            _slots.Clear();
+            foreach (var s in slots)
+            {
+                var act = resolve(s.Name);
+                if (act == null) continue; // unknown slot from another version — drop
+                _slots.Add(new Slot { Name = s.Name, Act = act, Time = s.Time, Daemon = s.Daemon });
+            }
+        }
     }
 }

@@ -6,12 +6,13 @@ using UnityEngine;
 
 namespace ADKOM.TextEditor
 {
-    // Section menu: Classes / Properties / Methods submenus listing the
-    // symbols of the ACTIVE tab, rebuilt on every click (the menu bar builds
-    // its GenericMenu on demand). Selecting a symbol repositions the caret
-    // and view to its declaration. The scan is a lightweight regex heuristic
-    // over the live buffer — fast, works without Semantic Features, and
-    // deliberately tolerant: a rare miss beats a per-click Roslyn query.
+    // Section menu: Classes / Properties / Methods / Bookmarks submenus for
+    // the ACTIVE tab, rebuilt on every click (the menu bar builds its
+    // GenericMenu on demand) — so tab switches and bookmark edits are always
+    // reflected. Selecting an item repositions the caret and view. The
+    // symbol scan is a lightweight regex heuristic over the live buffer —
+    // fast, works without Semantic Features, and deliberately tolerant: a
+    // rare miss beats a per-click Roslyn query.
     public partial class TextEditorWindow
     {
         // "class Foo" (also struct/interface/enum/record), not after //.
@@ -61,6 +62,60 @@ namespace ADKOM.TextEditor
             AddSectionGroup(m, L10n.Tr("Classes"), classes);
             AddSectionGroup(m, L10n.Tr("Properties"), props);
             AddSectionGroup(m, L10n.Tr("Methods"), methods);
+            AddBookmarksGroup(m);
+        }
+
+        // "#pragma bookmark <label>": a bookmark declared in the source
+        // itself. Matched per line; the label is the rest of the line.
+        static readonly Regex PragmaBookmarkRx = new Regex(
+            @"^[ \t]*#pragma[ \t]+bookmark[ \t]+(\S.*?)[ \t]*$",
+            RegexOptions.Compiled);
+
+        /// <summary>Section > Bookmarks: the ACTIVE document's bookmarks —
+        /// toggled ones (labeled "line:  text preview") merged with
+        /// "#pragma bookmark <label>" lines parsed from the source (labeled
+        /// with their label; it wins when a line is both) — sorted by line.
+        /// Selecting one jumps to (and centers) the line.</summary>
+        void AddBookmarksGroup(GenericMenu m)
+        {
+            string title = L10n.Tr("Bookmarks");
+            var marks = new SortedDictionary<int, string>();
+            string[] lines = CanEditDoc ? (_code.value ?? string.Empty).Split('\n') : null;
+            if (lines != null && Active.Bookmarks != null)
+            {
+                foreach (int l in Active.Bookmarks)
+                {
+                    if (l < 0 || l >= lines.Length) continue;
+                    string text = lines[l].TrimEnd('\r').Trim();
+                    if (text.Length > 60) text = text.Substring(0, 60) + "…";
+                    marks[l] = text;
+                }
+            }
+            if (lines != null)
+            {
+                for (int i = 0; i < lines.Length; i++)
+                {
+                    var pm = PragmaBookmarkRx.Match(lines[i].TrimEnd('\r'));
+                    if (pm.Success) marks[i] = pm.Groups[1].Value;
+                }
+            }
+            if (marks.Count == 0)
+            {
+                m.AddDisabledItem(new GUIContent(title + "/" + L10n.Tr("(none)")));
+                return;
+            }
+            foreach (var mark in marks)
+            {
+                string label = (mark.Key + 1) +
+                    (mark.Value.Length > 0 ? ":  " + mark.Value.Replace('/', '∕') : "");
+                int line = mark.Key;
+                m.AddItem(new GUIContent(title + "/" + label), false, () =>
+                {
+                    if (!CanEditDoc) return;
+                    PushNavLocation();
+                    _code.GoToLine(line + 1, 1);
+                });
+            }
         }
 
         /// <summary>One submenu of symbols, sorted by name (ties in document

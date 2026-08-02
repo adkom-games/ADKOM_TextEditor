@@ -43,8 +43,25 @@ namespace ADKOM.TextEditor
         /// image paths. Null for unsaved buffers.</summary>
         public string BaseDir;
 
+        /// <summary>Read-only mode: clicks never open block editors; labels
+        /// become selectable so text can be copied (plain, no formatting).
+        /// Set before <see cref="Render"/> — the window re-renders on toggle.</summary>
+        public bool Locked;
+
+        /// <summary>Raised by the locked-mode context menu's Unlock item; the
+        /// owning window flips the document's lock state and re-renders.</summary>
+        public event Action onUnlockRequest;
+
         TextField _activeEditor;
         public bool HasActiveEditor => _activeEditor != null;
+
+        /// <summary>Commits the open inline block editor, if any. Keyboard
+        /// shortcuts (Ctrl+S, …) run WITHOUT moving focus, so they must flush
+        /// the edit the way clicking a menu does via FocusOut — blurring the
+        /// editor drives the same commit path.</summary>
+        public void CommitActiveEdit() => _activeEditor?.Blur();
+
+        string _hoverLink; // link under the pointer, for "Copy Link URL"
 
         public MarkdownView()
         {
@@ -67,13 +84,196 @@ namespace ADKOM.TextEditor
             }, TrickleDown.TrickleDown);
             RegisterCallback<PointerOverLinkTagEvent>(e =>
             {
+                _hoverLink = e.linkID;
                 if (e.target is TextElement te && !string.IsNullOrEmpty(e.linkID))
                     te.tooltip = string.Format(L10n.Tr("Ctrl+Click to open {0}"), e.linkID);
             }, TrickleDown.TrickleDown);
             RegisterCallback<PointerOutLinkTagEvent>(e =>
             {
+                _hoverLink = null;
                 if (e.target is TextElement te) te.tooltip = null;
             }, TrickleDown.TrickleDown);
+
+            // Locked (read-only) mode: right-click offers clipboard actions.
+            // Copies are the RENDERED text without any formatting — no rich-
+            // text tags, no markdown markers — so URLs and prose paste clean.
+            RegisterCallback<MouseUpEvent>(e =>
+            {
+                if (e.button != 1 || !Locked) return;
+                var menu = new GenericMenu();
+                string link = _hoverLink;
+                if (!string.IsNullOrEmpty(link))
+                    menu.AddItem(new GUIContent(L10n.Tr("Copy Link URL")), false,
+                        () => EditorGUIUtility.systemCopyBuffer = link);
+                if (HasDocSelection)
+                    menu.AddItem(new GUIContent(L10n.Tr("Copy Selection as Text")), false,
+                        () => EditorGUIUtility.systemCopyBuffer = SelectedPlainText());
+                var block = BlockFor(e.target as VisualElement);
+                if (block != null)
+                    menu.AddItem(new GUIContent(L10n.Tr("Copy Block as Text")), false,
+                        () => EditorGUIUtility.systemCopyBuffer = PlainTextFor(block));
+                menu.AddItem(new GUIContent(L10n.Tr("Copy All as Text")), false,
+                    () => EditorGUIUtility.systemCopyBuffer = PlainText());
+                menu.AddSeparator("");
+                menu.AddItem(new GUIContent(L10n.Tr("Unlock (Allow Editing)")), false,
+                    () => onUnlockRequest?.Invoke());
+                menu.ShowAsContext();
+                e.StopPropagation();
+            });
+
+            HookDocSelection();
+        }
+
+        static Block BlockFor(VisualElement v)
+        {
+            for (; v != null; v = v.parent)
+                if (v.userData is Block b) return b;
+            return null;
+        }
+
+        // ---------- Locked-mode DOCUMENT selection (spans blocks) ----------
+        //
+        // Native TextElement selection is per label, so it can never cross a
+        // block boundary — and Ctrl+A used to select just the focused label.
+        // This layer adds a view-level selection ABOVE the native one:
+        // dragging past the block you started in selects whole blocks (shown
+        // as a tint), Ctrl+A selects the entire document, and Ctrl+C copies
+        // the covered blocks as plain rendered text. Within a single block,
+        // the native character-precise selection still works as before.
+
+        readonly List<Label> _selLabels = new List<Label>(); // visual == document order
+        int _selAnchor = -1, _selFocus = -1;                 // indices into _selLabels
+        bool _selAll, _selDragging;
+        static readonly Color SelTint = new Color(0.25f, 0.45f, 0.85f, 0.30f);
+
+        internal bool HasDocSelection =>
+            _selAll || (_selAnchor >= 0 && _selFocus >= 0 && _selAnchor != _selFocus);
+
+        void HookDocSelection()
+        {
+            RegisterCallback<PointerDownEvent>(e =>
+            {
+                if (!Locked || e.button != 0) return;
+                ClearDocSelection();
+                _selAnchor = _selFocus = LabelIndexAt(e.position);
+                _selDragging = _selAnchor >= 0;
+                // No StopPropagation: the label under the pointer still does
+                // its native char-precise selection until the drag leaves it.
+            }, TrickleDown.TrickleDown);
+            // NOTE: these view-level handlers only see moves while NO label
+            // has pointer capture. The native text selection CAPTURES the
+            // pointer on the label the drag started in, and captured pointer
+            // events go to that element alone — which is why every label also
+            // registers OnLabelPointerMove/Up (see Render): the capturing
+            // label keeps receiving moves even far outside its own bounds.
+            RegisterCallback<PointerMoveEvent>(e =>
+            {
+                if (!Locked || !_selDragging || (e.pressedButtons & 1) == 0) return;
+                UpdateDocSelectionAt(e.position);
+            }, TrickleDown.TrickleDown);
+            RegisterCallback<PointerUpEvent>(_ => _selDragging = false, TrickleDown.TrickleDown);
+            RegisterCallback<KeyDownEvent>(e =>
+            {
+                if (!Locked) return;
+                bool ctrl = e.ctrlKey || e.commandKey;
+                if (ctrl && e.keyCode == KeyCode.A)
+                {
+                    SelectAllDoc();
+                    e.StopImmediatePropagation(); // keep the label's own select-all out of it
+                }
+                else if (ctrl && e.keyCode == KeyCode.C && HasDocSelection)
+                {
+                    EditorGUIUtility.systemCopyBuffer = SelectedPlainText();
+                    e.StopImmediatePropagation();
+                }
+                else if (e.keyCode == KeyCode.Escape && HasDocSelection)
+                {
+                    ClearDocSelection();
+                    e.StopImmediatePropagation();
+                }
+            }, TrickleDown.TrickleDown);
+        }
+
+        void UpdateDocSelectionAt(Vector2 panelPos)
+        {
+            int idx = LabelIndexAt(panelPos);
+            if (idx < 0 || idx == _selFocus) return;
+            _selFocus = idx;
+            ApplyDocSelection();
+        }
+
+        /// <summary>Per-label drag tracking: the label a selection drag
+        /// started in holds the pointer capture, so IT gets every move —
+        /// route them into the document selection.</summary>
+        void OnLabelPointerMove(PointerMoveEvent e)
+        {
+            if (!Locked || !_selDragging || (e.pressedButtons & 1) == 0) return;
+            UpdateDocSelectionAt(e.position);
+        }
+
+        void OnLabelPointerUp(PointerUpEvent e) => _selDragging = false;
+
+        /// <summary>Ctrl+A: the whole document is the selection.</summary>
+        internal void SelectAllDoc()
+        {
+            if (_selLabels.Count == 0) return;
+            _selAnchor = 0;
+            _selFocus = _selLabels.Count - 1;
+            _selAll = true;
+            ApplyDocSelection();
+        }
+
+        void ApplyDocSelection()
+        {
+            int a = Mathf.Min(_selAnchor, _selFocus), b = Mathf.Max(_selAnchor, _selFocus);
+            for (int i = 0; i < _selLabels.Count; i++)
+            {
+                if (i >= a && i <= b) _selLabels[i].style.backgroundColor = SelTint;
+                else _selLabels[i].style.backgroundColor = StyleKeyword.Null;
+            }
+        }
+
+        void ClearDocSelection()
+        {
+            foreach (var l in _selLabels) l.style.backgroundColor = StyleKeyword.Null;
+            _selAnchor = _selFocus = -1;
+            _selAll = false;
+        }
+
+        /// <summary>The label under (or vertically nearest to) a panel-space
+        /// point — block flow is vertical, so Y distance is what matters.</summary>
+        int LabelIndexAt(Vector2 p)
+        {
+            float best = float.MaxValue;
+            int bestIdx = -1;
+            for (int i = 0; i < _selLabels.Count; i++)
+            {
+                var r = _selLabels[i].worldBound;
+                if (r.Contains(p)) return i;
+                float dy = p.y < r.yMin ? r.yMin - p.y : p.y > r.yMax ? p.y - r.yMax : 0f;
+                if (dy < best) { best = dy; bestIdx = i; }
+            }
+            return bestIdx;
+        }
+
+        /// <summary>The selected span as plain rendered text: EVERY block
+        /// from the first selected one to the last (rules and images between
+        /// them included), joined like Copy All.</summary>
+        internal string SelectedPlainText()
+        {
+            int a = Mathf.Min(_selAnchor, _selFocus), b = Mathf.Max(_selAnchor, _selFocus);
+            if (a < 0 || _selLabels.Count == 0) return string.Empty;
+            var ra = BlockRangeOf(_selLabels[a]);
+            var rb = BlockRangeOf(_selLabels[Mathf.Min(b, _selLabels.Count - 1)]);
+            int bi = Mathf.Min(ra.first, rb.first), be = Mathf.Max(ra.last, rb.last);
+            if (bi < 0 || be < 0) return string.Empty;
+            var sb = new StringBuilder();
+            for (int i = bi; i <= be && i < _blocks.Count; i++)
+            {
+                if (sb.Length > 0) sb.Append("\n\n");
+                sb.Append(PlainTextFor(_blocks[i]));
+            }
+            return sb.ToString();
         }
 
         public void SetPalette(HighlightTheme.Palette palette)
@@ -86,11 +286,209 @@ namespace ADKOM.TextEditor
         public void Render(string text)
         {
             _text = text ?? string.Empty;
+            _highlighted = null; // its element is discarded with the pool
+            _hlSegment = null;
             ParseBlocks();
             var c = _scroll.contentContainer;
             c.Clear();
-            foreach (var block in _blocks)
-                c.Add(BuildBlockElement(block));
+            _selLabels.Clear();
+            _selAnchor = _selFocus = -1;
+            _selAll = false;
+            _segments.Clear();
+            if (Locked)
+            {
+                // Locked = READING mode: runs of text blocks render as ONE
+                // selectable rich-text label each (a "segment"), so native
+                // selection and copy span headings, paragraphs, quotes, code,
+                // lists, and rules continuously — like a normal document.
+                // Only images and tables (which cannot live inside a rich
+                // text) interrupt a segment and keep their real elements;
+                // drags across THEM fall back to the block-span layer.
+                RenderLockedSegments(c);
+            }
+            else
+            {
+                // Unlocked keeps the per-block layout for click-to-edit.
+                foreach (var block in _blocks)
+                    c.Add(BuildBlockElement(block));
+            }
+        }
+
+        // ---------- Locked layout: segments of continuous rich text ----------
+
+        sealed class Segment
+        {
+            public int FirstBlock, LastBlock;   // indices into _blocks
+            public Label Label;
+            public readonly List<(Block block, int start, int length)> Ranges =
+                new List<(Block, int, int)>();  // rich-string range per block
+        }
+        readonly List<Segment> _segments = new List<Segment>();
+
+        void RenderLockedSegments(VisualElement c)
+        {
+            Color text = _palette?.TextColor ?? Color.white;
+            Segment seg = null;
+            var sb = new StringBuilder();
+            void Flush()
+            {
+                if (seg == null) return;
+                var label = new Label(sb.ToString()) { enableRichText = true };
+                label.style.whiteSpace = WhiteSpace.Normal;
+                label.style.color = text;
+                label.style.marginBottom = 8;
+                label.userData = seg;
+                seg.Label = label;
+                c.Add(label);
+                _segments.Add(seg);
+                sb.Clear();
+                seg = null;
+            }
+            for (int i = 0; i < _blocks.Count; i++)
+            {
+                var b = _blocks[i];
+                if (b.Kind == "image" || b.Kind == "table")
+                {
+                    Flush();
+                    var el = b.Kind == "image" ? BuildImageElement(b, text) : BuildTable(b, text);
+                    el.userData = b;
+                    c.Add(el);
+                    continue;
+                }
+                if (seg == null) seg = new Segment { FirstBlock = i };
+                if (sb.Length > 0) sb.Append("\n\n");
+                int start = sb.Length;
+                sb.Append(RichFor(b, text));
+                seg.Ranges.Add((b, start, sb.Length - start));
+                seg.LastBlock = i;
+            }
+            Flush();
+
+            // Every label (segments + table cells) is selectable and feeds
+            // the fallback block-span layer for drags across tables/images.
+            c.Query<Label>().ForEach(l =>
+            {
+                l.focusable = true;
+                l.selection.isSelectable = true;
+                _selLabels.Add(l);
+                l.RegisterCallback<PointerMoveEvent>(OnLabelPointerMove);
+                l.RegisterCallback<PointerUpEvent>(OnLabelPointerUp);
+            });
+        }
+
+        /// <summary>One block's rich-text form INSIDE a segment label —
+        /// reproducing the per-block styling with rich-text tags.</summary>
+        string RichFor(Block b, Color text)
+        {
+            switch (b.Kind)
+            {
+                case "h1": return "<size=24><b>" + RenderBlockText(b) + "</b></size>";
+                case "h2": return "<size=20><b>" + RenderBlockText(b) + "</b></size>";
+                case "h3": return "<size=17><b>" + RenderBlockText(b) + "</b></size>";
+                case "h4": case "h5": case "h6":
+                    return "<size=14><b>" + RenderBlockText(b) + "</b></size>";
+                case "hr":
+                    return "<color=#" + Hex(text, 0.35f) + ">" + new string('─', 40) + "</color>";
+                case "code":
+                {
+                    // The box background becomes a <mark> run; <noparse>
+                    // keeps code's angle brackets out of the tag parser.
+                    string body = StripFences(b.Source).Replace("</noparse>", "<\u200B/noparse>");
+                    Color codeCol = _palette != null ? ParseHex(_palette.String, text) : text;
+                    return "<mark=#" + Hex(text, 0.07f) + "><color=#" + Hex(codeCol) + "><noparse>"
+                        + body + "</noparse></color></mark>";
+                }
+                case "quote":
+                {
+                    // The left border rule becomes a ▎ glyph per line.
+                    var q = new StringBuilder();
+                    foreach (var line in RenderBlockText(b).Split('\n'))
+                    {
+                        if (q.Length > 0) q.Append('\n');
+                        q.Append("<color=#").Append(Hex(text, 0.4f)).Append(">▎</color> ").Append(line);
+                    }
+                    return "<alpha=#D9>" + q + "<alpha=#FF>";
+                }
+                default:
+                    return RenderBlockText(b);
+            }
+        }
+
+        static string Hex(Color c, float alphaMul = 1f) =>
+            ColorUtility.ToHtmlStringRGBA(new Color(c.r, c.g, c.b, Mathf.Clamp01(c.a * alphaMul)));
+
+        /// <summary>The [first, last] block-index range a label stands for:
+        /// a whole segment, or the single block of a table cell / image.</summary>
+        (int first, int last) BlockRangeOf(Label l)
+        {
+            if (l.userData is Segment s) return (s.FirstBlock, s.LastBlock);
+            var b = BlockFor(l);
+            int i = b != null ? _blocks.IndexOf(b) : -1;
+            return (i, i);
+        }
+
+        // ---------- Search highlight ----------
+
+        VisualElement _highlighted;
+        StyleColor _highlightedPrevBg;
+
+        /// <summary>Scrolls to and highlights the block containing document
+        /// span [start, end) — how Find shows its match while the rendered
+        /// view is active (the code view carries the actual selection but is
+        /// hidden). The highlight moves on the next call and clears on
+        /// re-render.</summary>
+        Segment _hlSegment;      // locked mode: segment carrying a <mark>
+        string _hlOriginal;      // its pre-highlight rich text
+
+        public void HighlightSpan(int start, int end)
+        {
+            ClearHighlight();
+            Block target = null;
+            foreach (var b in _blocks)
+                if (end >= b.StartOffset && start <= b.EndOffset) { target = b; break; }
+            if (target == null) return;
+            // Locked segments: the block lives INSIDE a big label — wrap its
+            // rich-text range in a temporary <mark> and scroll to it (the
+            // range positions are known exactly, so no index guessing).
+            foreach (var seg in _segments)
+            {
+                foreach (var r in seg.Ranges)
+                {
+                    if (!ReferenceEquals(r.block, target)) continue;
+                    _hlSegment = seg;
+                    _hlOriginal = seg.Label.text;
+                    seg.Label.text = _hlOriginal
+                        .Insert(r.start + r.length, "</mark>")
+                        .Insert(r.start, "<mark=#F5C8424D>");
+                    float y = seg.Label.layout.y;
+                    try { y += seg.Label.selection.GetCursorPositionFromStringIndex(r.start).y; }
+                    catch (System.Exception) { }
+                    _scroll.scrollOffset = new Vector2(0, Mathf.Max(0, y - 40));
+                    return;
+                }
+            }
+            // Per-block elements (unlocked mode, and tables/images in locked).
+            foreach (var child in _scroll.contentContainer.Children())
+            {
+                if (!ReferenceEquals(child.userData, target)) continue;
+                _highlighted = child;
+                _highlightedPrevBg = child.style.backgroundColor;
+                child.style.backgroundColor = new Color(1f, 0.8f, 0.2f, 0.18f);
+                _scroll.ScrollTo(child);
+                break;
+            }
+        }
+
+        void ClearHighlight()
+        {
+            if (_hlSegment != null)
+            {
+                if (_hlSegment.Label != null) _hlSegment.Label.text = _hlOriginal;
+                _hlSegment = null;
+            }
+            if (_highlighted == null) return;
+            _highlighted.style.backgroundColor = _highlightedPrevBg;
+            _highlighted = null;
         }
 
         // ---------- Block parsing ----------
@@ -290,12 +688,15 @@ namespace ADKOM.TextEditor
                 el = label;
             }
 
+            el.userData = block; // context menu maps the clicked element back
+
             // Click-to-edit: swap the block for an inline source editor.
             // Ctrl+Click is reserved for links (handled by the link-tag
-            // events) and must not open the editor.
+            // events) and must not open the editor. Locked mode never edits —
+            // the event must keep propagating so text selection works.
             el.RegisterCallback<PointerDownEvent>(e =>
             {
-                if (e.button != 0 || e.ctrlKey || e.commandKey) return;
+                if (Locked || e.button != 0 || e.ctrlKey || e.commandKey) return;
                 BeginBlockEdit(el, block);
                 e.StopPropagation();
             });
@@ -349,6 +750,7 @@ namespace ADKOM.TextEditor
         /// otherwise raises onInsertBlock with a template for a new block.</summary>
         public void ApplyFormat(string id)
         {
+            if (Locked) return; // read-only: formatting is an edit
             if (_activeEditor == null)
             {
                 string template = TemplateFor(id);
@@ -456,7 +858,12 @@ namespace ADKOM.TextEditor
             return string.Join("\n", lines);
         }
 
-        string RenderBlockText(Block block)
+        string RenderBlockText(Block block) => InlineToRich(StripBlockMarkers(block));
+
+        /// <summary>Block source minus its block-level markers (#, &gt;, list
+        /// bullets → glyphs) — the text part both the rich renderer and the
+        /// plain-text clipboard path start from.</summary>
+        static string StripBlockMarkers(Block block)
         {
             string src = block.Source;
             if (block.Kind.StartsWith("h"))
@@ -491,7 +898,133 @@ namespace ADKOM.TextEditor
                 }
                 src = sb.ToString().TrimEnd('\n');
             }
-            return InlineToRich(src);
+            return src;
+        }
+
+        // ---------- Plain-text copy (locked mode) ----------
+
+        /// <summary>The whole rendered document as plain text: blocks in
+        /// order, blank-line separated, no markers or rich-text tags.</summary>
+        public string PlainText()
+        {
+            var sb = new StringBuilder(_text.Length);
+            for (int i = 0; i < _blocks.Count; i++)
+            {
+                if (i > 0) sb.Append("\n\n");
+                sb.Append(PlainTextFor(_blocks[i]));
+            }
+            return sb.ToString();
+        }
+
+        /// <summary>Clipboard form of one block: the rendered text without
+        /// formatting. Links keep their URL — "text (url)" — so addresses
+        /// survive the copy; table cells are tab-separated.</summary>
+        string PlainTextFor(Block block)
+        {
+            switch (block.Kind)
+            {
+                case "hr": return block.Source.Trim();
+                case "code": return StripFences(block.Source);
+                case "image":
+                {
+                    var m = System.Text.RegularExpressions.Regex.Match(block.Source.Trim(),
+                        @"^!\[(?<alt>[^\]]*)\]\((?<path>[^)\s]+)[^)]*\)");
+                    if (!m.Success) return block.Source.Trim();
+                    string alt = m.Groups["alt"].Value, path = m.Groups["path"].Value;
+                    return alt.Length > 0 ? alt + " (" + path + ")" : path;
+                }
+                case "table":
+                {
+                    var sb = new StringBuilder();
+                    foreach (var raw in block.Source.Split('\n'))
+                    {
+                        string line = raw.Trim();
+                        if (!line.StartsWith("|")) continue;
+                        string inner = line.Trim('|');
+                        if (inner.Contains("-") && // separator row, not content
+                            inner.Replace("-", "").Replace(":", "").Replace("|", "").Trim().Length == 0)
+                            continue;
+                        var cells = inner.Split('|');
+                        for (int i = 0; i < cells.Length; i++)
+                        {
+                            if (i > 0) sb.Append('\t');
+                            sb.Append(InlineToPlain(cells[i].Trim()));
+                        }
+                        sb.Append('\n');
+                    }
+                    return sb.ToString().TrimEnd('\n');
+                }
+                default: return InlineToPlain(StripBlockMarkers(block));
+            }
+        }
+
+        /// <summary>Inline markdown → plain clipboard text: emphasis/code
+        /// markers dropped, "[text](url)" becomes "text (url)", images become
+        /// "alt (path)", bare URLs and everything else copy as displayed.</summary>
+        internal static string InlineToPlain(string src)
+        {
+            var sb = new StringBuilder(src.Length);
+            int i = 0, n = src.Length;
+            while (i < n)
+            {
+                char c = src[i];
+                if (c == '~' && i + 1 < n && src[i + 1] == '~')
+                {
+                    int send = src.IndexOf("~~", i + 2, StringComparison.Ordinal);
+                    if (send > i) { sb.Append(src, i + 2, send - i - 2); i = send + 2; continue; }
+                }
+                else if (c == '!' && i + 1 < n && src[i + 1] == '[')
+                {
+                    int close = src.IndexOf(']', i + 2);
+                    if (close > i && close + 1 < n && src[close + 1] == '(')
+                    {
+                        int urlEnd = src.IndexOf(')', close + 2);
+                        if (urlEnd > close)
+                        {
+                            string alt = src.Substring(i + 2, close - i - 2);
+                            string path = src.Substring(close + 2, urlEnd - close - 2).Split(' ')[0];
+                            sb.Append(alt.Length > 0 ? alt + " (" + path + ")" : path);
+                            i = urlEnd + 1;
+                            continue;
+                        }
+                    }
+                }
+                if (c == '`')
+                {
+                    int end = src.IndexOf('`', i + 1);
+                    if (end > i) { sb.Append(src, i + 1, end - i - 1); i = end + 1; continue; }
+                }
+                else if (c == '*' && i + 1 < n && src[i + 1] == '*')
+                {
+                    int end = src.IndexOf("**", i + 2, StringComparison.Ordinal);
+                    if (end > i) { sb.Append(src, i + 2, end - i - 2); i = end + 2; continue; }
+                }
+                else if ((c == '*' || c == '_') && i + 1 < n && src[i + 1] != ' ' && src[i + 1] != c)
+                {
+                    int end = src.IndexOf(c, i + 1);
+                    if (end > i) { sb.Append(src, i + 1, end - i - 1); i = end + 1; continue; }
+                }
+                else if (c == '[')
+                {
+                    int close = src.IndexOf(']', i + 1);
+                    if (close > i && close + 1 < n && src[close + 1] == '(')
+                    {
+                        int urlEnd = src.IndexOf(')', close + 2);
+                        if (urlEnd > close)
+                        {
+                            string label = src.Substring(i + 1, close - i - 1);
+                            string url = src.Substring(close + 2, urlEnd - close - 2).Split(' ')[0];
+                            sb.Append(label);
+                            if (url.Length > 0 && url != label) sb.Append(" (").Append(url).Append(')');
+                            i = urlEnd + 1;
+                            continue;
+                        }
+                    }
+                }
+                sb.Append(c);
+                i++;
+            }
+            return sb.ToString();
         }
 
         /// <summary>Inline markdown → UITK rich text: **bold**, *italic*,
@@ -621,7 +1154,8 @@ namespace ADKOM.TextEditor
         static bool IsOpenableUrl(string u) =>
             u.StartsWith("http://", StringComparison.Ordinal) ||
             u.StartsWith("https://", StringComparison.Ordinal) ||
-            u.StartsWith("mailto:", StringComparison.Ordinal);
+            u.StartsWith("mailto:", StringComparison.Ordinal) ||
+            u.StartsWith("ate://", StringComparison.Ordinal); // file:line links (security reports) open in ATE
 
         static void AppendEscaped(StringBuilder sb, string s)
         {

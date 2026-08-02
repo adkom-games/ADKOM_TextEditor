@@ -1,9 +1,15 @@
 #if UNITY_EDITOR
 // ============================================================================
 // ADKOM Text Editor — AteApi sample
-// Demonstrates EVERY member of the stable scripting API
-// (ADKOM.TextEditor.Scripting). Import via Package Manager → ADKOM Text
-// Editor → Samples, then explore the "Tools/ATE Samples" menu.
+// Demonstrates the CORE surface of the stable scripting API
+// (ADKOM.TextEditor.Scripting): window, documents, events, and the
+// lifecycle caveats. Import via Package Manager → ADKOM Text Editor →
+// Samples, then explore the "Tools/ATE Samples" menu.
+//
+// The GAME surface (API 1.1: game mode, WriteAt, colors, input, tick) is
+// demonstrated end to end by the Snake sample addon, and the STATEFUL
+// lifecycle (API 1.2: SaveState/RestoreState, StateTag) by Snake and
+// Rogue — Tools → Addons → Install Sample Addons.
 //
 // The API contract, caveats, and reference table live in the package's
 // Documentation~/Scripting.md — read "Things you must know" before

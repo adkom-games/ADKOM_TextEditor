@@ -39,6 +39,7 @@ namespace ADKOM.TextEditor
         // restores whatever an existing user already had configured.
         [SerializeField] bool _showLineNumbers = true;
         [SerializeField] bool _wordWrap = true;
+        [SerializeField] bool _showHiddenChars;
         [SerializeField] bool _consoleVisible = true;
         // Per-tab visibility of the console AREA's views — each View menu
         // toggle flips exactly one of these, independently.
@@ -56,6 +57,7 @@ namespace ADKOM.TextEditor
         VisualElement _editorArea;
         MarkdownView _mdView;
         UnityEditor.UIElements.ToolbarButton _mdToggle;
+        UnityEditor.UIElements.ToolbarButton _mdLockBtn;
         UnityEditor.UIElements.ToolbarButton _updateBtn;
         VisualElement _mdFormatBar;
         Label _emptyHint;
@@ -74,6 +76,7 @@ namespace ADKOM.TextEditor
         IntegerField _settingsFontSize;
         Toggle _settingsSmooth;
         Toggle _settingsMdRendered;
+        Toggle _settingsMdLocked;
         IntegerField _settingsRecentMax;
         UnityEditor.UIElements.ColorField _settingsTabColor;
         Toggle _settingsAutoClose;
@@ -84,6 +87,8 @@ namespace ADKOM.TextEditor
         Button _settingsCopilotSignIn;
         VisualElement _settingsUnityAiRow;
         Label _settingsUnityAiStatus;
+        Label _settingsPragmaStatus;
+        Button _settingsPragmaFix;
         Toggle _settingsTrimSave;
         Toggle _settingsFinalNewline;
         Toggle _settingsSemantics;
@@ -94,9 +99,15 @@ namespace ADKOM.TextEditor
         VisualElement _notifyBar;
         Label _notifyLabel;
         VisualElement _notifyButtons;
+        TextField _notifyInput;
         VisualElement _consolePane;
+        VisualElement _consoleHost; // filter row + list; toggled as one by the tabs
         ListView _consoleList;
+        TextField _consoleFilter;
+        Label _consoleHeader;
         readonly System.Collections.Generic.List<string> _consoleLines = new System.Collections.Generic.List<string>();
+        // What the ListView actually shows: _consoleLines through the Filter box.
+        readonly System.Collections.Generic.List<string> _consoleShown = new System.Collections.Generic.List<string>();
         int _consoleVersionShown = -1;
         double _statusHoldUntil;
 
@@ -280,6 +291,9 @@ namespace ADKOM.TextEditor
 
             root.RegisterCallback<KeyDownEvent>(OnGlobalKeyDown, TrickleDown.TrickleDown);
             root.RegisterCallback<KeyUpEvent>(OnGlobalKeyUp, TrickleDown.TrickleDown);
+            // Undo histories survive domain reloads: the active document's
+            // live world is parked on it just before the domain serializes.
+            AssemblyReloadEvents.beforeAssemblyReload += SyncUndoWorldForReload;
 
             // --- Menu bar. GenericMenu.DropDown is Unity's native menu on
             // every platform (Windows/macOS/Linux), and building the menu on
@@ -294,21 +308,33 @@ namespace ADKOM.TextEditor
             toolbar.Add(Menu(L10n.Tr("Window"), FillWindowMenu, L10n.Tr("Switch tabs and open ATE windows.")));
             // Built on click like every menu, so the symbol lists are always
             // fresh for the current tab.
-            toolbar.Add(Menu(L10n.Tr("Section"), FillSectionMenu, L10n.Tr("Jump to a class, property, or method in the current tab.")));
+            toolbar.Add(Menu(L10n.Tr("Section"), FillSectionMenu, L10n.Tr("Jump to a class, property, method, or bookmark in the current tab.")));
+            toolbar.Add(Menu(L10n.Tr("Games"), FillGamesMenu, L10n.Tr("Play Zork and the installed addon games.")));
             toolbar.Add(Menu(L10n.Tr("Help"), FillHelpMenu, L10n.Tr("Documentation, release notes, and support.")));
             toolbar.Add(new ToolbarSpacer { flex = true });
             _mdFormatBar = BuildMdFormatBar();
             _mdFormatBar.style.display = DisplayStyle.None; // transient: rendered MD mode only
             toolbar.Add(_mdFormatBar);
+            _mdLockBtn = new ToolbarButton(ToggleMdLock);
+            _mdLockBtn.style.display = DisplayStyle.None; // transient: rendered MD mode only
+            _mdLockBtn.style.flexShrink = 0;
+            // The 🔒/🔓 emoji comes from a fallback font and renders WIDER
+            // than the toolbar font measures it, clipping the glyph to half —
+            // give the button an explicit width instead of a measured one.
+            _mdLockBtn.style.minWidth = 26;
+            _mdLockBtn.style.unityTextAlign = TextAnchor.MiddleCenter;
+            toolbar.Add(_mdLockBtn);
             _mdToggle = new ToolbarButton(ToggleMdMode)
             { tooltip = L10n.Tr("Switch this Markdown tab between rendered and source view.") };
             _mdToggle.style.display = DisplayStyle.None; // transient: .md tabs only
+            _mdToggle.style.flexShrink = 0;
             toolbar.Add(_mdToggle);
             // Update-available icon: pinned immediately left of the gear —
             // transient bars (MD toolbar etc.) are added BEFORE it above, so
             // they appear to its left and never displace it.
             _updateBtn = new ToolbarButton(OnUpdateIconClicked)
             { tooltip = L10n.Tr("A new ATE version is available — click to update.") };
+            _updateBtn.style.flexShrink = 0; // the MD bar shrinks, never this icon
             var dlTex = EditorGUIUtility.IconContent("Download-Available").image;
             if (dlTex != null)
             {
@@ -326,6 +352,7 @@ namespace ADKOM.TextEditor
             RefreshUpdateIcon(UpdateChecker.AvailableVersion);
             toolbar.Add(_updateBtn);
             var gear = new ToolbarButton(OpenSettings) { tooltip = L10n.Tr("Settings") };
+            gear.style.flexShrink = 0; // like the update icon: never squeezed out
             var gearTex = EditorGUIUtility.IconContent("SettingsIcon").image;
             if (gearTex != null)
             {
@@ -368,6 +395,18 @@ namespace ADKOM.TextEditor
             _notifyLabel.style.fontSize = 13;
             _notifyLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
             _notifyBar.Add(_notifyLabel);
+            // Inline confirmation entry (typed addon consent): its own row
+            // IN the banner, above the buttons — the status-bar mini-buffer
+            // proved invisible for decisions this important. A sibling of
+            // _notifyButtons (which ShowBanner clears), so it persists.
+            _notifyInput = new TextField
+            { tooltip = L10n.Tr("Type a value and press Enter; Escape cancels.") };
+            _notifyInput.style.minWidth = 220;
+            _notifyInput.style.alignSelf = Align.FlexEnd;
+            _notifyInput.style.marginTop = 6;
+            _notifyInput.style.display = DisplayStyle.None;
+            _notifyInput.RegisterCallback<KeyDownEvent>(OnConsentInputKey, TrickleDown.TrickleDown);
+            _notifyBar.Add(_notifyInput);
             _notifyButtons = new VisualElement();
             _notifyButtons.style.flexDirection = FlexDirection.Row;
             _notifyButtons.style.justifyContent = Justify.FlexEnd;
@@ -384,10 +423,11 @@ namespace ADKOM.TextEditor
             _code.onValueChanged += OnTextChanged;
             _code.showLineNumbers = _showLineNumbers;
             _code.wordWrap = _wordWrap;
+            _code.showHiddenChars = _showHiddenChars;
             _code.RegisterCallback<KeyDownEvent>(OnKeyDown, TrickleDown.TrickleDown);
             _code.onFontSizeChanged += SyncSettingsControls; // zoom gestures
             _code.onNavigateRequest += NavigateToDefinition;  // Ctrl+Click
-            _code.onUndoStatus += PostStatus; // "Undid 12 char(s)." feedback
+            _code.onUndoStatus += PostStatusBarOnly; // "Undid 12 char(s)." — bar only, never the console
             _code.isLineBookmarked = line => CanEditDoc && Active.Bookmarks.Contains(line);
             _copilotPending = rootVisualElement.schedule.Execute(RequestCopilotGhost);
             _copilotPending.Pause();
@@ -412,12 +452,18 @@ namespace ADKOM.TextEditor
             _code.minimapVisible = _minimapVisible;
             _code.showIndentGuides = _indentGuides;
             _mainCtx = System.Threading.SynchronizationContext.Current;
+            // Post-reload, CreateGUI runs before the functional Unity context
+            // is current — a context captured now can swallow Posts (async git
+            // results would never land). Re-capture the working one.
+            AteMainCtx.WhenReady(ctx => { if (this != null) _mainCtx = ctx; });
             _editorArea.Add(_code);
 
             _mdView = new MarkdownView();
             _mdView.style.display = DisplayStyle.None;
             _mdView.onEditBlock += OnMdBlockEdited;
             _mdView.onInsertBlock += OnMdInsertBlock;
+            _mdView.onUnlockRequest += () =>
+            { if (ActiveIsMarkdown && Active.MdLocked) ToggleMdLock(); };
             _editorArea.Add(_mdView);
 
             _emptyHint = new Label(L10n.Tr("No file open.\nFile → New, File → Open…, or right-click a text asset in the Project window."));
@@ -479,6 +525,17 @@ namespace ADKOM.TextEditor
             root.schedule.Execute(UpdateStatus).Every(200);
             // Read/write occurrence highlighting follows the caret the same way.
             root.schedule.Execute(PollOccurrences).Every(300);
+
+            // Z-Machine resume: games snapshotted before a domain reload (or
+            // editor quit) rebuild around their surviving transcript tabs once
+            // the UI and session are up. Slightly deferred so layout exists
+            // (the screen reads the viewport width for wrapping). Stateful
+            // addons (API 1.2) get their stored state back the same way.
+            root.schedule.Execute(() =>
+            {
+                AteZMachine.ZMachineGame.Rehydrate(this);
+                Scripting.AteAddonManager.DeliverPendingStates();
+            }).ExecuteLater(300);
         }
 
         static ToolbarButton ToolbarBtn(string text, System.Action onClick) =>
@@ -575,6 +632,16 @@ namespace ADKOM.TextEditor
             UpdateMdUi();
         }
 
+        /// <summary>Per-tab read-only toggle for rendered Markdown. Locked
+        /// (default, Settings → Open Markdown Locked): clicks select text for
+        /// copying instead of opening block editors.</summary>
+        void ToggleMdLock()
+        {
+            if (!ActiveIsMarkdown) return;
+            Active.MdLocked = !Active.MdLocked;
+            UpdateMdUi();
+        }
+
         /// <summary>Shows/hides the transient toggle and swaps the code view
         /// against the rendered Markdown view for the active document.</summary>
         void UpdateMdUi()
@@ -594,14 +661,30 @@ namespace ADKOM.TextEditor
                 }
             }
             bool rendered = isMd && Active.MdRendered;
-            if (_mdFormatBar != null)
-                _mdFormatBar.style.display = isMd ? DisplayStyle.Flex : DisplayStyle.None;
+            bool locked = rendered && Active.MdLocked;
+            if (_mdLockBtn != null)
+            {
+                // Rendered mode only: source view is inherently editable, a
+                // lock there would be dead weight. Same status/action split as
+                // the MD toggle: label = current state, tooltip = the action.
+                _mdLockBtn.style.display = rendered ? DisplayStyle.Flex : DisplayStyle.None;
+                if (rendered)
+                {
+                    _mdLockBtn.text = locked ? "🔒" : "🔓";
+                    _mdLockBtn.tooltip = locked
+                        ? L10n.Tr("Locked (read-only): clicks select text for copying — click to allow editing")
+                        : L10n.Tr("Unlocked: clicks open block editors — click to make this tab read-only");
+                }
+            }
+            if (_mdFormatBar != null) // formatting edits, so it hides while locked
+                _mdFormatBar.style.display = isMd && !locked ? DisplayStyle.Flex : DisplayStyle.None;
             if (_code != null) _code.style.display = rendered || !HasDocs ? DisplayStyle.None : DisplayStyle.Flex;
             if (_mdView != null)
             {
                 _mdView.style.display = rendered ? DisplayStyle.Flex : DisplayStyle.None;
                 if (rendered)
                 {
+                    _mdView.Locked = locked;
                     _mdView.SetPalette(CurrentTheme.Current);
                     _mdView.BaseDir = Active.HasFile
                         ? System.IO.Path.GetDirectoryName(Active.FilePath) : null;
@@ -617,6 +700,11 @@ namespace ADKOM.TextEditor
         {
             var bar = new VisualElement();
             bar.style.flexDirection = FlexDirection.Row;
+            // On narrow windows the bar gives up its own space (clipping its
+            // rightmost buttons) instead of squeezing the pinned lock/MD/
+            // update/gear buttons to its right out of the toolbar.
+            bar.style.flexShrink = 1;
+            bar.style.overflow = Overflow.Hidden;
             (string id, string label, string tip)[] defs =
             {
                 ("h1", "H1", "Heading 1"),
@@ -643,6 +731,7 @@ namespace ADKOM.TextEditor
                 b.style.unityTextAlign = TextAnchor.MiddleCenter;
                 b.style.paddingLeft = 4;
                 b.style.paddingRight = 4;
+                b.style.flexShrink = 0; // whole buttons clip; none get squished
                 if (id == "bold") b.style.unityFontStyleAndWeight = FontStyle.Bold;
                 if (id == "italic") b.style.unityFontStyleAndWeight = FontStyle.Italic;
                 bar.Add(b);
@@ -656,6 +745,7 @@ namespace ADKOM.TextEditor
         void ApplyMdFormat(string id)
         {
             if (!ActiveIsMarkdown) return;
+            if (Active.MdRendered && Active.MdLocked) return; // read-only tab
             if (Active.MdRendered) { _mdView?.ApplyFormat(id); return; }
 
             string v = _code.value;
@@ -751,26 +841,50 @@ namespace ADKOM.TextEditor
             _consolePane.style.height = Mathf.Max(60f, EditorConfig.ConsoleHeight);
 
             var tabs = new VisualElement { name = "console-tabs" };
-            _consoleTab = new VisualElement { tooltip = L10n.Tr("Every ATE message, timestamped. Rows are selectable; Ctrl+C copies them.") };
+            // Every view tab carries an × that hides ONLY that view; for the
+            // toggleable views it flips the View menu setting. Right-click on
+            // a tab may offer a context menu (Clear).
+            Button TabClose(System.Action hide, string tip)
+            {
+                var b = new Button(() => hide()) { text = "×", tooltip = tip };
+                b.AddToClassList("tab__close");
+                return b;
+            }
+            string hideTip = L10n.Tr("Hide this view (the View menu shows it again).");
+            void TabPointer(VisualElement tab, int index, System.Action<GenericMenu> fillContext)
+            {
+                tab.RegisterCallback<PointerDownEvent>(e =>
+                {
+                    if (e.button == 1 && fillContext != null)
+                    {
+                        var cm = new GenericMenu();
+                        fillContext(cm);
+                        cm.ShowAsContext();
+                    }
+                    else SelectConsoleTab(index);
+                    e.StopPropagation();
+                });
+            }
+
+            _consoleTab = new VisualElement { tooltip = L10n.Tr("Every ATE message, timestamped. Click a row; Ctrl+C or right-click → Copy Line copies it.") };
             _consoleTab.AddToClassList("console-tab");
             _consoleTab.Add(new Label(L10n.Tr("Console")));
-            _consoleTab.RegisterCallback<PointerDownEvent>(e => { SelectConsoleTab(0); e.StopPropagation(); });
-            var close = new Button(() => SetConsoleVisible(false))
-            { text = "×", tooltip = L10n.Tr("Hide the console pane (View menu shows it again).") };
-            close.AddToClassList("tab__close");
-            _consoleTab.Add(close);
+            TabPointer(_consoleTab, 0, cm => cm.AddItem(new GUIContent(L10n.Tr("Clear")), false, AteConsole.Clear));
+            _consoleTab.Add(TabClose(() => ToggleConsoleAreaTab(0), hideTip));
             tabs.Add(_consoleTab);
             _searchTab = new VisualElement { tooltip = L10n.Tr("Hits from Find All, Find in Files, and Find All References. Click a row to jump to it.") };
             _searchTab.AddToClassList("console-tab");
             _searchTab.Add(new Label(L10n.Tr("Search Results")));
-            _searchTab.RegisterCallback<PointerDownEvent>(e => { SelectConsoleTab(1); e.StopPropagation(); });
+            TabPointer(_searchTab, 1, cm => cm.AddItem(new GUIContent(L10n.Tr("Clear")), false, ClearSearchResults));
+            _searchTab.Add(TabClose(() => ToggleConsoleAreaTab(1), hideTip));
             tabs.Add(_searchTab);
             // Bookmarks: hidden by default; View Bookmarks (or the View menu
             // toggle) reveals it.
             _bmTab = new VisualElement { tooltip = L10n.Tr("The bookmarked lines of every open document. Click a row to jump to it.") };
             _bmTab.AddToClassList("console-tab");
             _bmTab.Add(new Label(L10n.Tr("Bookmarks")));
-            _bmTab.RegisterCallback<PointerDownEvent>(e => { SelectConsoleTab(4); e.StopPropagation(); });
+            TabPointer(_bmTab, 4, null);
+            _bmTab.Add(TabClose(() => ToggleConsoleAreaTab(4), hideTip));
             tabs.Add(_bmTab);
             // Scanner Results: appears only when the addon security scanner
             // has findings to show; its label carries the script's name.
@@ -778,28 +892,49 @@ namespace ADKOM.TextEditor
             _scannerTab.AddToClassList("console-tab");
             _scannerTabLabel = new Label(L10n.Tr("Scanner Results"));
             _scannerTab.Add(_scannerTabLabel);
-            _scannerTab.RegisterCallback<PointerDownEvent>(e => { SelectConsoleTab(2); e.StopPropagation(); });
+            TabPointer(_scannerTab, 2, null);
+            _scannerTab.Add(TabClose(() =>
+            { _scannerTab.style.display = DisplayStyle.None; ApplyConsoleTabVisibility(); },
+                L10n.Tr("Hide this view.")));
             _scannerTab.style.display = DisplayStyle.None;
             tabs.Add(_scannerTab);
-            // Map: appears only while the built-in Z-Machine game runs with the
-            // auto-mapper on. Hosts the game's map view.
-            _mapTab = new VisualElement { tooltip = L10n.Tr("The Z-Machine game's automatic map.") };
-            _mapTab.AddToClassList("console-tab");
-            _mapTab.Add(new Label(L10n.Tr("Map")));
-            _mapTab.RegisterCallback<PointerDownEvent>(e => { SelectConsoleTab(3); e.StopPropagation(); });
-            _mapTab.style.display = DisplayStyle.None;
-            tabs.Add(_mapTab);
+            // Game maps: ONE TAB PER RUNNING GAME (built-in Z-Machine with
+            // the auto-mapper on), labeled with the game's tab title. The
+            // tabs live in this strip section; contents share _mapHost.
+            _mapTabsHost = new VisualElement { name = "game-map-tabs",
+                style = { flexDirection = FlexDirection.Row } };
+            tabs.Add(_mapTabsHost);
             _consolePane.Add(tabs);
 
+            // Filter row above the rows, mirroring the Search Results pane:
+            // a case-insensitive substring over the whole line.
+            _consoleHost = new VisualElement { name = "console-host",
+                style = { flexGrow = 1, flexDirection = FlexDirection.Column } };
+            var consoleTop = new VisualElement { style = { flexDirection = FlexDirection.Row, alignItems = Align.Center, flexShrink = 0 } };
+            _consoleHeader = new Label(); // "N of M shown" while filtering
+            _consoleHeader.style.unityFontStyleAndWeight = FontStyle.Bold;
+            _consoleHeader.style.paddingLeft = 4;
+            _consoleHeader.style.flexGrow = 1;
+            _consoleHeader.style.whiteSpace = WhiteSpace.NoWrap;
+            _consoleHeader.style.overflow = Overflow.Hidden;
+            consoleTop.Add(_consoleHeader);
+            consoleTop.Add(new Label(L10n.Tr("Filter")) { style = { marginRight = 2 } });
+            _consoleFilter = new TextField { name = "console-filter", style = { width = 160, marginRight = 4 },
+                tooltip = L10n.Tr("Show only console lines containing this text.") };
+            _consoleFilter.RegisterValueChangedCallback(_ => RefreshConsoleView());
+            consoleTop.Add(_consoleFilter);
+            _consoleHost.Add(consoleTop);
+
             // Per-line rows in a framed monospace subview with alternating
-            // background tones. Row selection: click / Shift+Click /
-            // Ctrl+Click; Ctrl+C copies the selected lines.
+            // background tones. Single selection by design: the active line
+            // is copied whole — Ctrl+C or right-click → Copy Line — with no
+            // multiline or sub-line selection.
             _consoleList = new ListView
             {
                 name = "console-list",
-                itemsSource = _consoleLines,
+                itemsSource = _consoleShown,
                 fixedItemHeight = 16,
-                selectionType = SelectionType.Multiple,
+                selectionType = SelectionType.Single,
                 makeItem = () =>
                 {
                     var l = new Label();
@@ -809,13 +944,27 @@ namespace ADKOM.TextEditor
                     l.style.unityTextAlign = TextAnchor.MiddleLeft;
                     l.style.whiteSpace = WhiteSpace.NoWrap;
                     l.style.overflow = Overflow.Hidden;
+                    l.RegisterCallback<PointerDownEvent>(e =>
+                    {
+                        if (e.button != 1 || !(l.userData is int idx)) return;
+                        if (idx < 0 || idx >= _consoleShown.Count) return;
+                        _consoleList.SetSelection(idx); // the clicked row IS the active line
+                        string lineText = _consoleShown[idx];
+                        var cm = new GenericMenu();
+                        cm.AddItem(new GUIContent(L10n.Tr("Copy Line")), false,
+                            () => CopyConsoleLine(lineText));
+                        cm.AddItem(new GUIContent(L10n.Tr("Clear")), false, AteConsole.Clear);
+                        cm.ShowAsContext();
+                        e.StopPropagation();
+                    });
                     return l;
                 },
             };
             _consoleList.bindItem = (e, i) =>
             {
                 var l = (Label)e;
-                l.text = i < _consoleLines.Count ? _consoleLines[i] : "";
+                l.text = i < _consoleShown.Count ? _consoleShown[i] : "";
+                l.userData = i; // row index for the right-click menu
                 // Zebra on the label itself: the wrapper element carries the
                 // selection highlight, which must stay visible underneath.
                 AteViewStyle.Zebra(l, i);
@@ -824,27 +973,18 @@ namespace ADKOM.TextEditor
             AteViewStyle.Frame(_consoleList);
             AteViewStyle.Mono(_consoleList);
             // Explicit Ctrl+C: the window-level key handling must never eat a
-            // copy from the console.
+            // copy from the console. Copies the active line only.
             _consoleList.RegisterCallback<KeyDownEvent>(e =>
             {
                 if ((e.ctrlKey || e.commandKey) && e.keyCode == KeyCode.C)
                 {
-                    var picked = new System.Collections.Generic.List<int>();
-                    foreach (int i in _consoleList.selectedIndices) picked.Add(i);
-                    picked.Sort();
-                    var sb = new System.Text.StringBuilder();
-                    foreach (int i in picked)
-                        if (i >= 0 && i < _consoleLines.Count)
-                            sb.Append(_consoleLines[i]).Append('\n');
-                    if (sb.Length > 0)
-                    {
-                        EditorGUIUtility.systemCopyBuffer = sb.ToString();
-                        PostStatus(L10n.Tr("Copied."));
-                    }
+                    int i = _consoleList.selectedIndex;
+                    if (i >= 0 && i < _consoleShown.Count) CopyConsoleLine(_consoleShown[i]);
                     e.StopImmediatePropagation();
                 }
             }, TrickleDown.TrickleDown);
-            _consolePane.Add(_consoleList);
+            _consoleHost.Add(_consoleList);
+            _consolePane.Add(_consoleHost);
 
             _searchPane = new VisualElement { name = "search-results-pane",
                 style = { display = DisplayStyle.None, flexGrow = 1, flexDirection = FlexDirection.Column } };
@@ -899,7 +1039,10 @@ namespace ADKOM.TextEditor
                 case 0: return _consoleTabVisible;
                 case 1: return _searchTabVisible;
                 case 2: return _scannerTab != null && _scannerTab.style.display.value == DisplayStyle.Flex;
-                case 3: return _mapTab != null && _mapTab.style.display.value == DisplayStyle.Flex;
+                case 3:
+                    foreach (var t in _gameMapTabs)
+                        if (t.Tab.style.display.value == DisplayStyle.Flex) return true;
+                    return false;
                 case 4: return _bmTabVisible;
                 default: return false;
             }
@@ -921,6 +1064,15 @@ namespace ADKOM.TextEditor
             _consoleTab.style.display = _consoleTabVisible ? DisplayStyle.Flex : DisplayStyle.None;
             _searchTab.style.display = _searchTabVisible ? DisplayStyle.Flex : DisplayStyle.None;
             _bmTab.style.display = _bmTabVisible ? DisplayStyle.Flex : DisplayStyle.None;
+            // The active game-map tab went away (hidden or removed): fall to
+            // another visible map tab before giving up on index 3 entirely.
+            if (_activeConsoleTab == 3 &&
+                (_activeMapTab == null || _activeMapTab.Tab.style.display.value != DisplayStyle.Flex))
+            {
+                foreach (var t in _gameMapTabs)
+                    if (t.Tab.style.display.value == DisplayStyle.Flex)
+                    { _activeMapTab = t; SelectConsoleTab(3); break; }
+            }
             if (!ConsoleTabOffered(_activeConsoleTab))
             {
                 int first = FirstOfferedConsoleTab();
@@ -951,17 +1103,31 @@ namespace ADKOM.TextEditor
             }
         }
 
-        VisualElement _consoleTab, _searchTab, _scannerTab, _mapTab, _mapHost, _bmTab;
+        VisualElement _consoleTab, _searchTab, _scannerTab, _mapHost, _bmTab;
+        VisualElement _mapTabsHost;
         Label _scannerTabLabel;
         int _activeConsoleTab;
+
+        /// <summary>One game-map console tab: a game's own strip tab plus its
+        /// own map view (kept as a hidden child of _mapHost while inactive,
+        /// so zoom/scroll state survives tab switches).</summary>
+        sealed class GameMapTab
+        {
+            public object Key;
+            public VisualElement Tab;
+            public VisualElement Content;
+        }
+        readonly System.Collections.Generic.List<GameMapTab> _gameMapTabs =
+            new System.Collections.Generic.List<GameMapTab>();
+        GameMapTab _activeMapTab;
 
         /// <summary>0 = Console, 1 = Search Results, 2 = Scanner Results,
         /// 3 = Map, 4 = Bookmarks.</summary>
         void SelectConsoleTab(int index)
         {
             _activeConsoleTab = index;
-            if (_consoleList != null)
-                _consoleList.style.display = index == 0 ? DisplayStyle.Flex : DisplayStyle.None;
+            if (_consoleHost != null)
+                _consoleHost.style.display = index == 0 ? DisplayStyle.Flex : DisplayStyle.None;
             if (_searchPane != null)
                 _searchPane.style.display = index == 1 ? DisplayStyle.Flex : DisplayStyle.None;
             if (_scannerScroll != null)
@@ -977,28 +1143,86 @@ namespace ADKOM.TextEditor
                 _searchTab.style.backgroundColor = index == 1 ? active : Color.clear;
             if (_scannerTab != null)
                 _scannerTab.style.backgroundColor = index == 2 ? active : Color.clear;
-            if (_mapTab != null)
-                _mapTab.style.backgroundColor = index == 3 ? active : Color.clear;
+            foreach (var t in _gameMapTabs)
+            {
+                bool on = index == 3 && t == _activeMapTab;
+                if (t.Content != null)
+                    t.Content.style.display = on ? DisplayStyle.Flex : DisplayStyle.None;
+                t.Tab.style.backgroundColor = on ? active : Color.clear;
+            }
             if (_bmTab != null)
                 _bmTab.style.backgroundColor = index == 4 ? active : Color.clear;
         }
 
-        /// <summary>Built-in game map: host a map view in the Map console tab,
-        /// show the tab, and bring it up. Passing null removes it.</summary>
-        internal void SetGameMapView(VisualElement content)
+        /// <summary>Game maps: ONE console tab per game. Creates (or re-shows)
+        /// the tab for <paramref name="key"/>, labeled <paramref name="title"/>
+        /// and hosting the game's own map view, and brings it to the front —
+        /// unless <paramref name="front"/> is false (domain-reload resume
+        /// registers every game's tab without stealing the console area).</summary>
+        internal void ShowGameMapTab(object key, string title, VisualElement content, bool front = true)
         {
-            if (_mapHost == null) return;
-            _mapHost.Clear();
-            if (content == null)
+            if (_mapTabsHost == null || _mapHost == null || content == null) return;
+            var t = FindGameMapTab(key);
+            if (t == null)
             {
-                _mapTab.style.display = DisplayStyle.None;
-                if (_activeConsoleTab == 3) SelectConsoleTab(0);
+                var made = new GameMapTab { Key = key };
+                var tab = new VisualElement { tooltip = L10n.Tr("The Z-Machine game's automatic map.") };
+                tab.AddToClassList("console-tab");
+                tab.Add(new Label(title));
+                tab.RegisterCallback<PointerDownEvent>(e =>
+                {
+                    _activeMapTab = made;
+                    SelectConsoleTab(3);
+                    e.StopPropagation();
+                });
+                var close = new Button(() =>
+                {
+                    tab.style.display = DisplayStyle.None;
+                    ApplyConsoleTabVisibility();
+                }) { text = "×", tooltip = L10n.Tr("Hide this view.") };
+                close.AddToClassList("tab__close");
+                tab.Add(close);
+                made.Tab = tab;
+                _mapTabsHost.Add(tab);
+                _gameMapTabs.Add(made);
+                t = made;
+            }
+            if (t.Content != content)
+            {
+                // The game re-attached its auto-map with a fresh view.
+                if (t.Content != null && t.Content.parent == _mapHost) _mapHost.Remove(t.Content);
+                t.Content = content;
+                content.style.display = DisplayStyle.None;
+                _mapHost.Add(content);
+            }
+            t.Tab.style.display = DisplayStyle.Flex;
+            if (!front)
+            {
+                if (_activeMapTab == null) _activeMapTab = t;
                 return;
             }
-            _mapHost.Add(content);
-            _mapTab.style.display = DisplayStyle.Flex;
+            _activeMapTab = t;
             SetConsoleVisible(true);
             SelectConsoleTab(3);
+        }
+
+        /// <summary>Deletes a game's map tab and view (the game ended or its
+        /// auto-map was turned off).</summary>
+        internal void RemoveGameMapTab(object key)
+        {
+            var t = FindGameMapTab(key);
+            if (t == null) return;
+            if (t.Content != null && t.Content.parent == _mapHost) _mapHost.Remove(t.Content);
+            t.Tab.RemoveFromHierarchy();
+            _gameMapTabs.Remove(t);
+            if (_activeMapTab == t) _activeMapTab = null;
+            ApplyConsoleTabVisibility();
+        }
+
+        GameMapTab FindGameMapTab(object key)
+        {
+            foreach (var t in _gameMapTabs) if (Equals(t.Key, key)) return t;
+            return null;
         }
 
         void SetConsoleVisible(bool visible)
@@ -1017,13 +1241,36 @@ namespace ADKOM.TextEditor
             if (_consoleVersionShown == AteConsole.Version) return;
             _consoleVersionShown = AteConsole.Version;
             AteConsole.CopyLinesInto(_consoleLines);
+            RefreshConsoleView();
+        }
+
+        /// <summary>(Re)applies the console Filter box to the raw lines and
+        /// refreshes the list, sticking to the bottom. The header shows
+        /// "N of M shown" while the filter hides anything.</summary>
+        void RefreshConsoleView()
+        {
+            if (_consoleList == null) return;
+            string filter = _consoleFilter != null ? (_consoleFilter.value ?? "").Trim().ToLowerInvariant() : "";
+            _consoleShown.Clear();
+            foreach (var line in _consoleLines)
+                if (filter.Length == 0 || line.ToLowerInvariant().Contains(filter))
+                    _consoleShown.Add(line);
+            _consoleHeader.text = filter.Length == 0 || _consoleShown.Count == _consoleLines.Count
+                ? string.Empty
+                : string.Format(L10n.Tr("{0} of {1} shown"), _consoleShown.Count, _consoleLines.Count);
             _consoleList.RefreshItems();
             // Stick to the bottom once the new content has been laid out.
             _consoleList.schedule.Execute(() =>
             {
-                if (_consoleLines.Count > 0)
-                    _consoleList.ScrollToItem(_consoleLines.Count - 1);
+                if (_consoleShown.Count > 0)
+                    _consoleList.ScrollToItem(_consoleShown.Count - 1);
             }).ExecuteLater(30);
+        }
+
+        void CopyConsoleLine(string line)
+        {
+            EditorGUIUtility.systemCopyBuffer = line;
+            PostStatus(L10n.Tr("Copied the console line."));
         }
 
         /// <summary>Status-bar messages also land in the console, and are held
@@ -1031,7 +1278,29 @@ namespace ADKOM.TextEditor
         void PostStatus(string message)
         {
             AteConsole.Log(message);
-            if (_statusLeft != null) _statusLeft.text = message;
+            PostStatusBarOnly(message);
+        }
+
+        IVisualElementScheduledItem _statusFlashReset;
+
+        /// <summary>Status bar WITHOUT the console copy — for high-frequency
+        /// ephemeral feedback (undo/redo character counts) that would
+        /// otherwise spam the console on every Ctrl+Z step. Every new message
+        /// FLASHES yellow briefly to draw the eye to the bar, then settles
+        /// back to the theme color.</summary>
+        void PostStatusBarOnly(string message)
+        {
+            if (_statusLeft != null)
+            {
+                _statusLeft.text = message;
+                if (!string.IsNullOrEmpty(message))
+                {
+                    _statusLeft.style.color = new Color(0.95f, 0.85f, 0.3f);
+                    _statusFlashReset ??= _statusLeft.schedule.Execute(() =>
+                        _statusLeft.style.color = StyleKeyword.Null);
+                    _statusFlashReset.ExecuteLater(800);
+                }
+            }
             _statusHoldUntil = EditorApplication.timeSinceStartup + 5.0;
         }
 
@@ -1167,6 +1436,27 @@ namespace ADKOM.TextEditor
             _settingsSemantics.tooltip = L10n.Tr("Compiler-accurate colors and Go to Definition. If the project has no Roslyn, enabling installs the bundled MIT-licensed Roslyn assemblies (see THIRD-PARTY-NOTICES).");
             _settingsPane.Add(_settingsSemantics);
 
+            // "#pragma bookmark" lines trigger CS1633 (unknown pragma) in C#
+            // scripts. Show whether the project suppresses it, with a
+            // one-click fix that writes -nowarn:1633 into Assets/csc.rsp.
+            var pragmaRow = new VisualElement();
+            pragmaRow.style.flexDirection = FlexDirection.Row;
+            pragmaRow.style.alignItems = Align.Center;
+            _settingsPragmaFix = new Button(SuppressUnknownPragmaWarning)
+            {
+                text = L10n.Tr("Suppress in This Project"),
+                tooltip = L10n.Tr("Adds -nowarn:1633 to Assets/csc.rsp, Unity's project-wide compiler response file, so #pragma bookmark lines compile without the warning. Assemblies compiled from their own asmdef may need the flag in their own response file.")
+            };
+            _settingsPragmaStatus = new Label
+            {
+                tooltip = L10n.Tr("#pragma bookmark lines in C# scripts trigger compiler warning CS1633 (unknown pragma) unless the project suppresses it.")
+            };
+            _settingsPragmaStatus.style.unityTextAlign = TextAnchor.MiddleLeft;
+            pragmaRow.Add(_settingsPragmaFix);
+            pragmaRow.Add(_settingsPragmaStatus);
+            _settingsPane.Add(pragmaRow);
+            SyncPragmaRow();
+
             Section("Display");
             _settingsSmooth = new Toggle(L10n.Tr("Smooth Scrolling")) { value = EditorConfig.SmoothScrolling };
             _settingsSmooth.RegisterValueChangedCallback(e => EditorConfig.SmoothScrolling = e.newValue);
@@ -1177,6 +1467,11 @@ namespace ADKOM.TextEditor
             _settingsMdRendered.RegisterValueChangedCallback(e => EditorConfig.MdOpenRendered = e.newValue);
             _settingsMdRendered.tooltip = L10n.Tr("Default view when opening .md files: rendered (WYSIWYG) when on, source when off. The MD/source toggle still switches per tab.");
             _settingsPane.Add(_settingsMdRendered);
+
+            _settingsMdLocked = new Toggle(L10n.Tr("Open Markdown Locked")) { value = EditorConfig.MdLockByDefault };
+            _settingsMdLocked.RegisterValueChangedCallback(e => EditorConfig.MdLockByDefault = e.newValue);
+            _settingsMdLocked.tooltip = L10n.Tr("Rendered Markdown opens read-only: clicks select text for copying instead of opening block editors. The lock button in the toolbar still switches per tab.");
+            _settingsPane.Add(_settingsMdLocked);
 
             _settingsTabColor = new UnityEditor.UIElements.ColorField(L10n.Tr("Tab Color")) { value = EditorConfig.TabColor, showAlpha = false, hdr = false };
             _settingsTabColor.RegisterValueChangedCallback(e =>
@@ -1334,7 +1629,8 @@ namespace ADKOM.TextEditor
                 var vdoc = new TextDocument
                 {
                     Content = content, VirtualName = title, VirtualCSharp = csharp,
-                    VirtualMarkdown = markdown, MdRendered = markdown && rendered
+                    VirtualMarkdown = markdown, MdRendered = markdown && rendered,
+                    MdLocked = markdown && EditorConfig.MdLockByDefault
                 };
                 _docs.Add(vdoc);
                 Scripting.AteApi.NotifyOpened(this, vdoc);
@@ -1378,6 +1674,65 @@ namespace ADKOM.TextEditor
             SwitchTo(_docs.Count - 1);
         }
 
+        // ---- CS1633 (unknown pragma) suppression for #pragma bookmark ----
+
+        static string CscRspPath => System.IO.Path.Combine(Application.dataPath, "csc.rsp");
+
+        /// <summary>Is CS1633 suppressed project-wide? Reads Assets/csc.rsp
+        /// for a -nowarn (or /nowarn) list containing 1633.</summary>
+        static bool UnknownPragmaSuppressed()
+        {
+            try
+            {
+                if (!System.IO.File.Exists(CscRspPath)) return false;
+                foreach (var line in System.IO.File.ReadAllLines(CscRspPath))
+                {
+                    var match = System.Text.RegularExpressions.Regex.Match(
+                        line, @"^[ \t]*[-/]nowarn:(.+)$");
+                    if (!match.Success) continue;
+                    foreach (var warn in match.Groups[1].Value.Split(','))
+                        if (warn.Trim().TrimStart('C', 'S') == "1633") return true;
+                }
+            }
+            catch (System.Exception) { }
+            return false;
+        }
+
+        /// <summary>The Settings button: appends -nowarn:1633 to Assets/csc.rsp
+        /// (creating the file if needed) and triggers a script recompile so
+        /// the suppression takes effect immediately.</summary>
+        void SuppressUnknownPragmaWarning()
+        {
+            try
+            {
+                if (!UnknownPragmaSuppressed())
+                {
+                    string text = System.IO.File.Exists(CscRspPath)
+                        ? System.IO.File.ReadAllText(CscRspPath).TrimEnd('\r', '\n') + System.Environment.NewLine
+                        : string.Empty;
+                    System.IO.File.WriteAllText(CscRspPath, text + "-nowarn:1633" + System.Environment.NewLine);
+                    AssetDatabase.ImportAsset("Assets/csc.rsp");
+                    UnityEditor.Compilation.CompilationPipeline.RequestScriptCompilation();
+                    PostStatus(L10n.Tr("Added -nowarn:1633 to Assets/csc.rsp — scripts will recompile."));
+                }
+            }
+            catch (System.Exception ex)
+            {
+                AteConsole.Warn("[ADKOM Text Editor] Could not update Assets/csc.rsp: " + ex.Message);
+            }
+            SyncPragmaRow();
+        }
+
+        void SyncPragmaRow()
+        {
+            if (_settingsPragmaStatus == null) return;
+            bool suppressed = UnknownPragmaSuppressed();
+            _settingsPragmaStatus.text = "  " + (suppressed
+                ? L10n.Tr("Unknown-pragma warning (CS1633): suppressed in this project.")
+                : L10n.Tr("Unknown-pragma warning (CS1633): not suppressed — #pragma bookmark lines will warn in C# scripts."));
+            _settingsPragmaFix.style.display = suppressed ? DisplayStyle.None : DisplayStyle.Flex;
+        }
+
         void SyncSettingsControls()
         {
             _settingsTheme?.SetValueWithoutNotify(CurrentTheme.Name);
@@ -1392,6 +1747,7 @@ namespace ADKOM.TextEditor
             _settingsSmooth?.SetValueWithoutNotify(EditorConfig.SmoothScrolling);
             _settingsSemantics?.SetValueWithoutNotify(EditorConfig.SemanticsEnabled);
             _settingsMdRendered?.SetValueWithoutNotify(EditorConfig.MdOpenRendered);
+            _settingsMdLocked?.SetValueWithoutNotify(EditorConfig.MdLockByDefault);
             _settingsRecentMax?.SetValueWithoutNotify(EditorConfig.RecentFilesMax);
             _settingsTabColor?.SetValueWithoutNotify(EditorConfig.TabColor);
             _settingsAutoClose?.SetValueWithoutNotify(EditorConfig.AutoCloseBrackets);
@@ -1415,6 +1771,7 @@ namespace ADKOM.TextEditor
                     ? string.Format(L10n.Tr("Unity AI account: {0}"), user)
                     : L10n.Tr("Unity account: signed out");
             }
+            SyncPragmaRow();
             _settingsTrimSave?.SetValueWithoutNotify(EditorConfig.TrimTrailingOnSave);
             _settingsFinalNewline?.SetValueWithoutNotify(EditorConfig.FinalNewlineOnSave);
         }
@@ -1479,7 +1836,10 @@ namespace ADKOM.TextEditor
             var doc = new TextDocument();
             doc.LoadFrom(full);
             if (full.EndsWith(".md", System.StringComparison.OrdinalIgnoreCase))
+            {
                 doc.MdRendered = EditorConfig.MdOpenRendered;
+                doc.MdLocked = EditorConfig.MdLockByDefault;
+            }
             _docs.Add(doc);
             EditorConfig.AddRecentFile(full);
             Scripting.AteApi.NotifyOpened(this, doc);
@@ -1515,6 +1875,7 @@ namespace ADKOM.TextEditor
         System.Action<string> _miniCommit;
         System.Action _miniCancel;
         bool _miniDigitsOnly;
+        bool _miniCancelOnBlur = true;
 
 
         void OnGlobalKeyUp(KeyUpEvent e)
@@ -1564,6 +1925,22 @@ namespace ADKOM.TextEditor
             UpdateChecker.onInstallStateChanged -= SetUpdatingOverlay;
             UpdateChecker.onAvailableVersionChanged -= RefreshUpdateIcon;
             CopilotService.onStatusChanged -= OnCopilotStatus;
+            AssemblyReloadEvents.beforeAssemblyReload -= SyncUndoWorldForReload;
+        }
+
+        /// <summary>The ACTIVE document's undo world lives in the code view
+        /// and is only parked on the document at tab switches — park it right
+        /// before the domain serializes, so its undo history (now a
+        /// serialized TextDocument field) survives the reload too. Re-attach
+        /// the same instance so the live view keeps operating; doc and view
+        /// then share the reference, which is exactly what serialization
+        /// needs.</summary>
+        void SyncUndoWorldForReload()
+        {
+            if (_undoWorldDoc == null || _code == null) return;
+            var world = _code.DetachUndoWorld();
+            _undoWorldDoc.UndoWorld = world;
+            _code.AttachUndoWorld(world);
         }
 
         /// <summary>Shows/hides the green update icon by the settings gear.</summary>
@@ -1582,12 +1959,9 @@ namespace ADKOM.TextEditor
         {
             string latest = UpdateChecker.AvailableVersion;
             if (string.IsNullOrEmpty(latest)) return;
-            if (UpdateChecker.IsEmbeddedPackage)
-                AteConsole.Info("[ADKOM Text Editor] " + string.Format(
-                    L10n.Tr("New version available: {0}. This copy is embedded for development — update manually via git."),
-                    latest));
-            else
-                UpdatePromptWindow.Open(UpdateChecker.CurrentVersion(), latest);
+            // Always the dialog — embedded copies too (Install Now is disabled
+            // there); a console-only reaction read as the click doing nothing.
+            UpdatePromptWindow.Open(UpdateChecker.CurrentVersion(), latest);
         }
 
 
@@ -1636,12 +2010,38 @@ namespace ADKOM.TextEditor
             // console), whose own/native handling must win.
             if (!handled && ctrl && !e.altKey && !e.shiftKey && CanEditDoc && !TargetIsTextInput(e))
             {
+                // Locked rendered Markdown is copy-only: Ctrl+C without a
+                // label selection copies the whole document as plain rendered
+                // text (a selected label's native copy wins via
+                // TargetIsTextInput); cut/paste must not reach the hidden
+                // source buffer.
+                bool lockedMd = ActiveIsMarkdown && Active.MdRendered && Active.MdLocked;
                 switch (e.keyCode)
                 {
-                    case KeyCode.X: _code.Cut(); handled = true; break;
-                    case KeyCode.C: _code.Copy(); handled = true; break;
-                    case KeyCode.V: _code.Paste(); handled = true; break;
-                    case KeyCode.A: _code.SelectAll(); handled = true; break;
+                    case KeyCode.X: if (!lockedMd) _code.Cut(); handled = true; break;
+                    case KeyCode.C:
+                        if (lockedMd && _mdView != null)
+                        {
+                            if (_mdView.HasDocSelection)
+                            {
+                                EditorGUIUtility.systemCopyBuffer = _mdView.SelectedPlainText();
+                                PostStatus(L10n.Tr("Copied the selected blocks as plain text."));
+                            }
+                            else
+                            {
+                                EditorGUIUtility.systemCopyBuffer = _mdView.PlainText();
+                                PostStatus(L10n.Tr("Copied the rendered document as plain text."));
+                            }
+                        }
+                        else _code.Copy();
+                        handled = true; break;
+                    case KeyCode.V: if (!lockedMd) _code.Paste(); handled = true; break;
+                    case KeyCode.A:
+                        // Locked rendered Markdown: select the whole DOCUMENT
+                        // (the view-level block selection), not one label.
+                        if (lockedMd) _mdView?.SelectAllDoc();
+                        else _code.SelectAll();
+                        handled = true; break;
                 }
             }
 
@@ -1921,7 +2321,15 @@ namespace ADKOM.TextEditor
                 if (le < v.Length && le < last) sb.Append('\n');
                 i = le + 1;
             }
-            ReplaceRange(first, last, sb.ToString(), first);
+            string repl = sb.ToString();
+            ReplaceRange(first, last, repl, first);
+            // A selection stays selected (the full affected line range), so
+            // repeated Ctrl+/ toggles cleanly; a bare caret stays collapsed.
+            if (end > start)
+            {
+                _code.selectIndex = first;
+                _code.cursorIndex = first + repl.Length;
+            }
         }
 
         // --- Find/Replace surface (used by FindReplaceWindow) ---
@@ -1967,6 +2375,17 @@ namespace ADKOM.TextEditor
             _code.cursorIndex = end;
             Focus();
             _code.Focus();
+            SyncMdFindHighlight();
+        }
+
+        /// <summary>Rendered Markdown: the code view (which carries every
+        /// find/jump selection) is hidden, so mirror its selection into the
+        /// rendered view as a scrolled-to block highlight.</summary>
+        void SyncMdFindHighlight()
+        {
+            if (!(ActiveIsMarkdown && Active.MdRendered) || _mdView == null) return;
+            GetSelection(out int s, out int e);
+            _mdView.HighlightSpan(s, e);
         }
 
         /// <summary>Replaces [start, end) in the active document (undoable).</summary>

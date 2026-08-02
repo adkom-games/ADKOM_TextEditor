@@ -1329,6 +1329,30 @@ msgstr "プッシュ"
 msgid "Branch History"
 msgstr "ブランチ履歴"
 
+msgid "Working Tree"
+msgstr "作業ツリー"
+
+msgid "HEAD — your working tree. Click to show the working-tree changes."
+msgstr "HEAD — 作業ツリーです。クリックすると作業ツリーの変更一覧を表示します。"
+
+msgid "Back to the working-tree changes."
+msgstr "作業ツリーの変更一覧に戻ります。"
+
+msgid "Commit {0}"
+msgstr "コミット {0}"
+
+msgid "Amend"
+msgstr "Amend"
+
+msgid "Rewrite this commit's message (message-only amend; staged files are not swept in)."
+msgstr "このコミットのメッセージを書き換えます（メッセージのみの amend。ステージ済みファイルは含まれません）。"
+
+msgid "Only the latest commit (HEAD) can be amended."
+msgstr "修正 (amend) できるのは最新のコミット（HEAD）だけです。"
+
+msgid "Message unchanged — nothing to amend."
+msgstr "メッセージが変更されていません — 修正するものがありません。"
+
 msgid "Toggle vertical / horizontal layout"
 msgstr "縦 / 横レイアウトを切り替え"
 
@@ -1740,11 +1764,158 @@ msgstr "プロパティ"
 msgid "Methods"
 msgstr "メソッド"
 
-msgid "Jump to a class, property, or method in the current tab."
-msgstr "現在のタブのクラス・プロパティ・メソッドへ移動します。"
+msgid "Jump to a class, property, method, or bookmark in the current tab."
+msgstr "現在のタブのクラス・プロパティ・メソッド・ブックマークへ移動します。"
 
-msgid "Open Manual"
-msgstr "マニュアルを開く"
+msgid "ATE Manual"
+msgstr "ATE マニュアル"
 
-msgid "Manual.md not found."
-msgstr "Manual.md が見つかりません。"
+msgid "{0} not found."
+msgstr "{0} が見つかりません。"
+
+msgid "Documentation"
+msgstr "ドキュメント"
+
+msgid "Scripting Reference"
+msgstr "スクリプティング リファレンス"
+
+msgid "AteApi Design"
+msgstr "AteApi 設計"
+
+msgid "Game API Design"
+msgstr "ゲーム API 設計"
+
+msgid "Addon Signing"
+msgstr "アドオンの署名"
+
+msgid "Games"
+msgstr "ゲーム"
+
+msgid "How to Play"
+msgstr "遊び方"
+
+msgid "(no games installed)"
+msgstr "（ゲームがインストールされていません）"
+
+msgid "(unloaded)"
+msgstr "（アンロード済み）"
+
+msgid "Z-Machine game '{0}' resumed after the reload."
+msgstr "Z-Machine ゲーム '{0}' はリロード後に再開されました。"
+
+msgid "This game's live state was lost to a domain reload (script compile, play mode, or an editor restart). The transcript remains as plain text; start a new game from the Games menu — a save made in-game can be restored there."
+msgstr "このゲームの実行状態はドメインリロード（スクリプトのコンパイル、プレイモード、またはエディター再起動）で失われました。トランスクリプトはプレーンテキストとして残っています。Games メニューから新しいゲームを開始してください — ゲーム内で作成したセーブはそこで復元できます。"
+
+msgid "Play Zork and the installed addon games."
+msgstr "Zork とインストール済みのアドオンゲームで遊べます。"
+
+msgid "Keyboard Shortcuts"
+msgstr "キーボード ショートカット"
+
+msgid "Localization"
+msgstr "ローカライズ"
+
+msgid "Snippets"
+msgstr "スニペット"
+
+msgid "Troubleshooting"
+msgstr "トラブルシューティング"
+
+msgid "Addon '{0}' moved into its own folder — addons are folder-based now. Approval (and any signature) must be renewed for the new folder identity."
+msgstr "アドオン '{0}' を専用フォルダーに移動しました — アドオンはフォルダー単位になりました。新しいフォルダーの識別内容に対して、承認（および署名）を再度行う必要があります。"
+
+msgid "Clear"
+msgstr "クリア"
+
+msgid "Hide this view (the View menu shows it again)."
+msgstr "このビューを隠します(表示メニューで再表示できます)。"
+
+msgid "Hide this view."
+msgstr "このビューを隠します。"
+
+msgid "Locked (read-only): clicks select text for copying — click to allow editing"
+msgstr "ロック中（読み取り専用）：クリックでコピー用のテキスト選択になります — クリックで編集を許可"
+
+msgid "Unlocked: clicks open block editors — click to make this tab read-only"
+msgstr "ロック解除中：クリックでブロックエディタが開きます — クリックでこのタブを読み取り専用に"
+
+msgid "Open Markdown Locked"
+msgstr "Markdown をロックして開く"
+
+msgid "Rendered Markdown opens read-only: clicks select text for copying instead of opening block editors. The lock button in the toolbar still switches per tab."
+msgstr "レンダリング表示の Markdown を読み取り専用で開きます：クリックはブロックエディタを開かず、コピー用のテキスト選択になります。ツールバーのロックボタンでタブごとに切り替えできます。"
+
+msgid "Copy Link URL"
+msgstr "リンクの URL をコピー"
+
+msgid "Copy Block as Text"
+msgstr "ブロックをテキストとしてコピー"
+
+msgid "Copy Selection as Text"
+msgstr "選択範囲をテキストとしてコピー"
+
+msgid "Copied the selected blocks as plain text."
+msgstr "選択したブロックをプレーンテキストとしてコピーしました。"
+
+msgid "Copy All as Text"
+msgstr "すべてをテキストとしてコピー"
+
+msgid "Unlock (Allow Editing)"
+msgstr "ロック解除（編集を許可）"
+
+msgid "Copied the rendered document as plain text."
+msgstr "レンダリングされたドキュメントをプレーンテキストとしてコピーしました。"
+
+msgid "Keep the current version. The update icon stays by the settings gear until you update."
+msgstr "現在のバージョンを維持します。更新するまで、設定ギアの横に更新アイコンが表示され続けます。"
+
+msgid "Install the new version now via the Unity Package Manager."
+msgstr "Unity Package Manager で新しいバージョンを今すぐインストールします。"
+
+msgid "This copy is embedded for development — update manually via git."
+msgstr "このコピーは開発用に埋め込まれています — git で手動更新してください。"
+
+msgid "Hidden Characters"
+msgstr "隠し文字"
+
+msgid "Region"
+msgstr "リージョン"
+
+msgid "Suppress in This Project"
+msgstr "このプロジェクトで抑制"
+
+msgid "Adds -nowarn:1633 to Assets/csc.rsp, Unity's project-wide compiler response file, so #pragma bookmark lines compile without the warning. Assemblies compiled from their own asmdef may need the flag in their own response file."
+msgstr "Assets/csc.rsp（Unity のプロジェクト全体のコンパイラー応答ファイル）に -nowarn:1633 を追加し、#pragma bookmark 行を警告なしでコンパイルできるようにします。独自の asmdef でコンパイルされるアセンブリでは、それぞれの応答ファイルにこのフラグが必要な場合があります。"
+
+msgid "#pragma bookmark lines in C# scripts trigger compiler warning CS1633 (unknown pragma) unless the project suppresses it."
+msgstr "C# スクリプト内の #pragma bookmark 行は、プロジェクトで抑制しない限りコンパイラー警告 CS1633（不明なプラグマ）を発生させます。"
+
+msgid "Added -nowarn:1633 to Assets/csc.rsp — scripts will recompile."
+msgstr "Assets/csc.rsp に -nowarn:1633 を追加しました — スクリプトは再コンパイルされます。"
+
+msgid "Unknown-pragma warning (CS1633): suppressed in this project."
+msgstr "不明なプラグマ警告（CS1633）：このプロジェクトでは抑制されています。"
+
+msgid "Unknown-pragma warning (CS1633): not suppressed — #pragma bookmark lines will warn in C# scripts."
+msgstr "不明なプラグマ警告（CS1633）：抑制されていません — #pragma bookmark 行は C# スクリプトで警告になります。"
+
+msgid "Hidden characters shown."
+msgstr "隠し文字を表示しました。"
+
+msgid "Hidden characters hidden."
+msgstr "隠し文字を非表示にしました。"
+
+msgid "Copy Line"
+msgstr "行をコピー"
+
+msgid "Copied the console line."
+msgstr "コンソールの行をコピーしました。"
+
+msgid "Show only console lines containing this text."
+msgstr "このテキストを含むコンソール行のみを表示します。"
+
+msgid "Every ATE message, timestamped. Click a row; Ctrl+C or right-click → Copy Line copies it."
+msgstr "すべての ATE メッセージ（タイムスタンプ付き）。行をクリックし、Ctrl+C または右クリック → 行をコピー でコピーできます。"
+
+msgid "{0} of {1} shown"
+msgstr "{1} 件中 {0} 件を表示"

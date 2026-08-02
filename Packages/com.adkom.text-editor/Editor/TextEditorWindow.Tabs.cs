@@ -152,7 +152,9 @@ namespace ADKOM.TextEditor
 
                 var label = new Label((doc.IsDirty ? "*" : "") + doc.DisplayName)
                 {
-                    tooltip = doc.HasFile ? doc.FilePath : L10n.Tr("New unsaved document — protected by the session, saved to disk on Save.")
+                    tooltip = doc.GameUnloaded
+                        ? L10n.Tr("This game's live state was lost to a domain reload (script compile, play mode, or an editor restart). The transcript remains as plain text; start a new game from the Games menu — a save made in-game can be restored there.")
+                        : doc.HasFile ? doc.FilePath : L10n.Tr("New unsaved document — protected by the session, saved to disk on Save.")
                 };
                 tab.Add(label);
 
@@ -368,6 +370,7 @@ namespace ADKOM.TextEditor
                 if (_code != null) { _code.SetValueWithoutNotify(string.Empty); _code.style.display = DisplayStyle.None; }
                 if (_mdView != null) _mdView.style.display = DisplayStyle.None;
                 if (_mdToggle != null) _mdToggle.style.display = DisplayStyle.None;
+                if (_mdLockBtn != null) _mdLockBtn.style.display = DisplayStyle.None;
                 if (_mdFormatBar != null) _mdFormatBar.style.display = DisplayStyle.None;
                 if (_emptyHint != null) _emptyHint.style.display = DisplayStyle.Flex;
                 RebuildTabs();
@@ -391,6 +394,7 @@ namespace ADKOM.TextEditor
             {
                 if (_mdView != null) _mdView.style.display = DisplayStyle.None;
                 if (_mdToggle != null) _mdToggle.style.display = DisplayStyle.None;
+                if (_mdLockBtn != null) _mdLockBtn.style.display = DisplayStyle.None;
                 if (_mdFormatBar != null) _mdFormatBar.style.display = DisplayStyle.None;
                 SyncSettingsControls();
                 RebuildTabs();

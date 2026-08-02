@@ -31,6 +31,9 @@ namespace ADKOM.TextEditor
         public string VirtualContextPath;
         // Markdown documents: true = rendered (WYSIWYG) mode, false = source.
         public bool MdRendered;
+        // Rendered Markdown: read-only tab — clicks select text for copying
+        // instead of opening block editors. Defaults from MdLockByDefault.
+        public bool MdLocked;
         public LineEnding Eol = LineEnding.Windows;
         public bool HasBom;
         // True when the file on disk indents with tabs. In memory tabs are
@@ -40,10 +43,13 @@ namespace ADKOM.TextEditor
         // Ticks of File.GetLastWriteTimeUtc at load/save time, for external-change detection.
         public long LastKnownWriteTimeUtcTicks;
 
-        // Per-document undo history (CodeView.UndoWorld), swapped into the
-        // code view on tab switch so Ctrl+Z never crosses documents.
-        // Runtime-only: undo does not survive domain reloads.
-        [NonSerialized] public object UndoWorld;
+        // Per-document undo history, swapped into the code view on tab
+        // switch so Ctrl+Z never crosses documents. SERIALIZED: undo/redo
+        // (and the History timeline) survive domain reloads with the
+        // session. Note: only the DETACHED world serializes — the active
+        // document's live world is synced back on tab switch and on the
+        // window's serialization callback.
+        [UnityEngine.SerializeField] internal CodeView.UndoWorld UndoWorld; // internal type → [SerializeField] keeps it serialized
 
         // Game-mode state (AteApi 1.1). Runtime-only, like the undo world:
         // a domain reload drops game mode and overlay colors with the game.
@@ -61,6 +67,26 @@ namespace ADKOM.TextEditor
         // "Keep Buffer" was chosen after the backing file vanished — stop
         // re-prompting; the buffer lives on (dirty) until saved or closed.
         public bool DeletionNotified;
+
+        // A game ran in this tab and a domain reload (or editor quit) wiped
+        // its live state WITHOUT a resumable snapshot; the transcript remains
+        // as plain text. Drives the "(unloaded)" tab title's explanatory
+        // tooltip. Serialized on purpose: the mark must survive the very
+        // reload it describes.
+        public bool GameUnloaded;
+
+        // Stateful-addon claim (AteApi 1.2, AteDocument.StateTag): addons
+        // stamp their documents so RestoreState can re-find them after a
+        // reload. Serialized — the whole point is surviving the reload.
+        public string StateTag;
+
+        // Z-Machine domain-reload survival: a snapshot of the running game
+        // (VM + transcript + map) was written before the reload, keyed by
+        // this id in the ZMachine session folder; the story file it needs is
+        // recorded too. Serialized so the launcher can rebuild the game
+        // around this very tab after the reload (or editor restart).
+        public string ZmSnapshotId;
+        public string ZmStoryPath;
 
         public bool HasFile => !string.IsNullOrEmpty(FilePath);
         public string DisplayName =>

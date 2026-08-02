@@ -149,7 +149,9 @@ namespace ADKOM.TextEditor
         // --- Read/write occurrence highlighting ---
 
         int _occLastCaret = -1, _occLastVersion = -1;
-        bool _occInFlight;
+        // Reset with the domain — a hot-serialized mid-flight true would
+        // permanently block occurrence highlighting.
+        [System.NonSerialized] bool _occInFlight;
 
         /// <summary>300ms poll: when the caret settles on a new spot (bare
         /// caret, C#, semantics on), resolve the symbol's occurrences on a

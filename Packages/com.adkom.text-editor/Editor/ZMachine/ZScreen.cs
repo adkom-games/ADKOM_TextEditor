@@ -54,6 +54,19 @@ namespace AteZMachine
             UpdateWidth();
         }
 
+        /// <summary>Adopts an EXISTING document — the domain-reload resume
+        /// path, where the transcript tab survived in the session. Re-enters
+        /// game mode and re-applies the game font; the transcript itself is
+        /// reloaded from the snapshot sidecar (LoadTranscript) afterwards.</summary>
+        public void Attach(AteDocument existing, string title)
+        {
+            _doc = existing;
+            _doc.SetTitle(title);
+            _doc.SetFont("Consolas", 15);
+            _doc.GameMode = true;
+            UpdateWidth();
+        }
+
         public void Close()
         {
             if (IsValid && _doc.GameMode) { _doc.GameMode = false; _doc.Close(discardChanges: true); }

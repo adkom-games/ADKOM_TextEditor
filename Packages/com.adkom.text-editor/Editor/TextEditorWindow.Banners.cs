@@ -18,6 +18,7 @@ namespace ADKOM.TextEditor
         {
             if (_notifyBar == null) return;
             _notifyLabel.text = msg;
+            if (_notifyInput != null) _notifyInput.style.display = DisplayStyle.None;
             _notifyButtons.Clear();
             foreach (var (label, act) in actions)
             {
@@ -30,6 +31,7 @@ namespace ADKOM.TextEditor
         void HideBanner()
         {
             if (_notifyBar != null) _notifyBar.style.display = DisplayStyle.None;
+            if (_notifyInput != null) _notifyInput.style.display = DisplayStyle.None;
         }
 
         /// <summary>Shows the non-modal banner when the active document's
@@ -137,34 +139,57 @@ namespace ADKOM.TextEditor
 
         /// <summary>Consent for a TAMPERED / possible-impersonation addon:
         /// approval requires typing the addon's name (deliberate friction —
-        /// AddonSigning, issue #27).</summary>
+        /// AddonSigning, issue #27). ONE step, all in the banner: message,
+        /// inline name entry, and the buttons — no status-bar prompt (it was
+        /// invisible down there, and its cancel-on-click re-showed the banner
+        /// in an endless loop). The banner survives stray clicks; Enter in
+        /// the field approves, Escape (or Not Now) dismisses, and the name
+        /// match is case-insensitive — the friction is typing the name, not
+        /// guessing its capitalization.</summary>
         internal void ShowAddonConsentTyped(string message, string addonName,
             System.Action onApprove, System.Action onDistrust)
         {
-            System.Action ask = null;
-            ask = () => ShowBanner(message,
-                (L10n.Tr("Approve Anyway…"), () =>
+            if (_notifyBar == null || _notifyInput == null) return;
+            System.Action tryApprove = () =>
+            {
+                if (string.Equals(_notifyInput.value?.Trim(), addonName,
+                        System.StringComparison.OrdinalIgnoreCase))
                 {
                     HideBanner();
-                    StartStatusPrompt(
-                        string.Format(L10n.Tr("Type the addon name '{0}' to approve:"), addonName),
-                        digitsOnly: false,
-                        onCommit: s =>
-                        {
-                            if (string.Equals(s?.Trim(), addonName, System.StringComparison.Ordinal))
-                                onApprove?.Invoke();
-                            else
-                            {
-                                PostStatus(L10n.Tr("Name did not match — not approved."));
-                                ask();
-                            }
-                        },
-                        initialValue: "",
-                        onCancel: ask);
-                }),
+                    onApprove?.Invoke();
+                }
+                else
+                {
+                    PostStatus(L10n.Tr("Name did not match — not approved."));
+                    _notifyInput.SetValueWithoutNotify(string.Empty);
+                    _notifyInput.schedule.Execute(() => _notifyInput.Focus()).ExecuteLater(0);
+                }
+            };
+            ShowBanner(
+                message + "  " + string.Format(L10n.Tr("Type the addon name '{0}' to approve:"), addonName),
+                (L10n.Tr("Approve and Run"), tryApprove),
                 (L10n.Tr("Not Now"), HideBanner),
                 (L10n.Tr("Distrust This Key"), () => { HideBanner(); onDistrust?.Invoke(); }));
-            ask();
+            _notifyInput.SetValueWithoutNotify(string.Empty);
+            _notifyInput.style.display = DisplayStyle.Flex; // after ShowBanner (which hides it)
+            _consentTryApprove = tryApprove; // Enter key path (handler registered at construction)
+            _notifyInput.schedule.Execute(() => _notifyInput.Focus()).ExecuteLater(0);
+        }
+
+        System.Action _consentTryApprove;
+
+        void OnConsentInputKey(KeyDownEvent e)
+        {
+            if (e.keyCode == KeyCode.Return || e.keyCode == KeyCode.KeypadEnter)
+            {
+                _consentTryApprove?.Invoke();
+                e.StopPropagation();
+            }
+            else if (e.keyCode == KeyCode.Escape)
+            {
+                HideBanner();
+                e.StopPropagation();
+            }
         }
 
         void BuildMiniBuffer(VisualElement statusBar)
@@ -205,10 +230,14 @@ namespace ADKOM.TextEditor
                     e.StopPropagation();
                 }
             }, TrickleDown.TrickleDown);
-            // Clicking elsewhere cancels, like emacs quitting the minibuffer.
+            // Clicking elsewhere cancels, like emacs quitting the minibuffer —
+            // except for prompts that pass cancelOnFocusOut: false (available
+            // for flows whose cancel path would fight stray clicks; the typed
+            // addon consent now lives in the banner instead).
             _miniInput.RegisterCallback<FocusOutEvent>(_ =>
             {
-                if (_miniBuffer.style.display == DisplayStyle.Flex) CloseMiniBuffer();
+                if (_miniBuffer.style.display == DisplayStyle.Flex && _miniCancelOnBlur)
+                    CloseMiniBuffer();
             });
             _miniBuffer.Add(_miniPrompt);
             _miniBuffer.Add(_miniInput);
@@ -220,7 +249,7 @@ namespace ADKOM.TextEditor
         /// invoking <paramref name="onCancel"/> when one is given. Opening a
         /// prompt while one is showing cancels the first.</summary>
         void StartStatusPrompt(string prompt, bool digitsOnly, System.Action<string> onCommit,
-            string initialValue = "", System.Action onCancel = null)
+            string initialValue = "", System.Action onCancel = null, bool cancelOnFocusOut = true)
         {
             if (_miniBuffer == null) return;
             if (_miniBuffer.style.display == DisplayStyle.Flex) CloseMiniBuffer();
@@ -228,6 +257,7 @@ namespace ADKOM.TextEditor
             _miniDigitsOnly = digitsOnly;
             _miniCommit = onCommit;
             _miniCancel = onCancel;
+            _miniCancelOnBlur = cancelOnFocusOut;
             _miniInput.SetValueWithoutNotify(initialValue ?? string.Empty);
             _statusLeft.style.display = DisplayStyle.None;
             _miniBuffer.style.display = DisplayStyle.Flex;

@@ -79,6 +79,12 @@ namespace ADKOM.TextEditor
         // its group — the text the group inserted and the text it replaced —
         // not a full document snapshot, so undo memory scales with edit size,
         // never with file size. Coalescing extends the top op in place.
+        // UndoOp/UndoSeg/UndoWorld are [Serializable] so a document's undo
+        // history rides Unity serialization across DOMAIN RELOADS (the world
+        // sits on TextDocument.UndoWorld between tab switches). Plain data
+        // only; the char/group-state fields Unity cannot serialize are
+        // harmless to lose (they only break one typing group).
+        [System.Serializable]
         internal sealed class UndoOp
         {
             public int Start;                       // group's change origin
@@ -92,6 +98,7 @@ namespace ADKOM.TextEditor
         /// <summary>One segment of a multi-caret edit; Start is in PRE-edit
         /// coordinates. Undo applies inverses ascending (each lands exactly
         /// at Start), redo applies forward descending.</summary>
+        [System.Serializable]
         internal sealed class UndoSeg
         {
             public int Start;
@@ -102,15 +109,18 @@ namespace ADKOM.TextEditor
         /// <summary>The complete per-document undo world: both stacks plus
         /// the coalescing state, swapped by the window on tab switches so
         /// undo history is scoped to its document.</summary>
+        [System.Serializable]
         internal sealed class UndoWorld
         {
-            public readonly List<UndoOp> Undo = new List<UndoOp>();
-            public readonly List<UndoOp> Redo = new List<UndoOp>();
+            // NOT readonly: Unity's serializer skips readonly fields, and
+            // these lists are exactly what must survive a domain reload.
+            public List<UndoOp> Undo = new List<UndoOp>();
+            public List<UndoOp> Redo = new List<UndoOp>();
             public EditKind LastKind = EditKind.Programmatic;
             public double LastEditTime, GroupStartTime;
             public int LastEditEnd = -1;
             public int GroupChars;
-            public char LastTypedChar = '\0';
+            [System.NonSerialized] public char LastTypedChar = '\0'; // char: not Unity-serializable
         }
 
         UndoWorld _world = new UndoWorld();
@@ -119,7 +129,7 @@ namespace ADKOM.TextEditor
 
         /// <summary>Detaches the current undo world (the caller stores it on
         /// the document) — used when the window swaps documents.</summary>
-        internal object DetachUndoWorld()
+        internal UndoWorld DetachUndoWorld()
         {
             SyncGroupStateIntoWorld();
             var w = _world;
@@ -129,9 +139,17 @@ namespace ADKOM.TextEditor
         }
 
         /// <summary>Attaches a document's undo world (null = fresh).</summary>
-        internal void AttachUndoWorld(object world)
+        internal void AttachUndoWorld(UndoWorld world)
         {
-            _world = world as UndoWorld ?? new UndoWorld();
+            _world = world ?? new UndoWorld();
+            // Unity's serializer (domain-reload survival) revives a null
+            // Segments list as an EMPTY one — but null is the "simple op"
+            // marker, so an empty list would undo as a zero-segment
+            // multi-caret op and restore nothing. Put the nulls back.
+            foreach (var list in new[] { _world.Undo, _world.Redo })
+                foreach (var op in list)
+                    if (op.Segments != null && op.Segments.Count == 0)
+                        op.Segments = null;
             AttachGroupStateFromWorld();
         }
 
@@ -941,6 +959,25 @@ namespace ADKOM.TextEditor
             set { _gutterCol.style.display = value ? DisplayStyle.Flex : DisplayStyle.None; RefreshVisible(); }
         }
 
+        bool _showHiddenChars;
+
+        /// <summary>Render non-printing characters as faint glyphs: '·' for
+        /// spaces, '→' for tabs, '°' for NBSP, '□' for zero-width characters,
+        /// control pictures for C0 controls, and '¶' at each line end.
+        /// Display only — the buffer, caret math, and copied text keep the
+        /// real characters.</summary>
+        public bool showHiddenChars
+        {
+            get => _showHiddenChars;
+            set
+            {
+                if (_showHiddenChars == value) return;
+                _showHiddenChars = value;
+                _lineMarkup = null; // markup embeds the glyphs; rebuild lazily
+                RefreshVisible();
+            }
+        }
+
         void Reclassify()
         {
             _lineMarkup = null;
@@ -974,7 +1011,9 @@ namespace ADKOM.TextEditor
             string text = _lines[line];
             toCol = Mathf.Min(toCol, text.Length);
             var sb = new StringBuilder((toCol - fromCol) + 32);
-            var spans = _lineSpans[line];
+            // Show Hidden Characters routes plain documents through here too,
+            // so a missing span table must read as "no colored spans".
+            var spans = _lineSpans != null && line < _lineSpans.Length ? _lineSpans[line] : null;
             int pos = fromCol;
             if (spans != null)
             {
@@ -992,15 +1031,47 @@ namespace ADKOM.TextEditor
             return sb.ToString();
         }
 
-        static void AppendEscaped(StringBuilder sb, string text, int from, int to, string color)
+        void AppendEscaped(StringBuilder sb, string text, int from, int to, string color)
         {
             if (to <= from) return;
             if (color != null) sb.Append("<color=").Append(color).Append('>');
-            bool hasLt = text.IndexOf('<', from, to - from) >= 0;
-            if (hasLt) sb.Append("<noparse>");
-            sb.Append(text, from, to - from);
-            if (hasLt) sb.Append("</noparse>");
+            if (_showHiddenChars) AppendWithHiddenGlyphs(sb, text, from, to);
+            else
+            {
+                bool hasLt = text.IndexOf('<', from, to - from) >= 0;
+                if (hasLt) sb.Append("<noparse>");
+                sb.Append(text, from, to - from);
+                if (hasLt) sb.Append("</noparse>");
+            }
             if (color != null) sb.Append("</color>");
+        }
+
+        // Faint but visible in light and dark themes alike.
+        const string HiddenGlyphColor = "#80808080";
+
+        /// <summary>Show Hidden Characters rendering: swaps each invisible
+        /// character for a same-width placeholder glyph in a faint color
+        /// (rich-text color tags nest, so the run's own color resumes after
+        /// each glyph) and escapes literal '&lt;'.</summary>
+        static void AppendWithHiddenGlyphs(StringBuilder sb, string text, int from, int to)
+        {
+            for (int i = from; i < to; i++)
+            {
+                char c = text[i];
+                string glyph =
+                    c == ' ' ? "\u00B7"                     // space -> middle dot
+                    : c == '\t' ? "\u2192"                  // tab -> arrow
+                    : c == '\u00A0' ? "\u00B0"              // no-break space
+                    : c == '\u200B' || c == '\u200C' || c == '\u200D' ||
+                      c == '\u2060' || c == '\uFEFF' ? "\u25A1" // zero-width family
+                    : c < ' ' ? ((char)(0x2400 + c)).ToString() // C0 control pictures
+                    : null;
+                if (glyph != null)
+                    sb.Append("<color=").Append(HiddenGlyphColor).Append('>')
+                      .Append(glyph).Append("</color>");
+                else if (c == '<') sb.Append("<noparse><</noparse>");
+                else sb.Append(c);
+            }
         }
 
         // ---------- Word wrap layout ----------
@@ -1206,7 +1277,8 @@ namespace ADKOM.TextEditor
                 label.style.left = 0;
                 label.style.color = _textColor;
                 var ov = OverlayFor(line);
-                bool rich = ov != null || (_lineSpans != null && line < _lineSpans.Length);
+                bool rich = ov != null || _showHiddenChars ||
+                    (_lineSpans != null && line < _lineSpans.Length);
                 label.enableRichText = rich;
                 if (ov != null)
                     label.text = OverlayMarkupForRange(line, sc, ec, ov);
@@ -1233,6 +1305,11 @@ namespace ADKOM.TextEditor
                     string glyph = IsRegionHeader(line) ? "⋯" : "⋯ }";
                     label.text += rich ? " <color=#9A9A9A>" + glyph + "</color>" : " " + glyph;
                 }
+                // Show Hidden Characters: a pilcrow marks each real line end
+                // (not the last line — no newline follows it, and not folded
+                // headers — their newline is inside the collapsed region).
+                else if (_showHiddenChars && ec == _lines[line].Length && line < _lines.Count - 1)
+                    label.text += "<color=" + HiddenGlyphColor + ">¶</color>";
 
                 if (!_wordWrap)
                 {
@@ -2057,13 +2134,32 @@ namespace ADKOM.TextEditor
             else
             {
                 // Jumps (search results, bookmarks, Section menu, Goto Line,
-                // …) land CENTERED in the viewport, not merely scrolled into
-                // view. Re-center once layout settles for the just-opened-tab
-                // case, where the scroller's max is still stale.
+                // ate:// report links, …) land CENTERED in the viewport, not
+                // merely scrolled into view. For a just-opened tab the
+                // scroller's range is still stale (content height settles
+                // over a few layout passes) and CenterOnLine clamps to it —
+                // one deferred re-center was often still too early. Keep
+                // re-centering until the range holds still across two ticks
+                // (then the last centering was computed against real limits),
+                // with a hard cap so a pathological layout never loops.
                 CenterOnLine(line);
-                schedule.Execute(() => { if (!_gameMode) CenterOnLine(line); });
+                _recenterLoop?.Pause(); // a newer jump supersedes an older loop
+                int attempts = 0;
+                float lastHigh = float.NaN;
+                IVisualElementScheduledItem recenter = null;
+                recenter = _recenterLoop = schedule.Execute(() =>
+                {
+                    if (_gameMode) { recenter.Pause(); return; }
+                    float high = _scroll.verticalScroller.highValue;
+                    bool settled = !float.IsNaN(lastHigh) && Mathf.Approximately(high, lastHigh);
+                    lastHigh = high;
+                    CenterOnLine(line);
+                    if (settled || ++attempts >= 8) recenter.Pause();
+                }).Every(40);
             }
         }
+
+        IVisualElementScheduledItem _recenterLoop;
 
         public void SelectAll()
         {

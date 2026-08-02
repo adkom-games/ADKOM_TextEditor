@@ -1331,6 +1331,30 @@ msgstr "Push"
 msgid "Branch History"
 msgstr "Branch History"
 
+msgid "Working Tree"
+msgstr "Working Tree"
+
+msgid "HEAD — your working tree. Click to show the working-tree changes."
+msgstr "HEAD — your working tree. Click to show the working-tree changes."
+
+msgid "Back to the working-tree changes."
+msgstr "Back to the working-tree changes."
+
+msgid "Commit {0}"
+msgstr "Commit {0}"
+
+msgid "Amend"
+msgstr "Amend"
+
+msgid "Rewrite this commit's message (message-only amend; staged files are not swept in)."
+msgstr "Rewrite this commit's message (message-only amend; staged files are not swept in)."
+
+msgid "Only the latest commit (HEAD) can be amended."
+msgstr "Only the latest commit (HEAD) can be amended."
+
+msgid "Message unchanged — nothing to amend."
+msgstr "Message unchanged — nothing to amend."
+
 msgid "Toggle vertical / horizontal layout"
 msgstr "Toggle vertical / horizontal layout"
 
@@ -1742,11 +1766,158 @@ msgstr "Properties"
 msgid "Methods"
 msgstr "Methods"
 
-msgid "Jump to a class, property, or method in the current tab."
-msgstr "Jump to a class, property, or method in the current tab."
+msgid "Jump to a class, property, method, or bookmark in the current tab."
+msgstr "Jump to a class, property, method, or bookmark in the current tab."
 
-msgid "Open Manual"
-msgstr "Open Manual"
+msgid "ATE Manual"
+msgstr "ATE Manual"
 
-msgid "Manual.md not found."
-msgstr "Manual.md not found."
+msgid "{0} not found."
+msgstr "{0} not found."
+
+msgid "Documentation"
+msgstr "Documentation"
+
+msgid "Scripting Reference"
+msgstr "Scripting Reference"
+
+msgid "AteApi Design"
+msgstr "AteApi Design"
+
+msgid "Game API Design"
+msgstr "Game API Design"
+
+msgid "Addon Signing"
+msgstr "Addon Signing"
+
+msgid "Games"
+msgstr "Games"
+
+msgid "How to Play"
+msgstr "How to Play"
+
+msgid "(no games installed)"
+msgstr "(no games installed)"
+
+msgid "(unloaded)"
+msgstr "(unloaded)"
+
+msgid "Z-Machine game '{0}' resumed after the reload."
+msgstr "Z-Machine game '{0}' resumed after the reload."
+
+msgid "This game's live state was lost to a domain reload (script compile, play mode, or an editor restart). The transcript remains as plain text; start a new game from the Games menu — a save made in-game can be restored there."
+msgstr "This game's live state was lost to a domain reload (script compile, play mode, or an editor restart). The transcript remains as plain text; start a new game from the Games menu — a save made in-game can be restored there."
+
+msgid "Play Zork and the installed addon games."
+msgstr "Play Zork and the installed addon games."
+
+msgid "Keyboard Shortcuts"
+msgstr "Keyboard Shortcuts"
+
+msgid "Localization"
+msgstr "Localization"
+
+msgid "Snippets"
+msgstr "Snippets"
+
+msgid "Troubleshooting"
+msgstr "Troubleshooting"
+
+msgid "Addon '{0}' moved into its own folder — addons are folder-based now. Approval (and any signature) must be renewed for the new folder identity."
+msgstr "Addon '{0}' moved into its own folder — addons are folder-based now. Approval (and any signature) must be renewed for the new folder identity."
+
+msgid "Clear"
+msgstr "Clear"
+
+msgid "Hide this view (the View menu shows it again)."
+msgstr "Hide this view (the View menu shows it again)."
+
+msgid "Hide this view."
+msgstr "Hide this view."
+
+msgid "Locked (read-only): clicks select text for copying — click to allow editing"
+msgstr "Locked (read-only): clicks select text for copying — click to allow editing"
+
+msgid "Unlocked: clicks open block editors — click to make this tab read-only"
+msgstr "Unlocked: clicks open block editors — click to make this tab read-only"
+
+msgid "Open Markdown Locked"
+msgstr "Open Markdown Locked"
+
+msgid "Rendered Markdown opens read-only: clicks select text for copying instead of opening block editors. The lock button in the toolbar still switches per tab."
+msgstr "Rendered Markdown opens read-only: clicks select text for copying instead of opening block editors. The lock button in the toolbar still switches per tab."
+
+msgid "Copy Link URL"
+msgstr "Copy Link URL"
+
+msgid "Copy Block as Text"
+msgstr "Copy Block as Text"
+
+msgid "Copy Selection as Text"
+msgstr "Copy Selection as Text"
+
+msgid "Copied the selected blocks as plain text."
+msgstr "Copied the selected blocks as plain text."
+
+msgid "Copy All as Text"
+msgstr "Copy All as Text"
+
+msgid "Unlock (Allow Editing)"
+msgstr "Unlock (Allow Editing)"
+
+msgid "Copied the rendered document as plain text."
+msgstr "Copied the rendered document as plain text."
+
+msgid "Keep the current version. The update icon stays by the settings gear until you update."
+msgstr "Keep the current version. The update icon stays by the settings gear until you update."
+
+msgid "Install the new version now via the Unity Package Manager."
+msgstr "Install the new version now via the Unity Package Manager."
+
+msgid "This copy is embedded for development — update manually via git."
+msgstr "This copy is embedded for development — update manually via git."
+
+msgid "Hidden Characters"
+msgstr "Hidden Characters"
+
+msgid "Region"
+msgstr "Region"
+
+msgid "Suppress in This Project"
+msgstr "Suppress in This Project"
+
+msgid "Adds -nowarn:1633 to Assets/csc.rsp, Unity's project-wide compiler response file, so #pragma bookmark lines compile without the warning. Assemblies compiled from their own asmdef may need the flag in their own response file."
+msgstr "Adds -nowarn:1633 to Assets/csc.rsp, Unity's project-wide compiler response file, so #pragma bookmark lines compile without the warning. Assemblies compiled from their own asmdef may need the flag in their own response file."
+
+msgid "#pragma bookmark lines in C# scripts trigger compiler warning CS1633 (unknown pragma) unless the project suppresses it."
+msgstr "#pragma bookmark lines in C# scripts trigger compiler warning CS1633 (unknown pragma) unless the project suppresses it."
+
+msgid "Added -nowarn:1633 to Assets/csc.rsp — scripts will recompile."
+msgstr "Added -nowarn:1633 to Assets/csc.rsp — scripts will recompile."
+
+msgid "Unknown-pragma warning (CS1633): suppressed in this project."
+msgstr "Unknown-pragma warning (CS1633): suppressed in this project."
+
+msgid "Unknown-pragma warning (CS1633): not suppressed — #pragma bookmark lines will warn in C# scripts."
+msgstr "Unknown-pragma warning (CS1633): not suppressed — #pragma bookmark lines will warn in C# scripts."
+
+msgid "Hidden characters shown."
+msgstr "Hidden characters shown."
+
+msgid "Hidden characters hidden."
+msgstr "Hidden characters hidden."
+
+msgid "Copy Line"
+msgstr "Copy Line"
+
+msgid "Copied the console line."
+msgstr "Copied the console line."
+
+msgid "Show only console lines containing this text."
+msgstr "Show only console lines containing this text."
+
+msgid "Every ATE message, timestamped. Click a row; Ctrl+C or right-click → Copy Line copies it."
+msgstr "Every ATE message, timestamped. Click a row; Ctrl+C or right-click → Copy Line copies it."
+
+msgid "{0} of {1} shown"
+msgstr "{0} of {1} shown"
