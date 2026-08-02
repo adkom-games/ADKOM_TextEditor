@@ -24,6 +24,15 @@ namespace ADKOM.TextEditor
         static AteUnsavedNotice _open; // singleton: repeated closes must not stack notices
         List<TextDocument> _dirtyDocs;
 
+        /// <summary>A domain reload orphans the notice: its document
+        /// references die with the domain, and the session already protects
+        /// those buffers — so a stale notice simply closes itself.</summary>
+        void CreateGUI()
+        {
+            if (_dirtyDocs == null)
+                EditorApplication.delayCall += () => { if (this != null) Close(); };
+        }
+
         /// <summary>Opens the notice for the given documents (called from the
         /// closing window's OnDestroy, deferred a tick so we never open UI
         /// during teardown). Skipped while the editor itself is quitting.
@@ -112,7 +121,8 @@ namespace ADKOM.TextEditor
                     path = d.HasFile ? Path.GetFullPath(d.FilePath) : string.Empty,
                     dirty = d.IsDirty,
                     content = d.IsDirty ? d.Content : null,
-                    mdRendered = d.MdRendered
+                    mdRendered = d.MdRendered,
+                    mdUnlocked = !d.MdLocked
                 });
             }
             EditorConfig.MergeSessionSaveState(tabs);

@@ -492,8 +492,8 @@ namespace ADKOM.TextEditor.Scripting
 
         // ---- Sidecar collection + verification for an addon ----
 
-        /// <summary>Collects and verifies every .atesig beside/inside the
-        /// addon. <paramref name="key"/> is the addon path (file or folder);
+        /// <summary>Collects and verifies every .atesig inside the addon
+        /// folder. <paramref name="key"/> is the addon folder path;
         /// <paramref name="contentHash"/> the consent hash.</summary>
         internal static SigningInfo Evaluate(string key, string contentHash)
         {
@@ -567,23 +567,14 @@ namespace ADKOM.TextEditor.Scripting
 
         static IEnumerable<string> SidecarsFor(string key)
         {
-            if (Directory.Exists(key))
-            {
-                foreach (var f in Directory.GetFiles(key, "*" + SidecarExt, SearchOption.AllDirectories))
-                    yield return f;
-            }
-            else if (File.Exists(key))
-            {
-                string dir = Path.GetDirectoryName(key);
-                string stem = Path.GetFileName(key);
-                foreach (var f in Directory.GetFiles(dir, stem + ".*" + SidecarExt, SearchOption.TopDirectoryOnly))
-                    yield return f;
-            }
+            if (!Directory.Exists(key)) yield break;
+            foreach (var f in Directory.GetFiles(key, "*" + SidecarExt, SearchOption.AllDirectories))
+                yield return f;
         }
 
-        /// <summary>Every shipped sample in the package: top-level .cs files
-        /// and first-level subfolders of Samples~/Addons. Used by the batch
-        /// signer and by the release gate that verifies them.</summary>
+        /// <summary>Every shipped sample in the package: the first-level
+        /// subfolders of Samples~/Addons. Used by the batch signer and by
+        /// the release gate that verifies them.</summary>
         internal static List<string> ShippedSampleKeys(out string error)
         {
             error = null;
@@ -592,7 +583,6 @@ namespace ADKOM.TextEditor.Scripting
             try { src = Path.GetFullPath("Packages/com.adkom.text-editor/Samples~/Addons"); }
             catch (Exception ex) { error = ex.Message; return keys; }
             if (!Directory.Exists(src)) { error = "sample addons folder not found: " + src; return keys; }
-            foreach (var f in Directory.GetFiles(src, "*.cs", SearchOption.TopDirectoryOnly)) keys.Add(f);
             foreach (var d in Directory.GetDirectories(src))
             {
                 if (Path.GetFileName(d).StartsWith(".", StringComparison.Ordinal)) continue;
@@ -602,13 +592,11 @@ namespace ADKOM.TextEditor.Scripting
             return keys;
         }
 
-        /// <summary>The identity hash of an addon at <paramref name="key"/>
-        /// (file or folder) — the same computation the consent gate uses.</summary>
+        /// <summary>The identity hash of the addon folder at <paramref
+        /// name="key"/> — the same computation the consent gate uses.</summary>
         internal static string HashOfAddonAt(string key)
         {
-            string[] files = Directory.Exists(key)
-                ? Directory.GetFiles(key, "*.cs", SearchOption.AllDirectories)
-                : new[] { key };
+            var files = Directory.GetFiles(key, "*.cs", SearchOption.AllDirectories);
             Array.Sort(files, StringComparer.OrdinalIgnoreCase);
             return AddonSecurity.HashFiles(files, key);
         }
@@ -663,21 +651,9 @@ namespace ADKOM.TextEditor.Scripting
 
         internal static void WriteSidecar(string addonKey, string kind, Envelope e)
         {
-            string dir, name;
-            if (Directory.Exists(addonKey))
-            {
-                dir = addonKey;
-                name = kind == TypeAuthor ? "author" + SidecarExt
-                    : "endorse." + SafeName(e.signerName) + "." + kind + SidecarExt;
-            }
-            else
-            {
-                dir = Path.GetDirectoryName(addonKey);
-                string stem = Path.GetFileName(addonKey);
-                name = kind == TypeAuthor ? stem + ".author" + SidecarExt
-                    : stem + ".endorse." + SafeName(e.signerName) + "." + kind + SidecarExt;
-            }
-            File.WriteAllText(Path.Combine(dir, name), UnityEngine.JsonUtility.ToJson(e, true));
+            string name = kind == TypeAuthor ? "author" + SidecarExt
+                : "endorse." + SafeName(e.signerName) + "." + kind + SidecarExt;
+            File.WriteAllText(Path.Combine(addonKey, name), UnityEngine.JsonUtility.ToJson(e, true));
         }
 
         internal const string KindAuthor = TypeAuthor;

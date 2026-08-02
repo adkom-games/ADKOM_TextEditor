@@ -11,7 +11,9 @@ namespace ADKOM.TextEditor
     // opening point-in-time snapshots. All via the system git CLI.
     public partial class TextEditorWindow
     {
-        bool _gitMarksInFlight;
+        // Reset with the domain — hot-serialization would keep a mid-flight
+        // true and permanently block gutter mark refreshes.
+        [System.NonSerialized] bool _gitMarksInFlight;
 
         /// <summary>Recomputes the active document's gutter diff markers on a
         /// background thread (no-op without git / a repo / a file).</summary>
@@ -107,15 +109,22 @@ namespace ADKOM.TextEditor
                         return;
                     }
                     PostStatus("");
-                    var menu = new GenericMenu();
+                    // GenericMenu.ShowAsContext needs Event.current, which a
+                    // posted (async) continuation never has — Unity dropped
+                    // the menu silently, making File History look dead. The
+                    // UIToolkit GenericDropdownMenu anchors in panel space
+                    // and works from any context.
+                    var menu = new UnityEngine.UIElements.GenericDropdownMenu();
                     foreach (var e in hist)
                     {
                         var entry = e;
                         string subj = entry.Subject.Length > 60 ? entry.Subject.Substring(0, 57) + "..." : entry.Subject;
-                        menu.AddItem(new GUIContent((entry.Date + "  " + entry.Hash + "  " + subj).Replace('/', '∕')),
+                        menu.AddItem(entry.Date + "  " + entry.Hash + "  " + subj,
                             false, () => OpenRevision(path, name, entry.Hash));
                     }
-                    menu.ShowAsContext();
+                    var cb = _code.worldBound;
+                    menu.DropDown(new Rect(cb.x + 24, cb.y + 8, 420, 0), _code,
+                        UnityEngine.UIElements.DropdownMenuSizeMode.Fixed);
                 }, null);
             });
         }

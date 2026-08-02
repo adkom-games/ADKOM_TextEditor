@@ -20,22 +20,37 @@ namespace ADKOM.TextEditor
     {
         static GitWindow _instance;
 
-        TextEditorWindow _owner;
+        [SerializeField] TextEditorWindow _owner; // an object ref survives reloads
         System.Threading.SynchronizationContext _ctx;
-        string _root;
+        [SerializeField] string _root;            // repo root — the rebuild key
+        [SerializeField] string _draftMsg = "";   // working-tree commit draft, kept across reloads
 
         Label _header, _status;
         ScrollView _changes;
         TextField _commitMsg;
         Button _commitBtn, _pushBtn, _orientBtn;
+        Label _changesTitle;
+        Button _backBtn;
+        // Commit inspection: clicking a graph node shows ITS files and
+        // message on the left; null = the normal working-tree view.
+        // [NonSerialized] matters: Unity's domain-reload hot-serialization
+        // captures even private fields, turning a null string into "" — which
+        // silently defeats every == null check (an "inspection" of commit ""
+        // suppressed RebuildChanges, leaving the file list empty forever).
+        [System.NonSerialized] string _inspectHash;
+        [System.NonSerialized] string _inspectOriginalMsg = "";
+        [System.NonSerialized] bool _inspectIsHead;
         ScrollView _graphScroll;
         VisualElement _graphCanvas;
         bool _horizontal;
 
         List<GitService.StatusEntry> _entries = new List<GitService.StatusEntry>();
         List<GitService.GraphNode> _nodes = new List<GitService.GraphNode>();
-        string _selectedHash;
-        bool _busy;
+        // null = HEAD is the active node; hot-serialization would turn it
+        // into "" (no node active). _busy stuck true across a reload would
+        // block every future Refresh. Both must reset with the domain.
+        [System.NonSerialized] string _selectedHash;
+        [System.NonSerialized] bool _busy;
 
         const float NodeGap = 26f, LaneGap = 18f, Radius = 4.5f;
         const float LabelSpace = 340f;
@@ -52,6 +67,12 @@ namespace ADKOM.TextEditor
             _instance._owner = owner;
             _instance._root = repoRoot;
             _instance._ctx = System.Threading.SynchronizationContext.Current;
+            // Opening always starts at HEAD: the working tree is the active
+            // node and the left pane shows the staging view.
+            _instance._selectedHash = null;
+            _instance._inspectHash = null;
+            _instance._inspectOriginalMsg = "";
+            _instance._inspectIsHead = false;
             _instance.BuildUI();
             _instance.Refresh();
             _instance.Focus();
@@ -59,29 +80,110 @@ namespace ADKOM.TextEditor
 
         void OnDestroy() { if (_instance == this) _instance = null; }
 
+        void OnEnable() { if (_instance == null) _instance = this; }
+
+        /// <summary>Reload survivor: the window outlives the domain but its
+        /// UI and live references do not. Rebuild from the serialized repo
+        /// root, re-acquire the main-thread context and the owner window,
+        /// and re-read git state — the panel comes back at the HEAD /
+        /// working-tree view, fully operational.</summary>
+        void CreateGUI()
+        {
+            rootVisualElement.schedule.Execute(() =>
+            {
+                if (_header != null || string.IsNullOrEmpty(_root)) return; // fresh Open() builds
+                if (_owner == null)
+                {
+                    var all = Resources.FindObjectsOfTypeAll<TextEditorWindow>();
+                    _owner = all.Length > 0 ? all[0] : null;
+                }
+                BuildUI();
+                // The refresh is DEFERRED to delayCall: this early post-reload
+                // tick's SynchronizationContext is not yet the functional
+                // Unity context, so a ctx captured here posts into the void —
+                // Refresh's completion never lands and the panel sticks at
+                // "Working…" with an empty file list.
+                // The refresh must wait for the REAL Unity synchronization
+                // context — a context captured this early swallows Posts and
+                // the panel would stick at "Working…" with an empty list.
+                AteMainCtx.WhenReady(ctx =>
+                {
+                    if (this == null) return;
+                    _ctx = ctx;
+                    Refresh();
+                });
+            });
+        }
+
         void BuildUI()
         {
             var root = rootVisualElement;
             root.Clear();
             root.style.paddingLeft = root.style.paddingRight = 8;
             root.style.paddingTop = 6;
+            root.style.paddingBottom = 8; // keep the panel frames off the window edge
 
             _header = new Label { style = { unityFontStyleAndWeight = FontStyle.Bold } };
             root.Add(_header);
             _status = new Label { style = { opacity = 0.8f, marginBottom = 4, whiteSpace = WhiteSpace.Normal } };
             root.Add(_status);
 
-            var split = new VisualElement { style = { flexDirection = FlexDirection.Row, flexGrow = 1 } };
+            // A TwoPaneSplitView (UIToolkit's splitter): the divider between
+            // Changes and Branch History is draggable; the chosen width of
+            // the fixed (left) pane persists across sessions.
+            float savedWidth = EditorPrefs.GetFloat("ATE.Git.SplitWidth", 300f);
+            var split = new TwoPaneSplitView(0, savedWidth, TwoPaneSplitViewOrientation.Horizontal)
+            { style = { flexGrow = 1 } };
+
+            // Framed panels: the same bordered-subview look the console area
+            // uses, on both panes and the commit-message box.
+            void Frame(VisualElement v)
+            {
+                var bc = new Color(0.5f, 0.5f, 0.5f, 0.4f);
+                v.style.borderTopWidth = 1; v.style.borderBottomWidth = 1;
+                v.style.borderLeftWidth = 1; v.style.borderRightWidth = 1;
+                v.style.borderTopColor = bc; v.style.borderBottomColor = bc;
+                v.style.borderLeftColor = bc; v.style.borderRightColor = bc;
+                v.style.borderTopLeftRadius = 3; v.style.borderTopRightRadius = 3;
+                v.style.borderBottomLeftRadius = 3; v.style.borderBottomRightRadius = 3;
+            }
 
             // --- Left: changes + commit ---
-            var left = new VisualElement { style = { width = 300, flexShrink = 0, flexDirection = FlexDirection.Column,
-                borderRightWidth = 1, borderRightColor = new Color(0.5f, 0.5f, 0.5f, 0.4f), paddingRight = 6 } };
-            left.Add(new Label(L10n.Tr("Changes")) { style = { unityFontStyleAndWeight = FontStyle.Bold } });
+            var left = new VisualElement { style = { minWidth = 180, flexDirection = FlexDirection.Column,
+                paddingLeft = 6, paddingRight = 6, paddingTop = 4, paddingBottom = 4, marginRight = 3 } };
+            Frame(left);
+            left.RegisterCallback<GeometryChangedEvent>(e =>
+            {
+                if (e.newRect.width > 0)
+                    EditorPrefs.SetFloat("ATE.Git.SplitWidth", e.newRect.width);
+            });
+            // The header keeps its height and truncates long titles with an
+            // ellipsis — a "Commit <hash>" title must never overflow into
+            // the file list below.
+            var changesHeader = new VisualElement { style = { flexDirection = FlexDirection.Row, alignItems = Align.Center, flexShrink = 0 } };
+            _changesTitle = new Label(L10n.Tr("Changes")) { style = { unityFontStyleAndWeight = FontStyle.Bold, flexGrow = 1,
+                whiteSpace = WhiteSpace.NoWrap, overflow = Overflow.Hidden, textOverflow = TextOverflow.Ellipsis } };
+            _backBtn = new Button(LeaveInspect) { text = L10n.Tr("Working Tree"),
+                tooltip = L10n.Tr("Back to the working-tree changes."),
+                style = { display = DisplayStyle.None } };
+            changesHeader.Add(_changesTitle);
+            changesHeader.Add(_backBtn);
+            left.Add(changesHeader);
             _changes = new ScrollView(ScrollViewMode.Vertical) { style = { flexGrow = 1 } };
             left.Add(_changes);
             left.Add(new Label(L10n.Tr("Commit message")) { style = { marginTop = 4 } });
             _commitMsg = new TextField { multiline = true, style = { height = 56 },
                 tooltip = L10n.Tr("The message for the next commit.") };
+            // Long messages (multi-paragraph bodies, inspected commits) need
+            // to scroll inside the fixed-height box.
+            _commitMsg.verticalScrollerVisibility = ScrollerVisibility.Auto;
+            Frame(_commitMsg);
+            // The working-tree DRAFT is serialized: it survives domain
+            // reloads and inspect round-trips. Inspected commit messages are
+            // deliberately not stored here.
+            _commitMsg.value = _draftMsg ?? "";
+            _commitMsg.RegisterValueChangedCallback(e =>
+            { if (_inspectHash == null) _draftMsg = e.newValue; });
             left.Add(_commitMsg);
             var btnRow = new VisualElement { style = { flexDirection = FlexDirection.Row, justifyContent = Justify.FlexEnd, marginTop = 4 } };
             _commitBtn = new Button(Commit) { text = L10n.Tr("Commit"),
@@ -94,7 +196,9 @@ namespace ADKOM.TextEditor
             split.Add(left);
 
             // --- Right: branch graph ---
-            var right = new VisualElement { style = { flexGrow = 1, flexDirection = FlexDirection.Column, paddingLeft = 6 } };
+            var right = new VisualElement { style = { minWidth = 200, flexGrow = 1, flexDirection = FlexDirection.Column,
+                paddingLeft = 6, paddingRight = 6, paddingTop = 4, paddingBottom = 4, marginLeft = 3 } };
+            Frame(right);
             var graphBar = new VisualElement { style = { flexDirection = FlexDirection.Row, alignItems = Align.Center } };
             graphBar.Add(new Label(L10n.Tr("Branch History")) { style = { unityFontStyleAndWeight = FontStyle.Bold, marginRight = 8 } });
             _orientBtn = new Button(() => { _horizontal = !_horizontal; RebuildGraph(); })
@@ -116,7 +220,7 @@ namespace ADKOM.TextEditor
 
         void Refresh()
         {
-            if (_busy || _root == null) return;
+            if (_busy || string.IsNullOrEmpty(_root)) return;
             _busy = true;
             _status.text = L10n.Tr("Working…");
             string rootDir = _root;
@@ -142,7 +246,7 @@ namespace ADKOM.TextEditor
                     _header.text = rootDir + "   —   " + (branch ?? "").Trim();
                     _status.text = _entries.Count == 0 ? L10n.Tr("Working tree clean.")
                         : string.Format(L10n.Tr("{0} changed file(s)."), _entries.Count);
-                    RebuildChanges();
+                    if (_inspectHash == null) RebuildChanges(); // keep an open commit inspection
                     RebuildGraph();
                 }, null);
             });
@@ -179,7 +283,7 @@ namespace ADKOM.TextEditor
 
         void RunGit(string args, System.Action after = null)
         {
-            if (_busy || _root == null) return;
+            if (_busy || string.IsNullOrEmpty(_root)) return;
             _busy = true;
             _status.text = L10n.Tr("Working…");
             string rootDir = _root;
@@ -208,16 +312,148 @@ namespace ADKOM.TextEditor
         {
             string msg = (_commitMsg.value ?? "").Trim();
             if (msg.Length == 0) { _status.text = L10n.Tr("Enter a commit message."); return; }
+            if (_inspectHash != null)
+            {
+                // Inspecting a commit: the button is Amend. Only HEAD can be
+                // amended (anything older would rewrite descendant history).
+                if (!_inspectIsHead) return;
+                if (msg == _inspectOriginalMsg.Trim())
+                { _status.text = L10n.Tr("Message unchanged — nothing to amend."); return; }
+                // --only with no paths = message-only amend: staged changes
+                // stay staged instead of being swept into the old commit.
+                RunGit("commit --amend --only -m \"" + msg.Replace("\"", "\\\"") + "\"", LeaveInspect);
+                return;
+            }
             RunGit("commit -m \"" + msg.Replace("\"", "\\\"") + "\"", () => _commitMsg.value = "");
         }
 
         void Push() => RunGit("push");
 
+        // ---- Commit inspection (click a graph node) ----
+
+        /// <summary>Shows a commit's file list on the left and its message in
+        /// the message box. On HEAD the Commit button becomes Amend: editing
+        /// the message and pressing it rewrites the message in place.</summary>
+        void InspectCommit(string hash)
+        {
+            if (string.IsNullOrEmpty(_root) || string.IsNullOrEmpty(hash)) return;
+            string rootDir = _root;
+            var ctx = _ctx;
+            System.Threading.Tasks.Task.Run(() =>
+            {
+                string files = null, msg = null, head = null;
+                try
+                {
+                    GitService.Run(rootDir, "show --name-status --format= " + hash, out files, out _);
+                    GitService.Run(rootDir, "log -1 --format=%B " + hash, out msg, out _);
+                    GitService.Run(rootDir, "rev-parse HEAD", out head, out _);
+                }
+                catch (System.Exception) { }
+                ctx.Post(_ =>
+                {
+                    if (this == null || _changes == null) return;
+                    head = (head ?? "").Trim();
+                    _inspectHash = hash;
+                    _inspectIsHead = head.Length > 0 &&
+                        (head.StartsWith(hash) || hash.StartsWith(head));
+                    _inspectOriginalMsg = (msg ?? "").TrimEnd('\n', '\r');
+                    _commitMsg.value = _inspectOriginalMsg;
+                    RebuildCommitFiles(files ?? "");
+                    UpdateActionButtons();
+                }, null);
+            });
+        }
+
+        /// <summary>The inspected commit's files: "M\tpath" name-status rows;
+        /// renames arrive as "R100\told\tnew" — show the new path.</summary>
+        void RebuildCommitFiles(string nameStatus)
+        {
+            _changes.Clear();
+            _changesTitle.text = string.Format(L10n.Tr("Commit {0}"), _inspectHash);
+            _backBtn.style.display = DisplayStyle.Flex;
+            foreach (var raw in nameStatus.Split('\n'))
+            {
+                string line = raw.Trim();
+                if (line.Length == 0) continue;
+                var parts = line.Split('\t');
+                string state = parts[0], path = parts[parts.Length - 1];
+                var row = new VisualElement { style = { flexDirection = FlexDirection.Row, alignItems = Align.Center } };
+                row.Add(new Label(state) { style = { width = 32, opacity = 0.7f } });
+                var lbl = new Label(path) { style = { overflow = Overflow.Hidden, whiteSpace = WhiteSpace.NoWrap } };
+                lbl.tooltip = path;
+                string p = path;
+                lbl.RegisterCallback<PointerDownEvent>(ev =>
+                {
+                    if (ev.clickCount >= 2)
+                        TextEditorWindow.OpenExternal(System.IO.Path.Combine(_root, p), 1, 1);
+                });
+                row.Add(lbl);
+                _changes.Add(row);
+            }
+        }
+
+        void LeaveInspect()
+        {
+            _inspectHash = null;
+            _inspectOriginalMsg = "";
+            _inspectIsHead = false;
+            _changesTitle.text = L10n.Tr("Changes");
+            _backBtn.style.display = DisplayStyle.None;
+            _commitMsg.value = _draftMsg ?? ""; // the draft survives an inspect round-trip
+            _commitMsg.isReadOnly = false;
+            RebuildChanges();
+            UpdateActionButtons();
+        }
+
+        void UpdateActionButtons()
+        {
+            if (_inspectHash == null)
+            {
+                _commitBtn.text = L10n.Tr("Commit");
+                _commitBtn.tooltip = L10n.Tr("Commit the checked files with the message above.");
+                _commitBtn.SetEnabled(true);
+                _commitMsg.isReadOnly = false;
+                return;
+            }
+            _commitBtn.text = L10n.Tr("Amend");
+            if (_inspectIsHead)
+            {
+                _commitBtn.tooltip = L10n.Tr("Rewrite this commit's message (message-only amend; staged files are not swept in).");
+                _commitBtn.SetEnabled(true);
+                _commitMsg.isReadOnly = false;
+            }
+            else
+            {
+                _commitBtn.tooltip = L10n.Tr("Only the latest commit (HEAD) can be amended.");
+                _commitBtn.SetEnabled(false);
+                _commitMsg.isReadOnly = true;
+            }
+        }
+
         // ---- Branch graph ----
 
+        // The first slot in the "newest" direction is reserved for the HEAD
+        // marker (the working-tree pseudo-node), so commits start one gap in.
         Vector2 NodePos(GitService.GraphNode n) => _horizontal
             ? new Vector2(20 + (_nodes.Count - 1 - n.Row) * NodeGap, 16 + n.Lane * LaneGap)
-            : new Vector2(16 + n.Lane * LaneGap, 12 + n.Row * NodeGap);
+            : new Vector2(16 + n.Lane * LaneGap, 12 + NodeGap + n.Row * NodeGap);
+
+        GitService.GraphNode HeadNode() => _nodes.FirstOrDefault(n => n.IsHead);
+
+        /// <summary>Where the HEAD (working tree) marker sits: one gap past
+        /// the newest commit, on HEAD's lane.</summary>
+        Vector2 HeadMarkerPos(GitService.GraphNode head) => _horizontal
+            ? new Vector2(20 + _nodes.Count * NodeGap, 16 + head.Lane * LaneGap)
+            : new Vector2(16 + head.Lane * LaneGap, 12);
+
+        /// <summary>Stable per-lane color: every branch line in the graph
+        /// gets its own hue (golden-angle spacing keeps neighbors distinct),
+        /// used for both the commit dots and their connecting edges.</summary>
+        static Color LaneColor(int lane)
+        {
+            float h = (lane * 0.61803399f) % 1f;
+            return Color.HSVToRGB(h, 0.55f, 0.95f);
+        }
 
         void RebuildGraph()
         {
@@ -225,10 +461,78 @@ namespace ADKOM.TextEditor
             _graphCanvas.Clear();
             if (_nodes.Count == 0) { _graphCanvas.MarkDirtyRepaint(); return; }
             int maxLane = _nodes.Max(n => n.Lane);
-            float w = _horizontal ? 40 + _nodes.Count * NodeGap : 24 + (maxLane + 1) * LaneGap + LabelSpace;
-            float h = _horizontal ? 32 + (maxLane + 1) * LaneGap + 220 : 24 + _nodes.Count * NodeGap;
+            float w = _horizontal ? 40 + (_nodes.Count + 1) * NodeGap : 24 + (maxLane + 1) * LaneGap + LabelSpace;
+            float h = _horizontal ? 32 + (maxLane + 1) * LaneGap + 220 : 24 + (_nodes.Count + 1) * NodeGap;
             _graphCanvas.style.width = w;
             _graphCanvas.style.height = h;
+
+            // ---- The HEAD marker: a pseudo-node for the WORKING TREE, one
+            // slot ahead of the newest commit on HEAD's lane. Clicking it
+            // returns the left pane to the working-tree changes (the
+            // counterpart of clicking a commit to inspect it). ----
+            var headNode = HeadNode();
+            if (headNode != null)
+            {
+                var hp = HeadMarkerPos(headNode);
+                // The HEAD marker is the ACTIVE node by default (no commit
+                // selected = the working tree is what the left pane shows),
+                // and clicking it re-activates it — so it wears the same
+                // selection gold the commits use.
+                bool headActive = _selectedHash == null;
+                var gold = new Color(0.95f, 0.8f, 0.3f);
+                var laneCol = headActive ? gold : LaneColor(headNode.Lane);
+                bool dirty = _entries.Count > 0;
+                var marker = new VisualElement
+                {
+                    style =
+                    {
+                        position = Position.Absolute,
+                        left = hp.x - Radius, top = hp.y - Radius,
+                        width = Radius * 2, height = Radius * 2,
+                        borderTopLeftRadius = Radius, borderTopRightRadius = Radius,
+                        borderBottomLeftRadius = Radius, borderBottomRightRadius = Radius,
+                        // Hollow ring: visibly "not a commit yet". A dirty
+                        // tree fills it faintly; the active marker fills more.
+                        backgroundColor = headActive
+                            ? new Color(gold.r, gold.g, gold.b, dirty ? 0.6f : 0.35f)
+                            : dirty ? new Color(laneCol.r, laneCol.g, laneCol.b, 0.35f) : Color.clear,
+                        borderTopWidth = 2, borderBottomWidth = 2,
+                        borderLeftWidth = 2, borderRightWidth = 2,
+                        borderTopColor = laneCol, borderBottomColor = laneCol,
+                        borderLeftColor = laneCol, borderRightColor = laneCol,
+                    },
+                    tooltip = L10n.Tr("HEAD — your working tree. Click to show the working-tree changes.")
+                };
+                marker.RegisterCallback<PointerDownEvent>(e =>
+                {
+                    _selectedHash = null;
+                    LeaveInspect();
+                    RebuildGraph();
+                    e.StopPropagation();
+                });
+                _graphCanvas.Add(marker);
+                var headLbl = new Label(dirty ? "HEAD *" : "HEAD")
+                {
+                    style =
+                    {
+                        position = Position.Absolute,
+                        color = laneCol,
+                        unityFontStyleAndWeight = FontStyle.Bold,
+                        whiteSpace = WhiteSpace.NoWrap,
+                        left = _horizontal ? hp.x - 16 : 24 + (maxLane + 1) * LaneGap,
+                        top = _horizontal ? hp.y - 26 : hp.y - 8,
+                    },
+                    tooltip = L10n.Tr("HEAD — your working tree. Click to show the working-tree changes.")
+                };
+                headLbl.RegisterCallback<PointerDownEvent>(e =>
+                {
+                    _selectedHash = null;
+                    LeaveInspect();
+                    RebuildGraph();
+                    e.StopPropagation();
+                });
+                _graphCanvas.Add(headLbl);
+            }
 
             foreach (var n in _nodes)
             {
@@ -243,18 +547,29 @@ namespace ADKOM.TextEditor
                         width = Radius * 2, height = Radius * 2,
                         borderTopLeftRadius = Radius, borderTopRightRadius = Radius,
                         borderBottomLeftRadius = Radius, borderBottomRightRadius = Radius,
+                        // Dots carry their BRANCH's lane color; selection is
+                        // gold, and HEAD keeps its lane color under a green
+                        // ring so both facts stay visible at once.
                         backgroundColor = node.Hash == _selectedHash
                             ? new Color(0.95f, 0.8f, 0.3f)
-                            : node.IsHead ? new Color(0.5f, 0.9f, 0.55f)
-                            : new Color(0.55f, 0.7f, 0.95f),
+                            : LaneColor(node.Lane),
                     },
                     tooltip = node.Hash + "  " + node.Date + "  " + node.Author + "\n" + node.Subject
                 };
+                if (node.IsHead)
+                {
+                    var ring = new Color(0.5f, 0.9f, 0.55f);
+                    dot.style.borderTopWidth = 2; dot.style.borderBottomWidth = 2;
+                    dot.style.borderLeftWidth = 2; dot.style.borderRightWidth = 2;
+                    dot.style.borderTopColor = ring; dot.style.borderBottomColor = ring;
+                    dot.style.borderLeftColor = ring; dot.style.borderRightColor = ring;
+                }
                 dot.RegisterCallback<PointerDownEvent>(e =>
                 {
                     _selectedHash = node.Hash;
                     _status.text = node.Hash + "  " + node.Date + "  " + node.Author + "  —  " + node.Subject;
                     RebuildGraph();
+                    InspectCommit(node.Hash);
                     if (e.button == 1 || e.clickCount >= 2) NodeMenu(node);
                     e.StopPropagation();
                 });
@@ -281,6 +596,7 @@ namespace ADKOM.TextEditor
                     {
                         _selectedHash = node.Hash;
                         RebuildGraph();
+                        InspectCommit(node.Hash);
                         if (e.button == 1 || e.clickCount >= 2) NodeMenu(node);
                         e.StopPropagation();
                     });
@@ -305,11 +621,26 @@ namespace ADKOM.TextEditor
             var byHash = _nodes.ToDictionary(n => n.Hash, n => n);
             var p = ctx.painter2D;
             p.lineWidth = 1.5f;
-            p.strokeColor = new Color(0.55f, 0.55f, 0.6f, 0.9f);
+            // The HEAD (working tree) marker hangs off the HEAD commit.
+            var head = HeadNode();
+            if (head != null)
+            {
+                var col = LaneColor(head.Lane);
+                p.strokeColor = new Color(col.r, col.g, col.b, 0.55f);
+                p.BeginPath();
+                p.MoveTo(HeadMarkerPos(head));
+                p.LineTo(NodePos(head));
+                p.Stroke();
+            }
             foreach (var n in _nodes)
                 foreach (var parent in n.Parents)
                 {
                     if (!byHash.TryGetValue(parent, out var pn)) continue;
+                    // The edge takes the color of the BRANCH it carries: for
+                    // same-lane edges that is trivially the lane; for forks
+                    // and merges the branch is the outer lane of the pair.
+                    var col = LaneColor(Mathf.Max(n.Lane, pn.Lane));
+                    p.strokeColor = new Color(col.r, col.g, col.b, 0.85f);
                     p.BeginPath();
                     p.MoveTo(NodePos(n));
                     p.LineTo(NodePos(pn));

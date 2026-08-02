@@ -147,10 +147,9 @@ namespace ADKOM.TextEditor.Scripting
             return findings;
         }
 
-        /// <summary>Identity hash for a file SET (folder addon): SHA-256 over
-        /// the sorted sequence of (relative path + NUL + content), so any
-        /// file change, addition, or removal re-prompts consent. A single
-        /// file hashes as its own set of one.</summary>
+        /// <summary>Identity hash for an addon folder's file set: SHA-256
+        /// over the sorted sequence of (relative path + NUL + content), so
+        /// any file change, addition, or removal re-prompts consent.</summary>
         internal static string HashFiles(string[] files, string root)
         {
             var sorted = (string[])files.Clone();
@@ -279,7 +278,7 @@ namespace ADKOM.TextEditor.Scripting
         {
             var sb = new StringBuilder();
             sb.Append("# Addon Security Review: ").Append(addonName).Append('\n').Append('\n');
-            sb.Append("- **File:** `").Append(file).Append("`\n");
+            sb.Append("- **Addon folder:** `").Append(file).Append("`\n");
             sb.Append("- **Content hash:** `").Append(hash, 0, Math.Min(16, hash.Length)).Append("…`\n");
             sb.Append("- **Scanned:** against ").Append(Rules.Length).Append(" known-dangerous API patterns\n\n");
             if (findings == null || findings.Count == 0)

@@ -28,19 +28,79 @@ namespace ADKOM.TextEditor
         static FindReplaceWindow _instance;
 
         // Session-persistent state.
-        static FrTab _sTab;
-        static string _sFind = string.Empty, _sReplace = string.Empty;
-        static string _sFilters = "*", _sDir = string.Empty;
-        static int _sMode = ModeNormal;
-        static bool _sDotNL;
-        static bool _sCase, _sWord, _sBack, _sInSel;
-        static bool _sWrap = true;
-        static bool _sSubFolders = true, _sHidden, _sFollowDoc;
-        static bool _sPurge;
+        // Search state is SessionState-backed: it survives domain reloads
+        // (statics do not) and dies with the editor session — exactly the
+        // documented "search state persists for the session".
+        static FrTab _sTab
+        { get => (FrTab)SessionState.GetInt("ATE.FR.Tab", 0); set => SessionState.SetInt("ATE.FR.Tab", (int)value); }
+        static string _sFind
+        { get => SessionState.GetString("ATE.FR.Find", string.Empty); set => SessionState.SetString("ATE.FR.Find", value ?? string.Empty); }
+        static string _sReplace
+        { get => SessionState.GetString("ATE.FR.Replace", string.Empty); set => SessionState.SetString("ATE.FR.Replace", value ?? string.Empty); }
+        static string _sFilters
+        { get => SessionState.GetString("ATE.FR.Filters", "*"); set => SessionState.SetString("ATE.FR.Filters", value ?? "*"); }
+        static string _sDir
+        { get => SessionState.GetString("ATE.FR.Dir", string.Empty); set => SessionState.SetString("ATE.FR.Dir", value ?? string.Empty); }
+        static int _sMode
+        { get => SessionState.GetInt("ATE.FR.Mode", ModeNormal); set => SessionState.SetInt("ATE.FR.Mode", value); }
+        static bool _sDotNL
+        { get => SessionState.GetBool("ATE.FR.DotNL", false); set => SessionState.SetBool("ATE.FR.DotNL", value); }
+        static bool _sCase
+        { get => SessionState.GetBool("ATE.FR.Case", false); set => SessionState.SetBool("ATE.FR.Case", value); }
+        static bool _sWord
+        { get => SessionState.GetBool("ATE.FR.Word", false); set => SessionState.SetBool("ATE.FR.Word", value); }
+        static bool _sBack
+        { get => SessionState.GetBool("ATE.FR.Back", false); set => SessionState.SetBool("ATE.FR.Back", value); }
+        static bool _sInSel
+        { get => SessionState.GetBool("ATE.FR.InSel", false); set => SessionState.SetBool("ATE.FR.InSel", value); }
+        static bool _sWrap
+        { get => SessionState.GetBool("ATE.FR.Wrap", true); set => SessionState.SetBool("ATE.FR.Wrap", value); }
+        static bool _sSubFolders
+        { get => SessionState.GetBool("ATE.FR.SubFolders", true); set => SessionState.SetBool("ATE.FR.SubFolders", value); }
+        static bool _sHidden
+        { get => SessionState.GetBool("ATE.FR.Hidden", false); set => SessionState.SetBool("ATE.FR.Hidden", value); }
+        static bool _sFollowDoc
+        { get => SessionState.GetBool("ATE.FR.FollowDoc", false); set => SessionState.SetBool("ATE.FR.FollowDoc", value); }
+        static bool _sPurge
+        { get => SessionState.GetBool("ATE.FR.Purge", false); set => SessionState.SetBool("ATE.FR.Purge", value); }
 
-        TextEditorWindow _owner;
+        [SerializeField] TextEditorWindow _owner; // an object ref survives reloads
         System.Threading.SynchronizationContext _ctx;
-        bool _searching;
+        // Guard flags must reset with the domain: hot-serialization keeps
+        // private fields, and a stuck true here would block forever.
+        [System.NonSerialized] bool _searching;
+
+        /// <summary>Reload survivor: the window asset outlives the domain —
+        /// re-adopt the singleton and re-acquire what the reload severed
+        /// (main-thread context; the owner if its reference broke). CreateGUI
+        /// then rebuilds the UI from the SessionState-backed search state.</summary>
+        void OnEnable()
+        {
+            _ctx = System.Threading.SynchronizationContext.Current;
+            // SaveState normally runs on close and tab switch — a domain
+            // reload does neither, so typed-but-unsaved field values would
+            // vanish. Flush them to SessionState just before the reload.
+            AssemblyReloadEvents.beforeAssemblyReload += SaveState;
+            // Singleton re-adoption is DEFERRED: OnEnable runs inside
+            // CreateInstance, before the F3 headless helper gets its
+            // HideAndDontSave flag — checking immediately would let the
+            // invisible helper steal the singleton slot.
+            // Post-reload, the context captured in OnEnable predates the
+            // functional Unity context — re-capture the working one.
+            AteMainCtx.WhenReady(ctx => { if (this != null) _ctx = ctx; });
+            EditorApplication.delayCall += () =>
+            {
+                if (this == null || hideFlags == HideFlags.HideAndDontSave) return;
+                if (_instance == null) _instance = this;
+                if (_owner == null)
+                {
+                    var all = Resources.FindObjectsOfTypeAll<TextEditorWindow>();
+                    _owner = all.Length > 0 ? all[0] : null;
+                }
+            };
+        }
+
+        void OnDisable() { AssemblyReloadEvents.beforeAssemblyReload -= SaveState; }
 
         Button[] _tabButtons;
         VisualElement _body;

@@ -53,5 +53,27 @@ namespace ADKOM.TextEditor.Scripting
         void OnFocusGained();
         void OnFocusLost();
     }
+
+    /// <summary>A STATEFUL addon (API 1.2) — the mobile-app lifecycle model:
+    /// the host snapshots the addon's state before every teardown and hands
+    /// it back after the next load, so games survive domain reloads, addon
+    /// reloads, and editor restarts.
+    ///
+    /// SaveState is called BEFORE OnUnload ("this may be your last
+    /// callback"): return your state as a string in any format you like, or
+    /// null when there is nothing worth restoring. The host owns storage —
+    /// addons never touch disk. Stamp the documents you want back via
+    /// <see cref="AteDocument.StateTag"/>; they survive in the session, and
+    /// when SaveState returned non-null your OnUnload should NOT close them.
+    ///
+    /// RestoreState is called at most once per load, after OnLoad, once the
+    /// editor window and its restored session documents exist. Re-find your
+    /// documents by their StateTag via AteApi.Documents; a missing document
+    /// or unparseable state should simply be ignored (fresh Run instead).</summary>
+    public interface IAteAddonStateful : IAteAddonLifecycle
+    {
+        string SaveState();
+        void RestoreState(string state);
+    }
 }
 #endif

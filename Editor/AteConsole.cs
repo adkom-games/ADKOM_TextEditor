@@ -47,6 +47,16 @@ namespace ADKOM.TextEditor
             }
         }
 
+        /// <summary>Empties the log (the console tab's right-click Clear).</summary>
+        public static void Clear()
+        {
+            lock (_lock)
+            {
+                _lines.Clear();
+                Version++;
+            }
+        }
+
         /// <summary>Snapshots the lines into <paramref name="into"/> (cleared
         /// first) — the console pane's per-row view binds to this list.</summary>
         public static void CopyLinesInto(List<string> into)

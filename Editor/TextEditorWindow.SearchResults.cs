@@ -101,6 +101,14 @@ namespace ADKOM.TextEditor
             JumpToLocation(_searchItems[_searchRowItem[row]]);
         }
 
+        /// <summary>Empties the Search Results tab (its right-click Clear).</summary>
+        internal void ClearSearchResults()
+        {
+            _searchItems.Clear();
+            _searchTitle = string.Empty;
+            RenderSearchResults();
+        }
+
         /// <summary>Shared row-click jump for the Search Results and
         /// Bookmarks tabs.</summary>
         void JumpToLocation(PickLocation it)
@@ -115,10 +123,12 @@ namespace ADKOM.TextEditor
                 {
                     SwitchTo(di);
                     _code.GoToLine(it.Line + 1, it.Col + 1);
+                    SyncMdFindHighlight();
                 }
                 return;
             }
             OpenExternal(it.Path, it.Line + 1, it.Col + 1); // opens the tab if needed
+            SyncMdFindHighlight();
         }
 
         // ---- Scanner Results: same shape, fed by the addon security scan.
@@ -204,7 +214,7 @@ namespace ADKOM.TextEditor
             _bmPane = new VisualElement { name = "bookmarks-pane",
                 style = { display = DisplayStyle.None, flexGrow = 1, flexDirection = FlexDirection.Column } };
             var top = new VisualElement { style = { flexDirection = FlexDirection.Row, alignItems = Align.Center, flexShrink = 0 } };
-            _bmHeader = new Label(L10n.Tr("(no bookmarks)"));
+            _bmHeader = new Label(); // empty until bookmarks are listed
             _bmHeader.style.unityFontStyleAndWeight = FontStyle.Bold;
             _bmHeader.style.paddingLeft = 4;
             _bmHeader.style.flexGrow = 1;
@@ -256,7 +266,7 @@ namespace ADKOM.TextEditor
                 if (any) docsWith++;
             }
             _bmItems = items;
-            _bmHeader.text = items.Count == 0 ? L10n.Tr("(no bookmarks)")
+            _bmHeader.text = items.Count == 0 ? string.Empty
                 : string.Format(L10n.Tr("{0} bookmark(s) in {1} document(s)"), items.Count, docsWith);
             RenderBookmarks();
             _bmTabVisible = true;

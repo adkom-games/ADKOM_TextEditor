@@ -38,6 +38,12 @@ namespace ADKOM.TextEditor
         static double _nextRearmTime;
         static bool _checkInFlight;
 
+        // Persisted (per project): AvailableVersion was static-only state, so
+        // every domain reload (compile, play mode) wiped it and the green icon
+        // vanished until the NEXT scheduled check — even though the update was
+        // still pending. The icon must stay until the update is performed.
+        static string AvailableVersionKey => EditorConfig.ProjectScoped("ADKOM.TextEditor.AvailableVersion");
+
         /// <summary>The newer version a check discovered, or null when current.
         /// Windows show a green update icon by the settings gear while set.</summary>
         public static string AvailableVersion { get; private set; }
@@ -45,6 +51,8 @@ namespace ADKOM.TextEditor
 
         static void SetAvailable(string version)
         {
+            if (string.IsNullOrEmpty(version)) EditorPrefs.DeleteKey(AvailableVersionKey);
+            else EditorPrefs.SetString(AvailableVersionKey, version);
             if (AvailableVersion == version) return;
             AvailableVersion = version;
             onAvailableVersionChanged?.Invoke(version);
@@ -53,6 +61,18 @@ namespace ADKOM.TextEditor
         static UpdateChecker()
         {
             EditorApplication.update += OnEditorUpdate;
+            // Deferred: PackageInfo (CurrentVersion) is not reliable inside
+            // InitializeOnLoad. Windows that built their toolbar before this
+            // runs are updated through onAvailableVersionChanged.
+            EditorApplication.delayCall += RestorePersistedAvailable;
+        }
+
+        static void RestorePersistedAvailable()
+        {
+            string stored = EditorPrefs.GetString(AvailableVersionKey, string.Empty);
+            if (stored.Length == 0) return;
+            if (CompareVersions(stored, CurrentVersion()) > 0) SetAvailable(stored);
+            else EditorPrefs.DeleteKey(AvailableVersionKey); // update performed / stale
         }
 
         static void OnEditorUpdate()
@@ -263,7 +283,9 @@ namespace ADKOM.TextEditor
     }
 
     /// <summary>Idle-time dialog offering to install a new version, with a
-    /// checkbox that disables automatic updates (synced with Settings).</summary>
+    /// checkbox that disables automatic updates (synced with Settings). For
+    /// embedded (development) copies the dialog still opens — from the update
+    /// icon too — but installing is disabled in favor of a manual-update hint.</summary>
     public class UpdatePromptWindow : EditorWindow
     {
         string _current, _latest;
@@ -274,7 +296,7 @@ namespace ADKOM.TextEditor
             w._current = current;
             w._latest = latest;
             w.titleContent = new GUIContent("ADKOM Text Editor Update");
-            w.minSize = w.maxSize = new Vector2(380, 150);
+            w.minSize = w.maxSize = new Vector2(380, UpdateChecker.IsEmbeddedPackage ? 180 : 150);
             w.ShowUtility();
             w.BuildUI();
         }
@@ -301,12 +323,23 @@ namespace ADKOM.TextEditor
             auto.style.marginTop = 8;
             root.Add(auto);
 
+            if (UpdateChecker.IsEmbeddedPackage)
+            {
+                var embedded = new Label(L10n.Tr("This copy is embedded for development — update manually via git."));
+                embedded.style.whiteSpace = WhiteSpace.Normal;
+                embedded.style.marginTop = 8;
+                embedded.style.opacity = 0.8f;
+                root.Add(embedded);
+            }
+
             var buttons = new VisualElement();
             buttons.style.flexDirection = FlexDirection.Row;
             buttons.style.justifyContent = Justify.FlexEnd;
             buttons.style.marginTop = 10;
-            var later = new Button(Close) { text = L10n.Tr("Later") };
-            var install = new Button(() => { UpdateChecker.Install(_latest); Close(); }) { text = L10n.Tr("Install Now") };
+            var later = new Button(Close) { text = L10n.Tr("Later"), tooltip = L10n.Tr("Keep the current version. The update icon stays by the settings gear until you update.") };
+            var install = new Button(() => { UpdateChecker.Install(_latest); Close(); })
+            { text = L10n.Tr("Install Now"), tooltip = L10n.Tr("Install the new version now via the Unity Package Manager.") };
+            install.SetEnabled(!UpdateChecker.IsEmbeddedPackage);
             buttons.Add(later);
             buttons.Add(install);
             root.Add(buttons);

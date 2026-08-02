@@ -1329,6 +1329,30 @@ msgstr "推送"
 msgid "Branch History"
 msgstr "分支歷史"
 
+msgid "Working Tree"
+msgstr "工作樹"
+
+msgid "HEAD — your working tree. Click to show the working-tree changes."
+msgstr "HEAD — 你的工作樹。點擊以顯示工作樹變更。"
+
+msgid "Back to the working-tree changes."
+msgstr "返回工作樹變更清單。"
+
+msgid "Commit {0}"
+msgstr "提交 {0}"
+
+msgid "Amend"
+msgstr "Amend"
+
+msgid "Rewrite this commit's message (message-only amend; staged files are not swept in)."
+msgstr "重寫此提交的訊息（僅訊息的 amend；不會帶入已暫存的檔案）。"
+
+msgid "Only the latest commit (HEAD) can be amended."
+msgstr "只有最新的提交（HEAD）可以修正（amend）。"
+
+msgid "Message unchanged — nothing to amend."
+msgstr "訊息未變更 — 無需修正。"
+
 msgid "Toggle vertical / horizontal layout"
 msgstr "切換垂直/水平配置"
 
@@ -1740,11 +1764,158 @@ msgstr "屬性"
 msgid "Methods"
 msgstr "方法"
 
-msgid "Jump to a class, property, or method in the current tab."
-msgstr "跳轉到目前分頁中的類別、屬性或方法。"
+msgid "Jump to a class, property, method, or bookmark in the current tab."
+msgstr "跳轉到目前分頁中的類別、屬性、方法或書籤。"
 
-msgid "Open Manual"
-msgstr "開啟手冊"
+msgid "ATE Manual"
+msgstr "ATE 手冊"
 
-msgid "Manual.md not found."
-msgstr "找不到 Manual.md。"
+msgid "{0} not found."
+msgstr "找不到 {0}。"
+
+msgid "Documentation"
+msgstr "說明文件"
+
+msgid "Scripting Reference"
+msgstr "指令碼參考"
+
+msgid "AteApi Design"
+msgstr "AteApi 設計"
+
+msgid "Game API Design"
+msgstr "遊戲 API 設計"
+
+msgid "Addon Signing"
+msgstr "附加元件簽章"
+
+msgid "Games"
+msgstr "遊戲"
+
+msgid "How to Play"
+msgstr "玩法說明"
+
+msgid "(no games installed)"
+msgstr "（未安裝遊戲）"
+
+msgid "(unloaded)"
+msgstr "（已卸載）"
+
+msgid "Z-Machine game '{0}' resumed after the reload."
+msgstr "Z-Machine 遊戲 '{0}' 已在重載後恢復。"
+
+msgid "This game's live state was lost to a domain reload (script compile, play mode, or an editor restart). The transcript remains as plain text; start a new game from the Games menu — a save made in-game can be restored there."
+msgstr "此遊戲的執行狀態已因網域重載（指令碼編譯、播放模式或編輯器重新啟動）而遺失。文字記錄以純文字形式保留。請從 Games 選單開始新遊戲 — 遊戲內建立的存檔可以在那裡還原。"
+
+msgid "Play Zork and the installed addon games."
+msgstr "遊玩 Zork 與已安裝的附加元件遊戲。"
+
+msgid "Keyboard Shortcuts"
+msgstr "鍵盤快速鍵"
+
+msgid "Localization"
+msgstr "在地化"
+
+msgid "Snippets"
+msgstr "程式碼片段"
+
+msgid "Troubleshooting"
+msgstr "疑難排解"
+
+msgid "Addon '{0}' moved into its own folder — addons are folder-based now. Approval (and any signature) must be renewed for the new folder identity."
+msgstr "附加元件 '{0}' 已移入其專屬資料夾 — 附加元件現在以資料夾為單位。需要針對新的資料夾識別重新進行核准（以及簽章）。"
+
+msgid "Clear"
+msgstr "清除"
+
+msgid "Hide this view (the View menu shows it again)."
+msgstr "隱藏此檢視（可從「檢視」選單再次顯示）。"
+
+msgid "Hide this view."
+msgstr "隱藏此檢視。"
+
+msgid "Locked (read-only): clicks select text for copying — click to allow editing"
+msgstr "已鎖定（唯讀）：點擊可選取文字進行複製 — 點擊以允許編輯"
+
+msgid "Unlocked: clicks open block editors — click to make this tab read-only"
+msgstr "未鎖定：點擊會開啟區塊編輯器 — 點擊將此分頁設為唯讀"
+
+msgid "Open Markdown Locked"
+msgstr "以鎖定狀態開啟 Markdown"
+
+msgid "Rendered Markdown opens read-only: clicks select text for copying instead of opening block editors. The lock button in the toolbar still switches per tab."
+msgstr "轉譯檢視的 Markdown 以唯讀方式開啟：點擊會選取文字以便複製，而不是開啟區塊編輯器。工具列中的鎖定按鈕仍可按分頁切換。"
+
+msgid "Copy Link URL"
+msgstr "複製連結 URL"
+
+msgid "Copy Block as Text"
+msgstr "以文字形式複製區塊"
+
+msgid "Copy Selection as Text"
+msgstr "將所選內容複製為文字"
+
+msgid "Copied the selected blocks as plain text."
+msgstr "已將所選區塊複製為純文字。"
+
+msgid "Copy All as Text"
+msgstr "以文字形式複製全部"
+
+msgid "Unlock (Allow Editing)"
+msgstr "解除鎖定（允許編輯）"
+
+msgid "Copied the rendered document as plain text."
+msgstr "已將轉譯的文件複製為純文字。"
+
+msgid "Keep the current version. The update icon stays by the settings gear until you update."
+msgstr "保留目前版本。在您更新之前，更新圖示會一直顯示在設定齒輪旁邊。"
+
+msgid "Install the new version now via the Unity Package Manager."
+msgstr "立即透過 Unity Package Manager 安裝新版本。"
+
+msgid "This copy is embedded for development — update manually via git."
+msgstr "此副本為開發用內嵌套件 — 請透過 git 手動更新。"
+
+msgid "Hidden Characters"
+msgstr "隱藏字元"
+
+msgid "Region"
+msgstr "區域"
+
+msgid "Suppress in This Project"
+msgstr "在此專案中抑制"
+
+msgid "Adds -nowarn:1633 to Assets/csc.rsp, Unity's project-wide compiler response file, so #pragma bookmark lines compile without the warning. Assemblies compiled from their own asmdef may need the flag in their own response file."
+msgstr "將 -nowarn:1633 加入 Assets/csc.rsp（Unity 的專案層級編譯器回應檔），讓 #pragma bookmark 行編譯時不再產生警告。以自有 asmdef 編譯的組件可能需要在其各自的回應檔中加入此旗標。"
+
+msgid "#pragma bookmark lines in C# scripts trigger compiler warning CS1633 (unknown pragma) unless the project suppresses it."
+msgstr "除非專案抑制該警告，C# 指令碼中的 #pragma bookmark 行會觸發編譯器警告 CS1633（未知 pragma）。"
+
+msgid "Added -nowarn:1633 to Assets/csc.rsp — scripts will recompile."
+msgstr "已將 -nowarn:1633 加入 Assets/csc.rsp — 指令碼將重新編譯。"
+
+msgid "Unknown-pragma warning (CS1633): suppressed in this project."
+msgstr "未知 pragma 警告（CS1633）：已在此專案中抑制。"
+
+msgid "Unknown-pragma warning (CS1633): not suppressed — #pragma bookmark lines will warn in C# scripts."
+msgstr "未知 pragma 警告（CS1633）：未抑制 — #pragma bookmark 行將在 C# 指令碼中產生警告。"
+
+msgid "Hidden characters shown."
+msgstr "已顯示隱藏字元。"
+
+msgid "Hidden characters hidden."
+msgstr "已不再顯示隱藏字元。"
+
+msgid "Copy Line"
+msgstr "複製行"
+
+msgid "Copied the console line."
+msgstr "已複製主控台行。"
+
+msgid "Show only console lines containing this text."
+msgstr "僅顯示包含此文字的主控台行。"
+
+msgid "Every ATE message, timestamped. Click a row; Ctrl+C or right-click → Copy Line copies it."
+msgstr "所有 ATE 訊息（含時間戳記）。點擊某行；Ctrl+C 或右鍵 → 複製行 即可複製。"
+
+msgid "{0} of {1} shown"
+msgstr "顯示 {0} / {1} 條"
