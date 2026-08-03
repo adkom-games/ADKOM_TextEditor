@@ -160,7 +160,9 @@ namespace AteZMachine
             string path = EditorUtility.SaveFilePanel(L10n.Tr("Export map as SVG"), "", "map.svg", "svg");
             if (string.IsNullOrEmpty(path)) return;
             try { System.IO.File.WriteAllText(path, ZMapSvg.ToSvg(_map)); }
-            catch (System.Exception e) { Debug.LogWarning("[ADKOM Text Editor] SVG export failed: " + e.Message); }
+            // ATE's own console, not Unity's — the user is standing in ATE,
+            // having just picked a file in ATE's save panel.
+            catch (System.Exception e) { ADKOM.TextEditor.AteConsole.Warn("[ADKOM Text Editor] SVG export failed: " + e.Message); }
         }
 
         void Rebuild()

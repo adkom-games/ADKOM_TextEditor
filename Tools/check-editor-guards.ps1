@@ -5,9 +5,14 @@
 #   2. Every .asmdef declares includePlatforms exactly ["Editor"] (braces).
 # Exits 0 when clean, 1 with a list of offending files otherwise.
 # Run from anywhere: powershell -File Tools/check-editor-guards.ps1
+# -PackageRoot <path> checks a different tree — CI runs it a second time
+# against the assembled upm-store branch, whose Distribution files come from
+# Tools/store-overrides and are otherwise never seen by this gate.
+
+param([string]$PackageRoot)
 
 $ErrorActionPreference = 'Stop'
-$pkg = Join-Path (Split-Path $PSScriptRoot -Parent) 'Packages\com.adkom.text-editor'
+$pkg = if ($PackageRoot) { $PackageRoot } else { Join-Path (Split-Path $PSScriptRoot -Parent) 'Packages\com.adkom.text-editor' }
 if (-not (Test-Path $pkg)) { Write-Error "Package folder not found: $pkg"; exit 1 }
 
 $failures = @()
@@ -38,10 +43,24 @@ foreach ($f in Get-ChildItem $pkg -Recurse -Filter *.asmdef -File) {
     }
 }
 
+# --- 3. Nothing that ships in player builds UNCONDITIONALLY ---
+# Resources/ and StreamingAssets/ content is included in every build merely
+# by existing, and a link.xml pins assemblies against stripping. None have
+# any business in an editor-only package. Folders ending in '~' are
+# invisible to Unity's asset pipeline and are exempt.
+foreach ($d in Get-ChildItem $pkg -Recurse -Directory |
+         Where-Object { $_.Name -in @('Resources', 'StreamingAssets') -and $_.FullName -notmatch '~[\\/]' }) {
+    $failures += "BUILD-BLEED FOLDER (ships in every player build): $($d.FullName)"
+}
+foreach ($f in Get-ChildItem $pkg -Recurse -Filter link.xml -File |
+         Where-Object { $_.FullName -notmatch '~[\\/]' }) {
+    $failures += "link.xml (pins assemblies into player builds): $($f.FullName)"
+}
+
 if ($failures.Count -gt 0) {
     Write-Host "EDITOR-GUARD CHECK FAILED ($($failures.Count) issue(s)):" -ForegroundColor Red
     $failures | ForEach-Object { Write-Host "  $_" -ForegroundColor Red }
     exit 1
 }
-Write-Host "Editor-guard check passed: all .cs files guarded, all asmdefs Editor-only."
+Write-Host "Editor-guard check passed: all .cs files guarded, all asmdefs Editor-only, no unconditional-ship content (Resources/StreamingAssets/link.xml)."
 exit 0

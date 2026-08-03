@@ -1032,11 +1032,80 @@ msgstr "ゲームを復元"
 msgid "Z-Machine (Zork)..."
 msgstr "Z-Machine (Zork)..."
 
+msgid "Download {0}?"
+msgstr "{0} をダウンロードしますか？"
+
+msgid "This story file is not part of the ADKOM Text Editor. It is downloaded from GitHub to your computer, outside the Unity project, and is never imported as an asset."
+msgstr "このストーリーファイルは ADKOM Text Editor には含まれていません。GitHub からお使いのコンピューターへ、Unity プロジェクトの外にダウンロードされ、アセットとしてインポートされることはありません。"
+
+msgid "Source repository"
+msgstr "ソースリポジトリ"
+
+msgid "Story file"
+msgstr "ストーリーファイル"
+
+msgid "Pinned commit"
+msgstr "固定コミット"
+
+msgid "License"
+msgstr "ライセンス"
+
+msgid "Size"
+msgstr "サイズ"
+
+msgid "Saves to"
+msgstr "保存先"
+
+msgid "Open the source repository on GitHub — source, history and its license."
+msgstr "GitHub でソースリポジトリを開きます — ソース、履歴、ライセンスを確認できます。"
+
+msgid "View this story file on GitHub, at the exact commit it is fetched from."
+msgstr "取得元のコミットのまま、このストーリーファイルを GitHub で表示します。"
+
+msgid "The download is pinned to this commit, so its contents cannot change."
+msgstr "ダウンロードはこのコミットに固定されているため、内容が変わることはありません。"
+
+msgid "These three Zork titles are the only MIT-licensed Infocom games in that collection."
+msgstr "このコレクションの中で MIT ライセンスの Infocom 作品は、この Zork 3 作品だけです。"
+
+msgid "The exact size at the pinned commit. A download of any other size is rejected."
+msgstr "固定コミット時点の正確なサイズです。これ以外のサイズのダウンロードは拒否されます。"
+
+msgid "Where the file is written. Delete it any time; nothing is stored in your project."
+msgstr "ファイルの書き込み先です。いつでも削除できます。プロジェクト内には何も保存されません。"
+
+msgid "Downloading…"
+msgstr "ダウンロード中…"
+
+msgid "Download"
+msgstr "ダウンロード"
+
+msgid "Download failed: {0}"
+msgstr "ダウンロードに失敗しました: {0}"
+
+msgid "Close without downloading anything."
+msgstr "何もダウンロードせずに閉じます。"
+
+msgid "Download the story file now and start the game."
+msgstr "ストーリーファイルをダウンロードしてゲームを開始します。"
+
+msgid "SHA-256"
+msgstr "SHA-256"
+
+msgid "The fingerprint of the file at the pinned commit. What arrives is hashed and must match this exactly, or it is deleted instead of played."
+msgstr "固定コミット時点のファイルのフィンガープリントです。ダウンロードしたファイルはハッシュ化され、この値と完全に一致しない場合は再生されずに削除されます。"
+
+msgid "Copy Link to Clipboard"
+msgstr "リンクをクリップボードにコピー"
+
+msgid "Copy the exact URL this download fetches (the raw file link) to the clipboard."
+msgstr "このダウンロードが実際に取得する URL（raw ファイルのリンク）をクリップボードにコピーします。"
+
+msgid "Link copied to the clipboard."
+msgstr "リンクをクリップボードにコピーしました。"
+
 msgid "(download)"
 msgstr "（ダウンロード）"
-
-msgid "download failed: "
-msgstr "ダウンロードに失敗しました: "
 
 msgid "Z-Machine (Zork)"
 msgstr "Z-Machine (Zork)"
@@ -1871,6 +1940,9 @@ msgstr "現在のバージョンを維持します。更新するまで、設定
 
 msgid "Install the new version now via the Unity Package Manager."
 msgstr "Unity Package Manager で新しいバージョンを今すぐインストールします。"
+
+msgid "Update this package from Window → Package Manager."
+msgstr "このパッケージは Window → Package Manager から更新してください。"
 
 msgid "This copy is embedded for development — update manually via git."
 msgstr "このコピーは開発用に埋め込まれています — git で手動更新してください。"

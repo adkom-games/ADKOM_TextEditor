@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using Unity.CodeEditor;
 using UnityEditor;
 using UnityEngine;
@@ -138,18 +137,10 @@ namespace ADKOM.TextEditor
             return null;
         }
 
-        static IEnumerable<IExternalCodeEditor> RegisteredEditors()
-        {
-            // The registry list is private; probe the known field names used by
-            // Unity's CodeEditor across versions.
-            foreach (var name in new[] { "m_ExternalCodeEditors", "externalCodeEditors" })
-            {
-                var fi = typeof(CodeEditor).GetField(name, BindingFlags.NonPublic | BindingFlags.Instance);
-                if (fi?.GetValue(CodeEditor.Editor) is IEnumerable<IExternalCodeEditor> list)
-                    return list.ToArray();
-            }
-            return Enumerable.Empty<IExternalCodeEditor>();
-        }
+        // Lives in Editor/Distribution because reading Unity's private editor
+        // registry is one of the things the Asset Store build must not do.
+        static IEnumerable<IExternalCodeEditor> RegisteredEditors() =>
+            AteCodeEditorRegistry.Registered();
     }
 }
 #endif

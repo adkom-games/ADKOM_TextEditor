@@ -30,7 +30,11 @@ Known issues and their fixes, plus answers to the questions that come up most. I
 
 ## Editing
 
-**Rendered Markdown won't let me edit.** Markdown opens **locked** (read-only) by default — clicks select text for copying instead of opening block editors. Click the 🔒 button next to the MD toggle to unlock; **Settings → Open Markdown Locked** changes the default.
+**Rendered Markdown won't let me edit.** Markdown opens **locked** (read-only) by default — clicks select text for copying instead of opening block editors. Click the lock button next to the MD toggle to unlock; **Settings → Open Markdown Locked** changes the default.
+
+**Selecting text in a rendered Markdown file that contains emoji spams the console with `IndexOutOfRangeException` (`ATGTextJobSystem.ConvertMeshInfoToUIRVertex`).** This is a bug in Unity's own text generator (confirmed on 6000.3.19f1), not in ATE: a text element whose content includes an emoji — a glyph that comes from OS font fallback rather than a Unity font asset — throws every time its mesh is regenerated, and dragging a selection regenerates it on every mouse-move. The exception happens inside a Unity job, so nothing in ATE can catch or suppress it. Nothing is damaged: the text, the selection and the copy are all correct. Until Unity fixes it, viewing the file in **source mode** (the MD toggle) avoids the rendered path entirely. ATE's own documentation contains no emoji for this reason.
+
+**Selecting across blocks in rendered Markdown looks different from normal selection.** Unity displays a native text selection in only one text element at a time, so ATE draws cross-block selections itself. They are character-precise, highlight continuously across block margins, and copy correctly — but images in the span show no highlight, and double-click/triple-click (native) selections stop at block boundaries. Tracked on GitHub.
 
 **Double-clicking a script opens the wrong editor.** Pick ATE as the External Script Editor in Unity's **Preferences → External Tools**. Anything ATE doesn't handle (solutions, binaries) goes to the **External Fallback** editor you configure in ATE's Settings.
 

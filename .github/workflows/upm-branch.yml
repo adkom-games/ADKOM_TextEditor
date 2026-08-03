@@ -32,7 +32,48 @@ jobs:
       - name: Shipped sample signatures (must match current content)
         shell: pwsh
         run: ./Tools/check-sample-signatures.ps1
+      - name: Asset Store compliance check (development tree)
+        shell: pwsh
+        run: ./Tools/check-store-compliance.ps1
+
       - name: Split package subtrees and push
         run: |
           git subtree split --prefix=Packages/com.adkom.text-editor -b upm
           git push -f origin upm
+
+      # The Asset Store copy is the same package with the guideline-sensitive
+      # files swapped: no package add/remove, no Editor-internal reflection, no
+      # unprompted network call, and the MIT grant replaced by the Store EULA.
+      # Consumers never install this branch by git URL — it is what gets
+      # uploaded to the publisher portal.
+      - name: Stage store overrides
+        run: cp -r Tools/store-overrides /tmp/store-overrides && cp Tools/check-store-compliance.ps1 Tools/check-editor-guards.ps1 /tmp/
+
+      - name: Build upm-store branch
+        run: |
+          git checkout -B upm-store upm
+          cp -r /tmp/store-overrides/. .
+          rm -f LICENSE.md LICENSE.md.meta
+          node -e '
+            const fs = require("fs");
+            const p = JSON.parse(fs.readFileSync("package.json", "utf8"));
+            p.license = "Unity Asset Store EULA";
+            p.licensesUrl = "https://unity.com/legal/as-terms";
+            fs.writeFileSync("package.json", JSON.stringify(p, null, 2) + "\n");
+          '
+          git add -A
+          git -c user.name=github-actions -c user.email=github-actions@github.com \
+              commit -m "Asset Store build of $(node -p "require('./package.json').version")"
+
+      - name: Asset Store compliance check (store tree)
+        shell: pwsh
+        run: pwsh -File /tmp/check-store-compliance.ps1 -Store -PackageRoot .
+
+      # The store tree's Distribution files come from Tools/store-overrides —
+      # the dev-tree guard run never sees them, so guard the assembled tree too.
+      - name: Editor-guard check (store tree)
+        shell: pwsh
+        run: pwsh -File /tmp/check-editor-guards.ps1 -PackageRoot .
+
+      - name: Push upm-store
+        run: git push -f origin upm-store

@@ -49,6 +49,18 @@ Runtime libraries: https://github.com/dotnet/runtime
 
 ---
 
+## Zork I / II / III story files (downloaded on request, not bundled)
+
+The Games menu can fetch three Infocom story files for the bundled Z-Machine interpreter. **Nothing is downloaded unless you pick a game**, and no story file ships inside this package. Each download is pinned to a specific commit of the corresponding `historicalsource` repository:
+
+- Zork I — https://github.com/historicalsource/zork1
+- Zork II — https://github.com/historicalsource/zork2
+- Zork III — https://github.com/historicalsource/zork3
+
+These three repositories carry an MIT license; they are the only Infocom titles in that collection that do, and no other game there is offered. The files are written to a per-user folder outside the Unity project, are never imported as assets, and can be deleted at any time. The interpreter also opens any Z-Machine story file you already own.
+
+---
+
 ## SCOWL (Spell Checker Oriented Word Lists)
 
 The bundled English spell-check dictionary (`Editor/SpellCheckData~/words-en.txt`)

@@ -22,8 +22,9 @@ namespace ADKOM.TextEditor.Scripting
     public static partial class AteApi
     {
         /// <summary>The AteApi semantic version. Addons declare the version
-        /// they target; MAJOR must match and their MINOR must not be newer.</summary>
-        public const string ApiVersion = "1.2.0";
+        /// they target; MAJOR must match and their MINOR must not be newer.
+        /// 1.3.0 added <see cref="DebugLog(object)"/>.</summary>
+        public const string ApiVersion = "1.3.0";
 
         // ---- Events (VS Code-shaped) ----
 
@@ -38,6 +39,25 @@ namespace ADKOM.TextEditor.Scripting
         /// <summary>The active document's text changed. Debounced (~400ms)
         /// for typing; raised once per programmatic write.</summary>
         public static event Action<AteDocument> textChanged;
+
+        // ---- Output ----
+
+        /// <summary>Writes a line to ATE's console pane (View → Console) —
+        /// the drop-in replacement for <c>UnityEngine.Debug.Log</c> in addon
+        /// code. Same shape and same formatting; it simply lands in ATE's
+        /// console instead of the project's, which ATE leaves to you.
+        /// Since 1.3.0.</summary>
+        public static void DebugLog(object message) => AteConsole.Info(Stringify(message));
+
+        /// <summary>Matches <c>UnityEngine.Debug.Log(object, Object)</c> so
+        /// calls swap one for one. ATE's console is plain text and cannot
+        /// ping an object, so <paramref name="context"/> is accepted for
+        /// call compatibility and not shown. Since 1.3.0.</summary>
+        public static void DebugLog(object message, UnityEngine.Object context) => DebugLog(message);
+
+        /// <summary>Unity's own rendering of a logged object, including
+        /// "Null" for a null message.</summary>
+        static string Stringify(object message) => message?.ToString() ?? "Null";
 
         // ---- Window / documents ----
 

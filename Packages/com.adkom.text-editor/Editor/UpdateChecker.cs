@@ -15,6 +15,13 @@ namespace ADKOM.TextEditor
     /// — when the editor is idle — offers to install via UPM (git URL). When
     /// the package is embedded (development), install is skipped and only the
     /// console announcement is made.
+    ///
+    /// In the Asset Store build (<see cref="AteBuildFlavor.AssetStore"/>)
+    /// nothing here reaches the network on its own and nothing installs:
+    /// submissions may not contact the outside world without consent, nor add
+    /// or update packages in a user's project. A check still runs when the
+    /// user explicitly asks for one in Settings, and the result then points at
+    /// the Package Manager instead of offering to install.
     /// </summary>
     [InitializeOnLoad]
     public static class UpdateChecker
@@ -100,15 +107,20 @@ namespace ADKOM.TextEditor
                 AteConsole.Info($"[ADKOM Text Editor] Updated {previous} → {current}.");
                 TextEditorWindow.ShowReleaseNotes(current);
             }
-            if (!EditorConfig.AutoUpdate) return false;
+            if (!AutoCheckAllowed) return false;
             AteConsole.Info($"[ADKOM Text Editor] First run of version {current} — checking for updates.");
             CheckNow(manual: false);
             return true;
         }
 
+        /// <summary>Whether a check may run without the user asking for one.
+        /// Never in the Asset Store build — an unprompted outbound request on
+        /// import is exactly what the submission guidelines forbid.</summary>
+        static bool AutoCheckAllowed => !AteBuildFlavor.AssetStore && EditorConfig.AutoUpdate;
+
         static void TryScheduledCheck()
         {
-            if (!EditorConfig.AutoUpdate || _checkInFlight) return;
+            if (!AutoCheckAllowed || _checkInFlight) return;
             long ticks = long.TryParse(EditorPrefs.GetString(LastCheckKey, "0"), out var t) ? t : 0;
             var last = new DateTime(ticks, DateTimeKind.Utc);
             if ((DateTime.UtcNow - last).TotalDays < EditorConfig.UpdateFrequencyDays) return;
@@ -164,10 +176,12 @@ namespace ADKOM.TextEditor
                         AteConsole.Info($"[ADKOM Text Editor] New version available: {latest} (installed: {current}). " +
                             (IsEmbedded()
                                 ? "This copy is embedded for development — update manually via git."
-                                : "You will be offered the update when the editor is idle."));
+                                : CanSelfInstall
+                                    ? "You will be offered the update when the editor is idle."
+                                    : "Update through Window → Package Manager."));
                         onResult?.Invoke("New version available: " + latest);
                         SetAvailable(latest);
-                        if (!IsEmbedded()) PromptWhenIdle(current, latest);
+                        if (CanSelfInstall) PromptWhenIdle(current, latest);
                     }
                     else
                     {
@@ -238,47 +252,54 @@ namespace ADKOM.TextEditor
             EditorApplication.update += WaitForIdle;
         }
 
-        static UnityEditor.PackageManager.Requests.AddRequest _installRequest;
-        static string _installVersion;
-
         /// <summary>True from Install() until the request completes (success
         /// ends in a domain reload). Windows overlay-block their UI meanwhile:
         /// edits during the swap would be lost or corrupt the reload.</summary>
         public static bool InstallInProgress { get; private set; }
         public static event System.Action<bool> onInstallStateChanged;
 
+        /// <summary>Whether this build can install an update itself. False for
+        /// the Asset Store distribution (which must not touch the project's
+        /// package set) and for embedded development copies.</summary>
+        public static bool CanSelfInstall =>
+            !AteBuildFlavor.AssetStore && AtePackageInstaller.Supported && !IsEmbedded();
+
+        /// <summary>The git URL a user can paste into the Package Manager,
+        /// shown wherever self-installing is unavailable.</summary>
+        public static string ManualInstallUrl(string version) => GitInstallUrl + "#" + version;
+
         public static void Install(string version)
         {
+            if (!CanSelfInstall)
+            {
+                // Store / embedded builds never reach here from the UI, but a
+                // scripted caller might: say what to do instead of failing mute.
+                AteConsole.Info("[ADKOM Text Editor] This build does not install updates itself — " +
+                    "update through Window → Package Manager (" + ManualInstallUrl(version) + ").");
+                return;
+            }
             AteConsole.Info($"[ADKOM Text Editor] Updating to {version} via UPM…");
-            _installVersion = version;
             InstallInProgress = true;
             onInstallStateChanged?.Invoke(true);
-            _installRequest = Client.Add(GitInstallUrl + "#" + version);
-            EditorApplication.update += MonitorInstall;
-        }
-
-        // Client.Add is async and previously fire-and-forget: a failed update
-        // was completely silent and the project stayed on the old version.
-        static void MonitorInstall()
-        {
-            if (_installRequest == null || !_installRequest.IsCompleted) return;
-            EditorApplication.update -= MonitorInstall;
-            InstallInProgress = false;
-            onInstallStateChanged?.Invoke(false);
-            if (_installRequest.Status == UnityEditor.PackageManager.StatusCode.Success)
+            // Install is async and was once fire-and-forget: a failed update
+            // was completely silent and the project stayed on the old version.
+            AtePackageInstaller.Install(GitInstallUrl, version, (ok, message) =>
             {
-                AteConsole.Info($"[ADKOM Text Editor] Updated to {_installRequest.Result.version}.");
-            }
-            else
-            {
-                // Completes async, possibly with nobody at the keyboard — a
-                // modal here would block the whole editor until dismissed.
-                string error = _installRequest.Error?.message ?? "unknown error";
-                AteConsole.Error("[ADKOM Text Editor] Update failed: " + error +
-                    " — update manually via Package Manager → + → Add package from git URL: " +
-                    GitInstallUrl + "#" + _installVersion);
-            }
-            _installRequest = null;
+                InstallInProgress = false;
+                onInstallStateChanged?.Invoke(false);
+                if (ok)
+                {
+                    AteConsole.Info($"[ADKOM Text Editor] Updated to {message}.");
+                }
+                else
+                {
+                    // Completes async, possibly with nobody at the keyboard — a
+                    // modal here would block the whole editor until dismissed.
+                    AteConsole.Error("[ADKOM Text Editor] Update failed: " + message +
+                        " — update manually via Package Manager → + → Add package from git URL: " +
+                        ManualInstallUrl(version));
+                }
+            });
         }
     }
 
@@ -318,10 +339,16 @@ namespace ADKOM.TextEditor
             versions.style.whiteSpace = WhiteSpace.Pre;
             root.Add(versions);
 
-            var auto = new Toggle(L10n.Tr("Check for updates automatically")) { value = EditorConfig.AutoUpdate };
-            auto.RegisterValueChangedCallback(e => EditorConfig.AutoUpdate = e.newValue);
-            auto.style.marginTop = 8;
-            root.Add(auto);
+            // No automatic checks exist in the Asset Store build, so offering
+            // the toggle there would promise something that never happens.
+            if (!AteBuildFlavor.AssetStore)
+            {
+                var auto = new Toggle(L10n.Tr("Check for updates automatically")) { value = EditorConfig.AutoUpdate };
+                auto.RegisterValueChangedCallback(e => EditorConfig.AutoUpdate = e.newValue);
+                auto.style.marginTop = 8;
+                auto.tooltip = L10n.Tr("Check GitHub for new releases and offer to install them.");
+                root.Add(auto);
+            }
 
             if (UpdateChecker.IsEmbeddedPackage)
             {
@@ -331,6 +358,14 @@ namespace ADKOM.TextEditor
                 embedded.style.opacity = 0.8f;
                 root.Add(embedded);
             }
+            else if (!UpdateChecker.CanSelfInstall)
+            {
+                var manual = new Label(L10n.Tr("Update this package from Window → Package Manager."));
+                manual.style.whiteSpace = WhiteSpace.Normal;
+                manual.style.marginTop = 8;
+                manual.style.opacity = 0.8f;
+                root.Add(manual);
+            }
 
             var buttons = new VisualElement();
             buttons.style.flexDirection = FlexDirection.Row;
@@ -339,7 +374,7 @@ namespace ADKOM.TextEditor
             var later = new Button(Close) { text = L10n.Tr("Later"), tooltip = L10n.Tr("Keep the current version. The update icon stays by the settings gear until you update.") };
             var install = new Button(() => { UpdateChecker.Install(_latest); Close(); })
             { text = L10n.Tr("Install Now"), tooltip = L10n.Tr("Install the new version now via the Unity Package Manager.") };
-            install.SetEnabled(!UpdateChecker.IsEmbeddedPackage);
+            install.SetEnabled(UpdateChecker.CanSelfInstall);
             buttons.Add(later);
             buttons.Add(install);
             root.Add(buttons);

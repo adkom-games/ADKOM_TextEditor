@@ -711,20 +711,21 @@ namespace ADKOM.TextEditor.Scripting
 "Example — save as `HelloAddon/HelloAddon.cs`:\n\n" +
 "```csharp\n" +
 "using ADKOM.TextEditor.Scripting;\n\n" +
-"[AteAddon(Name = \"Hello Addon\", Category = \"Samples\", ApiVersion = \"1.0\")]\n" +
+"[AteAddon(Name = \"Hello Addon\", Category = \"Samples\", ApiVersion = \"1.3\")]\n" +
 "public class HelloAddon : IAteAddonResident\n" +
 "{\n" +
 "    public void OnLoad()\n" +
 "    {\n" +
-"        AteApi.documentSaved += d => UnityEngine.Debug.Log(\"[Hello] saved: \" + d.DisplayName);\n" +
+"        AteApi.documentSaved += d => AteApi.DebugLog(\"[Hello] saved: \" + d.DisplayName);\n" +
 "    }\n\n" +
 "    public void Run()\n" +
 "    {\n" +
 "        var doc = AteApi.ActiveDocument;\n" +
-"        UnityEngine.Debug.Log(\"[Hello] active: \" + (doc != null ? doc.DisplayName : \"none\"));\n" +
+"        AteApi.DebugLog(\"[Hello] active: \" + (doc != null ? doc.DisplayName : \"none\"));\n" +
 "    }\n" +
 "}\n" +
 "```\n\n" +
+"AteApi.DebugLog is the addon counterpart of UnityEngine.Debug.Log: same call, but the line goes to ATE's console pane (View > Console). ATE keeps Unity's console for your project's own messages.\n\n" +
 "API compatibility follows semver: your ApiVersion's MAJOR must match ATE's AteApi.ApiVersion (currently " + AteApi.ApiVersion + ") and its MINOR must not be newer. Incompatible addons appear disabled in the menu with the reason.\n");
             }
             catch (Exception) { }
