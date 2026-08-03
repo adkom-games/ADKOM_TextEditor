@@ -1,6 +1,23 @@
 # Release Notes — ADKOM Text Editor
 
-**☕ Enjoying ATE? Support development on Ko-fi:** [https://ko-fi.com/adkomgames](https://ko-fi.com/adkomgames)
+**Enjoying ATE? Support development on Ko-fi:** [https://ko-fi.com/adkomgames](https://ko-fi.com/adkomgames)
+
+## 0.14.2 — 2026-08-03
+
+A quieter console, a rendered-Markdown selection overhaul, and the groundwork for an Asset Store edition.
+
+### Added
+- **Selecting in read-only Markdown, done right** — selection is now character-precise across block boundaries instead of falling back to whole-block highlighting, the highlight is continuous (block margins fill like selected empty lines), dragging past the top or bottom edge auto-scrolls (faster the further you go), and the selection survives clicking tabs, the title bar, or switching apps. Ctrl+C copies exactly what is highlighted. It is also much faster: a mouse-move during a drag costs ~2 ms where long documents previously stalled for over 100 ms.
+- **Zork downloads ask first** — picking a game you don't have yet opens a consent window naming the source repository and exact file (both link to GitHub at the pinned commit), the license, the size, the SHA-256 fingerprint, and where the file lands on your machine — with **Copy Link to Clipboard** if you'd rather fetch it yourself. What arrives must match both the expected size and fingerprint or it is deleted instead of played.
+- **`AteApi.DebugLog`** (AteApi 1.3.0) — the addon counterpart of `UnityEngine.Debug.Log`: same call, but the line lands in ATE's console pane. The shipped samples and the new-addon template use it.
+- **Asset Store groundwork** — CI now also builds a store-compliant variant of the package (no self-install, no Editor-internal reflection, no unprompted network access), with release gates that keep both flavors honest. Installing from GitHub is unchanged.
+
+### Fixed
+- **ATE stays out of Unity's console.** Progress and status messages — update checks, addon loading, Copilot status, session restores — now appear only in ATE's own console pane. Only real errors still reach Unity's console, so it stays yours.
+- **Semantic Features' Roslyn assemblies are marked editor-only when installed.** They previously imported with Unity's "Any Platform" default, which would have included ~14 MB of Roslyn in your player builds. Existing installs are repaired automatically the next time the editor loads.
+- Selecting text in rendered Markdown containing emoji no longer floods the console with exceptions from Unity's text generator: ATE's own docs no longer use emoji, and the underlying Unity bug is reported (see Troubleshooting for your own emoji-bearing files).
+- A `NullReferenceException` when the editor regained focus during a domain reload while a file had changed on disk.
+- Selection geometry in rendered Markdown now survives a window resize.
 
 ## 0.14.1 — 2026-08-02
 
@@ -27,7 +44,7 @@ A full diff & merge suite, read-only Markdown, visible invisibles, games and win
 - **Hidden Characters** (View menu) — see every invisible character: spaces as ·, tabs as →, no-break spaces as °, zero-width characters as □, control codes as ␀-style pictures, and ¶ at line ends. Pure display — your file doesn't change.
 - **Search in rendered Markdown** — Find, F3, and Search Results clicks now work while the rendered view is up: the view scrolls to the matching block and highlights it.
 - **Console filter & line copy** — the Console tab has a Filter box like Search Results, and copying is now precise: click a row, Ctrl+C (or right-click → Copy Line) copies exactly that line.
-- **Markdown lock** — rendered Markdown now opens **read-only** by default: a 🔒 button sits just left of the MD toggle, clicks select text instead of popping block editors, and copying always gives you the plain rendered text — URLs included, no `**markers**` or tags. Ctrl+C copies the selection (or the whole document when nothing is selected); right-click for Copy Block as Text, Copy All as Text, and Copy Link URL. Click 🔒 to unlock and edit; Settings → **Open Markdown Locked** changes the default.
+- **Markdown lock** — rendered Markdown now opens **read-only** by default: a lock button sits just left of the MD toggle, clicks select text instead of popping block editors, and copying always gives you the plain rendered text — URLs included, no `**markers**` or tags. Ctrl+C copies the selection (or the whole document when nothing is selected); right-click for Copy Block as Text, Copy All as Text, and Copy Link URL. Click to unlock and edit; Settings → **Open Markdown Locked** changes the default.
 
 ### Changed
 - Region folding commands (Fold, Unfold, Unfold All) moved from the View menu into the new **Edit → Code → Region** submenu; the View menu top group now holds all view toggles, sorted.
@@ -180,7 +197,7 @@ The AI release.
 
 ## 0.10.1 — 2026-07-27
 
-- Added the Ko-fi support link (☕ above) to the READMEs and these release notes. No code changes.
+- Added the Ko-fi support link (above) to the READMEs and these release notes. No code changes.
 
 ## 0.10.0 — 2026-07-27
 
@@ -239,7 +256,7 @@ The IDE release: every "must-have" editing feature a coder reflexively reaches f
 ### Features
 - **Markdown support** for `.md` files: full syntax coloring in source mode, and a rendered mode with block-level WYSIWYG editing — click any block to edit its source inline; undo works across both modes. A transient MD/source button by the settings gear shows the current mode and switches per tab.
 - **Formatting toolbar** for any `.md` tab: headings, bold, italic, strikethrough, inline code, links, images, bullet/numbered/task lists, blockquotes, code blocks, tables, and horizontal rules — one click formats your selection or the block you're editing, or inserts a ready-made template, in either mode.
-- Strikethrough, images, task lists (☐/☑), and tables render and color everywhere Markdown does.
+- Strikethrough, images, task lists (checkboxes), and tables render and color everywhere Markdown does.
 - New setting **"Open Markdown Rendered"** chooses the default view for `.md` files (source by default). Release notes after an update always open rendered — like this document.
 
 ## 0.7.1 — 2026-07-26
