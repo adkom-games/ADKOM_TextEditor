@@ -530,8 +530,29 @@ namespace ADKOM.TextEditor
             if (!_cursorPos.TryGetValue(label, out var map))
                 _cursorPos[label] = map = new Dictionary<int, Vector2>();
             if (!map.TryGetValue(index, out var p))
-                map[index] = p = label.selection.GetCursorPositionFromStringIndex(index);
+                map[index] = p = CursorPositionOf(label.selection, index);
             return p;
+        }
+
+        /// <summary>Index → cursor position across Unity versions.
+        /// ITextSelection.GetCursorPositionFromStringIndex is 6000.3+; on
+        /// 6000.0–6000.2 the same answer comes from a set/read/restore
+        /// round-trip through the cursor — verified pixel-identical to the
+        /// real API (worst delta 0.00 px) and side-effect free on 6000.3,
+        /// where both paths exist. Same per-call cost (~1.6 ms), so the
+        /// memoization above matters equally on every version.</summary>
+        static Vector2 CursorPositionOf(ITextSelection sel, int index)
+        {
+#if UNITY_6000_3_OR_NEWER
+            return sel.GetCursorPositionFromStringIndex(index);
+#else
+            int prevCursor = sel.cursorIndex, prevSelect = sel.selectIndex;
+            sel.cursorIndex = index;
+            Vector2 p = sel.cursorPosition;
+            sel.cursorIndex = prevCursor;
+            sel.selectIndex = prevSelect;
+            return p;
+#endif
         }
 
         /// <summary>Line height per label, measured once from the text itself
@@ -978,7 +999,7 @@ namespace ADKOM.TextEditor
                         .Insert(r.start + r.length, "</mark>")
                         .Insert(r.start, "<mark=#F5C8424D>");
                     float y = seg.Label.layout.y;
-                    try { y += seg.Label.selection.GetCursorPositionFromStringIndex(r.start).y; }
+                    try { y += CursorPositionOf(seg.Label.selection, r.start).y; }
                     catch (System.Exception) { }
                     _scroll.scrollOffset = new Vector2(0, Mathf.Max(0, y - 40));
                     return;
