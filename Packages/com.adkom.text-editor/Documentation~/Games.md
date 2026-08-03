@@ -1,5 +1,7 @@
 # Playing Games in ATE
 
+> **Games are off by default.** Enable **Settings → Games → Enable In-Editor Games** to show the Games menu. This guide (and all documentation under Help → Documentation) is available either way.
+
 ATE ships three complete text-mode games, all launched from the **Games** menu in the menu bar. This is the player's guide — for *writing* games, see **Game API Design** under Help → Documentation.
 
 All games run in **game mode**: the document becomes a game screen (editor chrome hidden, block cursor), and closing the tab or pressing the game's quit key returns you to normal editing. Your open documents are untouched.

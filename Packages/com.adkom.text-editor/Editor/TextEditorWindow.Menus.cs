@@ -315,6 +315,14 @@ namespace ADKOM.TextEditor
                     System.StringComparer.OrdinalIgnoreCase);
                 foreach (var e in Scripting.AteAddonManager.Entries)
                 {
+                    // Game addons are reachable from here as well as from the
+                    // Games menu, so the In-Editor Games setting gates both —
+                    // otherwise Tools → Addons would be a bypass. Removed
+                    // outright, no hint: the Settings toggle is the one
+                    // discoverable switch for everything games.
+                    if (!EditorConfig.GamesEnabled &&
+                        string.Equals(e.Category, "Games", System.StringComparison.OrdinalIgnoreCase))
+                        continue;
                     if (!canon.TryGetValue(e.Category, out string cat))
                         canon[e.Category] = cat = e.Category;
                     string item = root + cat.Replace('/', '∕') + "/" + e.Name.Replace('/', '∕');

@@ -2,6 +2,13 @@
 
 **Enjoying ATE? Support development on Ko-fi:** [https://ko-fi.com/adkomgames](https://ko-fi.com/adkomgames)
 
+## 0.14.5 — 2026-08-03
+
+In-editor gaming is now opt-in.
+
+### Changed
+- **The Games menu is off by default.** In-editor gaming — the Games menu with the Z-Machine (Zork) and installed addon games — now sits behind **Settings → Games → Enable In-Editor Games** (machine-wide, off by default). **After this update the Games menu is gone until you flip that setting once.** With games disabled, game addons are also removed from Tools → Addons, and snapshotted Z-Machine games are not resumed after reloads. Games already running when you toggle the setting off keep running, and the player guides under **Help → Documentation** stay available regardless. The toggle takes effect immediately in every open ATE window. ATE is a work tool first — the games are an extra you invite in.
+
 ## 0.14.4 — 2026-08-03
 
 Hotfix.
