@@ -1112,9 +1112,6 @@ msgstr "Enable In-Editor Games"
 msgid "Show the Games menu — the Z-Machine (Zork) and installed addon games. Off by default; games already running keep running, and the player guides under Help → Documentation stay available either way. Machine-wide."
 msgstr "Show the Games menu — the Z-Machine (Zork) and installed addon games. Off by default; games already running keep running, and the player guides under Help → Documentation stay available either way. Machine-wide."
 
-msgid "Game addons hidden — enable In-Editor Games in Settings"
-msgstr "Game addons hidden — enable In-Editor Games in Settings"
-
 msgid "(download)"
 msgstr "(download)"
 

@@ -1110,9 +1110,6 @@ msgstr "エディター内ゲームを有効化"
 msgid "Show the Games menu — the Z-Machine (Zork) and installed addon games. Off by default; games already running keep running, and the player guides under Help → Documentation stay available either way. Machine-wide."
 msgstr "Games メニュー（Z-Machine（Zork）とインストール済みアドオンゲーム）を表示します。既定ではオフです。実行中のゲームはそのまま動き続け、Help → Documentation のプレイヤーガイドはどちらでも読めます。マシン全体の設定です。"
 
-msgid "Game addons hidden — enable In-Editor Games in Settings"
-msgstr "ゲームアドオンは非表示です — Settings で In-Editor Games を有効にしてください"
-
 msgid "(download)"
 msgstr "（ダウンロード）"
 
