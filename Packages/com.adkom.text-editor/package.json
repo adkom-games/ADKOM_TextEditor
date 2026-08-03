@@ -1,6 +1,6 @@
 {
   "name": "com.adkom.text-editor",
-  "version": "0.14.3",
+  "version": "0.14.4",
   "samples": [
     {
       "displayName": "Scripting (AteApi)",

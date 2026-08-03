@@ -4,6 +4,11 @@ All notable changes to this package are documented here. Format follows [Keep a 
 
 ## [Unreleased]
 
+## [0.14.4] - 2026-08-03
+
+### Fixed
+- Unity 6000.5 spammed "Trying to access the DPI setting of a visual element that is not on a panel" on window creation: CreateGUI sets word wrap before the window attaches, and every `MeasureTextSize` call in that state now warns (two per character, across the whole document). `CharWidth` returns its font-derived estimate without measuring while off-panel — the geometry-change handler already re-measures with real widths once the panel exists, so wrapping is unchanged.
+
 ## [0.14.3] - 2026-08-03
 
 ### Fixed
