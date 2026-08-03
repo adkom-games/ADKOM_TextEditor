@@ -69,7 +69,7 @@ namespace ADKOM.TextEditor
             RefreshFormatter();
             RebuildTabs();
             UpdateTitle();
-            _notifyBar.style.display = DisplayStyle.None;
+            HideBanner();
             PostStatus(string.Format(L10n.Tr("Reloaded {0} from disk."), Active.DisplayName));
         }
 
@@ -81,7 +81,7 @@ namespace ADKOM.TextEditor
             Active.IsDirty = true;
             RebuildTabs();
             UpdateTitle();
-            _notifyBar.style.display = DisplayStyle.None;
+            HideBanner();
             PostStatus(string.Format(L10n.Tr("Kept in-editor version of {0}."), Active.DisplayName));
         }
 
@@ -94,14 +94,14 @@ namespace ADKOM.TextEditor
             Active.IsDirty = true;
             RebuildTabs();
             UpdateTitle();
-            _notifyBar.style.display = DisplayStyle.None;
+            HideBanner();
             PostStatus(string.Format(L10n.Tr("Kept buffer of deleted file {0} — Save to restore it to disk."), Active.DisplayName));
         }
 
         void CloseDeletedActive()
         {
             if (!HasDocs) return;
-            _notifyBar.style.display = DisplayStyle.None;
+            HideBanner();
             Active.IsDirty = false; // user chose to let the buffer go
             CloseTab(_active);
         }

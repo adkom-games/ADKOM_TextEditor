@@ -1034,11 +1034,80 @@ msgstr "Restore game"
 msgid "Z-Machine (Zork)..."
 msgstr "Z-Machine (Zork)..."
 
+msgid "Download {0}?"
+msgstr "Download {0}?"
+
+msgid "This story file is not part of the ADKOM Text Editor. It is downloaded from GitHub to your computer, outside the Unity project, and is never imported as an asset."
+msgstr "This story file is not part of the ADKOM Text Editor. It is downloaded from GitHub to your computer, outside the Unity project, and is never imported as an asset."
+
+msgid "Source repository"
+msgstr "Source repository"
+
+msgid "Story file"
+msgstr "Story file"
+
+msgid "Pinned commit"
+msgstr "Pinned commit"
+
+msgid "License"
+msgstr "License"
+
+msgid "Size"
+msgstr "Size"
+
+msgid "Saves to"
+msgstr "Saves to"
+
+msgid "Open the source repository on GitHub — source, history and its license."
+msgstr "Open the source repository on GitHub — source, history and its license."
+
+msgid "View this story file on GitHub, at the exact commit it is fetched from."
+msgstr "View this story file on GitHub, at the exact commit it is fetched from."
+
+msgid "The download is pinned to this commit, so its contents cannot change."
+msgstr "The download is pinned to this commit, so its contents cannot change."
+
+msgid "These three Zork titles are the only MIT-licensed Infocom games in that collection."
+msgstr "These three Zork titles are the only MIT-licensed Infocom games in that collection."
+
+msgid "The exact size at the pinned commit. A download of any other size is rejected."
+msgstr "The exact size at the pinned commit. A download of any other size is rejected."
+
+msgid "Where the file is written. Delete it any time; nothing is stored in your project."
+msgstr "Where the file is written. Delete it any time; nothing is stored in your project."
+
+msgid "Downloading…"
+msgstr "Downloading…"
+
+msgid "Download"
+msgstr "Download"
+
+msgid "Download failed: {0}"
+msgstr "Download failed: {0}"
+
+msgid "Close without downloading anything."
+msgstr "Close without downloading anything."
+
+msgid "Download the story file now and start the game."
+msgstr "Download the story file now and start the game."
+
+msgid "SHA-256"
+msgstr "SHA-256"
+
+msgid "The fingerprint of the file at the pinned commit. What arrives is hashed and must match this exactly, or it is deleted instead of played."
+msgstr "The fingerprint of the file at the pinned commit. What arrives is hashed and must match this exactly, or it is deleted instead of played."
+
+msgid "Copy Link to Clipboard"
+msgstr "Copy Link to Clipboard"
+
+msgid "Copy the exact URL this download fetches (the raw file link) to the clipboard."
+msgstr "Copy the exact URL this download fetches (the raw file link) to the clipboard."
+
+msgid "Link copied to the clipboard."
+msgstr "Link copied to the clipboard."
+
 msgid "(download)"
 msgstr "(download)"
-
-msgid "download failed: "
-msgstr "download failed: "
 
 msgid "Z-Machine (Zork)"
 msgstr "Z-Machine (Zork)"
@@ -1873,6 +1942,9 @@ msgstr "Keep the current version. The update icon stays by the settings gear unt
 
 msgid "Install the new version now via the Unity Package Manager."
 msgstr "Install the new version now via the Unity Package Manager."
+
+msgid "Update this package from Window → Package Manager."
+msgstr "Update this package from Window → Package Manager."
 
 msgid "This copy is embedded for development — update manually via git."
 msgstr "This copy is embedded for development — update manually via git."

@@ -109,7 +109,7 @@ static class SaveLogger
 {
     static SaveLogger()
     {
-        AteApi.documentSaved += d => UnityEngine.Debug.Log($"ATE saved {d.Path}");
+        AteApi.documentSaved += d => AteApi.DebugLog($"ATE saved {d.Path}");
     }
 }
 ```
@@ -148,14 +148,14 @@ An addon is one class carrying `[AteAddon]` and implementing `IAteAddon` (menu-i
 ```csharp
 using ADKOM.TextEditor.Scripting;
 
-[AteAddon(Name = "Hello Addon", Category = "Samples", ApiVersion = "1.0")]
+[AteAddon(Name = "Hello Addon", Category = "Samples", ApiVersion = "1.3")]
 public class HelloAddon : IAteAddonResident
 {
     public void OnLoad() =>
-        AteApi.documentSaved += d => UnityEngine.Debug.Log("saved " + d.DisplayName);
+        AteApi.documentSaved += d => AteApi.DebugLog("saved " + d.DisplayName);
 
     public void Run() =>
-        UnityEngine.Debug.Log("active: " + (AteApi.ActiveDocument?.DisplayName ?? "none"));
+        AteApi.DebugLog("active: " + (AteApi.ActiveDocument?.DisplayName ?? "none"));
 }
 ```
 
@@ -171,4 +171,4 @@ Approval is one-time **per addon content**: consent is keyed to the file's SHA-2
 
 **Tools > Addons > Install Sample Addons** copies three working samples (resident events, document editing, document reading) into the folder — the fastest way to start.
 
-Compatibility is semantic versioning against `AteApi.ApiVersion` (currently 1.2.0): your declared MAJOR must match and your MINOR must not be newer. Incompatible or broken addons stay visible in the menu, disabled, with the reason; compile errors are reported in the ATE console with file and line. **Tools > Addons > Reload Addons** rescans without restarting.
+Compatibility is semantic versioning against `AteApi.ApiVersion` (currently 1.3.0): your declared MAJOR must match and your MINOR must not be newer. Incompatible or broken addons stay visible in the menu, disabled, with the reason; compile errors are reported in the ATE console with file and line. **Tools > Addons > Reload Addons** rescans without restarting.

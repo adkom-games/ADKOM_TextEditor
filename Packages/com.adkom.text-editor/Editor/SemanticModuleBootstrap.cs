@@ -25,7 +25,6 @@ namespace ADKOM.TextEditor
         const string RoslynDestDir = "Assets/Plugins/ADKOM.TextEditor/Roslyn";
 
         const string ObsoleteModuleName = "com.adkom.text-editor.semantics";
-        static UnityEditor.PackageManager.Requests.RemoveRequest _removeRequest;
 
         static SemanticSetup()
         {
@@ -38,28 +37,36 @@ namespace ADKOM.TextEditor
 
         /// <summary>The pre-0.6.0 companion module defines the same-named
         /// assembly the main package now ships; leaving both installed breaks
-        /// compilation. Remove it automatically.</summary>
+        /// compilation. Remove it automatically where that is allowed — the
+        /// Asset Store build may not change a user's package set, so there it
+        /// only says what to remove.</summary>
         static void RemoveObsoleteModule()
         {
             if (!UnityEditor.PackageManager.PackageInfo.GetAllRegisteredPackages()
                     .Any(p => p.name == ObsoleteModuleName))
                 return;
-            AteConsole.Info("[ADKOM Text Editor] Removing the obsolete semantics module package (its features now ship in the main package)…");
-            _removeRequest = UnityEditor.PackageManager.Client.Remove(ObsoleteModuleName);
-            EditorApplication.update += MonitorRemove;
-        }
 
-        static void MonitorRemove()
-        {
-            if (_removeRequest == null || !_removeRequest.IsCompleted) return;
-            EditorApplication.update -= MonitorRemove;
-            if (_removeRequest.Status == UnityEditor.PackageManager.StatusCode.Success)
-                AteConsole.Info("[ADKOM Text Editor] Obsolete semantics module removed.");
-            else
-                AteConsole.Warn("[ADKOM Text Editor] Could not remove the obsolete semantics module (" +
-                    (_removeRequest.Error?.message ?? "unknown error") +
-                    ") — remove 'ADKOM Text Editor — Semantics Module' in the Package Manager.");
-            _removeRequest = null;
+            if (!AtePackageInstaller.Supported)
+            {
+                // Error, not Warn: this one blocks compilation project-wide,
+                // so it has to be visible with no ATE window open.
+                AteConsole.Error("[ADKOM Text Editor] The obsolete semantics module package (" + ObsoleteModuleName +
+                    ") is installed and defines the same assembly this package now ships — compilation will keep " +
+                    "failing until you remove 'ADKOM Text Editor — Semantics Module' in Window → Package Manager.");
+                return;
+            }
+
+            AteConsole.Info("[ADKOM Text Editor] Removing the obsolete semantics module package (its features now ship in the main package)…");
+            AtePackageInstaller.Remove(ObsoleteModuleName, (ok, message) =>
+            {
+                if (ok)
+                    AteConsole.Info("[ADKOM Text Editor] Obsolete semantics module removed.");
+                else
+                    // Same blocking condition: the removal that would have
+                    // fixed compilation did not happen.
+                    AteConsole.Error("[ADKOM Text Editor] Could not remove the obsolete semantics module (" + message +
+                        ") — remove 'ADKOM Text Editor — Semantics Module' in the Package Manager.");
+            });
         }
 
         public static bool RoslynPresent =>
@@ -79,6 +86,10 @@ namespace ADKOM.TextEditor
                 CopyBundledRoslyn();
                 return; // resumes after the plugin import reloads
             }
+            // Repair path for installs made before importer settings were
+            // forced: a DLL left on Unity's "Any Platform" default would ship
+            // 14 MB of Roslyn in the user's player builds.
+            EnforceEditorOnlyImport();
             EnsureDefine();
             if (!silent && SemanticServices.Provider == null)
                 AteConsole.Info("[ADKOM Text Editor] Semantics module compiling — features available shortly.");
@@ -107,6 +118,31 @@ namespace ADKOM.TextEditor
             AteConsole.Info($"[ADKOM Text Editor] Installed {copied} bundled Roslyn assemblies to {RoslynDestDir} " +
                 "(MIT-licensed, © .NET Foundation — see the package's THIRD-PARTY-NOTICES.md).");
             AssetDatabase.Refresh();
+            EnforceEditorOnlyImport();
+        }
+
+        /// <summary>Marks every installed Roslyn DLL editor-only. A managed
+        /// plugin under Assets/ defaults to "Any Platform" (verified on a
+        /// fresh copy), which would include all ~14 MB of Roslyn in the
+        /// user's player builds — the package's whole promise is that nothing
+        /// it does reaches a build. Runs after every install AND on every
+        /// semantics bootstrap, so installs made by older versions are
+        /// repaired the next time the editor loads.</summary>
+        static void EnforceEditorOnlyImport()
+        {
+            if (!Directory.Exists(RoslynDestDir)) return;
+            foreach (var dll in Directory.GetFiles(RoslynDestDir, "*.dll"))
+            {
+                string assetPath = dll.Replace('\\', '/');
+                if (!(AssetImporter.GetAtPath(assetPath) is PluginImporter importer)) continue;
+                if (!importer.GetCompatibleWithAnyPlatform() && importer.GetCompatibleWithEditor())
+                    continue; // already correct — don't dirty the import
+                importer.SetCompatibleWithAnyPlatform(false);
+                importer.SetCompatibleWithEditor(true);
+                importer.SaveAndReimport();
+                AteConsole.Log("[ADKOM Text Editor] Marked " + Path.GetFileName(dll) +
+                    " editor-only so it can never reach a player build.");
+            }
         }
 
         static void EnsureDefine()

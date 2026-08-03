@@ -3,7 +3,7 @@
 using System;
 using ADKOM.TextEditor.Scripting;
 
-[AteAddon(Name = "Insert Timestamp", Category = "Text", ApiVersion = "1.0")]
+[AteAddon(Name = "Insert Timestamp", Category = "Text", ApiVersion = "1.3")]
 public class InsertTimestamp : IAteAddon
 {
     public void Run()
@@ -11,7 +11,8 @@ public class InsertTimestamp : IAteAddon
         var doc = AteApi.ActiveDocument;
         if (doc == null)
         {
-            UnityEngine.Debug.Log("[Insert Timestamp] no active document");
+            // ATE's console pane (View > Console), not Unity's.
+            AteApi.DebugLog("[Insert Timestamp] no active document");
             return;
         }
         string text = doc.GetText();

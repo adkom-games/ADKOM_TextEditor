@@ -66,12 +66,40 @@ namespace ADKOM.TextEditor
         public MarkdownView()
         {
             style.flexGrow = 1;
+            // The view takes keyboard focus when a selection drag starts, so
+            // Ctrl+A / Ctrl+C keep working after the labels stop receiving
+            // pointer-downs (the view captures the pointer during drags).
+            focusable = true;
             _scroll = new ScrollView(ScrollViewMode.Vertical);
             _scroll.style.flexGrow = 1;
             _scroll.contentContainer.style.paddingLeft = 16;
             _scroll.contentContainer.style.paddingRight = 16;
             _scroll.contentContainer.style.paddingTop = 10;
             Add(_scroll);
+
+            // Selection highlight, painted BEHIND the text: absolutely
+            // positioned so it adds no layout, stretched over the whole
+            // content, and re-inserted as the first child on every Render.
+            _selOverlay = new VisualElement { name = "selection-overlay", pickingMode = PickingMode.Ignore };
+            _selOverlay.style.position = Position.Absolute;
+            _selOverlay.style.left = 0;
+            _selOverlay.style.right = 0;
+            _selOverlay.style.top = 0;
+            _selOverlay.style.bottom = 0;
+            _selOverlay.generateVisualContent += PaintSelection;
+            // A window resize re-wraps every label WITHOUT a Render: all the
+            // memoized cursor positions (and the line heights derived from
+            // them) go stale — measured two lines of drift after a 250 px
+            // narrowing. The character offsets survive a re-wrap; only their
+            // positions move, so re-derive the geometry.
+            _scroll.contentContainer.RegisterCallback<GeometryChangedEvent>(e =>
+            {
+                if (e.oldRect.size == e.newRect.size) return;
+                _cursorPos.Clear();
+                _lineHeights.Clear();
+                if (HasDocSelection) ApplyDocSelection();
+                else if (_selRects.Count > 0) ClearDrawnSelection();
+            });
 
             // Rendered-mode links: Ctrl+Click on a <link>-tagged span opens
             // it; hovering shows the instruction tooltip on the label.
@@ -144,34 +172,69 @@ namespace ADKOM.TextEditor
         readonly List<Label> _selLabels = new List<Label>(); // visual == document order
         int _selAnchor = -1, _selFocus = -1;                 // indices into _selLabels
         bool _selAll, _selDragging;
-        static readonly Color SelTint = new Color(0.25f, 0.45f, 0.85f, 0.30f);
 
         internal bool HasDocSelection =>
-            _selAll || (_selAnchor >= 0 && _selFocus >= 0 && _selAnchor != _selFocus);
+            _selAll || (_selAnchor >= 0 && _selFocus >= 0 &&
+                        (_selAnchor != _selFocus || _selAnchorChar != _selFocusChar));
 
         void HookDocSelection()
         {
             RegisterCallback<PointerDownEvent>(e =>
             {
                 if (!Locked || e.button != 0) return;
+                // Pass through what the labels must handle natively:
+                // Ctrl+Click link opening, and double/triple-click word/line
+                // selection — those engage the label's own machinery.
+                if (e.ctrlKey || e.commandKey || e.clickCount > 1) return;
+                // And anything that is not the document itself — a scrollbar
+                // click has to scroll, not clear the selection.
+                if (!IsInContent(e.target as VisualElement)) return;
+
                 ClearDocSelection();
                 _selAnchor = _selFocus = LabelIndexAt(e.position);
+                _selAnchorChar = _selFocusChar =
+                    _selAnchor >= 0 ? CharIndexAt(_selLabels[_selAnchor], e.position) : 0;
                 _selDragging = _selAnchor >= 0;
-                // No StopPropagation: the label under the pointer still does
-                // its native char-precise selection until the drag leaves it.
+                if (!_selDragging) return;
+
+                // Take the pointer for the view and keep the event from the
+                // label: if the label's native selection captured it instead,
+                // every mouse-move would regenerate that label's entire text
+                // mesh (6–14 ms on this package's own docs) to display a
+                // highlight the overlay draws for well under a millisecond.
+                // View capture also keeps moves flowing when the pointer
+                // leaves the window, which the edge auto-scroll feeds on.
+                Focus();   // so Ctrl+A / Ctrl+C route through this view
+                this.CapturePointer(e.pointerId);
+                e.StopImmediatePropagation();
             }, TrickleDown.TrickleDown);
-            // NOTE: these view-level handlers only see moves while NO label
-            // has pointer capture. The native text selection CAPTURES the
-            // pointer on the label the drag started in, and captured pointer
-            // events go to that element alone — which is why every label also
-            // registers OnLabelPointerMove/Up (see Render): the capturing
-            // label keeps receiving moves even far outside its own bounds.
+            // The VIEW holds the pointer capture during a selection drag (see
+            // PointerDown above), so captured moves arrive here directly —
+            // including moves outside the window. The per-label
+            // OnLabelPointerMove/Up handlers (see Render) only matter for the
+            // native paths that still capture on a label: double/triple-click
+            // drags and Ctrl+Click.
             RegisterCallback<PointerMoveEvent>(e =>
             {
                 if (!Locked || !_selDragging || (e.pressedButtons & 1) == 0) return;
                 UpdateDocSelectionAt(e.position);
             }, TrickleDown.TrickleDown);
-            RegisterCallback<PointerUpEvent>(_ => _selDragging = false, TrickleDown.TrickleDown);
+            RegisterCallback<PointerUpEvent>(e =>
+            {
+                if (this.HasPointerCapture(e.pointerId)) this.ReleasePointer(e.pointerId);
+                _selDragging = false;
+                StopEdgeScroll();
+                PromoteSelectionToOverlay();
+            }, TrickleDown.TrickleDown);
+            // If anything else steals the capture mid-drag, end the drag
+            // cleanly with whatever was selected so far.
+            RegisterCallback<PointerCaptureOutEvent>(_ =>
+            {
+                if (!_selDragging) return;
+                _selDragging = false;
+                StopEdgeScroll();
+                PromoteSelectionToOverlay();
+            });
             RegisterCallback<KeyDownEvent>(e =>
             {
                 if (!Locked) return;
@@ -183,7 +246,11 @@ namespace ADKOM.TextEditor
                 }
                 else if (ctrl && e.keyCode == KeyCode.C && HasDocSelection)
                 {
-                    EditorGUIUtility.systemCopyBuffer = SelectedPlainText();
+                    // Never clobber the clipboard with nothing: an empty
+                    // result means the selection resolved to zero characters,
+                    // and whatever the user copied before must survive that.
+                    string copied = SelectedPlainText();
+                    if (copied.Length > 0) EditorGUIUtility.systemCopyBuffer = copied;
                     e.StopImmediatePropagation();
                 }
                 else if (e.keyCode == KeyCode.Escape && HasDocSelection)
@@ -196,10 +263,78 @@ namespace ADKOM.TextEditor
 
         void UpdateDocSelectionAt(Vector2 panelPos)
         {
+            _lastDragPos = panelPos;
+            EdgeScrollTick(panelPos);
             int idx = LabelIndexAt(panelPos);
-            if (idx < 0 || idx == _selFocus) return;
+            if (idx < 0) return;
+            int ch = CharIndexAt(_selLabels[idx], panelPos);
+            // Within one label the character end moves even when the label
+            // does not, so both have to be compared.
+            if (idx == _selFocus && ch == _selFocusChar) return;
             _selFocus = idx;
+            _selFocusChar = ch;
             ApplyDocSelection();
+        }
+
+        // ---------- Auto-scroll while dragging past the viewport ----------
+        //
+        // Dragging a selection to the top or bottom edge has to keep going:
+        // without this the selection stops at whatever was on screen when the
+        // drag started, and a document taller than the window can never be
+        // selected with the mouse at all. Pointer-move events stop arriving
+        // once the pointer stops moving, so the scrolling runs on a scheduled
+        // tick rather than off the events, and each tick re-extends the
+        // selection using the last known pointer position.
+
+        Vector2 _lastDragPos;
+        IVisualElementScheduledItem _edgeScroll;
+        const float EdgeScrollZone = 24f;    // px inside the edge where it arms
+        const float EdgeScrollMaxStep = 28f; // px per tick at full overshoot
+
+        void EdgeScrollTick(Vector2 panelPos)
+        {
+            float speed = EdgeScrollSpeed(panelPos);
+            if (Mathf.Approximately(speed, 0f)) { StopEdgeScroll(); return; }
+            if (_edgeScroll != null) return;                 // already running
+            _edgeScroll = schedule.Execute(() =>
+            {
+                if (!_selDragging) { StopEdgeScroll(); return; }
+                float step = EdgeScrollSpeed(_lastDragPos);
+                if (Mathf.Approximately(step, 0f)) { StopEdgeScroll(); return; }
+
+                var offset = _scroll.scrollOffset;
+                float maxY = Mathf.Max(0f, _scroll.contentContainer.worldBound.height
+                                          - _scroll.contentViewport.worldBound.height);
+                float y = Mathf.Clamp(offset.y + step, 0f, maxY);
+                if (Mathf.Approximately(y, offset.y)) return; // already at the end
+                _scroll.scrollOffset = new Vector2(offset.x, y);
+
+                // The content moved under a stationary pointer, so the label
+                // beneath it changed: extend the selection to match.
+                UpdateDocSelectionAt(_lastDragPos);
+            }).Every(16);
+        }
+
+        /// <summary>Pixels to scroll per tick for a pointer at
+        /// <paramref name="panelPos"/>: 0 inside the viewport, ramping up to
+        /// <see cref="EdgeScrollMaxStep"/> the further past an edge it goes.
+        /// Negative scrolls up.</summary>
+        float EdgeScrollSpeed(Vector2 panelPos)
+        {
+            var view = _scroll.contentViewport.worldBound;
+            if (view.height <= 0f) return 0f;
+            float over = panelPos.y > view.yMax - EdgeScrollZone ? panelPos.y - (view.yMax - EdgeScrollZone)
+                       : panelPos.y < view.yMin + EdgeScrollZone ? panelPos.y - (view.yMin + EdgeScrollZone)
+                       : 0f;
+            if (Mathf.Approximately(over, 0f)) return 0f;
+            float ramp = Mathf.Clamp01(Mathf.Abs(over) / 120f);
+            return Mathf.Sign(over) * Mathf.Lerp(4f, EdgeScrollMaxStep, ramp);
+        }
+
+        void StopEdgeScroll()
+        {
+            _edgeScroll?.Pause();
+            _edgeScroll = null;
         }
 
         /// <summary>Per-label drag tracking: the label a selection drag
@@ -211,7 +346,12 @@ namespace ADKOM.TextEditor
             UpdateDocSelectionAt(e.position);
         }
 
-        void OnLabelPointerUp(PointerUpEvent e) => _selDragging = false;
+        void OnLabelPointerUp(PointerUpEvent e)
+        {
+            _selDragging = false;
+            StopEdgeScroll();
+            PromoteSelectionToOverlay();
+        }
 
         /// <summary>Ctrl+A: the whole document is the selection.</summary>
         internal void SelectAllDoc()
@@ -219,25 +359,294 @@ namespace ADKOM.TextEditor
             if (_selLabels.Count == 0) return;
             _selAnchor = 0;
             _selFocus = _selLabels.Count - 1;
+            _selAnchorChar = 0;
+            _selFocusChar = (_selLabels[_selFocus].text ?? string.Empty).Length;
             _selAll = true;
             ApplyDocSelection();
         }
 
+        // The label range currently showing a selection, so a drag only
+        // touches labels that actually change. Re-applying all of them per
+        // mouse-move re-ran the text generator over the whole document on
+        // every pointer move.
+        int _tintedA = -1, _tintedB = -1;
+
+        // Character offsets of the two ends, inside their own labels. A
+        // segment boundary is an implementation detail of how the document is
+        // laid out — the user sees one continuous document, so a selection
+        // that crosses one stays character-precise instead of degrading to
+        // whole blocks.
+        int _selAnchorChar, _selFocusChar;
+
+        // Unity renders a native selection in at most ONE TextElement: setting
+        // a range on a second one silently clears the first at the next
+        // repaint. A selection spanning blocks is therefore drawn here instead
+        // — the usual three-part shape (partial first line, full-width middle,
+        // partial last line) painted into an overlay behind the text. Native
+        // selection still handles the single-block case, so double-click word
+        // select and triple-click line select behave exactly as before.
+        readonly VisualElement _selOverlay;
+        readonly List<Rect> _selRects = new List<Rect>();
+        static readonly Color SelFill = new Color(0.25f, 0.45f, 0.85f, 0.45f);
+
         void ApplyDocSelection()
         {
             int a = Mathf.Min(_selAnchor, _selFocus), b = Mathf.Max(_selAnchor, _selFocus);
-            for (int i = 0; i < _selLabels.Count; i++)
+            bool forward = _selFocus >= _selAnchor;
+            int firstChar = forward ? _selAnchorChar : _selFocusChar;
+            int lastChar = forward ? _selFocusChar : _selAnchorChar;
+
+            // Single block: drawn too. Handing this case to the native
+            // selection cost a full text-mesh regeneration of the label per
+            // mouse-move; the overlay repaint is geometry only.
+            if (a == b)
             {
-                if (i >= a && i <= b) _selLabels[i].style.backgroundColor = SelTint;
-                else _selLabels[i].style.backgroundColor = StyleKeyword.Null;
+                _selRects.Clear();
+                AddRangeRects(_selLabels[a], Mathf.Min(firstChar, lastChar), Mathf.Max(firstChar, lastChar));
+                _selOverlay.MarkDirtyRepaint();
+                _tintedA = _tintedB = a;
+                return;
+            }
+
+            // Spanning blocks: the native selection can only ever show one of
+            // them, so drop it entirely and draw the whole span ourselves.
+            // SelectNone only where a selection actually exists — it dirties
+            // the label (a text-mesh regeneration) even when it is a no-op.
+            for (int i = _tintedA < 0 ? a : Mathf.Min(a, _tintedA); i <= Mathf.Max(b, _tintedB) && i < _selLabels.Count; i++)
+            {
+                var sel = i >= 0 ? _selLabels[i].selection : null;
+                if (sel != null && sel.HasSelection()) sel.SelectNone();
+            }
+
+            _selRects.Clear();
+            for (int i = a; i <= b; i++)
+            {
+                var label = _selLabels[i];
+                if (i == a) AddPartialRects(label, firstChar, toEnd: true);
+                else if (i == b) AddPartialRects(label, lastChar, toEnd: false);
+                else _selRects.Add(BoxOf(label));
+
+                // Bridge the margin to the next covered block: the gap reads
+                // as a selected empty line, so the highlight is one continuous
+                // range instead of stripes with seams. Table cells on the same
+                // row overlap vertically and produce no bridge.
+                if (i == b) continue;
+                var lo = BoxOf(label);
+                var hi = BoxOf(_selLabels[i + 1]);
+                if (hi.yMin <= lo.yMax) continue;
+                float x = Mathf.Min(lo.xMin, hi.xMin);
+                _selRects.Add(new Rect(x, lo.yMax, Mathf.Max(lo.xMax, hi.xMax) - x, hi.yMin - lo.yMax));
+            }
+            _selOverlay.MarkDirtyRepaint();
+            _tintedA = a;
+            _tintedB = b;
+        }
+
+        /// <summary>The label's whole box, in overlay space.</summary>
+        Rect BoxOf(VisualElement label)
+        {
+            var tl = label.ChangeCoordinatesTo(_selOverlay, Vector2.zero);
+            return new Rect(tl, label.layout.size);
+        }
+
+        /// <summary>Unity wipes a native TextElement selection on ANY focus
+        /// change — clicking a tab, the window title bar, or another
+        /// application all clear it (measured: even moving focus to a
+        /// ToolbarButton in the same window zeroes the range). The drawn
+        /// overlay has no such dependency, so the moment a single-block drag
+        /// ends, its native selection is converted into overlay rects and can
+        /// no longer be lost to focus traffic. Multi-block selections are
+        /// drawn from the start and were never affected.</summary>
+        void PromoteSelectionToOverlay()
+        {
+            if (_selAnchor < 0 || _selAnchor != _selFocus || _selAnchorChar == _selFocusChar) return;
+            if (_selAnchor >= _selLabels.Count) return;
+            var label = _selLabels[_selAnchor];
+            label.selection?.SelectNone();
+            _selRects.Clear();
+            AddRangeRects(label, Mathf.Min(_selAnchorChar, _selFocusChar), Mathf.Max(_selAnchorChar, _selFocusChar));
+            _selOverlay.MarkDirtyRepaint();
+        }
+
+        /// <summary>Rects for a range with both ends inside one label — a
+        /// single rect on one line, else the usual three-part shape.</summary>
+        void AddRangeRects(Label label, int fromChar, int toChar)
+        {
+            var sel = label.selection;
+            var box = BoxOf(label);
+            if (sel == null) { _selRects.Add(box); return; }
+            Vector2 pa = label.ChangeCoordinatesTo(_selOverlay, CursorPos(label, fromChar));
+            Vector2 pb = label.ChangeCoordinatesTo(_selOverlay, CursorPos(label, toChar));
+            float lh = LineHeight(label);
+            if (Mathf.Abs(pa.y - pb.y) < lh * 0.5f)
+            {
+                _selRects.Add(new Rect(pa.x, pa.y - lh, Mathf.Max(0f, pb.x - pa.x), lh));
+                return;
+            }
+            _selRects.Add(new Rect(pa.x, pa.y - lh, Mathf.Max(0f, box.xMax - pa.x), lh));
+            if (pb.y - lh > pa.y) _selRects.Add(new Rect(box.x, pa.y, box.width, pb.y - lh - pa.y));
+            _selRects.Add(new Rect(box.x, pb.y - lh, Mathf.Max(0f, pb.x - box.x), lh));
+        }
+
+        /// <summary>Rects for a partially covered label: from
+        /// <paramref name="ch"/> to the label's end (<paramref name="toEnd"/>),
+        /// or from its start up to <paramref name="ch"/>.</summary>
+        void AddPartialRects(Label label, int ch, bool toEnd)
+        {
+            var sel = label.selection;
+            var box = BoxOf(label);
+            if (sel == null) { _selRects.Add(box); return; }
+
+            Vector2 at = label.ChangeCoordinatesTo(_selOverlay, CursorPos(label, ch));
+            float lh = LineHeight(label);
+            float lineTop = at.y - lh;
+
+            if (toEnd)
+            {
+                // Rest of the anchor's line, then everything below it.
+                _selRects.Add(new Rect(at.x, lineTop, Mathf.Max(0f, box.xMax - at.x), lh));
+                if (box.yMax > at.y) _selRects.Add(new Rect(box.x, at.y, box.width, box.yMax - at.y));
+            }
+            else
+            {
+                // Everything above the focus line, then the start of its line.
+                if (lineTop > box.y) _selRects.Add(new Rect(box.x, box.y, box.width, lineTop - box.y));
+                _selRects.Add(new Rect(box.x, lineTop, Mathf.Max(0f, at.x - box.x), lh));
+            }
+        }
+
+        /// <summary>ITextSelection.GetCursorPositionFromStringIndex re-shapes
+        /// the label's text on EVERY call — measured 1.66 ms on a 4,660-char
+        /// label — and the pointer-to-character binary search makes ~12 calls
+        /// per mouse-move. A label's layout is fixed between Renders, so every
+        /// consumer goes through this memo instead; consecutive moves share
+        /// most of their search path, so a drag settles into cache hits.
+        /// Cleared in Render together with the labels.</summary>
+        readonly Dictionary<Label, Dictionary<int, Vector2>> _cursorPos =
+            new Dictionary<Label, Dictionary<int, Vector2>>();
+
+        Vector2 CursorPos(Label label, int index)
+        {
+            if (!_cursorPos.TryGetValue(label, out var map))
+                _cursorPos[label] = map = new Dictionary<int, Vector2>();
+            if (!map.TryGetValue(index, out var p))
+                map[index] = p = label.selection.GetCursorPositionFromStringIndex(index);
+            return p;
+        }
+
+        /// <summary>Line height per label, measured once from the text itself
+        /// (a segment can mix sizes, so the style's font size alone would be
+        /// wrong): the first index whose cursor y differs from index 0's is
+        /// the start of line two. Cleared in Render.</summary>
+        readonly Dictionary<Label, float> _lineHeights = new Dictionary<Label, float>();
+
+        float LineHeight(Label label)
+        {
+            if (_lineHeights.TryGetValue(label, out float cached)) return cached;
+            string t = label.text ?? string.Empty;
+            float lh = Mathf.Max(4f, label.resolvedStyle.fontSize * 1.2f);
+            if (label.selection != null && t.Length > 0)
+            {
+                float y0 = CursorPos(label, 0).y;
+                int lo = 0, hi = t.Length;
+                while (lo < hi)
+                {
+                    int mid = (lo + hi) / 2;
+                    if (CursorPos(label, mid).y <= y0 + 0.5f) lo = mid + 1; else hi = mid;
+                }
+                if (lo < t.Length)
+                {
+                    float y1 = CursorPos(label, lo).y;
+                    if (y1 > y0) lh = y1 - y0;
+                }
+            }
+            _lineHeights[label] = lh;
+            return lh;
+        }
+
+        /// <summary>True when <paramref name="v"/> sits inside the document
+        /// content — as opposed to the scroll bars or the view chrome.</summary>
+        bool IsInContent(VisualElement v)
+        {
+            for (; v != null; v = v.parent)
+                if (v == _scroll.contentContainer) return true;
+            return false;
+        }
+
+        void ClearDrawnSelection()
+        {
+            if (_selRects.Count == 0) return;
+            _selRects.Clear();
+            _selOverlay.MarkDirtyRepaint();
+        }
+
+        void PaintSelection(MeshGenerationContext ctx)
+        {
+            // Raw quads, not painter2D: the general path tessellator cost
+            // ~9 ms for a full-document selection's ~40 rects — per repaint,
+            // so per mouse-move while dragging. Axis-aligned rectangles are
+            // two triangles each; allocating them directly is microseconds.
+            int n = 0;
+            for (int i = 0; i < _selRects.Count; i++)
+                if (_selRects[i].width > 0f && _selRects[i].height > 0f) n++;
+            if (n == 0) return;
+
+            var mesh = ctx.Allocate(n * 4, n * 6);
+            Color32 tint = SelFill;
+            ushort v = 0;
+            foreach (var r in _selRects)
+            {
+                if (r.width <= 0f || r.height <= 0f) continue;
+                mesh.SetNextVertex(new Vertex { position = new Vector3(r.xMin, r.yMin, Vertex.nearZ), tint = tint });
+                mesh.SetNextVertex(new Vertex { position = new Vector3(r.xMax, r.yMin, Vertex.nearZ), tint = tint });
+                mesh.SetNextVertex(new Vertex { position = new Vector3(r.xMax, r.yMax, Vertex.nearZ), tint = tint });
+                mesh.SetNextVertex(new Vertex { position = new Vector3(r.xMin, r.yMax, Vertex.nearZ), tint = tint });
+                mesh.SetNextIndex(v);
+                mesh.SetNextIndex((ushort)(v + 1));
+                mesh.SetNextIndex((ushort)(v + 2));
+                mesh.SetNextIndex((ushort)(v + 2));
+                mesh.SetNextIndex((ushort)(v + 3));
+                mesh.SetNextIndex(v);
+                v += 4;
             }
         }
 
         void ClearDocSelection()
         {
-            foreach (var l in _selLabels) l.style.backgroundColor = StyleKeyword.Null;
+            for (int i = 0; i < _selLabels.Count; i++)
+                if (i >= _tintedA && i <= _tintedB) _selLabels[i].selection?.SelectNone();
+            ClearDrawnSelection();
+            _tintedA = _tintedB = -1;
             _selAnchor = _selFocus = -1;
+            _selAnchorChar = _selFocusChar = 0;
             _selAll = false;
+        }
+
+        /// <summary>The character offset in <paramref name="l"/> nearest a
+        /// panel-space point. UI Toolkit maps index → position but not the
+        /// reverse; the mapping is monotonic in y, so the inverse is a binary
+        /// search — about 12 probes for a 4,000-character label.</summary>
+        int CharIndexAt(Label l, Vector2 panelPos)
+        {
+            var sel = l.selection;
+            string t = l.text ?? string.Empty;
+            if (sel == null || t.Length == 0) return 0;
+
+            Vector2 local = l.WorldToLocal(panelPos);
+            // Positions sit on the text baseline, so compare lines with a
+            // tolerance of roughly one line rather than exact equality.
+            float lineTol = Mathf.Max(4f, l.resolvedStyle.fontSize * 0.6f);
+
+            int lo = 0, hi = t.Length;
+            while (lo < hi)
+            {
+                int mid = (lo + hi) / 2;
+                Vector2 p = CursorPos(l, mid);
+                bool beforePoint = p.y < local.y - lineTol
+                                   || (p.y <= local.y + lineTol && p.x < local.x);
+                if (beforePoint) lo = mid + 1; else hi = mid;
+            }
+            return lo;
         }
 
         /// <summary>The label under (or vertically nearest to) a panel-space
@@ -256,22 +665,94 @@ namespace ADKOM.TextEditor
             return bestIdx;
         }
 
-        /// <summary>The selected span as plain rendered text: EVERY block
-        /// from the first selected one to the last (rules and images between
-        /// them included), joined like Copy All.</summary>
+        /// <summary>The selected span as plain rendered text — exactly what is
+        /// highlighted, including the partial first and last blocks. Images
+        /// and tables inside the span cannot hold a text selection, so they
+        /// contribute their whole plain form (alt text, tab-separated cells)
+        /// the way Copy All renders them.</summary>
         internal string SelectedPlainText()
         {
             int a = Mathf.Min(_selAnchor, _selFocus), b = Mathf.Max(_selAnchor, _selFocus);
             if (a < 0 || _selLabels.Count == 0) return string.Empty;
-            var ra = BlockRangeOf(_selLabels[a]);
-            var rb = BlockRangeOf(_selLabels[Mathf.Min(b, _selLabels.Count - 1)]);
-            int bi = Mathf.Min(ra.first, rb.first), be = Mathf.Max(ra.last, rb.last);
-            if (bi < 0 || be < 0) return string.Empty;
+            b = Mathf.Min(b, _selLabels.Count - 1);
+            bool forward = _selFocus >= _selAnchor;
+            int firstChar = forward ? _selAnchorChar : _selFocusChar;
+            int lastChar = forward ? _selFocusChar : _selAnchorChar;
+
             var sb = new StringBuilder();
-            for (int i = bi; i <= be && i < _blocks.Count; i++)
+            var emitted = new HashSet<int>();   // non-segment blocks, once each
+            for (int i = a; i <= b; i++)
             {
+                var label = _selLabels[i];
+                string piece;
+                if (label.userData is Segment)
+                {
+                    // Selection offsets are indices into the RENDERED text, so
+                    // slice that rather than the rich source or the markdown.
+                    string rendered = RenderedText(label.text ?? string.Empty);
+                    int from = i == a ? Mathf.Clamp(firstChar, 0, rendered.Length) : 0;
+                    int to = i == b ? Mathf.Clamp(lastChar, 0, rendered.Length) : rendered.Length;
+                    // Both ends in one label: firstChar/lastChar are ordered by
+                    // LABEL, so a backward drag (right-to-left) arrives
+                    // reversed here — order them or the slice is empty and
+                    // Ctrl+C would overwrite the clipboard with "".
+                    if (a == b && from > to) { int t2 = from; from = to; to = t2; }
+                    if (to <= from) continue;
+                    piece = rendered.Substring(from, to - from);
+                }
+                else
+                {
+                    // A table cell: emit its whole block once, not cell by cell.
+                    var range = BlockRangeOf(label);
+                    if (range.first < 0 || range.first >= _blocks.Count || !emitted.Add(range.first)) continue;
+                    piece = PlainTextFor(_blocks[range.first]);
+                }
+                if (piece.Length == 0) continue;
                 if (sb.Length > 0) sb.Append("\n\n");
-                sb.Append(PlainTextFor(_blocks[i]));
+                sb.Append(piece);
+            }
+            return sb.ToString();
+        }
+
+        /// <summary>The tags this view emits (see RichFor / RenderBlockText).
+        /// Anything else is left alone, because Unity renders an unrecognized
+        /// tag literally and the offsets have to keep matching what is drawn.</summary>
+        static readonly HashSet<string> RichTags = new HashSet<string>
+        { "b", "i", "s", "u", "size", "color", "mark", "alpha", "noparse", "sup", "sub", "link", "align", "indent" };
+
+        /// <summary>What the user actually sees for a rich-text string: tags
+        /// removed, but the body of a &lt;noparse&gt; run kept verbatim — code
+        /// blocks are wrapped in one precisely so their angle brackets survive,
+        /// and stripping "&lt;int&gt;" out of a generic would shift every
+        /// offset after it.</summary>
+        static string RenderedText(string rich)
+        {
+            if (string.IsNullOrEmpty(rich) || rich.IndexOf('<') < 0) return rich ?? string.Empty;
+            const string noparseEnd = "</noparse>";
+            var sb = new StringBuilder(rich.Length);
+            int i = 0;
+            while (i < rich.Length)
+            {
+                if (rich[i] != '<') { sb.Append(rich[i++]); continue; }
+                int close = rich.IndexOf('>', i + 1);
+                if (close < 0) { sb.Append(rich, i, rich.Length - i); break; }
+
+                string inner = rich.Substring(i + 1, close - i - 1);
+                bool closing = inner.StartsWith("/", StringComparison.Ordinal);
+                string name = closing ? inner.Substring(1) : inner;
+                int cut = name.IndexOfAny(new[] { '=', ' ' });
+                if (cut >= 0) name = name.Substring(0, cut);
+                if (!RichTags.Contains(name.ToLowerInvariant())) { sb.Append(rich[i++]); continue; }
+
+                if (!closing && name.Equals("noparse", StringComparison.OrdinalIgnoreCase))
+                {
+                    int end = rich.IndexOf(noparseEnd, close + 1, StringComparison.Ordinal);
+                    int bodyEnd = end < 0 ? rich.Length : end;
+                    sb.Append(rich, close + 1, bodyEnd - close - 1);
+                    i = end < 0 ? rich.Length : end + noparseEnd.Length;
+                    continue;
+                }
+                i = close + 1;
             }
             return sb.ToString();
         }
@@ -291,8 +772,15 @@ namespace ADKOM.TextEditor
             ParseBlocks();
             var c = _scroll.contentContainer;
             c.Clear();
+            _selRects.Clear();
+            _lineHeights.Clear();       // the labels they were measured on are gone
+            _cursorPos.Clear();
+            c.Add(_selOverlay);         // first child: paints behind the blocks
+            _selDragging = false;
+            StopEdgeScroll();           // the labels it was scrolling toward are gone
             _selLabels.Clear();
             _selAnchor = _selFocus = -1;
+            _tintedA = _tintedB = -1;   // the labels that carried the tint are gone
             _selAll = false;
             _segments.Clear();
             if (Locked)
@@ -325,6 +813,29 @@ namespace ADKOM.TextEditor
         }
         readonly List<Segment> _segments = new List<Segment>();
 
+        /// <summary>Maximum rich-text length of one segment label.
+        ///
+        /// A segment is one TextElement, and Unity regenerates an element's
+        /// WHOLE text mesh whenever its selection changes — so a drag inside a
+        /// segment costs one full regeneration per pointer-move. That cost is
+        /// linear in the segment's length; measured on 6000.3.19f1 with this
+        /// package's RELEASE-NOTES.md (a document of nothing but text blocks,
+        /// which merged into a single 40,768-character label):
+        ///
+        ///     500 chars 2.6 ms | 2,000 6.4 ms | 8,000 21.8 ms
+        ///     16,000 45.3 ms | 32,000 97.2 ms | 40,768 124.7 ms
+        ///
+        /// At 125 ms per mouse-move, selecting text felt like dragging through
+        /// treacle. Capping at 2,000 keeps a move near 6 ms.
+        ///
+        /// The cost of the cap is selection seams: NATIVE char-precise
+        /// selection cannot cross a TextElement boundary. Splitting only
+        /// BETWEEN blocks means selection inside any single block is unchanged,
+        /// and multi-block drags fall through to the block-span layer, which
+        /// already handles the seams that images and tables have always
+        /// created.</summary>
+        const int MaxSegmentChars = 2000;
+
         void RenderLockedSegments(VisualElement c)
         {
             Color text = _palette?.TextColor ?? Color.white;
@@ -355,10 +866,16 @@ namespace ADKOM.TextEditor
                     c.Add(el);
                     continue;
                 }
+                string rich = RichFor(b, text);
+                // Break BEFORE a block that would push this segment past the
+                // cap, never inside one: splitting a block would cut its
+                // rich-text tags in half. A single block over the cap stays
+                // whole and simply costs what it costs.
+                if (seg != null && sb.Length + rich.Length > MaxSegmentChars) Flush();
                 if (seg == null) seg = new Segment { FirstBlock = i };
                 if (sb.Length > 0) sb.Append("\n\n");
                 int start = sb.Length;
-                sb.Append(RichFor(b, text));
+                sb.Append(rich);
                 seg.Ranges.Add((b, start, sb.Length - start));
                 seg.LastBlock = i;
             }

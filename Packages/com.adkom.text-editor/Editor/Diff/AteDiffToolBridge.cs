@@ -88,20 +88,17 @@ namespace ADKOM.TextEditor
                 string two = "two \"#LEFT\" \"#RIGHT\"";
                 string three = "three \"#LEFT\" \"#RIGHT\" \"#ANCESTOR\"";
                 string merge = "merge \"#LEFT\" \"#RIGHT\" \"#ANCESTOR\" \"#OUTPUT\"";
-                var ieu = typeof(UnityEditorInternal.InternalEditorUtility);
-                var set = ieu.GetMethod("SetCustomDiffToolPrefs",
-                    System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic);
-                if (set != null) set.Invoke(null, new object[] { ShimPath, two, three, merge });
-                else
-                {
-                    EditorPrefs.SetString("customDiffToolPath", ShimPath);
-                    EditorPrefs.SetString("twoWayDiffArguments", two);
-                    EditorPrefs.SetString("threeWayDiffArguments", three);
-                    EditorPrefs.SetString("mergeArguments", merge);
-                }
-                var data = ieu.GetMethod("SetCustomDiffToolData",
-                    System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic);
-                if (data != null) data.Invoke(null, new object[] { ShimPath, two, three, merge });
+                // Written straight to the preference keys Unity reads. The
+                // internal InternalEditorUtility.SetCustomDiffToolPrefs /
+                // SetCustomDiffToolData would do the same thing, but Asset
+                // Store submissions may not reflect into Editor internals —
+                // and this path was already the fallback here, so nothing is
+                // lost beyond an open Preferences window needing a reopen to
+                // show the new values.
+                EditorPrefs.SetString("customDiffToolPath", ShimPath);
+                EditorPrefs.SetString("twoWayDiffArguments", two);
+                EditorPrefs.SetString("threeWayDiffArguments", three);
+                EditorPrefs.SetString("mergeArguments", merge);
                 EditorPrefs.SetString("kDiffsDefaultApp", "Custom Tool");
                 return L10n.Tr("ATE is now Unity's Revision Control Diff/Merge tool (Preferences → External Tools).");
             }
