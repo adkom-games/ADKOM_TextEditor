@@ -1083,6 +1083,19 @@ namespace ADKOM.TextEditor
         float CharWidth(char c)
         {
             if (_charW.TryGetValue(c, out float w)) return w;
+            // Off-panel there is nothing to measure against: CreateGUI sets
+            // wordWrap before the window attaches, and 6000.5+ logs a warning
+            // ("Trying to access the DPI setting...") for EVERY MeasureTextSize
+            // call in that state — two per character, over the whole document.
+            // Return the same font-derived estimate the NaN path uses, without
+            // caching; OnViewportChanged re-measures once the panel exists.
+            // (resolvedStyle.fontSize is itself NaN before attach, and
+            // Mathf.Max(1, NaN) is NaN — hence the explicit guard.)
+            if (_measure.panel == null)
+            {
+                float size = resolvedStyle.fontSize;
+                return float.IsNaN(size) || size <= 0f ? 7.2f : size * 0.6f;
+            }
             // Bracket the char on BOTH sides: measurers trim trailing
             // whitespace, so "|" + ' ' measured the same as "|" and every
             // space came back 1px — which crushed the indent guides against
