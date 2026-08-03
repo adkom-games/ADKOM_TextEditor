@@ -4,6 +4,9 @@ All notable changes to this package are documented here. Format follows [Keep a 
 
 ## [Unreleased]
 
+### Fixed
+- Compile errors on Unity 6000.0–6000.2 (clean install of 0.14.2): `ITextSelection.GetCursorPositionFromStringIndex` and `DropdownMenuSizeMode` are both 6000.3+ APIs. The cursor-position mapping now goes through a version-gated shim — on older editors the same answer comes from a public set/read/restore round-trip through `cursorIndex`/`cursorPosition`, verified pixel-identical to the real API where both exist — and the Git file-history dropdown uses the anchored `DropDown` overload. The fallback bodies are compile-verified with no version defines set.
+
 ## [0.14.2] - 2026-08-03
 
 ### Added
