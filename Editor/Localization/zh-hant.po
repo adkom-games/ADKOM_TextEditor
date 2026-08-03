@@ -1104,6 +1104,15 @@ msgstr "將此次下載實際取得的 URL（raw 檔案連結）複製到剪貼�
 msgid "Link copied to the clipboard."
 msgstr "已複製連結到剪貼簿。"
 
+msgid "Enable In-Editor Games"
+msgstr "啟用編輯器內遊戲"
+
+msgid "Show the Games menu — the Z-Machine (Zork) and installed addon games. Off by default; games already running keep running, and the player guides under Help → Documentation stay available either way. Machine-wide."
+msgstr "顯示 Games 選單 — Z-Machine（Zork）和已安裝的外掛遊戲。預設關閉；正在執行的遊戲會繼續執行，Help → Documentation 中的玩家指南始終可用。此設定對整台機器生效。"
+
+msgid "Game addons hidden — enable In-Editor Games in Settings"
+msgstr "遊戲外掛已隱藏 — 請在 Settings 中啟用 In-Editor Games"
+
 msgid "(download)"
 msgstr "（下載）"
 

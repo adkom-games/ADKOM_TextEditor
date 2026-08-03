@@ -4,6 +4,9 @@ All notable changes to this package are documented here. Format follows [Keep a 
 
 ## [Unreleased]
 
+### Changed
+- **In-editor gaming is now opt-in.** A new machine-wide setting (Settings → Games → **Enable In-Editor Games**, off by default) gates the entire Games feature: the Games menu itself, and game addons under Tools → Addons (which would otherwise be a bypass — a disabled hint there says how to enable). With the feature off, snapshotted Z-Machine games are not resumed after a reload (their transcript tabs restore as plain documents); games already running when the setting is turned off keep running. The documentation shelf under Help is NOT gated — the player guides stay readable. Toggling takes effect immediately in every open ATE window. **Existing users: the Games menu disappears after this update until the setting is enabled once.**
+
 ## [0.14.4] - 2026-08-03
 
 ### Fixed

@@ -371,6 +371,19 @@ namespace ADKOM.TextEditor
             set => EditorPrefs.SetBool(MdOpenRenderedKey, value);
         }
 
+        const string GamesEnabledKey = "ADKOM.TextEditor.GamesEnabled";
+
+        /// <summary>In-editor gaming (the Games menu: Z-Machine plus addon
+        /// games). Off by default — ATE is a work tool first, and the games
+        /// are a strictly opt-in extra. Machine-wide, like the addons folder
+        /// the games live in. The documentation shelf under Help is NOT
+        /// gated: reading about the games requires nothing.</summary>
+        public static bool GamesEnabled
+        {
+            get => EditorPrefs.GetBool(GamesEnabledKey, false);
+            set => EditorPrefs.SetBool(GamesEnabledKey, value);
+        }
+
         const string MdLockByDefaultKey = "ADKOM.TextEditor.MdLockByDefault";
 
         /// <summary>Rendered Markdown opens locked (read-only, default on):
