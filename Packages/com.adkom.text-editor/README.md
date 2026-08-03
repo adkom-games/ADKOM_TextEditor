@@ -143,7 +143,7 @@ https://github.com/adkom-games/ADKOM_TextEditor.git#upm
 Prefer a pinned version?
 
 ```
-https://github.com/adkom-games/ADKOM_TextEditor.git#0.14.4
+https://github.com/adkom-games/ADKOM_TextEditor.git#0.14.5
 ```
 
 Semantic Features (compiler-accurate colors + Go to Definition) are built in — the first use, or the Settings toggle, sets everything up automatically.
