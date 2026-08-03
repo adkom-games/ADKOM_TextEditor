@@ -57,14 +57,15 @@ namespace AteZMachine
             foreach (var g in ZStory.Downloadable)
             {
                 var game = g;
-                bool have = File.Exists(Path.Combine(ZStory.StoryFolder, g.File));
+                bool have = ZStory.IsDownloaded(game);
                 string label = prefix + (have ? game.Title : game.Title + " " + L10n.Tr("(download)"));
                 m.AddItem(new GUIContent(label), false, () =>
                 {
                     _window = window;
-                    string p = ZStory.EnsureDownloaded(game, out string err);
-                    if (p == null) { AteConsole.Warn("[ADKOM Text Editor] " + game.Title + " " + L10n.Tr("download failed: ") + err); return; }
-                    Launch(p);
+                    if (have) { Launch(ZStory.LocalPath(game)); return; }
+                    // Never fetch anything without asking: the prompt shows the
+                    // source, the pinned commit, the license and the target path.
+                    ZStoryDownloadPrompt.Open(game, Launch);
                 });
             }
             m.AddItem(new GUIContent(prefix + L10n.Tr("Open Story File… (.z3)")), false, () =>

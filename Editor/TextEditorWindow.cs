@@ -123,59 +123,9 @@ namespace ADKOM.TextEditor
         [MenuItem("Window/ADKOM Text Editor %&8")] // Ctrl+Alt+8 shown here
         static void OpenFromWindowMenu() => Open();
 
-        /// <summary>Puts ATE in every dock's tab context / "⋮" menu under
-        /// "Add Tab". The Add Tab list itself is a fixed set of built-in pane
-        /// types (HostView.GetPaneTypes), so third-party windows can only get
-        /// there via the internal static HostView.populateDefaultMenuItems
-        /// event — Action&lt;GenericMenu, EditorWindow&gt;, raised while the
-        /// menu is built. Same-named submenus merge, so our item lands inside
-        /// the existing "Add Tab". Reflection-based and failure-tolerant: if
-        /// a future Unity removes the event, we silently lose the entry.</summary>
-        [InitializeOnLoad]
-        static class AteAddTabIntegration
-        {
-            static AteAddTabIntegration()
-            {
-                try
-                {
-                    var hostT = typeof(EditorWindow).Assembly.GetType("UnityEditor.HostView");
-                    var ev = hostT?.GetEvent("populateDefaultMenuItems",
-                        System.Reflection.BindingFlags.Static |
-                        System.Reflection.BindingFlags.Public |
-                        System.Reflection.BindingFlags.NonPublic);
-                    if (ev == null) return;
-                    System.Action<GenericMenu, EditorWindow> handler = (menu, view) =>
-                    {
-                        if (view is TextEditorWindow) return; // already one here
-                        menu.AddItem(new GUIContent("Add Tab/ADKOM Text Editor"), false, () =>
-                        {
-                            var existing = Resources.FindObjectsOfTypeAll<TextEditorWindow>();
-                            if (existing.Length > 0) { existing[0].Show(); existing[0].Focus(); return; }
-                            var win = CreateInstance<TextEditorWindow>();
-                            try
-                            {
-                                // Dock as a sibling tab of the clicked pane.
-                                var parentF = typeof(EditorWindow).GetField("m_Parent",
-                                    System.Reflection.BindingFlags.Instance |
-                                    System.Reflection.BindingFlags.NonPublic);
-                                object dock = view != null ? parentF?.GetValue(view) : null;
-                                var addTab = dock?.GetType().GetMethod("AddTab",
-                                    new[] { typeof(EditorWindow), typeof(bool) });
-                                if (addTab != null) addTab.Invoke(dock, new object[] { win, true });
-                                else win.Show();
-                            }
-                            catch (System.Exception) { win.Show(); }
-                            win.UpdateTitle();
-                            win.Focus();
-                        });
-                    };
-                    // The add accessor is internal — AddEventHandler refuses
-                    // non-public accessors, so invoke it directly.
-                    ev.GetAddMethod(true).Invoke(null, new object[] { handler });
-                }
-                catch (System.Exception) { /* menu entry is best-effort */ }
-            }
-        }
+        // The "Add Tab" dock-menu entry lives in
+        // Editor/Distribution/AteAddTabIntegration.cs: it needs reflection
+        // into UnityEditor.HostView, which the Asset Store build strips.
 
         [MenuItem("Tools/ADKOM/Text Editor")] // shortcut lives on the Window menu entry
         public static void Open()
@@ -538,7 +488,17 @@ namespace ADKOM.TextEditor
                 AteZMachine.ZMachineGame.Rehydrate(this);
                 Scripting.AteAddonManager.DeliverPendingStates();
             }).ExecuteLater(300);
+
+            _uiReady = true;
         }
+
+        /// <summary>False until CreateGUI has built the UI. Unity raises
+        /// OnFocus from HostView.RegisterSelectedPane during DockArea.OnEnable
+        /// — i.e. BEFORE CreateGUI on a domain reload or editor start — so any
+        /// handler that touches visual elements has to wait for this.
+        /// [NonSerialized]: hot serialization would carry a true across the
+        /// reload and defeat the guard exactly when it is needed.</summary>
+        [System.NonSerialized] bool _uiReady;
 
         static ToolbarButton ToolbarBtn(string text, System.Action onClick) =>
             new ToolbarButton(onClick) { text = text };
@@ -1593,19 +1553,25 @@ namespace ADKOM.TextEditor
             _settingsPane.Add(_settingsRecentMax);
 
             Section("Updates");
-            _settingsAutoUpdate = new Toggle(L10n.Tr("Automatic Updates")) { value = EditorConfig.AutoUpdate };
-            _settingsAutoUpdate.RegisterValueChangedCallback(e => EditorConfig.AutoUpdate = e.newValue);
-            _settingsAutoUpdate.tooltip = L10n.Tr("Check GitHub for new releases and offer to install them.");
-            _settingsPane.Add(_settingsAutoUpdate);
-
-            _settingsUpdateFreq = new IntegerField(L10n.Tr("Check Every (days)")) { value = EditorConfig.UpdateFrequencyDays };
-            _settingsUpdateFreq.RegisterValueChangedCallback(e =>
+            // The Asset Store build never checks on its own (submissions may
+            // not call out without consent), so it offers only the manual
+            // button below — a schedule it would never run is worse than none.
+            if (!AteBuildFlavor.AssetStore)
             {
-                EditorConfig.UpdateFrequencyDays = e.newValue;
-                _settingsUpdateFreq.SetValueWithoutNotify(EditorConfig.UpdateFrequencyDays); // clamp echo (min 1)
-            });
-            _settingsUpdateFreq.tooltip = L10n.Tr("Days between automatic update checks. 1 = daily; never more often than once per day.");
-            _settingsPane.Add(_settingsUpdateFreq);
+                _settingsAutoUpdate = new Toggle(L10n.Tr("Automatic Updates")) { value = EditorConfig.AutoUpdate };
+                _settingsAutoUpdate.RegisterValueChangedCallback(e => EditorConfig.AutoUpdate = e.newValue);
+                _settingsAutoUpdate.tooltip = L10n.Tr("Check GitHub for new releases and offer to install them.");
+                _settingsPane.Add(_settingsAutoUpdate);
+
+                _settingsUpdateFreq = new IntegerField(L10n.Tr("Check Every (days)")) { value = EditorConfig.UpdateFrequencyDays };
+                _settingsUpdateFreq.RegisterValueChangedCallback(e =>
+                {
+                    EditorConfig.UpdateFrequencyDays = e.newValue;
+                    _settingsUpdateFreq.SetValueWithoutNotify(EditorConfig.UpdateFrequencyDays); // clamp echo (min 1)
+                });
+                _settingsUpdateFreq.tooltip = L10n.Tr("Days between automatic update checks. 1 = daily; never more often than once per day.");
+                _settingsPane.Add(_settingsUpdateFreq);
+            }
 
             var checkNowRow = new VisualElement();
             checkNowRow.style.flexDirection = FlexDirection.Row;
@@ -1946,6 +1912,10 @@ namespace ADKOM.TextEditor
         void OnFocus()
         {
             Scripting.AteApi.NotifyWindowFocus(true);
+            // Focus arrives before CreateGUI on a reload — the banner and the
+            // git marks both need visual elements that do not exist yet. The
+            // check is not lost: CreateGUI ends with SwitchTo, which runs it.
+            if (!_uiReady) return;
             // Inactive tabs are checked when they are activated (SwitchTo).
             if (_docs == null || _docs.Count == 0 || _active >= _docs.Count) return;
             CheckExternalChange(Active); // non-modal banner
@@ -2528,7 +2498,10 @@ namespace ADKOM.TextEditor
             }
         }
 
-        void UpdateTitle()
+        // internal: AteAddTabIntegration (Editor/Distribution) titles the
+        // window it docks, and lives outside this class so the Asset Store
+        // build can drop its Editor-internal reflection wholesale.
+        internal void UpdateTitle()
         {
             if (!HasDocs)
             {

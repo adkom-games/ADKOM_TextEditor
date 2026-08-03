@@ -9,8 +9,15 @@ namespace ADKOM.TextEditor
     /// <summary>
     /// Session log for the ADKOM Text Editor: every ATE message — tool
     /// output, update checks, semantic setup, status-bar messages — lands
-    /// here, timestamped. The console pane in the editor window renders it;
-    /// Info/Warn/Error also mirror to Unity's console. Thread-safe.
+    /// here, timestamped, and is rendered by the console pane in the editor
+    /// window. Thread-safe.
+    ///
+    /// ATE keeps out of Unity's console. A text editor that narrates itself
+    /// there buries the messages the user's own project is trying to show
+    /// them, so <see cref="Info"/> and <see cref="Warn"/> stay inside ATE.
+    /// Only <see cref="Error"/> — something failed and the user has to act —
+    /// also reaches Unity's console, because that must be seen even with no
+    /// ATE window open.
     /// </summary>
     public static class AteConsole
     {
@@ -33,8 +40,16 @@ namespace ADKOM.TextEditor
             }
         }
 
-        public static void Info(string message) { Debug.Log(message); Log(message); }
-        public static void Warn(string message) { Debug.LogWarning(message); Log("[warn] " + message); }
+        /// <summary>Ordinary progress and results. ATE's console only.</summary>
+        public static void Info(string message) { Log(message); }
+
+        /// <summary>Something is off but ATE carried on. ATE's console only —
+        /// promote to <see cref="Error"/> if the user must see it with ATE
+        /// closed.</summary>
+        public static void Warn(string message) { Log("[warn] " + message); }
+
+        /// <summary>Something failed and needs the user. The only thing ATE
+        /// writes to Unity's console.</summary>
         public static void Error(string message) { Debug.LogError(message); Log("[error] " + message); }
 
         public static string GetText()

@@ -26,7 +26,8 @@ A working sample covering the whole CORE surface ships in **Package Manager → 
 
 | Member | Description |
 |---|---|
-| `ApiVersion` | The API's semantic version (`"1.2.0"`). Addons declare the version they target. |
+| `ApiVersion` | The API's semantic version (`"1.3.0"`). Addons declare the version they target. |
+| `Log(message)` | Writes a line to ATE's console pane (View → Console). The way an addon or editor script reports to the user — ATE leaves Unity's console to your project. Since 1.3.0. |
 | `OpenWindow()` | Opens (or focuses) the ATE window. |
 | `Open(path, line = 1, column = 1)` | Opens a file at a 1-based position; reuses an existing tab for the same file; creates the window if needed. |
 | `NewDocument(initialText = "")` | Creates a new untitled document and returns its handle. |
@@ -75,8 +76,8 @@ static class SaveLogger
 {
     static SaveLogger()
     {
-        AteApi.documentSaved += doc => Debug.Log($"[SaveLogger] saved {doc.DisplayName} ({doc.Path})");
-        AteApi.activeDocumentChanged += doc => Debug.Log(doc != null ? $"[SaveLogger] now editing {doc.DisplayName}" : "[SaveLogger] no active document");
+        AteApi.documentSaved += doc => AteApi.DebugLog($"[SaveLogger] saved {doc.DisplayName} ({doc.Path})");
+        AteApi.activeDocumentChanged += doc => AteApi.DebugLog(doc != null ? $"[SaveLogger] now editing {doc.DisplayName}" : "[SaveLogger] no active document");
     }
 }
 ```
@@ -163,7 +164,7 @@ An addon is a **folder** in the machine-shared addons folder (**Tools → Addons
 // Save as WordCount/WordCount.cs in the addons folder.
 using ADKOM.TextEditor.Scripting;
 
-[AteAddon(Name = "Word Count", Category = "Text", ApiVersion = "1.0")]
+[AteAddon(Name = "Word Count", Category = "Text", ApiVersion = "1.3")]
 public class WordCountAddon : IAteAddon
 {
     public void Run()
@@ -171,7 +172,7 @@ public class WordCountAddon : IAteAddon
         var doc = AteApi.ActiveDocument;
         if (doc == null) return;
         int words = doc.GetText().Split((char[])null, System.StringSplitOptions.RemoveEmptyEntries).Length;
-        UnityEngine.Debug.Log($"{doc.DisplayName}: {words} words");
+        AteApi.DebugLog($"{doc.DisplayName}: {words} words");
     }
 }
 ```

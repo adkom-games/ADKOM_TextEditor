@@ -1,7 +1,7 @@
 // ATE sample addon: reads the active document and reports statistics.
 using ADKOM.TextEditor.Scripting;
 
-[AteAddon(Name = "Word Count", Category = "Text", ApiVersion = "1.0")]
+[AteAddon(Name = "Word Count", Category = "Text", ApiVersion = "1.3")]
 public class WordCount : IAteAddon
 {
     public void Run()
@@ -9,7 +9,9 @@ public class WordCount : IAteAddon
         var doc = AteApi.ActiveDocument;
         if (doc == null)
         {
-            UnityEngine.Debug.Log("[Word Count] no active document");
+            // AteApi.DebugLog reports in ATE's console pane (View > Console),
+            // where the user is already looking — not Unity's console.
+            AteApi.DebugLog("[Word Count] no active document");
             return;
         }
         string text = doc.GetText();
@@ -21,7 +23,7 @@ public class WordCount : IAteAddon
             if (char.IsWhiteSpace(c)) inWord = false;
             else if (!inWord) { inWord = true; words++; }
         }
-        UnityEngine.Debug.Log("[Word Count] " + doc.DisplayName + ": " +
+        AteApi.DebugLog("[Word Count] " + doc.DisplayName + ": " +
             words + " words, " + text.Length + " chars, " + lines + " lines");
     }
 }

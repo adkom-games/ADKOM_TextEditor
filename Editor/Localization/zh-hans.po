@@ -1032,11 +1032,80 @@ msgstr "恢复游戏"
 msgid "Z-Machine (Zork)..."
 msgstr "Z-Machine (Zork)..."
 
+msgid "Download {0}?"
+msgstr "下载 {0}？"
+
+msgid "This story file is not part of the ADKOM Text Editor. It is downloaded from GitHub to your computer, outside the Unity project, and is never imported as an asset."
+msgstr "此故事文件不是 ADKOM Text Editor 的一部分。它将从 GitHub 下载到您的计算机上、Unity 项目之外的位置，并且不会作为资源导入。"
+
+msgid "Source repository"
+msgstr "源代码仓库"
+
+msgid "Story file"
+msgstr "故事文件"
+
+msgid "Pinned commit"
+msgstr "锁定的提交"
+
+msgid "License"
+msgstr "许可证"
+
+msgid "Size"
+msgstr "大小"
+
+msgid "Saves to"
+msgstr "保存到"
+
+msgid "Open the source repository on GitHub — source, history and its license."
+msgstr "在 GitHub 上打开源代码仓库 — 可查看源码、历史记录和许可证。"
+
+msgid "View this story file on GitHub, at the exact commit it is fetched from."
+msgstr "在 GitHub 上查看此故事文件，正是下载所用的那个提交。"
+
+msgid "The download is pinned to this commit, so its contents cannot change."
+msgstr "下载锁定在此提交，因此内容不会发生变化。"
+
+msgid "These three Zork titles are the only MIT-licensed Infocom games in that collection."
+msgstr "在该合集中，只有这三部 Zork 作品采用 MIT 许可证。"
+
+msgid "The exact size at the pinned commit. A download of any other size is rejected."
+msgstr "锁定提交时的精确大小。大小不符的下载会被拒绝。"
+
+msgid "Where the file is written. Delete it any time; nothing is stored in your project."
+msgstr "文件的写入位置。可随时删除；项目中不会保存任何内容。"
+
+msgid "Downloading…"
+msgstr "正在下载…"
+
+msgid "Download"
+msgstr "下载"
+
+msgid "Download failed: {0}"
+msgstr "下载失败：{0}"
+
+msgid "Close without downloading anything."
+msgstr "不下载任何内容并关闭。"
+
+msgid "Download the story file now and start the game."
+msgstr "立即下载故事文件并开始游戏。"
+
+msgid "SHA-256"
+msgstr "SHA-256"
+
+msgid "The fingerprint of the file at the pinned commit. What arrives is hashed and must match this exactly, or it is deleted instead of played."
+msgstr "锁定提交时该文件的指纹。下载到的文件会被计算哈希，必须与此完全一致，否则将被删除而不会运行。"
+
+msgid "Copy Link to Clipboard"
+msgstr "复制链接到剪贴板"
+
+msgid "Copy the exact URL this download fetches (the raw file link) to the clipboard."
+msgstr "将此次下载实际获取的 URL（raw 文件链接）复制到剪贴板。"
+
+msgid "Link copied to the clipboard."
+msgstr "已复制链接到剪贴板。"
+
 msgid "(download)"
 msgstr "（下载）"
-
-msgid "download failed: "
-msgstr "下载失败："
 
 msgid "Z-Machine (Zork)"
 msgstr "Z-Machine (Zork)"
@@ -1871,6 +1940,9 @@ msgstr "保留当前版本。在您更新之前，更新图标会一直显示在
 
 msgid "Install the new version now via the Unity Package Manager."
 msgstr "立即通过 Unity Package Manager 安装新版本。"
+
+msgid "Update this package from Window → Package Manager."
+msgstr "请从 Window → Package Manager 更新此软件包。"
 
 msgid "This copy is embedded for development — update manually via git."
 msgstr "此副本为开发用内嵌包 — 请通过 git 手动更新。"
