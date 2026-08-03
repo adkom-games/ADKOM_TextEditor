@@ -2,6 +2,13 @@
 
 **Enjoying ATE? Support development on Ko-fi:** [https://ko-fi.com/adkomgames](https://ko-fi.com/adkomgames)
 
+## 0.14.4 — 2026-08-03
+
+Hotfix.
+
+### Fixed
+- **Quiet console on Unity 6000.5.** Opening an ATE window spammed "Trying to access the DPI setting of a visual element that is not on a panel" — measured 1,890 warnings in a single session. ATE computed word wrap before the window attached to a panel, and 6000.5 warns on every text measurement made in that state. Wrap now uses a font-derived estimate until the window attaches, then re-measures exactly as before — wrapping is unchanged on every Unity version, and window creation got a little cheaper everywhere.
+
 ## 0.14.3 — 2026-08-03
 
 Hotfix.
