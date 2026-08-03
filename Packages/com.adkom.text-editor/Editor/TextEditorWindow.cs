@@ -261,7 +261,9 @@ namespace ADKOM.TextEditor
             // Built on click like every menu, so the symbol lists are always
             // fresh for the current tab.
             toolbar.Add(Menu(L10n.Tr("Section"), FillSectionMenu, L10n.Tr("Jump to a class, property, method, or bookmark in the current tab.")));
-            toolbar.Add(Menu(L10n.Tr("Games"), FillGamesMenu, L10n.Tr("Play Zork and the installed addon games.")));
+            _gamesMenuBtn = Menu(L10n.Tr("Games"), FillGamesMenu, L10n.Tr("Play Zork and the installed addon games."));
+            _gamesMenuBtn.style.display = EditorConfig.GamesEnabled ? DisplayStyle.Flex : DisplayStyle.None;
+            toolbar.Add(_gamesMenuBtn);
             toolbar.Add(Menu(L10n.Tr("Help"), FillHelpMenu, L10n.Tr("Documentation, release notes, and support.")));
             toolbar.Add(new ToolbarSpacer { flex = true });
             _mdFormatBar = BuildMdFormatBar();
@@ -485,11 +487,30 @@ namespace ADKOM.TextEditor
             // addons (API 1.2) get their stored state back the same way.
             root.schedule.Execute(() =>
             {
-                AteZMachine.ZMachineGame.Rehydrate(this);
+                // Games are opt-in: with the feature off, snapshotted games
+                // are not resumed (their transcript tabs restore as plain
+                // documents). Addon state delivery is NOT games-gated — it
+                // serves every stateful addon, not only the game samples.
+                if (EditorConfig.GamesEnabled) AteZMachine.ZMachineGame.Rehydrate(this);
                 Scripting.AteAddonManager.DeliverPendingStates();
             }).ExecuteLater(300);
 
             _uiReady = true;
+        }
+
+        VisualElement _gamesMenuBtn;
+
+        /// <summary>Applies the In-Editor Games setting to every open ATE
+        /// window's menu bar, so the Settings toggle takes effect immediately
+        /// everywhere rather than only after a window rebuild.</summary>
+        internal static void RefreshGamesMenuVisibility()
+        {
+            foreach (var w in Resources.FindObjectsOfTypeAll<TextEditorWindow>())
+            {
+                if (w._gamesMenuBtn == null) continue;
+                w._gamesMenuBtn.style.display =
+                    EditorConfig.GamesEnabled ? DisplayStyle.Flex : DisplayStyle.None;
+            }
         }
 
         /// <summary>False until CreateGUI has built the UI. Unity raises
@@ -1551,6 +1572,16 @@ namespace ADKOM.TextEditor
             });
             _settingsRecentMax.tooltip = L10n.Tr("How many entries File → Recent Files keeps (1-30).");
             _settingsPane.Add(_settingsRecentMax);
+
+            Section("Games");
+            var gamesToggle = new Toggle(L10n.Tr("Enable In-Editor Games")) { value = EditorConfig.GamesEnabled };
+            gamesToggle.RegisterValueChangedCallback(e =>
+            {
+                EditorConfig.GamesEnabled = e.newValue;
+                RefreshGamesMenuVisibility();
+            });
+            gamesToggle.tooltip = L10n.Tr("Show the Games menu — the Z-Machine (Zork) and installed addon games. Off by default; games already running keep running, and the player guides under Help → Documentation stay available either way. Machine-wide.");
+            _settingsPane.Add(gamesToggle);
 
             Section("Updates");
             // The Asset Store build never checks on its own (submissions may

@@ -38,7 +38,7 @@ A real code editor — C# semantics, multi-caret, find in files, diff/merge — 
 - **Semantic Features (optional)**: enabling them copies the bundled MIT-licensed Roslyn assemblies into `Assets/Plugins/ADKOM.TextEditor/Roslyn` in your project. This happens only after you turn the feature on, and Roslyn adds ~14 MB to the download whether or not you use it.
 - **GitHub Copilot (optional)**: requires your own active GitHub Copilot subscription and a local Node.js installation. ATE ships no credentials and no subscription.
 - **Ask Unity AI (optional)**: requires Unity's Assistant package; ATE only forwards your selected text to it and spends no points until you submit.
-- **Games menu (optional)**: the bundled Z-Machine interpreter can download three MIT-licensed Infocom story files on request. Nothing is downloaded unless you choose a game; no story files ship in the package.
+- **Games menu (off by default)**: in-editor gaming is opt-in via Settings. When enabled, the bundled Z-Machine interpreter can download three MIT-licensed Infocom story files on request. Nothing is downloaded unless you choose a game; no story files ship in the package.
 - Updates are delivered through the Package Manager. This build performs no automatic update checks and never changes your project's packages.
 
 ## Keywords

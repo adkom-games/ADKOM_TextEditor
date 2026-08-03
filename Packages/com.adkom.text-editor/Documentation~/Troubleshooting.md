@@ -36,6 +36,8 @@ Known issues and their fixes, plus answers to the questions that come up most. I
 
 **Selecting across blocks in rendered Markdown looks different from normal selection.** Unity displays a native text selection in only one text element at a time, so ATE draws cross-block selections itself. They are character-precise, highlight continuously across block margins, and copy correctly — but images in the span show no highlight, and double-click/triple-click (native) selections stop at block boundaries. Tracked on GitHub.
 
+**The Games menu is missing.** In-editor gaming is off by default. Enable **Settings → Games → Enable In-Editor Games** — the Games menu appears immediately in every open ATE window, and game addons show up under Tools → Addons. The player guides under Help → Documentation are available regardless.
+
 **Double-clicking a script opens the wrong editor.** Pick ATE as the External Script Editor in Unity's **Preferences → External Tools**. Anything ATE doesn't handle (solutions, binaries) goes to the **External Fallback** editor you configure in ATE's Settings.
 
 **`#pragma bookmark` makes the C# compiler warn (CS1633 "Unrecognized #pragma directive").** Expected — the pragma is ATE's, not the compiler's. Three fixes, pick one: (1) ATE Settings → Language & Tools shows the warning's suppression status and offers **Suppress in This Project**, which writes `-nowarn:1633` into `Assets/csc.rsp` and recompiles; (2) add that line to `Assets/csc.rsp` yourself; (3) put `#pragma warning disable 1633` at the top of the affected file. Note that assemblies compiled from their own asmdef may need the flag in their own response file.

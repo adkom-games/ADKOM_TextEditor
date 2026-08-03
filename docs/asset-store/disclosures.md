@@ -15,7 +15,7 @@ The Asset Store build makes **no** network request on import or on any schedule.
 | Action | Endpoint | Why |
 |---|---|---|
 | **Check for Updates Now** (Settings) | `github.com/adkom-games/ADKOM_TextEditor/releases.atom` | reports whether a newer version exists; installs nothing |
-| Choosing a game in the Games menu, then confirming | `raw.githubusercontent.com/historicalsource/zork{1,2,3}` | downloads that story file to a per-user folder outside the project. A confirmation window naming the repository, the pinned commit, the licence, the size, the SHA-256 and the destination path appears first, every time; nothing is fetched unless the user presses Download, and the result is verified against both the expected size and the expected SHA-256 before it is used |
+| Choosing a game in the Games menu (the whole feature is opt-in: Settings → Enable In-Editor Games, off by default), then confirming | `raw.githubusercontent.com/historicalsource/zork{1,2,3}` | downloads that story file to a per-user folder outside the project. A confirmation window naming the repository, the pinned commit, the licence, the size, the SHA-256 and the destination path appears first, every time; nothing is fetched unless the user presses Download, and the result is verified against both the expected size and the expected SHA-256 before it is used |
 | Signing in to GitHub Copilot | GitHub device-flow and Copilot endpoints | the user's own subscription; ATE ships no credentials |
 | Opening Help → Repository / Release Notes / Issues | `github.com` | ordinary user-initiated link |
 

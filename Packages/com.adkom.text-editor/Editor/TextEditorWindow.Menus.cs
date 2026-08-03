@@ -313,8 +313,18 @@ namespace ADKOM.TextEditor
                 // Case-insensitive categories: first-seen casing wins.
                 var canon = new System.Collections.Generic.Dictionary<string, string>(
                     System.StringComparer.OrdinalIgnoreCase);
+                bool gamesHidden = false;
                 foreach (var e in Scripting.AteAddonManager.Entries)
                 {
+                    // Game addons are reachable from here as well as from the
+                    // Games menu, so the In-Editor Games setting gates both —
+                    // otherwise Tools → Addons would be a bypass.
+                    if (!EditorConfig.GamesEnabled &&
+                        string.Equals(e.Category, "Games", System.StringComparison.OrdinalIgnoreCase))
+                    {
+                        gamesHidden = true;
+                        continue;
+                    }
                     if (!canon.TryGetValue(e.Category, out string cat))
                         canon[e.Category] = cat = e.Category;
                     string item = root + cat.Replace('/', '∕') + "/" + e.Name.Replace('/', '∕');
@@ -328,6 +338,9 @@ namespace ADKOM.TextEditor
                     else
                         m.AddDisabledItem(new GUIContent(item + " — " + FirstLine(e.Error)));
                 }
+                if (gamesHidden)
+                    m.AddDisabledItem(new GUIContent(root +
+                        L10n.Tr("Game addons hidden — enable In-Editor Games in Settings")));
                 if (Scripting.AteAddonManager.Entries.Count > 0) m.AddSeparator(root);
             }
             Scripting.AddonSigningMenu.Fill(m, root);

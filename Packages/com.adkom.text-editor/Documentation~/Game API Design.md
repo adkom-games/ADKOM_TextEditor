@@ -1,5 +1,7 @@
 # Game API Design — Games on the AteApi (1.1)
 
+> **Note:** players see game addons in the **Games** menu (and under Tools → Addons) only when **Settings → Games → Enable In-Editor Games** is on — it is off by default. Tell your players; nothing else about developing a game changes.
+
 The game surface of the ATE scripting API: how to turn a document into a game screen, and every member that supports it, with examples. Designed 2026-07-27, shipped in ATE 0.12.0 as **AteApi 1.1**. The shipped **Snake** and **Rogue** sample addons and the built-in Z-Machine interpreter all run on exactly this surface — read their source for full-scale examples.
 
 General API concepts (handles, events, threading, undo, addon lifecycle) live in **AteApi Design** (Help → Documentation → AteApi Design); this document covers the game-specific members.
