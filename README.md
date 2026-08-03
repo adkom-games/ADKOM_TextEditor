@@ -99,7 +99,7 @@ https://github.com/adkom-games/ADKOM_TextEditor.git#upm
 Pinned release:
 
 ```
-https://github.com/adkom-games/ADKOM_TextEditor.git#0.14.1
+https://github.com/adkom-games/ADKOM_TextEditor.git#0.14.2
 ```
 
 The `upm` branch contains only the package, so consumer downloads stay
@@ -112,8 +112,10 @@ lean.
 | `Packages/com.adkom.text-editor/` | The package source (embedded package — this is the code that ships) |
 | `Assets/` | Host Unity project used to develop and test the package |
 | `Tools/` | Release-gate scripts (editor-only guard audit, localization completeness) run locally and in CI |
-| `.github/workflows/upm-branch.yml` | Runs the gates, then regenerates the package-only `upm` branch via `git subtree split` on every package change |
+| `.github/workflows/upm-branch.yml` | Runs the gates, then regenerates the package-only `upm` branch via `git subtree split` on every package change, and builds `upm-store` from it |
+| `Tools/store-overrides/` | Files CI swaps in when building the Asset Store copy — see [Asset Store submission](docs/asset-store/README.md) |
 | `upm` branch | Distribution branch consumed by Unity Package Manager |
+| `upm-store` branch | Asset Store build: same package, guideline-sensitive files replaced, MIT grant removed. Uploaded to the publisher portal; not for `git URL` installs |
 
 ## Development
 
