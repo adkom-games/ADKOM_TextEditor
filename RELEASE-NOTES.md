@@ -2,6 +2,13 @@
 
 **Enjoying ATE? Support development on Ko-fi:** [https://ko-fi.com/adkomgames](https://ko-fi.com/adkomgames)
 
+## 0.14.3 — 2026-08-03
+
+Hotfix.
+
+### Fixed
+- **Compiles on Unity 6000.0–6000.2 again.** Two 6000.3-only APIs had crept in: the rendered-Markdown selection (new in 0.14.2) used `ITextSelection.GetCursorPositionFromStringIndex`, and the Git file-history dropdown (since 0.14.0) used `DropdownMenuSizeMode` — so 0.14.0–0.14.2 failed to compile on a clean 6000.0 install. Both are version-gated now: on older editors the selection mapping uses a public-API equivalent verified pixel-identical to the 6000.3 API, and the dropdown uses the anchored overload. No feature differences on any version.
+
 ## 0.14.2 — 2026-08-03
 
 A quieter console, a rendered-Markdown selection overhaul, and the groundwork for an Asset Store edition.
