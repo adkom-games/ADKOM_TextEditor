@@ -123,8 +123,14 @@ namespace ADKOM.TextEditor
                             false, () => OpenRevision(path, name, entry.Hash));
                     }
                     var cb = _code.worldBound;
+#if UNITY_6000_3_OR_NEWER
                     menu.DropDown(new Rect(cb.x + 24, cb.y + 8, 420, 0), _code,
                         UnityEngine.UIElements.DropdownMenuSizeMode.Fixed);
+#else
+                    // DropdownMenuSizeMode is 6000.3+; anchored=true likewise
+                    // sizes the menu to the given rect's width.
+                    menu.DropDown(new Rect(cb.x + 24, cb.y + 8, 420, 0), _code, true);
+#endif
                 }, null);
             });
         }
