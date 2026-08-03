@@ -1110,9 +1110,6 @@ msgstr "启用编辑器内游戏"
 msgid "Show the Games menu — the Z-Machine (Zork) and installed addon games. Off by default; games already running keep running, and the player guides under Help → Documentation stay available either way. Machine-wide."
 msgstr "显示 Games 菜单 — Z-Machine（Zork）和已安装的插件游戏。默认关闭；正在运行的游戏会继续运行，Help → Documentation 中的玩家指南始终可用。此设置对整台机器生效。"
 
-msgid "Game addons hidden — enable In-Editor Games in Settings"
-msgstr "游戏插件已隐藏 — 请在 Settings 中启用 In-Editor Games"
-
 msgid "(download)"
 msgstr "（下载）"
 
