@@ -2,6 +2,14 @@
 
 **Enjoying ATE? Support development on Ko-fi:** [https://ko-fi.com/adkomgames](https://ko-fi.com/adkomgames)
 
+## 1.0.0 — 2026-08-04
+
+**ATE is stable.** Same editor as 0.14.5 — this release is a promise, not a change.
+
+- **Verified everywhere it claims to run**: clean installs on Unity 6000.0 (the minimum), 6000.3 LTS, and 6000.5 (the newest) — no console warnings, no errors, Semantic Features included — and a real player build audited to confirm what the README has always said: nothing of ATE ships in your game.
+- **Stability is now the contract.** 1.x releases follow semver: your projects, settings, sessions, addons, and anything built on AteApi keep working. Breaking changes wait for a 2.0.
+- **Thank you** for the bug reports, the stress tests, and the patience with a text editor that plays Zork. If ATE saves you an alt-tab a day, consider the Ko-fi link above.
+
 ## 0.14.5 — 2026-08-03
 
 In-editor gaming is now opt-in.
