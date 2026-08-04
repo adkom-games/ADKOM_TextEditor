@@ -4,6 +4,14 @@ All notable changes to this package are documented here. Format follows [Keep a 
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-08-04
+
+The 0.14.5 feature set, declared stable. No code changes from 0.14.5.
+
+- First stable release. Clean-install verified on Unity 6000.0.80f1 (minimum), 6000.3.21f1 (LTS), and 6000.5.6f1 (newest) — zero console warnings or errors, Semantic Features exercised, and a real player build audited to contain nothing of ATE.
+- The public scripting surface (`ADKOM.TextEditor.Scripting`, AteApi 1.3.0) keeps its existing semver contract: additions on minor releases, breaking changes only on a major.
+- From here on, versioning follows semver at the package level too: 1.x releases will not break projects, settings, sessions, or addons that 1.0.0 works with.
+
 ## [0.14.5] - 2026-08-03
 
 ### Changed
