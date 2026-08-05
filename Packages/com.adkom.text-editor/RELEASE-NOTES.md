@@ -2,6 +2,13 @@
 
 **Enjoying ATE? Support development on Ko-fi:** [https://ko-fi.com/adkomgames](https://ko-fi.com/adkomgames)
 
+## 1.0.1 — 2026-08-05
+
+Patch.
+
+### Fixed
+- **Installs into minimal projects.** ATE now declares the engine modules it uses (UnityWebRequest, UI Toolkit, JSON serialization) instead of assuming they are present. Projects created from a Unity template always had them, so this only affected stripped-down manifests — but a package should declare what it needs.
+
 ## 1.0.0 — 2026-08-04
 
 **ATE is stable.** Same editor as 0.14.5 — this release is a promise, not a change.
