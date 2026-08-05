@@ -4,6 +4,12 @@ All notable changes to this package are documented here. Format follows [Keep a 
 
 ## [Unreleased]
 
+## [1.0.2] - 2026-08-05
+
+### Fixed
+- **The package no longer assumes its own name.** The Asset Store build ships under the portal-assigned technical name `com.adkomgames.text-editor` (the GitHub build stays `com.adkom.text-editor`), and eight code sites located package files through the hardcoded name — stylesheet loading, Roslyn installation, the spell-check dictionary, release notes, session restore of package docs, and sample-addon installation would all have silently failed in the store build. Every lookup now goes through `AtePackage`, which resolves the running package from the assembly. CI renames the package on the `upm-store` branch, and the store gate fails if the name and the portal ever disagree.
+- **Installing both builds at once is detected.** The two names mean the GitHub and Asset Store builds can coexist in one project, where they define the same assemblies and break compilation with an unexplained "assembly already exists" error. ATE now detects the pairing and reports exactly which package to remove.
+
 ## [1.0.1] - 2026-08-05
 
 ### Fixed

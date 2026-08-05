@@ -2,6 +2,14 @@
 
 **Enjoying ATE? Support development on Ko-fi:** [https://ko-fi.com/adkomgames](https://ko-fi.com/adkomgames)
 
+## 1.0.2 — 2026-08-05
+
+Patch for the upcoming Asset Store edition.
+
+### Fixed
+- **Ready for two package names.** The Asset Store edition ships as `com.adkomgames.text-editor`; this GitHub build remains `com.adkom.text-editor`. ATE now finds its own files regardless of which name it is installed under — previously the styling, Semantic Features install, spell check, release notes, and sample addons all assumed the GitHub name.
+- **Clear error if both editions are installed.** They are the same editor and cannot coexist; ATE now says which one to remove instead of leaving Unity's bare "assembly already exists" error.
+
 ## 1.0.1 — 2026-08-05
 
 Patch.
