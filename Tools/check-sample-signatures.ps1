@@ -17,7 +17,7 @@
 
 $ErrorActionPreference = 'Stop'
 $root = Split-Path $PSScriptRoot -Parent
-$samples = Join-Path $root 'Packages\com.adkom.text-editor\Samples~\Addons'
+$samples = Join-Path $root 'Packages\com.adkom.text-editor\Addons~'
 $expectedKeyFile = Join-Path $PSScriptRoot 'adkom-signing-key.pub'
 
 if (-not (Test-Path $samples)) { Write-Error "Samples folder not found: $samples"; exit 1 }

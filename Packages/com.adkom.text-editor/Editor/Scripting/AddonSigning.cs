@@ -573,7 +573,7 @@ namespace ADKOM.TextEditor.Scripting
         }
 
         /// <summary>Every shipped sample in the package: the first-level
-        /// subfolders of Samples~/Addons. Used by the batch signer and by
+        /// subfolders of Addons~. Used by the batch signer and by
         /// the release gate that verifies them.</summary>
         internal static List<string> ShippedSampleKeys(out string error)
         {
@@ -583,7 +583,7 @@ namespace ADKOM.TextEditor.Scripting
             try
             {
                 if (AtePackage.DiskRoot == null) { error = "package not resolved"; return keys; }
-                src = Path.Combine(AtePackage.DiskRoot, "Samples~", "Addons");
+                src = Path.Combine(AtePackage.DiskRoot, "Addons~");
             }
             catch (Exception ex) { error = ex.Message; return keys; }
             if (!Directory.Exists(src)) { error = "sample addons folder not found: " + src; return keys; }

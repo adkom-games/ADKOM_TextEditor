@@ -33,7 +33,7 @@ $root = (Resolve-Path $PackageRoot).Path
 
 $failures = @()
 $sources = @(Get-ChildItem $root -Recurse -Filter *.cs -File |
-    Where-Object { $_.FullName -notmatch '[\\/]Samples~[\\/]' })
+    Where-Object { $_.FullName -notmatch '[\\/](Samples~|Addons~)[\\/]' })
 
 function Relative([string]$full) {
     $r = $full.Substring($root.Length).TrimStart('\', '/')

@@ -11,6 +11,7 @@
   "displayName": "ADKOM Text Editor",
   "description": "An advanced text editor that lives inside the Unity Editor. Editor-only: contributes nothing to player builds.",
   "unity": "6000.0",
+  "unityRelease": "80f1",
   "license": "MIT",
   "documentationUrl": "https://github.com/adkom-games/ADKOM_TextEditor/blob/main/Packages/com.adkom.text-editor/Manual.md",
   "changelogUrl": "https://github.com/adkom-games/ADKOM_TextEditor/blob/main/Packages/com.adkom.text-editor/CHANGELOG.md",

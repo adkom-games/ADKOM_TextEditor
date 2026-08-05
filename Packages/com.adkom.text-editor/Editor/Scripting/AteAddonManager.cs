@@ -646,13 +646,13 @@ namespace ADKOM.TextEditor.Scripting
         }
 
         /// <summary>Copies the sample addons shipped with the package
-        /// (Samples~/Addons) into the shared folder and reloads. Existing
+        /// (Addons~) into the shared folder and reloads. Existing
         /// files with the same names are overwritten (they are samples).</summary>
         public static void InstallSamples()
         {
             EnsureFolder();
             string src;
-            try { src = AtePackage.DiskRoot == null ? null : Path.Combine(AtePackage.DiskRoot, "Samples~", "Addons"); }
+            try { src = AtePackage.DiskRoot == null ? null : Path.Combine(AtePackage.DiskRoot, "Addons~"); }
             catch (Exception ex)
             {
                 AteConsole.Warn("[ADKOM Text Editor] Sample addons not found: " + ex.Message);

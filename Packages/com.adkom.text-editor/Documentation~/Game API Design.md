@@ -195,4 +195,4 @@ Upgrade to `IAteAddonStateful` and your game outlives script compiles, play mode
 - Your game is one **subfolder** of the shared addons folder — all `.cs` files under it compile together as ONE addon, with exactly one `[AteAddon]` class in the folder. A small game is a folder with a single file; Rogue is a folder with thirteen.
 - `[AteAddon(Name = "...", Category = "Games", ApiVersion = "1.1")]` lists it in the **Games** menu (and under Tools → Addons → Games).
 - Every addon passes the **security gate**: a source scan, a risk report, and one-time consent keyed to the folder's exact content. Addons can be **signed** (an `author.atesig` in the folder — see **Addon Signing** in Help → Documentation); the shipped samples are.
-- Install the samples with **Tools → Addons → Install Sample Addons**, then read `Samples~/Addons/SnakeGame/SnakeGame.cs` (every game feature in ~300 lines) and `Samples~/Addons/RogueGame/` (a full 1980 BSD Rogue port).
+- Install the samples with **Tools → Addons → Install Sample Addons**, then read `Addons~/SnakeGame/SnakeGame.cs` (every game feature in ~300 lines) and `Addons~/RogueGame/` (a full 1980 BSD Rogue port).
