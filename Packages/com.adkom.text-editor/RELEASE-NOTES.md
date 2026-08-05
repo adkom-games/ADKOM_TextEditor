@@ -2,6 +2,15 @@
 
 **Enjoying ATE? Support development on Ko-fi:** [https://ko-fi.com/adkomgames](https://ko-fi.com/adkomgames)
 
+## 1.0.4 — 2026-08-05
+
+Asset Store submission compliance. No feature changes.
+
+### Changed
+- **Sample addons moved to `Addons~`.** They were under `Samples~/Addons`, but they are not Package Manager samples — ATE installs them itself via **Tools → Addons → Install Sample Addons**, which is unchanged. The move satisfies the Asset Store validator, which requires everything under `Samples~` to be an importable sample (addon source must not be — it is compiled by ATE, not Unity). Addon signatures are unaffected.
+- **The Scripting sample ships `.meta` files**, so importing it through the Package Manager keeps stable GUIDs.
+- **`package.json` declares `unityRelease`** (6000.0.80f1, the verified minimum) — a mandatory Asset Store manifest field.
+
 ## 1.0.3 — 2026-08-05
 
 Hotfix.

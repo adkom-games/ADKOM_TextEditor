@@ -56,7 +56,7 @@ A working sample covering the whole CORE surface (window, documents, events, lif
 
 ## Game API (1.1)
 
-API 1.1 adds everything needed for text-based in-editor games, shipped as addons. Players see game addons only when **Settings → Games → Enable In-Editor Games** is on (off by default) — developing and compiling them requires nothing. The shipped **Snake** sample (`Samples~/Addons/SnakeGame/SnakeGame.cs`, installed by Tools → Addons → Install Sample Addons) uses every member below and is the reference implementation.
+API 1.1 adds everything needed for text-based in-editor games, shipped as addons. Players see game addons only when **Settings → Games → Enable In-Editor Games** is on (off by default) — developing and compiling them requires nothing. The shipped **Snake** sample (`Addons~/SnakeGame/SnakeGame.cs`, installed by Tools → Addons → Install Sample Addons) uses every member below and is the reference implementation.
 
 ### Game mode
 

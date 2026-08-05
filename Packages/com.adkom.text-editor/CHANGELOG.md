@@ -2,6 +2,11 @@
 
 All notable changes to this package are documented here. Format follows [Keep a Changelog](https://keepachangelog.com); versions follow semver.
 
+## [1.0.4] - 2026-08-05
+
+### Changed
+- **Asset Store validator compliance.** The shipped sample addons moved from `Samples~/Addons` to `Addons~`: they are loaded by ATE from disk (Tools → Addons → Install Sample Addons), not imported through the Package Manager, and the validator requires every `Samples~` folder to be a declared, importable sample — which addon source must never be, since it is deliberately unguarded for ATE’s Roslyn addon compiler. The Scripting sample now ships `.meta` files so importing it keeps stable GUIDs, and `package.json` declares the mandatory `unityRelease` field (minimum 6000.0.80f1, matching the verified minimum). No behavior change: addon install, signing, and the release gates all follow the new path.
+
 ## [1.0.3] - 2026-08-05
 
 ### Fixed
