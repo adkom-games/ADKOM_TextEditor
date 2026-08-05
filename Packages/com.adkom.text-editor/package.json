@@ -1,6 +1,6 @@
 {
   "name": "com.adkom.text-editor",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "samples": [
     {
       "displayName": "Scripting (AteApi)",
@@ -26,6 +26,9 @@
   ],
   "type": "tool",
   "dependencies": {
-    "com.unity.nuget.newtonsoft-json": "3.2.1"
+    "com.unity.nuget.newtonsoft-json": "3.2.1",
+    "com.unity.modules.unitywebrequest": "1.0.0",
+    "com.unity.modules.uielements": "1.0.0",
+    "com.unity.modules.jsonserialize": "1.0.0"
   }
 }
