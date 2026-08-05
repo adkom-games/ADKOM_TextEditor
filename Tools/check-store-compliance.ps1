@@ -113,6 +113,11 @@ if ($Store) {
         $failures += 'STORE: AteBuildFlavor.AssetStore is not true (the store override was not applied)'
     }
 
+    $storeName = (Get-Content $pkgPath -Raw -Encoding UTF8 | ConvertFrom-Json).name
+    if ($storeName -ne 'com.adkomgames.text-editor') {
+        $failures += "STORE: package name is $storeName - the portal technical name is com.adkomgames.text-editor and they must match or the upload lands on the wrong product"
+    }
+
     if (Test-Path (Join-Path $root 'LICENSE.md')) {
         $failures += 'STORE: LICENSE.md (MIT grant) must not ship in the store build — it is governed by the Asset Store EULA'
     }

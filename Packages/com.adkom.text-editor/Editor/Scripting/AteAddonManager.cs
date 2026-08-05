@@ -652,7 +652,7 @@ namespace ADKOM.TextEditor.Scripting
         {
             EnsureFolder();
             string src;
-            try { src = Path.GetFullPath("Packages/com.adkom.text-editor/Samples~/Addons"); }
+            try { src = AtePackage.DiskRoot == null ? null : Path.Combine(AtePackage.DiskRoot, "Samples~", "Addons"); }
             catch (Exception ex)
             {
                 AteConsole.Warn("[ADKOM Text Editor] Sample addons not found: " + ex.Message);

@@ -105,7 +105,8 @@ namespace ADKOM.TextEditor
                     {
                         try
                         {
-                            string p = Path.GetFullPath("Packages/com.adkom.text-editor/" + name);
+                            if (AtePackage.DiskRoot == null) continue;
+                            string p = Path.Combine(AtePackage.DiskRoot, name);
                             if (File.Exists(p))
                             {
                                 var doc = new TextDocument();
