@@ -41,12 +41,11 @@ namespace ADKOM.TextEditor
         {
             try
             {
-                foreach (var p in UnityEditor.PackageManager.PackageInfo.GetAllRegisteredPackages())
-                    if (p.name == "com.adkom.text-editor")
-                    {
-                        _bundledPath = Path.Combine(p.resolvedPath, "Editor", "SpellCheckData~", "words-en.txt");
-                        break;
-                    }
+                // By assembly, never by package name (the store build ships
+                // under com.adkomgames.text-editor).
+                var p = AtePackage.Info;
+                if (p != null)
+                    _bundledPath = Path.Combine(p.resolvedPath, "Editor", "SpellCheckData~", "words-en.txt");
             }
             catch (Exception) { }
         }

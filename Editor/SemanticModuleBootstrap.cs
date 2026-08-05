@@ -21,7 +21,6 @@ namespace ADKOM.TextEditor
     public static class SemanticSetup
     {
         const string Define = "ADKOM_TE_ROSLYN";
-        const string PackageName = "com.adkom.text-editor";
         const string RoslynDestDir = "Assets/Plugins/ADKOM.TextEditor/Roslyn";
 
         const string ObsoleteModuleName = "com.adkom.text-editor.semantics";
@@ -97,8 +96,10 @@ namespace ADKOM.TextEditor
 
         static void CopyBundledRoslyn()
         {
-            var pkg = UnityEditor.PackageManager.PackageInfo.GetAllRegisteredPackages()
-                .FirstOrDefault(p => p.name == PackageName);
+            // By assembly, never by package name: the Asset Store build ships
+            // under a different name (com.adkomgames.text-editor), and a
+            // hardcoded lookup would silently break Roslyn installation there.
+            var pkg = AtePackage.Info;
             if (pkg == null) return;
             string src = Path.Combine(pkg.resolvedPath, "RoslynBinaries~");
             if (!Directory.Exists(src))

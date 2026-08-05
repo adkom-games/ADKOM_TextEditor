@@ -17,7 +17,7 @@ namespace ADKOM.TextEditor
     /// </summary>
     public partial class TextEditorWindow : EditorWindow
     {
-        const string UssPath = "Packages/com.adkom.text-editor/Editor/UI/TextEditor.uss";
+        static string UssPath => AtePackage.AssetRoot + "/Editor/UI/TextEditor.uss";
         const string ThemePrefKey = "ADKOM.TextEditor.Theme";
         const string ThemeModePrefKey = "ADKOM.TextEditor.ThemeMode";
 
@@ -1663,8 +1663,9 @@ namespace ADKOM.TextEditor
         /// focused virtual tab, always in rendered (WYSIWYG) Markdown mode.</summary>
         public static void ShowReleaseNotes(string version)
         {
-            var pkg = UnityEditor.PackageManager.PackageInfo.GetAllRegisteredPackages()
-                .FirstOrDefault(p => p.name == "com.adkom.text-editor");
+            // By assembly, never by package name (the store build ships
+            // under com.adkomgames.text-editor).
+            var pkg = AtePackage.Info;
             if (pkg == null) return;
             string path = Path.Combine(pkg.resolvedPath, "RELEASE-NOTES.md");
             if (!File.Exists(path)) return;
