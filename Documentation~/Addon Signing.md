@@ -38,5 +38,5 @@ The consent banner and the security report show a one-line signing verdict:
 
 ## For package maintainers
 
-- **Sign Shipped Samples** signs every sample folder in the package source (`Samples~/Addons`) with your identity, writing the `author.atesig` files to commit and ship.
+- **Sign Shipped Samples** signs every sample folder in the package source (`Addons~`) with your identity, writing the `author.atesig` files to commit and ship.
 - **Verify Shipped Samples** is the release gate: it reports any sample that is unsigned, signed with an unexpected key, or whose signature no longer matches the current content.

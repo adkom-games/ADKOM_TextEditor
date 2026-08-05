@@ -124,7 +124,7 @@ namespace ADKOM.TextEditor.Semantics
         }
 
         /// <summary>Semantics for a .cs OUTSIDE every Unity assembly — addon
-        /// files in the shared folder, Samples~ sources, external files. The
+        /// files in the shared folder, Addons~/Samples~ sources, external files. The
         /// file's DIRECTORY becomes the source set (so multi-file addons see
         /// their siblings) and the references/defines come from the richest
         /// UNITY_EDITOR assembly we captured, which includes the engine

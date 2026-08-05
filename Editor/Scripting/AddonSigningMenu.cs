@@ -118,7 +118,7 @@ namespace ADKOM.TextEditor.Scripting
             }, null, "");
         }
 
-        /// <summary>Signs every sample in the PACKAGE SOURCE (Samples~) so the
+        /// <summary>Signs every sample in the PACKAGE SOURCE (Addons~) so the
         /// .atesig files can be committed and ship with the package. Run this
         /// before a release whenever a sample changed — the release gate
         /// fails otherwise.</summary>
