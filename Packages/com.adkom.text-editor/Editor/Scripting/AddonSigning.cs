@@ -580,7 +580,11 @@ namespace ADKOM.TextEditor.Scripting
             error = null;
             var keys = new List<string>();
             string src;
-            try { src = Path.GetFullPath("Packages/com.adkom.text-editor/Samples~/Addons"); }
+            try
+            {
+                if (AtePackage.DiskRoot == null) { error = "package not resolved"; return keys; }
+                src = Path.Combine(AtePackage.DiskRoot, "Samples~", "Addons");
+            }
             catch (Exception ex) { error = ex.Message; return keys; }
             if (!Directory.Exists(src)) { error = "sample addons folder not found: " + src; return keys; }
             foreach (var d in Directory.GetDirectories(src))
