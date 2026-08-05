@@ -4,6 +4,9 @@ All notable changes to this package are documented here. Format follows [Keep a 
 
 ## [Unreleased]
 
+### Fixed
+- "Localization must be run in Main Thread" when the Copilot Language Server installs: the npm-install worker thread resolved its two error strings with `L10n.Tr`, which is main-thread-only. The strings are now resolved before the thread starts and captured — the same fix issue #39 applied to Go to Definition, whose "repo-wide scan" missed this file. The scan is now a real script (`scratchpad` tooling graduated to a scope-aware pass over Task.Run/Thread bodies minus Post islands) and reports zero remaining offenders.
+
 ## [1.0.2] - 2026-08-05
 
 ### Fixed
