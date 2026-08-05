@@ -96,6 +96,11 @@ namespace ADKOM.TextEditor
         static void InstallThenStart()
         {
             SetStatus(State.Installing, L10n.Tr("Installing the Copilot Language Server (npm)…"));
+            // L10n is main-thread-only: resolve the worker error strings here
+            // and capture them (same bug and same fix as issue #39, which its
+            // repo-wide scan missed in this file).
+            string trNpmFailed = L10n.Tr("npm install failed: ");
+            string trNoNode = L10n.Tr("Could not run npm — is Node.js installed? ");
             var t = new Thread(() =>
             {
                 try
@@ -128,7 +133,7 @@ namespace ADKOM.TextEditor
                         p.WaitForExit();
                         if (p.ExitCode != 0 || !File.Exists(ServerJs))
                         {
-                            SetStatus(State.Error, L10n.Tr("npm install failed: ") + err);
+                            SetStatus(State.Error, trNpmFailed + err);
                             return;
                         }
                     }
@@ -136,8 +141,7 @@ namespace ADKOM.TextEditor
                 }
                 catch (Exception ex)
                 {
-                    SetStatus(State.Error,
-                        L10n.Tr("Could not run npm — is Node.js installed? ") + ex.Message);
+                    SetStatus(State.Error, trNoNode + ex.Message);
                 }
             }) { IsBackground = true, Name = "ATE Copilot npm install" };
             t.Start();
