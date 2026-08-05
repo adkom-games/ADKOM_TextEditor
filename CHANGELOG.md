@@ -4,6 +4,11 @@ All notable changes to this package are documented here. Format follows [Keep a 
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-08-05
+
+### Fixed
+- The package now declares the engine modules it actually uses: `com.unity.modules.unitywebrequest` (the update check), `com.unity.modules.uielements` (the entire UI), and `com.unity.modules.jsonserialize`. Only `newtonsoft-json` was declared before, so installing into a minimal project — one whose manifest lacks those modules, as opposed to a template-created project that has them — failed to compile. Found while building a clean project for the Asset Store upload.
+
 ## [1.0.0] - 2026-08-04
 
 The 0.14.5 feature set, declared stable. No code changes from 0.14.5.
