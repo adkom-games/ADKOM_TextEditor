@@ -2,6 +2,13 @@
 
 **Enjoying ATE? Support development on Ko-fi:** [https://ko-fi.com/adkomgames](https://ko-fi.com/adkomgames)
 
+## 1.0.3 — 2026-08-05
+
+Hotfix.
+
+### Fixed
+- **Copilot install no longer errors with "Localization must be run in Main Thread."** If installing the Copilot Language Server failed, the background installer tried to localize its error message from the worker thread — replacing the real error (npm failed, or Node.js missing) with Unity's threading complaint. The messages are now prepared before the thread starts, so a failed install tells you what actually went wrong.
+
 ## 1.0.2 — 2026-08-05
 
 Patch for the upcoming Asset Store edition.
