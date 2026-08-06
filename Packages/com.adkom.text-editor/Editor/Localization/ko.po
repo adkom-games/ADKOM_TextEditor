@@ -2103,6 +2103,9 @@ msgstr "렌더링된 Markdown을 읽기 전용으로 엽니다. 클릭 시 블�
 msgid "Copy Link URL"
 msgstr "링크 URL 복사"
 
+msgid "Open Link in Browser"
+msgstr "링크를 브라우저에서 열기"
+
 msgid "Copy Block as Text"
 msgstr "블록을 텍스트로 복사"
 

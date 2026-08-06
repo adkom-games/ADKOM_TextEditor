@@ -2103,6 +2103,9 @@ msgstr "轉譯檢視的 Markdown 以唯讀方式開啟：點擊會選取文字�
 msgid "Copy Link URL"
 msgstr "複製連結 URL"
 
+msgid "Open Link in Browser"
+msgstr "在瀏覽器中開啟連結"
+
 msgid "Copy Block as Text"
 msgstr "以文字形式複製區塊"
 
