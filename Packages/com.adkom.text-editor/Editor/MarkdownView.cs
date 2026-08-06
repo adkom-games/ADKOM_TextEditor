@@ -52,6 +52,11 @@ namespace ADKOM.TextEditor
         /// owning window flips the document's lock state and re-renders.</summary>
         public event Action onUnlockRequest;
 
+        /// <summary>The owning window appends its shared context-menu
+        /// entries (Tabs, file ops, the Git submenu) here — the rendered
+        /// view itself only knows its clipboard/lock items.</summary>
+        public Action<GenericMenu> onContextMenuExtend;
+
         TextField _activeEditor;
         public bool HasActiveEditor => _activeEditor != null;
 
@@ -122,30 +127,39 @@ namespace ADKOM.TextEditor
                 if (e.target is TextElement te) te.tooltip = null;
             }, TrickleDown.TrickleDown);
 
-            // Locked (read-only) mode: right-click offers clipboard actions.
-            // Copies are the RENDERED text without any formatting — no rich-
-            // text tags, no markdown markers — so URLs and prose paste clean.
+            // Right-click menu. Locked (read-only) mode offers clipboard
+            // actions — copies are the RENDERED text without any formatting
+            // (no rich-text tags, no markdown markers) so URLs and prose
+            // paste clean. Both modes then get the window's shared entries
+            // via onContextMenuExtend (Tabs, file ops, Git submenu) — a
+            // rendered .md is still a file in the repo. In unlocked mode a
+            // click inside an open block editor keeps native handling.
             RegisterCallback<MouseUpEvent>(e =>
             {
-                if (e.button != 1 || !Locked) return;
+                if (e.button != 1) return;
+                if (!Locked && InBlockEditor(e.target as VisualElement)) return;
                 var menu = new GenericMenu();
-                string link = _hoverLink;
-                if (!string.IsNullOrEmpty(link))
-                    menu.AddItem(new GUIContent(L10n.Tr("Copy Link URL")), false,
-                        () => EditorGUIUtility.systemCopyBuffer = link);
-                if (HasDocSelection)
-                    menu.AddItem(new GUIContent(L10n.Tr("Copy Selection as Text")), false,
-                        () => EditorGUIUtility.systemCopyBuffer = SelectedPlainText());
-                var block = BlockFor(e.target as VisualElement);
-                if (block != null)
-                    menu.AddItem(new GUIContent(L10n.Tr("Copy Block as Text")), false,
-                        () => EditorGUIUtility.systemCopyBuffer = PlainTextFor(block));
-                menu.AddItem(new GUIContent(L10n.Tr("Copy All as Text")), false,
-                    () => EditorGUIUtility.systemCopyBuffer = PlainText());
-                menu.AddSeparator("");
-                menu.AddItem(new GUIContent(L10n.Tr("Unlock (Allow Editing)")), false,
-                    () => onUnlockRequest?.Invoke());
-                menu.ShowAsContext();
+                if (Locked)
+                {
+                    string link = _hoverLink;
+                    if (!string.IsNullOrEmpty(link))
+                        menu.AddItem(new GUIContent(L10n.Tr("Copy Link URL")), false,
+                            () => EditorGUIUtility.systemCopyBuffer = link);
+                    if (HasDocSelection)
+                        menu.AddItem(new GUIContent(L10n.Tr("Copy Selection as Text")), false,
+                            () => EditorGUIUtility.systemCopyBuffer = SelectedPlainText());
+                    var block = BlockFor(e.target as VisualElement);
+                    if (block != null)
+                        menu.AddItem(new GUIContent(L10n.Tr("Copy Block as Text")), false,
+                            () => EditorGUIUtility.systemCopyBuffer = PlainTextFor(block));
+                    menu.AddItem(new GUIContent(L10n.Tr("Copy All as Text")), false,
+                        () => EditorGUIUtility.systemCopyBuffer = PlainText());
+                    menu.AddSeparator("");
+                    menu.AddItem(new GUIContent(L10n.Tr("Unlock (Allow Editing)")), false,
+                        () => onUnlockRequest?.Invoke());
+                }
+                onContextMenuExtend?.Invoke(menu);
+                if (menu.GetItemCount() > 0) menu.ShowAsContext();
                 e.StopPropagation();
             });
 
@@ -157,6 +171,15 @@ namespace ADKOM.TextEditor
             for (; v != null; v = v.parent)
                 if (v.userData is Block b) return b;
             return null;
+        }
+
+        /// <summary>True when the element sits inside an open click-to-edit
+        /// block editor (its TextField owns the mouse there).</summary>
+        static bool InBlockEditor(VisualElement v)
+        {
+            for (; v != null; v = v.parent)
+                if (v is TextField) return true;
+            return false;
         }
 
         // ---------- Locked-mode DOCUMENT selection (spans blocks) ----------
