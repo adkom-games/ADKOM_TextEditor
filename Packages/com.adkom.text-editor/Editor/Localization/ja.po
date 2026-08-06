@@ -192,9 +192,6 @@ msgstr "リリースノート"
 msgid "Go to Definition"
 msgstr "定義へ移動"
 
-msgid "Find Occurrences"
-msgstr "出現箇所を検索"
-
 msgid "Find Occurrences of '{0}'"
 msgstr "'{0}' の出現箇所を検索"
 
@@ -1454,6 +1451,48 @@ msgstr "表示中のリビジョンの作成者。読み取り専用。"
 
 msgid "How many lines the current tab has added/removed against the shown revision."
 msgstr "現在のタブが表示中のリビジョンに対して追加/削除した行数。"
+
+msgid "Jump to the previous change in the shown revision."
+msgstr "表示中のリビジョンの前の変更へ移動します。"
+
+msgid "Jump to the next change in the shown revision."
+msgstr "表示中のリビジョンの次の変更へ移動します。"
+
+msgid "Wrap Searches"
+msgstr "検索を折り返す"
+
+msgid "When on, the previous/next change buttons wrap around at the first and last change instead of stopping."
+msgstr "オンの場合、前/次の変更ボタンは最初と最後の変更で止まらずに折り返します。"
+
+msgid "No changes in this revision."
+msgstr "このリビジョンに変更はありません。"
+
+msgid "No more changes."
+msgstr "これ以上変更はありません。"
+
+msgid "Could not read that file."
+msgstr "そのファイルを読み取れませんでした。"
+
+msgid "Goto Line"
+msgstr "行へ移動"
+
+msgid "Line number to jump to (clamped to the document)."
+msgstr "移動先の行番号（ドキュメントの範囲内に丸められます）。"
+
+msgid "Go"
+msgstr "移動"
+
+msgid "Jump to the entered line."
+msgstr "入力した行へ移動します。"
+
+msgid "Copy Left Side ({0})"
+msgstr "左側をコピー ({0})"
+
+msgid "Copy Right Side ({0})"
+msgstr "右側をコピー ({0})"
+
+msgid "Git ({0})"
+msgstr "Git ({0})"
 
 msgid "How many revisions stay fetched around the slider position; contents outside this sliding window are dropped and re-fetched when needed (5-500). Overrides the Options default for this window only."
 msgstr "スライダー位置の周囲で取得済みのまま保持するリビジョン数。このスライディングウィンドウの外の内容は破棄され、必要時に再取得されます（5-500）。このウィンドウに限りオプションの既定値を上書きします。"

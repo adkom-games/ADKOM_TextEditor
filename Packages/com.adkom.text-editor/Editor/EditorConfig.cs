@@ -407,6 +407,17 @@ namespace ADKOM.TextEditor
             set => EditorPrefs.SetInt(TimeLapseWindowKey, Mathf.Clamp(value, 5, 500));
         }
 
+        const string TimeLapseWrapKey = "ADKOM.TextEditor.TimeLapseWrapSearches";
+
+        /// <summary>Whether Time Lapse change navigation (▲/▼) wraps around
+        /// at the first/last change instead of stopping. Machine-wide,
+        /// default on.</summary>
+        public static bool TimeLapseWrapSearches
+        {
+            get => EditorPrefs.GetBool(TimeLapseWrapKey, true);
+            set => EditorPrefs.SetBool(TimeLapseWrapKey, value);
+        }
+
         const string AutoUpdateKey = "ADKOM.TextEditor.AutoUpdate";
         const string UpdateFreqKey = "ADKOM.TextEditor.UpdateFrequencyDays";
 

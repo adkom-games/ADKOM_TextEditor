@@ -50,6 +50,8 @@ namespace ADKOM.TextEditor
 
         SliderInt _slider;
         Button _prevBtn, _nextBtn;
+        Button _prevChgBtn, _nextChgBtn; // ▲/▼ jump between change regions
+        Toggle _wrapToggle; // Wrap Searches: ▲/▼ wrap at the ends
         Label _posLabel; // "version/total", between the step buttons
         IntegerField _sizeField;
         CodeView _view;   // the REAL editor view, read-only — syntax colors,
@@ -66,6 +68,7 @@ namespace ADKOM.TextEditor
         [System.NonSerialized] List<GitService.LogEntry> _hist;
         [System.NonSerialized] string[] _cache;    // only in-window slots are non-null
         [System.NonSerialized] string[] _msgCache; // full commit messages, windowed like _cache
+        [System.NonSerialized] List<int> _changeLines; // first line of each change region shown
         [System.NonSerialized] bool _loading;
         [System.NonSerialized] int _pending = -1; // slider position waiting for its content
         [System.NonSerialized] int _fetchGen;     // bumped on every move/resize; stale fetch loops stop
@@ -155,6 +158,20 @@ namespace ADKOM.TextEditor
             };
             _nextBtn.SetEnabled(false);
             sliderRow.Add(_nextBtn);
+            _prevChgBtn = new Button(() => JumpChange(-1))
+            {
+                text = "▲",
+                tooltip = L10n.Tr("Jump to the previous change in the shown revision."),
+                style = { flexShrink = 0, marginLeft = 6 }
+            };
+            sliderRow.Add(_prevChgBtn);
+            _nextChgBtn = new Button(() => JumpChange(+1))
+            {
+                text = "▼",
+                tooltip = L10n.Tr("Jump to the next change in the shown revision."),
+                style = { flexShrink = 0 }
+            };
+            sliderRow.Add(_nextChgBtn);
             _sizeField = new IntegerField(L10n.Tr("Window Size"))
             {
                 value = _windowSize,
@@ -185,6 +202,10 @@ namespace ADKOM.TextEditor
                 style = { flexGrow = 1 }
             };
             StyleView();
+            // Context menu: aux feature set, with Time Lapse pruned — this
+            // window must not offer opening itself.
+            AuxTextMenu.Attach(_view, _owner, () => _filePath, () => _displayName,
+                AuxTextMenu.Prune.TimeLapse);
             frame.Add(_view);
             root.Add(frame);
 
@@ -246,6 +267,14 @@ namespace ADKOM.TextEditor
                 style = { alignSelf = Align.Center, flexGrow = 1, unityTextAlign = TextAnchor.MiddleLeft }
             };
             buttons.Add(_status);
+            _wrapToggle = new Toggle(L10n.Tr("Wrap Searches"))
+            {
+                value = EditorConfig.TimeLapseWrapSearches,
+                tooltip = L10n.Tr("When on, the previous/next change buttons wrap around at the first and last change instead of stopping."),
+                style = { flexShrink = 0, alignSelf = Align.Center, marginRight = 8 }
+            };
+            _wrapToggle.RegisterValueChangedCallback(e => EditorConfig.TimeLapseWrapSearches = e.newValue);
+            buttons.Add(_wrapToggle);
             _copyToTab = new Button(CopyToTab)
             {
                 text = L10n.Tr("Copy to Tab"),
@@ -481,10 +510,53 @@ namespace ADKOM.TextEditor
             }
             _view.AttachOverlay(ov);
             _view.ApplyGitMarks(marks);
+            RecordChangeLines(marks);
             if (center >= 0) _view.CenterOnLine(center);
 
             UpdateInfo(pos);
             _copyToTab.SetEnabled(pos < PosCount() && _owner != null);
+        }
+
+        /// <summary>Collapses the shown revision's per-line marks into the
+        /// first line of each contiguous change region, for ▲/▼ hopping.</summary>
+        void RecordChangeLines(Dictionary<int, GitService.LineMark> marks)
+        {
+            _changeLines = new List<int>();
+            if (marks == null || marks.Count == 0) return;
+            var lines = new List<int>(marks.Keys);
+            lines.Sort();
+            for (int i = 0; i < lines.Count; i++)
+                if (i == 0 || lines[i] != lines[i - 1] + 1)
+                    _changeLines.Add(lines[i]);
+        }
+
+        /// <summary>▲/▼: centers the view (and caret) on the previous/next
+        /// change region relative to the currently centered line. At the
+        /// ends it wraps when Wrap Searches is on, otherwise stops.</summary>
+        void JumpChange(int dir)
+        {
+            if (_changeLines == null || _changeLines.Count == 0)
+            {
+                _status.text = L10n.Tr("No changes in this revision.");
+                return;
+            }
+            int reference = _view.CenterLine();
+            int target = -1;
+            if (dir < 0)
+            {
+                for (int i = _changeLines.Count - 1; i >= 0; i--)
+                    if (_changeLines[i] < reference) { target = _changeLines[i]; break; }
+                if (target < 0 && _wrapToggle.value) target = _changeLines[_changeLines.Count - 1];
+            }
+            else
+            {
+                for (int i = 0; i < _changeLines.Count; i++)
+                    if (_changeLines[i] > reference) { target = _changeLines[i]; break; }
+                if (target < 0 && _wrapToggle.value) target = _changeLines[0];
+            }
+            if (target < 0) { _status.text = L10n.Tr("No more changes."); return; }
+            _view.GoToLine(target + 1, 1);
+            UpdateInfo(_shown); // restore the counts line after any status text
         }
 
         /// <summary>Reflects the shown position everywhere it appears: the

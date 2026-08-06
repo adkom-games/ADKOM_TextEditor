@@ -1635,6 +1635,7 @@ namespace ADKOM.TextEditor
             _settingsPane.Add(versionLabel);
 
             scroller.Add(_settingsPane);
+            scroller.RegisterCallback<MouseUpEvent>(OnSettingsContextMenu);
             _settingsScroll = scroller;
             root.Add(scroller);
         }

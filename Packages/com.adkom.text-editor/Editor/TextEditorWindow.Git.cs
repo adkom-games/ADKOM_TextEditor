@@ -45,8 +45,13 @@ namespace ADKOM.TextEditor
         internal void GitBlameCurrent()
         {
             if (!HasDocs || !Active.HasFile) return;
-            string path = Active.FilePath;
-            string name = Active.DisplayName;
+            GitBlameFor(Active.FilePath, Active.DisplayName);
+        }
+
+        /// <summary>Blame for any file (auxiliary views pass their own
+        /// path), shown as a read-only virtual tab.</summary>
+        internal void GitBlameFor(string path, string name)
+        {
             var ctx = _mainCtx;
             PostStatus(L10n.Tr("Running git blame…"));
             System.Threading.Tasks.Task.Run(() =>
@@ -91,8 +96,14 @@ namespace ADKOM.TextEditor
         internal void GitFileHistory()
         {
             if (!HasDocs || !Active.HasFile) return;
-            string path = Active.FilePath;
-            string name = Active.DisplayName;
+            GitFileHistoryFor(Active.FilePath, Active.DisplayName, null);
+        }
+
+        /// <summary>File history dropdown for any file; <paramref
+        /// name="anchor"/> hosts the dropdown (an auxiliary view's element),
+        /// null = the main editor's code view.</summary>
+        internal void GitFileHistoryFor(string path, string name, UnityEngine.UIElements.VisualElement anchor)
+        {
             var ctx = _mainCtx;
             PostStatus(L10n.Tr("Reading history…"));
             System.Threading.Tasks.Task.Run(() =>
@@ -122,14 +133,15 @@ namespace ADKOM.TextEditor
                         menu.AddItem(entry.Date + "  " + entry.Hash + "  " + subj,
                             false, () => OpenRevision(path, name, entry.Hash));
                     }
-                    var cb = _code.worldBound;
+                    var host = anchor != null && anchor.panel != null ? anchor : _code;
+                    var cb = host.worldBound;
 #if UNITY_6000_3_OR_NEWER
-                    menu.DropDown(new Rect(cb.x + 24, cb.y + 8, 420, 0), _code,
+                    menu.DropDown(new Rect(cb.x + 24, cb.y + 8, 420, 0), host,
                         UnityEngine.UIElements.DropdownMenuSizeMode.Fixed);
 #else
                     // DropdownMenuSizeMode is 6000.3+; anchored=true likewise
                     // sizes the menu to the given rect's width.
-                    menu.DropDown(new Rect(cb.x + 24, cb.y + 8, 420, 0), _code, true);
+                    menu.DropDown(new Rect(cb.x + 24, cb.y + 8, 420, 0), host, true);
 #endif
                 }, null);
             });
@@ -142,6 +154,23 @@ namespace ADKOM.TextEditor
         {
             if (!HasDocs || !Active.HasFile || _code == null) return;
             GitTimeLapseWindow.Open(this, Active.FilePath, Active.DisplayName, _code.value);
+        }
+
+        /// <summary>Time Lapse for any file (auxiliary views pass their own
+        /// path): the slider's right end is the open tab's buffer when the
+        /// file has one, the on-disk content otherwise.</summary>
+        internal void GitTimeLapseFor(string path, string name)
+        {
+            var d = FindDocByPath(path);
+            string content;
+            if (d != null)
+                content = HasDocs && Active == d && _code != null ? _code.value : d.Content ?? "";
+            else
+            {
+                try { content = System.IO.File.ReadAllText(path); }
+                catch (System.Exception) { PostStatus(L10n.Tr("Could not read that file.")); return; }
+            }
+            GitTimeLapseWindow.Open(this, path, name, content);
         }
 
         /// <summary>The main editor's word-wrap setting, for auxiliary views

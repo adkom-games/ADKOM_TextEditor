@@ -192,9 +192,6 @@ msgstr "릴리스 노트"
 msgid "Go to Definition"
 msgstr "정의로 이동"
 
-msgid "Find Occurrences"
-msgstr "일치 항목 찾기"
-
 msgid "Find Occurrences of '{0}'"
 msgstr "'{0}' 일치 항목 찾기"
 
@@ -1454,6 +1451,48 @@ msgstr "표시된 리비전의 작성자입니다. 읽기 전용."
 
 msgid "How many lines the current tab has added/removed against the shown revision."
 msgstr "현재 탭이 표시된 리비전에 대해 추가/삭제한 줄 수입니다."
+
+msgid "Jump to the previous change in the shown revision."
+msgstr "표시된 리비전의 이전 변경으로 이동합니다."
+
+msgid "Jump to the next change in the shown revision."
+msgstr "표시된 리비전의 다음 변경으로 이동합니다."
+
+msgid "Wrap Searches"
+msgstr "검색 순환"
+
+msgid "When on, the previous/next change buttons wrap around at the first and last change instead of stopping."
+msgstr "켜면 이전/다음 변경 버튼이 첫/마지막 변경에서 멈추지 않고 순환합니다."
+
+msgid "No changes in this revision."
+msgstr "이 리비전에는 변경 사항이 없습니다."
+
+msgid "No more changes."
+msgstr "더 이상 변경 사항이 없습니다."
+
+msgid "Could not read that file."
+msgstr "해당 파일을 읽을 수 없습니다."
+
+msgid "Goto Line"
+msgstr "줄로 이동"
+
+msgid "Line number to jump to (clamped to the document)."
+msgstr "이동할 줄 번호(문서 범위로 제한됩니다)."
+
+msgid "Go"
+msgstr "이동"
+
+msgid "Jump to the entered line."
+msgstr "입력한 줄로 이동합니다."
+
+msgid "Copy Left Side ({0})"
+msgstr "왼쪽 복사 ({0})"
+
+msgid "Copy Right Side ({0})"
+msgstr "오른쪽 복사 ({0})"
+
+msgid "Git ({0})"
+msgstr "Git ({0})"
 
 msgid "How many revisions stay fetched around the slider position; contents outside this sliding window are dropped and re-fetched when needed (5-500). Overrides the Options default for this window only."
 msgstr "슬라이더 위치 주변에 가져온 상태로 유지할 리비전 수입니다. 이 슬라이딩 윈도우 밖의 내용은 버려지고 필요할 때 다시 가져옵니다(5-500). 이 창에 한해 옵션의 기본값을 재정의합니다."
