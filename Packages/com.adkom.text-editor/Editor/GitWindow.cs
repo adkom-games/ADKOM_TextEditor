@@ -434,11 +434,7 @@ namespace ADKOM.TextEditor
                         if (target && !staged) stage.Add(e.Path);
                         else if (!target && staged) unstage.Add(e.Path);
                     }
-                    string q(List<string> l) => string.Join(" ", l.Select(p => "\"" + p + "\""));
-                    if (stage.Count > 0 && unstage.Count > 0)
-                        RunGit("add -- " + q(stage), () => RunGit("restore --staged -- " + q(unstage)));
-                    else if (stage.Count > 0) RunGit("add -- " + q(stage));
-                    else if (unstage.Count > 0) RunGit("restore --staged -- " + q(unstage));
+                    RunGitBatch("add", stage, () => RunGitBatch("restore --staged", unstage));
                 });
             }
             bool Untracked(GitService.StatusEntry e) => e.Index == '?' || e.Work == '?';
@@ -459,6 +455,20 @@ namespace ADKOM.TextEditor
             m.ShowAsContext();
         }
 
+        /// <summary>Runs a path-taking git command over an arbitrarily long
+        /// path list by CHUNKING it — one giant command line blew straight
+        /// through the OS argument-length limit the first time Select All
+        /// met an untracked build folder. Chunks chain through RunGit's
+        /// completion callback; an empty list just advances the chain.</summary>
+        void RunGitBatch(string command, List<string> paths, System.Action after = null)
+        {
+            const int Chunk = 32;
+            if (paths == null || paths.Count == 0) { after?.Invoke(); return; }
+            var batch = paths.Take(Chunk).Select(p => "\"" + p.Replace("\"", "\\\"") + "\"");
+            var rest = paths.Skip(Chunk).ToList();
+            RunGit(command + " -- " + string.Join(" ", batch), () => RunGitBatch(command, rest, after));
+        }
+
         void RunGit(string args, System.Action after = null)
         {
             if (_busy || string.IsNullOrEmpty(_root)) return;
@@ -477,7 +487,11 @@ namespace ADKOM.TextEditor
                     {
                         string msg = (se + "\n" + so).Trim();
                         _status.text = msg.Length > 300 ? msg.Substring(0, 297) + "..." : msg;
-                        AteConsole.Warn("[ADKOM Text Editor] git " + args + " failed: " + msg);
+                        // Batched commands can carry hundreds of paths —
+                        // echoing them whole turned the console to soup.
+                        string shownArgs = args.Length > 160 ? args.Substring(0, 157) + "…" : args;
+                        if (msg.Length > 400) msg = msg.Substring(0, 397) + "…";
+                        AteConsole.Warn("[ADKOM Text Editor] git " + shownArgs + " failed: " + msg);
                     }
                     after?.Invoke();
                     Refresh();
@@ -678,12 +692,16 @@ namespace ADKOM.TextEditor
             ? new Vector2(20 + _nodes.Count * NodeGap, 16 + head.Lane * LaneGap)
             : new Vector2(16 + head.Lane * LaneGap, 12);
 
-        /// <summary>Stable per-lane color: every branch line in the graph
-        /// gets its own hue (golden-angle spacing keeps neighbors distinct),
-        /// used for both the commit dots and their connecting edges.</summary>
-        static Color LaneColor(int lane)
+        /// <summary>Stable per-BRANCH color, keyed by the layout's segment id
+        /// (golden-angle hue spacing keeps neighbors distinct), used for the
+        /// commit dots and their connecting edges. Keyed by segment, not
+        /// lane: lanes are reused for compactness, and lane-keyed colors
+        /// made an unmerged stale branch read as one continuous line with
+        /// the newer merged branches sharing its lane. Segment 0 (main's
+        /// trunk) stays the first hue.</summary>
+        static Color BranchColor(int segment)
         {
-            float h = (lane * 0.61803399f) % 1f;
+            float h = (segment * 0.61803399f) % 1f;
             return Color.HSVToRGB(h, 0.55f, 0.95f);
         }
 
@@ -712,7 +730,7 @@ namespace ADKOM.TextEditor
                 // selection gold the commits use.
                 bool headActive = _selectedHash == null;
                 var gold = new Color(0.95f, 0.8f, 0.3f);
-                var laneCol = headActive ? gold : LaneColor(headNode.Lane);
+                var laneCol = headActive ? gold : BranchColor(headNode.Segment);
                 bool dirty = _entries.Count > 0;
                 var marker = new VisualElement
                 {
@@ -784,7 +802,7 @@ namespace ADKOM.TextEditor
                         // ring so both facts stay visible at once.
                         backgroundColor = node.Hash == _selectedHash
                             ? new Color(0.95f, 0.8f, 0.3f)
-                            : LaneColor(node.Lane),
+                            : BranchColor(node.Segment),
                     },
                     tooltip = node.Hash + "  " + node.Date + "  " + node.Author + "\n" + node.Subject
                 };
@@ -876,7 +894,7 @@ namespace ADKOM.TextEditor
             var head = HeadNode();
             if (head != null)
             {
-                var col = LaneColor(head.Lane);
+                var col = BranchColor(head.Segment);
                 p.strokeColor = new Color(col.r, col.g, col.b, 0.55f);
                 p.BeginPath();
                 p.MoveTo(HeadMarkerPos(head));
@@ -888,9 +906,9 @@ namespace ADKOM.TextEditor
                 {
                     if (!byHash.TryGetValue(parent, out var pn)) continue;
                     // The edge takes the color of the BRANCH it carries: for
-                    // same-lane edges that is trivially the lane; for forks
-                    // and merges the branch is the outer lane of the pair.
-                    var col = LaneColor(Mathf.Max(n.Lane, pn.Lane));
+                    // same-lane edges both ends agree; for forks and merges
+                    // the branch is the node on the OUTER lane of the pair.
+                    var col = BranchColor((n.Lane >= pn.Lane ? n : pn).Segment);
                     p.strokeColor = new Color(col.r, col.g, col.b, 0.85f);
                     p.BeginPath();
                     p.MoveTo(NodePos(n));
