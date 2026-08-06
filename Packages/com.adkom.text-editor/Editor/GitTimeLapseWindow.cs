@@ -48,6 +48,7 @@ namespace ADKOM.TextEditor
 
         Label _header;
         SliderInt _slider;
+        Button _prevBtn, _nextBtn;
         IntegerField _sizeField;
         CodeView _view;   // the REAL editor view, read-only — syntax colors,
                           // line numbers, wrap, selection/copy all intact
@@ -133,6 +134,22 @@ namespace ADKOM.TextEditor
             _slider.RegisterValueChangedCallback(e => ShowPosition(e.newValue));
             _slider.SetEnabled(false);
             sliderRow.Add(_slider);
+            _prevBtn = new Button(() => _slider.value = Mathf.Max(0, _slider.value - 1))
+            {
+                text = "◀",
+                tooltip = L10n.Tr("Step to the previous (older) revision."),
+                style = { flexShrink = 0, marginLeft = 6 }
+            };
+            _prevBtn.SetEnabled(false);
+            sliderRow.Add(_prevBtn);
+            _nextBtn = new Button(() => _slider.value = Mathf.Min(_slider.highValue, _slider.value + 1))
+            {
+                text = "▶",
+                tooltip = L10n.Tr("Step to the next (newer) revision."),
+                style = { flexShrink = 0 }
+            };
+            _nextBtn.SetEnabled(false);
+            sliderRow.Add(_nextBtn);
             _sizeField = new IntegerField(L10n.Tr("Window Size"))
             {
                 value = _windowSize,
@@ -272,6 +289,8 @@ namespace ADKOM.TextEditor
                     _slider.highValue = hist.Count;
                     _slider.SetValueWithoutNotify(hist.Count);
                     _slider.SetEnabled(true);
+                    _prevBtn.SetEnabled(true);
+                    _nextBtn.SetEnabled(true);
                     _shown = hist.Count; // the shown tab buffer is now the LAST position
                     UpdateHeader(_shown);
                     _pauseTimer?.ExecuteLater(PauseMs); // fill the newest window
