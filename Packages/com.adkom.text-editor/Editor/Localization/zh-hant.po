@@ -1431,6 +1431,12 @@ msgstr "視窗大小"
 msgid "Version"
 msgstr "版本"
 
+msgid "Step to the previous (older) revision."
+msgstr "跳到上一個（更早的）修訂版本。"
+
+msgid "Step to the next (newer) revision."
+msgstr "跳到下一個（更新的）修訂版本。"
+
 msgid "How many revisions stay fetched around the slider position; contents outside this sliding window are dropped and re-fetched when needed (5-500). Overrides the Options default for this window only."
 msgstr "在滑桿位置周圍保持已擷取狀態的修訂版本數量；此滑動視窗之外的內容會被捨棄，需要時重新擷取（5-500）。僅對此視窗覆寫選項中的預設值。"
 
