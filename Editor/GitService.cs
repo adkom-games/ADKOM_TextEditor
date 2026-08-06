@@ -229,6 +229,16 @@ namespace ADKOM.TextEditor
             return result;
         }
 
+        /// <summary>A commit's full message — subject plus body (null on
+        /// failure).</summary>
+        public static string CommitMessage(string filePath, string hash)
+        {
+            string root = RepoRoot(filePath);
+            if (root == null) return null;
+            return Run(root, "show -s --format=%B " + hash, out var o, out _) == 0
+                ? o.TrimEnd('\r', '\n') : null;
+        }
+
         /// <summary>A file's content at a commit (null on failure).</summary>
         public static string ShowFileAt(string filePath, string hash)
         {
