@@ -115,6 +115,7 @@ namespace ADKOM.TextEditor
                 else if (e.keyCode == KeyCode.Escape) { Close(); e.StopPropagation(); }
             }, TrickleDown.TrickleDown);
             rootVisualElement.schedule.Execute(() => field.Focus());
+            AteTooltip.Attach(rootVisualElement);
         }
 
         void Go(int line)

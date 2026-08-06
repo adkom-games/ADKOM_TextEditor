@@ -24,7 +24,7 @@ From top to bottom:
 4. **Console area** — a resizable bottom pane hosting the Console, Search Results, Bookmarks, Scanner Results, and Map views (see *The Console Area*).
 5. **Status bar** — messages on the left (also kept in the Console, except transient undo/redo feedback, which stays out of the Console by design), caret position and document info (indentation, line endings, encoding) on the right. With a selection, the caret readout becomes the selection's Ln/Col range — or "Multiple Selections" for disjoint multi-caret ranges — plus its character, word, and line counts summed over every range. Some commands (Goto Line) prompt inline here, emacs-style.
 
-Every control in ATE has a tooltip — hover anything to learn what it does.
+Every control in ATE has a tooltip — hover anything to learn what it does. ATE draws its own tooltips: a bordered panel that appears just off the mouse pointer and follows it, consistent across every ATE window (Unity's native tooltip anchors to the hovered element instead, which lands far from the pointer on tall elements).
 
 ## 3. Files, Tabs & Sessions
 

@@ -307,6 +307,7 @@ namespace ADKOM.TextEditor
                 _ctx = c;
                 StartLoad();
             });
+            AteTooltip.Attach(rootVisualElement);
         }
 
         void StyleView()
