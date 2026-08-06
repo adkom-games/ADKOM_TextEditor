@@ -1391,6 +1391,42 @@ msgstr "No history available (not in a git repository?)."
 msgid "Could not read that revision."
 msgstr "Could not read that revision."
 
+msgid "Time Lapse Current File..."
+msgstr "Time Lapse Current File..."
+
+msgid "Time Lapse {0}"
+msgstr "Time Lapse {0}"
+
+msgid "Loading git history…"
+msgstr "Loading git history…"
+
+msgid "The revision shown below, and how the current tab differs from it."
+msgstr "The revision shown below, and how the current tab differs from it."
+
+msgid "Drag through the file's git history — oldest commit on the left, the current tab contents on the right."
+msgstr "Drag through the file's git history — oldest commit on the left, the current tab contents on the right."
+
+msgid "Read-only view of the file at the selected revision. Text can be selected and copied."
+msgstr "Read-only view of the file at the selected revision. Text can be selected and copied."
+
+msgid "Copy to Tab"
+msgstr "Copy to Tab"
+
+msgid "Replace the file's tab contents with this revision. For the active tab this is undoable."
+msgstr "Replace the file's tab contents with this revision. For the active tab this is undoable."
+
+msgid "Current tab contents"
+msgstr "Current tab contents"
+
+msgid "Current tab vs this revision: +{0} −{1}"
+msgstr "Current tab vs this revision: +{0} −{1}"
+
+msgid "That file's tab is no longer open."
+msgstr "That file's tab is no longer open."
+
+msgid "Copied this revision into the file's tab."
+msgstr "Copied this revision into the file's tab."
+
 msgid "Changes"
 msgstr "Changes"
 

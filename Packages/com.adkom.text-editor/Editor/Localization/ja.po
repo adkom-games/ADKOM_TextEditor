@@ -1389,6 +1389,42 @@ msgstr "履歴を取得できません（git リポジトリ外？）。"
 msgid "Could not read that revision."
 msgstr "そのリビジョンを読み取れませんでした。"
 
+msgid "Time Lapse Current File..."
+msgstr "現在のファイルのタイムラプス..."
+
+msgid "Time Lapse {0}"
+msgstr "タイムラプス {0}"
+
+msgid "Loading git history…"
+msgstr "git 履歴を読み込み中…"
+
+msgid "The revision shown below, and how the current tab differs from it."
+msgstr "下に表示されているリビジョンと、現在のタブとの差分情報。"
+
+msgid "Drag through the file's git history — oldest commit on the left, the current tab contents on the right."
+msgstr "ファイルの git 履歴をドラッグで移動 — 左端が最古のコミット、右端が現在のタブ内容です。"
+
+msgid "Read-only view of the file at the selected revision. Text can be selected and copied."
+msgstr "選択したリビジョンのファイルの読み取り専用ビュー。テキストの選択とコピーは可能です。"
+
+msgid "Copy to Tab"
+msgstr "タブへコピー"
+
+msgid "Replace the file's tab contents with this revision. For the active tab this is undoable."
+msgstr "ファイルのタブ内容をこのリビジョンで置き換えます。アクティブなタブでは元に戻す操作が可能です。"
+
+msgid "Current tab contents"
+msgstr "現在のタブ内容"
+
+msgid "Current tab vs this revision: +{0} −{1}"
+msgstr "現在のタブとこのリビジョンの差: +{0} −{1}"
+
+msgid "That file's tab is no longer open."
+msgstr "そのファイルのタブは既に閉じられています。"
+
+msgid "Copied this revision into the file's tab."
+msgstr "このリビジョンをファイルのタブへコピーしました。"
+
 msgid "Changes"
 msgstr "変更"
 
