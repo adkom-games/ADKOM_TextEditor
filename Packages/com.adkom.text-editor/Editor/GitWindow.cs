@@ -374,17 +374,18 @@ namespace ADKOM.TextEditor
                 {
                     if (ev.button != 1) return;
                     ev.StopPropagation();
-                    ShowEntryMenu(entry.Path, staged, () => DiffWorkingEntry(entry));
+                    ShowEntryMenu(entry, entry.Path, () => DiffWorkingEntry(entry));
                 });
                 _changes.Add(row);
             }
         }
 
         /// <summary>Context menu for a file row — working tree and inspected
-        /// commits alike: diff, open, reveal, stage/unstage (working tree
-        /// only), and the Git submenu incl. Time Lapse. Git Panel itself is
-        /// pruned: this IS the Git Panel.</summary>
-        void ShowEntryMenu(string relPath, bool? staged, System.Action diff)
+        /// commits alike: diff, open, reveal, and the Git submenu, which for
+        /// working-tree rows leads with the file's ELIGIBLE operations
+        /// (stage / unstage / discard, derived from its current state).
+        /// Git Panel itself is pruned: this IS the Git Panel.</summary>
+        void ShowEntryMenu(GitService.StatusEntry? entry, string relPath, System.Action diff)
         {
             var m = new GenericMenu();
             string full = System.IO.Path.GetFullPath(System.IO.Path.Combine(_root, relPath));
@@ -399,24 +400,41 @@ namespace ADKOM.TextEditor
                 m.AddItem(new GUIContent(L10n.Tr("Show in File Explorer")), false,
                     () => EditorUtility.RevealInFinder(full));
             }
-            if (staged != null)
+            string gitRoot = L10n.Tr("Git") + "/";
+            bool anyGit = false;
+            if (entry != null)
             {
+                // Working-tree (HEAD of the checked-out branch, merged or
+                // not): only the operations the file's state makes eligible.
+                var e = entry.Value;
+                bool untracked = e.Index == '?' || e.Work == '?';
+                bool stagedAny = !untracked && e.Index != ' ';
+                bool unstagedAny = untracked || e.Work != ' ';
                 m.AddSeparator("");
-                if (staged.Value)
-                    m.AddItem(new GUIContent(L10n.Tr("Unstage")), false,
-                        () => RunGit("restore --staged -- \"" + relPath + "\""));
-                else
-                    m.AddItem(new GUIContent(L10n.Tr("Stage")), false,
+                anyGit = true;
+                if (unstagedAny)
+                    m.AddItem(new GUIContent(gitRoot + L10n.Tr("Stage")), false,
                         () => RunGit("add -- \"" + relPath + "\""));
+                if (stagedAny)
+                    m.AddItem(new GUIContent(gitRoot + L10n.Tr("Unstage")), false,
+                        () => RunGit("restore --staged -- \"" + relPath + "\""));
+                if (!untracked && e.Work != ' ')
+                    m.AddItem(new GUIContent(gitRoot + L10n.Tr("Discard Changes...")), false, () =>
+                    {
+                        if (EditorUtility.DisplayDialog(L10n.Tr("Discard Changes"),
+                                string.Format(L10n.Tr("Discard the working-tree changes to {0}? This cannot be undone."), relPath),
+                                L10n.Tr("Discard"), L10n.Tr("Cancel")))
+                            RunGit("restore -- \"" + relPath + "\"");
+                    });
             }
             if (onDisk && _owner != null)
             {
-                m.AddSeparator("");
-                string gitRoot = L10n.Tr("Git") + "/";
+                if (!anyGit) m.AddSeparator("");
+                else m.AddSeparator(gitRoot);
                 m.AddItem(new GUIContent(gitRoot + L10n.Tr("Blame Current File")), false,
                     () => _owner.GitBlameFor(full, name));
                 m.AddItem(new GUIContent(gitRoot + L10n.Tr("File History...")), false,
-                    () => _owner.GitFileHistoryFor(full, name, _changes));
+                    () => _owner.GitFileHistoryFor(full, name));
                 m.AddItem(new GUIContent(gitRoot + L10n.Tr("Time Lapse Current File...")), false,
                     () => _owner.GitTimeLapseFor(full, name));
             }
@@ -611,7 +629,7 @@ namespace ADKOM.TextEditor
                 {
                     if (ev.button != 1) return;
                     ev.StopPropagation();
-                    ShowEntryMenu(p, null, () => DiffCommitEntry(p, hash));
+                    ShowEntryMenu(null, p, () => DiffCommitEntry(p, hash));
                 });
                 _changes.Add(row);
             }
