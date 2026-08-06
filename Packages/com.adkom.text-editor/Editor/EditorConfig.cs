@@ -395,6 +395,18 @@ namespace ADKOM.TextEditor
             set => EditorPrefs.SetBool(MdLockByDefaultKey, value);
         }
 
+        const string TimeLapseWindowKey = "ADKOM.TextEditor.TimeLapseWindowSize";
+
+        /// <summary>Default sliding-window size for Git Time Lapse windows:
+        /// how many revision contents stay fetched around the slider
+        /// position. Machine-wide user preference; each Time Lapse window
+        /// seeds from this and can override its own copy.</summary>
+        public static int TimeLapseWindowSize
+        {
+            get => Mathf.Clamp(EditorPrefs.GetInt(TimeLapseWindowKey, 50), 5, 500);
+            set => EditorPrefs.SetInt(TimeLapseWindowKey, Mathf.Clamp(value, 5, 500));
+        }
+
         const string AutoUpdateKey = "ADKOM.TextEditor.AutoUpdate";
         const string UpdateFreqKey = "ADKOM.TextEditor.UpdateFrequencyDays";
 

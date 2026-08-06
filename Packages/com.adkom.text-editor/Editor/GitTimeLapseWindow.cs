@@ -15,10 +15,22 @@ namespace ADKOM.TextEditor
     /// plus the git gutter bars — deletions leave only the red gutter stub),
     /// keeps whatever line was centered in view centered, and the header
     /// shows the revision's commit info plus how the current tab differs
-    /// from it. Multi-instance by design: each invocation opens its own
-    /// window, so several files can be compared side by side. Copy to Tab
-    /// pushes the shown revision back into the file's tab (undoable while
-    /// that tab is active).
+    /// from it.
+    ///
+    /// Revision CONTENTS live in a sliding window around the slider
+    /// position: while the slider rests (~400 ms), the window's missing
+    /// revisions are fetched nearest-first in the background; contents that
+    /// fall outside the window are dropped, so memory stays bounded at
+    /// ~window-size revisions no matter how long the history is. Landing on
+    /// a revision the prefetch hasn't reached fetches it immediately — the
+    /// only cost of outrunning the window is that brief wait. The window
+    /// size is a per-window override (the field beside the slider) seeded
+    /// from the Options default.
+    ///
+    /// Multi-instance by design: each invocation opens its own window, so
+    /// several files can be compared side by side. Copy to Tab pushes the
+    /// shown revision back into the file's tab (undoable while that tab is
+    /// active).
     /// </summary>
     public class GitTimeLapseWindow : EditorWindow
     {
@@ -26,25 +38,31 @@ namespace ADKOM.TextEditor
         static readonly Color AddedBg = new Color(0.25f, 0.62f, 0.25f, 0.16f);
         static readonly Color ChangedBg = new Color(0.78f, 0.65f, 0.20f, 0.13f);
 
+        const int PauseMs = 400; // slider must rest this long before the window prefetches
+
         [SerializeField] TextEditorWindow _owner; // an object ref survives reloads
         [SerializeField] string _filePath;
         [SerializeField] string _displayName;
         [SerializeField] string _tabText; // the buffer at open time — the slider's right end
+        [SerializeField] int _windowSize; // per-window override, seeded from EditorConfig
 
         Label _header;
         SliderInt _slider;
+        IntegerField _sizeField;
         CodeView _view;   // the REAL editor view, read-only — syntax colors,
                           // line numbers, wrap, selection/copy all intact
         Button _copyToTab;
 
         // Revision data: _hist[0] = oldest … _hist[N-1] = newest commit;
         // slider position N is the tab buffer itself. All rebuilt after a
-        // domain reload — a mid-flight prefetch must not appear finished.
+        // domain reload — a mid-flight fetch must not appear finished.
         [System.NonSerialized] List<GitService.LogEntry> _hist;
-        [System.NonSerialized] string[] _cache;   // revision contents, filled newest-first
+        [System.NonSerialized] string[] _cache;   // only in-window slots are non-null
         [System.NonSerialized] bool _loading;
         [System.NonSerialized] int _pending = -1; // slider position waiting for its content
+        [System.NonSerialized] int _fetchGen;     // bumped on every move/resize; stale fetch loops stop
         [System.NonSerialized] System.Threading.SynchronizationContext _ctx;
+        IVisualElementScheduledItem _pauseTimer;
         int _shown = -1;
 
         public static void Open(TextEditorWindow owner, string filePath, string displayName, string tabText)
@@ -56,6 +74,7 @@ namespace ADKOM.TextEditor
             w._filePath = filePath;
             w._displayName = displayName;
             w._tabText = Normalize(tabText);
+            w._windowSize = EditorConfig.TimeLapseWindowSize;
             w.Show();
             w.BuildUI();
         }
@@ -64,9 +83,10 @@ namespace ADKOM.TextEditor
             (s ?? "").Replace("\r\n", "\n").Replace("\r", "\n");
 
         /// <summary>Reload survivor: rebind to a main window and rebuild —
-        /// the file path and captured tab text are serialized, the history
-        /// and content cache are refetched. Deferred so the normal Open()
-        /// path (which builds immediately) wins when both run.</summary>
+        /// the file path, captured tab text and window-size override are
+        /// serialized; the history and content cache are refetched. Deferred
+        /// so the normal Open() path (which builds immediately) wins when
+        /// both run.</summary>
         void CreateGUI()
         {
             rootVisualElement.schedule.Execute(() =>
@@ -88,6 +108,7 @@ namespace ADKOM.TextEditor
             root.Clear();
             root.style.paddingLeft = root.style.paddingRight = 8;
             root.style.paddingTop = 6;
+            if (_windowSize <= 0) _windowSize = EditorConfig.TimeLapseWindowSize;
 
             _header = new Label
             {
@@ -97,14 +118,32 @@ namespace ADKOM.TextEditor
             };
             root.Add(_header);
 
+            var sliderRow = new VisualElement
+            { style = { flexDirection = FlexDirection.Row, marginBottom = 2, flexShrink = 0 } };
             _slider = new SliderInt(0, 0)
             {
                 tooltip = L10n.Tr("Drag through the file's git history — oldest commit on the left, the current tab contents on the right."),
-                style = { marginBottom = 2, flexShrink = 0 }
+                style = { flexGrow = 1 }
             };
             _slider.RegisterValueChangedCallback(e => ShowPosition(e.newValue));
             _slider.SetEnabled(false);
-            root.Add(_slider);
+            sliderRow.Add(_slider);
+            _sizeField = new IntegerField(L10n.Tr("Window Size"))
+            {
+                value = _windowSize,
+                tooltip = L10n.Tr("How many revisions stay fetched around the slider position; contents outside this sliding window are dropped and re-fetched when needed (5-500). Overrides the Options default for this window only."),
+                style = { flexShrink = 0, marginLeft = 8, width = 190 }
+            };
+            _sizeField.RegisterValueChangedCallback(e =>
+            {
+                _windowSize = Mathf.Clamp(e.newValue, 5, 500);
+                _sizeField.SetValueWithoutNotify(_windowSize); // clamp echo
+                _fetchGen++;
+                EvictOutsideWindow();
+                _pauseTimer?.ExecuteLater(PauseMs);
+            });
+            sliderRow.Add(_sizeField);
+            root.Add(sliderRow);
 
             var frame = new VisualElement { style = { flexGrow = 1 } };
             AteViewStyle.Frame(frame);
@@ -133,13 +172,19 @@ namespace ADKOM.TextEditor
             root.Add(buttons);
 
             // Keyboard: Left/Right (and Home/End) step through revisions —
-            // unless the read-only view or the slider itself has the event,
-            // which keep their own key handling.
+            // unless the read-only view or a field has the event, which keep
+            // their own key handling.
             root.RegisterCallback<KeyDownEvent>(OnKey, TrickleDown.TrickleDown);
 
-            // The buffer shows immediately; history and revision contents
-            // stream in from a background prefetch once the functional main
-            // thread context exists (see AteMainCtx for why not Current).
+            // The pause timer drives the sliding-window prefetch: (re)armed
+            // on every slider move, it fires once after the slider has
+            // rested. Created paused; ExecuteLater() re-arms it.
+            _pauseTimer = root.schedule.Execute(PrefetchWindow);
+            _pauseTimer.Pause();
+
+            // The buffer shows immediately; the history list and revision
+            // contents stream in once the functional main thread context
+            // exists (see AteMainCtx for why not Current).
             _shown = -1;
             Render(PosCount());
             _header.text = _displayName + "   —   " + L10n.Tr("Loading git history…");
@@ -165,10 +210,33 @@ namespace ADKOM.TextEditor
         string ContentAt(int pos) => pos >= PosCount() ? _tabText : _cache[pos];
 
         /// <summary>A position renders once its content AND its older
-        /// neighbor (the highlight baseline) have been prefetched.</summary>
+        /// neighbor (the highlight baseline) are cached.</summary>
         bool Ready(int pos) =>
             (pos >= PosCount() || _cache[pos] != null) &&
             (pos == 0 || ContentAt(pos - 1) != null);
+
+        /// <summary>The sliding window's revision-index bounds around a
+        /// slider position (the tab-buffer position anchors at the newest
+        /// revision).</summary>
+        void WindowBounds(int pos, out int lo, out int hi)
+        {
+            int n = PosCount();
+            if (n == 0) { lo = 0; hi = -1; return; }
+            int half = _windowSize / 2;
+            lo = Mathf.Clamp(pos - half, 0, n - 1);
+            hi = Mathf.Clamp(pos + half, 0, n - 1);
+        }
+
+        /// <summary>Drops cached contents outside the current window — the
+        /// half of "sliding": memory stays bounded at ~window size.</summary>
+        void EvictOutsideWindow()
+        {
+            if (_cache == null || _shown < 0) return;
+            WindowBounds(_shown, out int lo, out int hi);
+            for (int i = 0; i < _cache.Length; i++)
+                if ((i < lo || i > hi) && _cache[i] != null)
+                    _cache[i] = null;
+        }
 
         void StartLoad()
         {
@@ -179,7 +247,7 @@ namespace ADKOM.TextEditor
             System.Threading.Tasks.Task.Run(() =>
             {
                 List<GitService.LogEntry> hist = null;
-                try { if (GitService.GitAvailable) hist = GitService.FileHistory(path, 400); }
+                try { if (GitService.GitAvailable) hist = GitService.FileHistory(path, int.MaxValue); }
                 catch (System.Exception) { }
                 ctx.Post(_ =>
                 {
@@ -197,29 +265,54 @@ namespace ADKOM.TextEditor
                     _slider.SetEnabled(true);
                     _shown = hist.Count; // the shown tab buffer is now the LAST position
                     UpdateHeader(_shown);
-                    Prefetch(path, hist, ctx);
+                    _pauseTimer?.ExecuteLater(PauseMs); // fill the newest window
                 }, null);
             });
         }
 
-        /// <summary>Fetches every revision's content newest-first (the user
-        /// starts at the right end), posting each into the cache; a slider
-        /// position that outran the prefetch renders as soon as its content
-        /// lands.</summary>
-        void Prefetch(string path, List<GitService.LogEntry> hist, System.Threading.SynchronizationContext ctx)
+        /// <summary>Pause-time prefetch: fetches the window's missing
+        /// revisions nearest-to-the-slider first, expanding outward. Runs
+        /// only after the slider has rested; any further movement (or a
+        /// window-size change) bumps the generation and the loop stops.</summary>
+        void PrefetchWindow()
         {
+            if (_hist == null || _ctx == null) return;
+            EvictOutsideWindow();
+            WindowBounds(_shown, out int lo, out int hi);
+            var missing = new List<int>();
+            int center = Mathf.Clamp(_shown, lo, hi);
+            for (int d = 0; d <= hi - lo; d++) // nearest-first, alternating outward
+            {
+                int a = center - d, b = center + d;
+                if (a >= lo && _cache[a] == null) missing.Add(a);
+                if (b != a && b <= hi && _cache[b] == null) missing.Add(b);
+            }
+            if (missing.Count > 0) FetchIndices(missing, _fetchGen);
+        }
+
+        /// <summary>Background fetch of revision contents in the given
+        /// order. Results land in the cache only while they are still inside
+        /// the current window; a stale generation stops the loop early (the
+        /// slider moved on — a new prefetch or demand fetch has taken over).</summary>
+        void FetchIndices(List<int> indices, int gen)
+        {
+            string path = _filePath;
+            var ctx = _ctx;
             System.Threading.Tasks.Task.Run(() =>
             {
-                for (int i = hist.Count - 1; i >= 0; i--)
+                foreach (int idx in indices)
                 {
+                    if (gen != _fetchGen) return; // benign race: worst case one extra fetch
+                    if (_cache != null && _cache[idx] != null) continue;
                     string content = null;
-                    try { content = GitService.ShowFileAt(path, hist[i].Hash); }
+                    try { content = GitService.ShowFileAt(path, _hist[idx].Hash); }
                     catch (System.Exception) { }
                     string norm = Normalize(content ?? "");
-                    int idx = i;
                     ctx.Post(_ =>
                     {
                         if (this == null || _view == null || _view.panel == null || _cache == null) return;
+                        WindowBounds(_shown, out int lo, out int hi);
+                        if (idx < lo || idx > hi) return; // slid away — don't resurrect evicted slots
                         _cache[idx] = norm;
                         if (_pending >= 0 && Ready(_pending))
                         {
@@ -234,9 +327,21 @@ namespace ADKOM.TextEditor
 
         void ShowPosition(int pos)
         {
+            _fetchGen++; // outdate any running fetch loop
+            _pauseTimer?.ExecuteLater(PauseMs); // re-arm the pause prefetch
             if (Ready(pos)) { _pending = -1; Render(pos); return; }
+
+            // Outran the window: fetch just what this position needs, now.
+            // The user pays this wait only when they didn't pause long
+            // enough for the window prefetch to get here.
             _pending = pos;
             _header.text = L10n.Tr("Loading git history…");
+            var need = new List<int>();
+            int n = PosCount();
+            if (pos < n && _cache[pos] == null) need.Add(pos);
+            if (pos > 0 && pos - 1 < n && _cache[pos - 1] == null) need.Add(pos - 1);
+            _shown = pos; // anchor the window here so the demand results are kept
+            if (need.Count > 0) FetchIndices(need, _fetchGen);
         }
 
         void Render(int pos)
@@ -322,6 +427,9 @@ namespace ADKOM.TextEditor
             if (_slider != null && e.target is VisualElement se &&
                 (se == _slider || _slider.Contains(se)))
                 return; // the slider already steps on arrow keys itself
+            if (_sizeField != null && e.target is VisualElement fe &&
+                (fe == _sizeField || _sizeField.Contains(fe)))
+                return; // typing a number must not scrub the timeline
             if (_slider == null || !_slider.enabledSelf) return;
             int target = e.keyCode switch
             {

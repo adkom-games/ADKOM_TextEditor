@@ -1425,6 +1425,18 @@ msgstr "そのファイルのタブは既に閉じられています。"
 msgid "Copied this revision into the file's tab."
 msgstr "このリビジョンをファイルのタブへコピーしました。"
 
+msgid "Window Size"
+msgstr "ウィンドウサイズ"
+
+msgid "How many revisions stay fetched around the slider position; contents outside this sliding window are dropped and re-fetched when needed (5-500). Overrides the Options default for this window only."
+msgstr "スライダー位置の周囲で取得済みのまま保持するリビジョン数。このスライディングウィンドウの外の内容は破棄され、必要時に再取得されます（5-500）。このウィンドウに限りオプションの既定値を上書きします。"
+
+msgid "Time Lapse Window Size"
+msgstr "タイムラプスウィンドウサイズ"
+
+msgid "Default sliding-window size for new Git Time Lapse windows: how many revision contents stay fetched around the slider position (5-500). Each Time Lapse window can override its own copy."
+msgstr "新しい Git タイムラプスウィンドウの既定スライディングウィンドウサイズ: スライダー位置の周囲で取得済みのまま保持するリビジョン数（5-500）。各タイムラプスウィンドウは自身の値を個別に変更できます。"
+
 msgid "Changes"
 msgstr "変更"
 
