@@ -1582,6 +1582,21 @@ namespace ADKOM.TextEditor
                 }
                 else if (c == '[')
                 {
+                    // Image-in-link ([![alt](badge)](target)): alt (target).
+                    if (i + 1 < n && src[i + 1] == '!')
+                    {
+                        var nested = System.Text.RegularExpressions.Regex.Match(src.Substring(i),
+                            @"^\[!\[(?<alt>[^\]]*)\]\([^)]*\)\]\((?<target>[^)\s]+)[^)]*\)");
+                        if (nested.Success)
+                        {
+                            string alt2 = nested.Groups["alt"].Value;
+                            string target2 = nested.Groups["target"].Value;
+                            sb.Append(alt2.Length > 0 ? alt2 : target2);
+                            if (target2.Length > 0 && target2 != alt2) sb.Append(" (").Append(target2).Append(')');
+                            i += nested.Length;
+                            continue;
+                        }
+                    }
                     int close = src.IndexOf(']', i + 1);
                     if (close > i && close + 1 < n && src[close + 1] == '(')
                     {
@@ -1635,9 +1650,15 @@ namespace ADKOM.TextEditor
                         int urlEnd = src.IndexOf(')', close + 2);
                         if (urlEnd > close)
                         {
+                            // Clickable when the image URL is openable — the
+                            // picture itself can't render inline.
+                            string imgUrl = src.Substring(close + 2, urlEnd - close - 2).Split(' ')[0];
+                            bool imgOpen = IsOpenableUrl(imgUrl);
+                            if (imgOpen) sb.Append("<link=\"").Append(imgUrl).Append("\">");
                             sb.Append("<color=").Append(imgColor).Append(">[img] <u>");
                             AppendEscaped(sb, src.Substring(i + 2, close - i - 2));
                             sb.Append("</u></color>");
+                            if (imgOpen) sb.Append("</link>");
                             i = urlEnd + 1;
                             continue;
                         }
@@ -1681,6 +1702,29 @@ namespace ADKOM.TextEditor
                 }
                 else if (c == '[')
                 {
+                    // Image-in-link — [![alt](badge)](target), the README
+                    // badge idiom. The badge cannot render inline, so ALT is
+                    // the link text and TARGET the destination. Without this
+                    // the first ']' found belonged to the nested image and
+                    // the line shredded into raw syntax.
+                    if (i + 1 < n && src[i + 1] == '!')
+                    {
+                        var nested = System.Text.RegularExpressions.Regex.Match(src.Substring(i),
+                            @"^\[!\[(?<alt>[^\]]*)\]\([^)]*\)\]\((?<target>[^)\s]+)[^)]*\)");
+                        if (nested.Success)
+                        {
+                            string target = nested.Groups["target"].Value;
+                            string alt = nested.Groups["alt"].Value;
+                            bool openable = IsOpenableUrl(target);
+                            if (openable) sb.Append("<link=\"").Append(target).Append("\">");
+                            sb.Append("<color=").Append(linkColor).Append("><u>");
+                            AppendEscaped(sb, alt.Length > 0 ? alt : target);
+                            sb.Append("</u></color>");
+                            if (openable) sb.Append("</link>");
+                            i += nested.Length;
+                            continue;
+                        }
+                    }
                     int close = src.IndexOf(']', i + 1);
                     if (close > i && close + 1 < n && src[close + 1] == '(')
                     {
