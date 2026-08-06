@@ -489,7 +489,7 @@ namespace ADKOM.TextEditor
             m.AddItem(new GUIContent(root + L10n.Tr("Blame Current File")), false,
                 () => owner.GitBlameFor(path, name));
             m.AddItem(new GUIContent(root + L10n.Tr("File History...")), false,
-                () => owner.GitFileHistoryFor(path, name, _list));
+                () => owner.GitFileHistoryFor(path, name));
             m.AddItem(new GUIContent(root + L10n.Tr("Time Lapse Current File...")), false,
                 () => owner.GitTimeLapseFor(path, name));
         }

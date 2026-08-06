@@ -91,18 +91,20 @@ namespace ADKOM.TextEditor
             });
         }
 
-        /// <summary>Pops the active file's commit history; picking a commit
-        /// opens that revision as a read-only virtual tab.</summary>
+        /// <summary>Opens the active file's commit history as a focused
+        /// read-only virtual tab.</summary>
         internal void GitFileHistory()
         {
             if (!HasDocs || !Active.HasFile) return;
-            GitFileHistoryFor(Active.FilePath, Active.DisplayName, null);
+            GitFileHistoryFor(Active.FilePath, Active.DisplayName);
         }
 
-        /// <summary>File history dropdown for any file; <paramref
-        /// name="anchor"/> hosts the dropdown (an auxiliary view's element),
-        /// null = the main editor's code view.</summary>
-        internal void GitFileHistoryFor(string path, string name, UnityEngine.UIElements.VisualElement anchor)
+        /// <summary>File history for any file, opened as a focused virtual
+        /// tab titled "History <name>" — one "hash date author subject"
+        /// line per commit, newest first. (This replaced a transient
+        /// dropdown popup: a tab persists, scrolls, and can be searched or
+        /// copied from.)</summary>
+        internal void GitFileHistoryFor(string path, string name)
         {
             var ctx = _mainCtx;
             PostStatus(L10n.Tr("Reading history…"));
@@ -120,29 +122,17 @@ namespace ADKOM.TextEditor
                         return;
                     }
                     PostStatus("");
-                    // GenericMenu.ShowAsContext needs Event.current, which a
-                    // posted (async) continuation never has — Unity dropped
-                    // the menu silently, making File History look dead. The
-                    // UIToolkit GenericDropdownMenu anchors in panel space
-                    // and works from any context.
-                    var menu = new UnityEngine.UIElements.GenericDropdownMenu();
+                    int authorW = System.Math.Min(18, hist.Max(h => (h.Author ?? "").Length));
+                    var sb = new System.Text.StringBuilder(hist.Count * 96);
+                    sb.Append(path).Append('\n').Append('\n');
                     foreach (var e in hist)
                     {
-                        var entry = e;
-                        string subj = entry.Subject.Length > 60 ? entry.Subject.Substring(0, 57) + "..." : entry.Subject;
-                        menu.AddItem(entry.Date + "  " + entry.Hash + "  " + subj,
-                            false, () => OpenRevision(path, name, entry.Hash));
+                        string author = (e.Author ?? "").PadRight(authorW);
+                        if (author.Length > authorW) author = author.Substring(0, authorW);
+                        sb.Append(e.Hash).Append("  ").Append(e.Date).Append("  ")
+                          .Append(author).Append("  ").Append(e.Subject).Append('\n');
                     }
-                    var host = anchor != null && anchor.panel != null ? anchor : _code;
-                    var cb = host.worldBound;
-#if UNITY_6000_3_OR_NEWER
-                    menu.DropDown(new Rect(cb.x + 24, cb.y + 8, 420, 0), host,
-                        UnityEngine.UIElements.DropdownMenuSizeMode.Fixed);
-#else
-                    // DropdownMenuSizeMode is 6000.3+; anchored=true likewise
-                    // sizes the menu to the given rect's width.
-                    menu.DropDown(new Rect(cb.x + 24, cb.y + 8, 420, 0), host, true);
-#endif
+                    OpenVirtualDoc(string.Format(L10n.Tr("History {0}"), name), sb.ToString(), csharp: false);
                 }, null);
             });
         }
@@ -203,23 +193,6 @@ namespace ADKOM.TextEditor
             return true;
         }
 
-        void OpenRevision(string path, string name, string hash)
-        {
-            var ctx = _mainCtx;
-            System.Threading.Tasks.Task.Run(() =>
-            {
-                string content = null;
-                try { content = GitService.ShowFileAt(path, hash); }
-                catch (System.Exception) { }
-                ctx.Post(_ =>
-                {
-                    if (this == null) return;
-                    if (content == null) { PostStatus(L10n.Tr("Could not read that revision.")); return; }
-                    OpenVirtualDoc(name + " @ " + hash, content,
-                        csharp: path.EndsWith(".cs", System.StringComparison.OrdinalIgnoreCase));
-                }, null);
-            });
-        }
     }
 }
 #endif

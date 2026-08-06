@@ -1383,9 +1383,6 @@ msgstr "히스토리를 읽는 중…"
 msgid "No history available (not in a git repository?)."
 msgstr "히스토리를 사용할 수 없습니다(git 리포지토리가 아닌가요?)."
 
-msgid "Could not read that revision."
-msgstr "해당 리비전을 읽을 수 없습니다."
-
 msgid "Time Lapse Current File..."
 msgstr "현재 파일 타임랩스..."
 
@@ -1541,6 +1538,21 @@ msgstr "스테이지"
 
 msgid "Unstage"
 msgstr "스테이지 해제"
+
+msgid "History {0}"
+msgstr "기록 {0}"
+
+msgid "Discard Changes..."
+msgstr "변경 사항 버리기..."
+
+msgid "Discard Changes"
+msgstr "변경 사항 버리기"
+
+msgid "Discard the working-tree changes to {0}? This cannot be undone."
+msgstr "{0}의 작업 트리 변경 사항을 버리시겠습니까? 이 작업은 되돌릴 수 없습니다."
+
+msgid "Discard"
+msgstr "버리기"
 
 msgid "How many revisions stay fetched around the slider position; contents outside this sliding window are dropped and re-fetched when needed (5-500). Overrides the Options default for this window only."
 msgstr "슬라이더 위치 주변에 가져온 상태로 유지할 리비전 수입니다. 이 슬라이딩 윈도우 밖의 내용은 버려지고 필요할 때 다시 가져옵니다(5-500). 이 창에 한해 옵션의 기본값을 재정의합니다."

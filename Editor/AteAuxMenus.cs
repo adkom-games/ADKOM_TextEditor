@@ -66,7 +66,7 @@ namespace ADKOM.TextEditor
                 m.AddItem(new GUIContent(gitRoot + L10n.Tr("Blame Current File")), false,
                     () => owner.GitBlameFor(path, name));
                 m.AddItem(new GUIContent(gitRoot + L10n.Tr("File History...")), false,
-                    () => owner.GitFileHistoryFor(path, name, view));
+                    () => owner.GitFileHistoryFor(path, name));
                 if ((prune & Prune.TimeLapse) == 0)
                     m.AddItem(new GUIContent(gitRoot + L10n.Tr("Time Lapse Current File...")), false,
                         () => owner.GitTimeLapseFor(path, name));
