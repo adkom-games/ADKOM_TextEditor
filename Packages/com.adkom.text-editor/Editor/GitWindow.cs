@@ -915,11 +915,23 @@ namespace ADKOM.TextEditor
                 }
                 else if (node.Refs.Count > 0)
                 {
+                    // Clickable like the vertical layout's labels: select and
+                    // inspect the commit, context/double-click for the menu.
                     var lbl = new Label(string.Join(",", node.Refs))
                     {
+                        tooltip = node.Hash + "  " + node.Date + "  " + node.Author + "\n" + node.Subject,
                         style = { position = Position.Absolute, left = p.x - 12, top = 16 + (maxLane + 1) * LaneGap + 4,
                                   rotate = new Rotate(45), color = new Color(0.55f, 0.85f, 0.6f), whiteSpace = WhiteSpace.NoWrap }
                     };
+                    lbl.RegisterCallback<PointerDownEvent>(e =>
+                    {
+                        _selectedHash = node.Hash;
+                        UpdateSelectionStatus();
+                        RebuildGraph();
+                        InspectCommit(node.Hash);
+                        if (e.button == 1 || e.clickCount >= 2) NodeMenu(node);
+                        e.StopPropagation();
+                    });
                     _graphCanvas.Add(lbl);
                 }
             }
