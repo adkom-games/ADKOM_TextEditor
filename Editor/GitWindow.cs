@@ -28,6 +28,11 @@ namespace ADKOM.TextEditor
         Label _header, _status;
         ScrollView _changes;
         TextField _commitMsg;
+        Button _selectBtn;      // bulk checkbox (staging) menu
+        TextField _filterField; // substring filter over the file list
+        [System.NonSerialized] string _filterText = "";
+        [System.NonSerialized] string _lastNameStatus; // inspected commit's file rows, for re-filtering
+        TextField _giDate, _giHash, _giAuthor, _giTitle; // inspected-commit meta, read-only
         Button _commitBtn, _pushBtn, _orientBtn;
         Label _changesTitle;
         Button _backBtn;
@@ -161,18 +166,74 @@ namespace ADKOM.TextEditor
             // ellipsis — a "Commit <hash>" title must never overflow into
             // the file list below.
             var changesHeader = new VisualElement { style = { flexDirection = FlexDirection.Row, alignItems = Align.Center, flexShrink = 0 } };
-            _changesTitle = new Label(L10n.Tr("Changes")) { style = { unityFontStyleAndWeight = FontStyle.Bold, flexGrow = 1,
+            _changesTitle = new Label(L10n.Tr("Changes")) { style = { unityFontStyleAndWeight = FontStyle.Bold, flexShrink = 1,
                 whiteSpace = WhiteSpace.NoWrap, overflow = Overflow.Hidden, textOverflow = TextOverflow.Ellipsis } };
             _backBtn = new Button(LeaveInspect) { text = L10n.Tr("Working Tree"),
                 tooltip = L10n.Tr("Back to the working-tree changes."),
                 style = { display = DisplayStyle.None } };
             changesHeader.Add(_changesTitle);
+            _selectBtn = new Button { text = L10n.Tr("Select") + " ▾",
+                tooltip = L10n.Tr("Change which files are checked (staged) in one step."),
+                style = { flexShrink = 0, marginLeft = 4 } };
+            _selectBtn.clicked += ShowSelectMenu;
+            changesHeader.Add(_selectBtn);
+            // Filter sits right-aligned in the header; the spacer soaks up
+            // the middle so a long "Commit <hash>" title still truncates.
+            changesHeader.Add(new VisualElement { style = { flexGrow = 1 } });
+            changesHeader.Add(new Label(L10n.Tr("Filter"))
+            { style = { flexShrink = 0, marginRight = 2, alignSelf = Align.Center },
+              tooltip = L10n.Tr("Show only changed files whose path contains this text.") });
+            _filterField = new TextField
+            { style = { width = 90, flexShrink = 0 },
+              tooltip = L10n.Tr("Show only changed files whose path contains this text.") };
+            _filterField.RegisterValueChangedCallback(e =>
+            {
+                _filterText = e.newValue ?? "";
+                if (_inspectHash == null) RebuildChanges();
+                else if (_lastNameStatus != null) RebuildCommitFiles(_lastNameStatus);
+            });
+            changesHeader.Add(_filterField);
             changesHeader.Add(_backBtn);
             left.Add(changesHeader);
             _changes = new ScrollView(ScrollViewMode.Vertical) { style = { flexGrow = 1 } };
             left.Add(_changes);
+
+            // Inspected-commit meta (date / hash / author / title) in
+            // read-only fields, mirroring the Time Lapse window; hidden
+            // while the working tree is shown.
+            var giMeta = new VisualElement { style = { flexDirection = FlexDirection.Row, flexShrink = 0, marginTop = 2 } };
+            _giDate = new TextField
+            {
+                isReadOnly = true,
+                tooltip = L10n.Tr("The shown revision's commit date. Read-only."),
+                style = { fontSize = 11, width = 92, flexShrink = 0, display = DisplayStyle.None }
+            };
+            giMeta.Add(_giDate);
+            _giHash = new TextField
+            {
+                isReadOnly = true,
+                tooltip = L10n.Tr("The shown revision's short commit hash. Read-only."),
+                style = { fontSize = 11, width = 78, flexShrink = 0, display = DisplayStyle.None }
+            };
+            giMeta.Add(_giHash);
+            _giAuthor = new TextField
+            {
+                isReadOnly = true,
+                tooltip = L10n.Tr("The shown revision's author. Read-only."),
+                style = { fontSize = 11, flexGrow = 1, display = DisplayStyle.None }
+            };
+            giMeta.Add(_giAuthor);
+            left.Add(giMeta);
+            _giTitle = new TextField
+            {
+                isReadOnly = true,
+                tooltip = L10n.Tr("The shown revision's commit title (subject line). Read-only; the text can be selected and copied."),
+                style = { fontSize = 11, flexShrink = 0, display = DisplayStyle.None }
+            };
+            left.Add(_giTitle);
+
             left.Add(new Label(L10n.Tr("Commit message")) { style = { marginTop = 4 } });
-            _commitMsg = new TextField { multiline = true, style = { height = 56 },
+            _commitMsg = new TextField { multiline = true, style = { height = 56, fontSize = 11 },
                 tooltip = L10n.Tr("The message for the next commit.") };
             // Long messages (multi-paragraph bodies, inspected commits) need
             // to scroll inside the fixed-height box.
@@ -257,12 +318,33 @@ namespace ADKOM.TextEditor
 
         // ---- Changes / stage / commit / push ----
 
+        bool PassesFilter(string path) =>
+            string.IsNullOrEmpty(_filterText) ||
+            path.IndexOf(_filterText, System.StringComparison.OrdinalIgnoreCase) >= 0;
+
+        /// <summary>Status-letter tint: green added/untracked, amber
+        /// modified, red deleted, blue renamed/copied — the git gutter
+        /// palette, so the letters read the same as the code view marks.</summary>
+        static Color StateColor(string state)
+        {
+            char c = state.Length > 0 ? state[0] : ' ';
+            switch (c)
+            {
+                case 'A': case '?': return new Color(0.35f, 0.75f, 0.4f);
+                case 'M': case 'U': return new Color(0.85f, 0.65f, 0.2f);
+                case 'D': return new Color(0.9f, 0.35f, 0.3f);
+                case 'R': case 'C': return new Color(0.45f, 0.65f, 0.9f);
+                default: return new Color(0.7f, 0.7f, 0.7f);
+            }
+        }
+
         void RebuildChanges()
         {
             _changes.Clear();
             foreach (var e in _entries)
             {
                 var entry = e;
+                if (!PassesFilter(entry.Path)) continue;
                 var row = new VisualElement { style = { flexDirection = FlexDirection.Row, alignItems = Align.Center } };
                 bool staged = entry.Index != ' ' && entry.Index != '?';
                 var t = new Toggle { value = staged, tooltip = L10n.Tr("Staged for commit") };
@@ -271,7 +353,7 @@ namespace ADKOM.TextEditor
                     : "restore --staged -- \"" + entry.Path + "\""));
                 row.Add(t);
                 string state = ("" + entry.Index + entry.Work).Trim();
-                row.Add(new Label(state) { style = { width = 24, opacity = 0.7f } });
+                row.Add(new Label(state) { style = { width = 24, color = StateColor(state) } });
                 var lbl = new Label(entry.Path) { style = { overflow = Overflow.Hidden, whiteSpace = WhiteSpace.NoWrap } };
                 lbl.tooltip = entry.Path + "\n" + L10n.Tr("Double-click: diff against the previous version (HEAD).");
                 lbl.RegisterCallback<PointerDownEvent>(ev =>
@@ -279,8 +361,102 @@ namespace ADKOM.TextEditor
                     if (ev.clickCount >= 2) DiffWorkingEntry(entry);
                 });
                 row.Add(lbl);
+                row.RegisterCallback<MouseUpEvent>(ev =>
+                {
+                    if (ev.button != 1) return;
+                    ev.StopPropagation();
+                    ShowEntryMenu(entry.Path, staged, () => DiffWorkingEntry(entry));
+                });
                 _changes.Add(row);
             }
+        }
+
+        /// <summary>Context menu for a file row — working tree and inspected
+        /// commits alike: diff, open, reveal, stage/unstage (working tree
+        /// only), and the Git submenu incl. Time Lapse. Git Panel itself is
+        /// pruned: this IS the Git Panel.</summary>
+        void ShowEntryMenu(string relPath, bool? staged, System.Action diff)
+        {
+            var m = new GenericMenu();
+            string full = System.IO.Path.GetFullPath(System.IO.Path.Combine(_root, relPath));
+            string name = System.IO.Path.GetFileName(relPath);
+            bool onDisk = System.IO.File.Exists(full);
+            m.AddItem(new GUIContent(_inspectHash == null
+                ? L10n.Tr("Diff Against Previous Version") : L10n.Tr("Diff Against Parent")), false, () => diff());
+            if (onDisk)
+            {
+                m.AddItem(new GUIContent(L10n.Tr("Open in Text Editor")), false,
+                    () => TextEditorWindow.OpenExternal(full, 1, 1));
+                m.AddItem(new GUIContent(L10n.Tr("Show in File Explorer")), false,
+                    () => EditorUtility.RevealInFinder(full));
+            }
+            if (staged != null)
+            {
+                m.AddSeparator("");
+                if (staged.Value)
+                    m.AddItem(new GUIContent(L10n.Tr("Unstage")), false,
+                        () => RunGit("restore --staged -- \"" + relPath + "\""));
+                else
+                    m.AddItem(new GUIContent(L10n.Tr("Stage")), false,
+                        () => RunGit("add -- \"" + relPath + "\""));
+            }
+            if (onDisk && _owner != null)
+            {
+                m.AddSeparator("");
+                string gitRoot = L10n.Tr("Git") + "/";
+                m.AddItem(new GUIContent(gitRoot + L10n.Tr("Blame Current File")), false,
+                    () => _owner.GitBlameFor(full, name));
+                m.AddItem(new GUIContent(gitRoot + L10n.Tr("File History...")), false,
+                    () => _owner.GitFileHistoryFor(full, name, _changes));
+                m.AddItem(new GUIContent(gitRoot + L10n.Tr("Time Lapse Current File...")), false,
+                    () => _owner.GitTimeLapseFor(full, name));
+            }
+            m.ShowAsContext();
+        }
+
+        /// <summary>The Select ▾ menu: sets the staging checkboxes of the
+        /// currently FILTERED working-tree rows in one step.</summary>
+        void ShowSelectMenu()
+        {
+            if (_inspectHash != null) return;
+            var visible = _entries.Where(e => PassesFilter(e.Path)).ToList();
+            var m = new GenericMenu();
+            void Item(string label, System.Func<GitService.StatusEntry, bool> want)
+            {
+                m.AddItem(new GUIContent(label), false, () =>
+                {
+                    var stage = new List<string>();
+                    var unstage = new List<string>();
+                    foreach (var e in visible)
+                    {
+                        bool staged = e.Index != ' ' && e.Index != '?';
+                        bool target = want(e);
+                        if (target && !staged) stage.Add(e.Path);
+                        else if (!target && staged) unstage.Add(e.Path);
+                    }
+                    string q(List<string> l) => string.Join(" ", l.Select(p => "\"" + p + "\""));
+                    if (stage.Count > 0 && unstage.Count > 0)
+                        RunGit("add -- " + q(stage), () => RunGit("restore --staged -- " + q(unstage)));
+                    else if (stage.Count > 0) RunGit("add -- " + q(stage));
+                    else if (unstage.Count > 0) RunGit("restore --staged -- " + q(unstage));
+                });
+            }
+            bool Untracked(GitService.StatusEntry e) => e.Index == '?' || e.Work == '?';
+            bool Modified(GitService.StatusEntry e) => e.Index == 'M' || e.Work == 'M';
+            bool Added(GitService.StatusEntry e) => e.Index == 'A' || e.Work == 'A';
+            bool Deleted(GitService.StatusEntry e) => e.Index == 'D' || e.Work == 'D';
+            bool Renamed(GitService.StatusEntry e) => e.Index == 'R' || e.Work == 'R';
+            Item(L10n.Tr("Select All"), _ => true);
+            Item(L10n.Tr("Select None"), _ => false);
+            m.AddSeparator("");
+            Item(L10n.Tr("Select Modified"), Modified);
+            Item(L10n.Tr("Select Untracked"), Untracked);
+            Item(L10n.Tr("Select Added"), Added);
+            Item(L10n.Tr("Select Deleted"), Deleted);
+            Item(L10n.Tr("Select Renamed"), Renamed);
+            m.AddSeparator("");
+            Item(L10n.Tr("Invert Selection"), e => !(e.Index != ' ' && e.Index != '?'));
+            m.ShowAsContext();
         }
 
         void RunGit(string args, System.Action after = null)
@@ -343,11 +519,12 @@ namespace ADKOM.TextEditor
             var ctx = _ctx;
             System.Threading.Tasks.Task.Run(() =>
             {
-                string files = null, msg = null, head = null;
+                string files = null, msg = null, head = null, meta = null;
                 try
                 {
                     GitService.Run(rootDir, "show --name-status --format= " + hash, out files, out _);
                     GitService.Run(rootDir, "log -1 --format=%B " + hash, out msg, out _);
+                    GitService.Run(rootDir, "log -1 --date=short --format=%h%x01%an%x01%ad%x01%s " + hash, out meta, out _);
                     GitService.Run(rootDir, "rev-parse HEAD", out head, out _);
                 }
                 catch (System.Exception) { }
@@ -360,6 +537,14 @@ namespace ADKOM.TextEditor
                         (head.StartsWith(hash) || hash.StartsWith(head));
                     _inspectOriginalMsg = (msg ?? "").TrimEnd('\n', '\r');
                     _commitMsg.value = _inspectOriginalMsg;
+                    // Meta fields (date / hash / author / title), same as
+                    // the Time Lapse window's read-only info block.
+                    var mp = (meta ?? "").Trim().Split('\u0001');
+                    _giHash.SetValueWithoutNotify(mp.Length > 0 ? mp[0] : hash);
+                    _giAuthor.SetValueWithoutNotify(mp.Length > 1 ? mp[1] : "");
+                    _giDate.SetValueWithoutNotify(mp.Length > 2 ? mp[2] : "");
+                    _giTitle.SetValueWithoutNotify(mp.Length > 3 ? mp[3] : "");
+                    SetInspectMetaVisible(true);
                     RebuildCommitFiles(files ?? "");
                     UpdateActionButtons();
                 }, null);
@@ -370,17 +555,20 @@ namespace ADKOM.TextEditor
         /// renames arrive as "R100\told\tnew" — show the new path.</summary>
         void RebuildCommitFiles(string nameStatus)
         {
+            _lastNameStatus = nameStatus; // filter edits re-run this
             _changes.Clear();
             _changesTitle.text = string.Format(L10n.Tr("Commit {0}"), _inspectHash);
             _backBtn.style.display = DisplayStyle.Flex;
+            _selectBtn.style.display = DisplayStyle.None; // staging is working-tree-only
             foreach (var raw in nameStatus.Split('\n'))
             {
                 string line = raw.Trim();
                 if (line.Length == 0) continue;
                 var parts = line.Split('\t');
                 string state = parts[0], path = parts[parts.Length - 1];
+                if (!PassesFilter(path)) continue;
                 var row = new VisualElement { style = { flexDirection = FlexDirection.Row, alignItems = Align.Center } };
-                row.Add(new Label(state) { style = { width = 32, opacity = 0.7f } });
+                row.Add(new Label(state) { style = { width = 32, color = StateColor(state) } });
                 var lbl = new Label(path) { style = { overflow = Overflow.Hidden, whiteSpace = WhiteSpace.NoWrap } };
                 lbl.tooltip = path + "\n" + L10n.Tr("Double-click: diff this commit's version against its parent.");
                 string p = path;
@@ -390,8 +578,23 @@ namespace ADKOM.TextEditor
                     if (ev.clickCount >= 2) DiffCommitEntry(p, hash);
                 });
                 row.Add(lbl);
+                row.RegisterCallback<MouseUpEvent>(ev =>
+                {
+                    if (ev.button != 1) return;
+                    ev.StopPropagation();
+                    ShowEntryMenu(p, null, () => DiffCommitEntry(p, hash));
+                });
                 _changes.Add(row);
             }
+        }
+
+        void SetInspectMetaVisible(bool on)
+        {
+            var d = on ? DisplayStyle.Flex : DisplayStyle.None;
+            _giDate.style.display = d;
+            _giHash.style.display = d;
+            _giAuthor.style.display = d;
+            _giTitle.style.display = d;
         }
 
         /// <summary>Double-click on a working-tree change: diff the previous
@@ -423,8 +626,11 @@ namespace ADKOM.TextEditor
             _inspectHash = null;
             _inspectOriginalMsg = "";
             _inspectIsHead = false;
+            _lastNameStatus = null;
             _changesTitle.text = L10n.Tr("Changes");
             _backBtn.style.display = DisplayStyle.None;
+            _selectBtn.style.display = DisplayStyle.Flex;
+            SetInspectMetaVisible(false);
             _commitMsg.value = _draftMsg ?? ""; // the draft survives an inspect round-trip
             _commitMsg.isReadOnly = false;
             RebuildChanges();
