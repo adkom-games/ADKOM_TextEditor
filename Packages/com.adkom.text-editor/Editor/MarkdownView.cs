@@ -101,7 +101,6 @@ namespace ADKOM.TextEditor
             {
                 if (e.oldRect.size == e.newRect.size) return;
                 _cursorPos.Clear();
-                _lineHeights.Clear();
                 if (HasDocSelection) ApplyDocSelection();
                 else if (_selRects.Count > 0) ClearDrawnSelection();
             });
@@ -514,8 +513,28 @@ namespace ADKOM.TextEditor
             _selOverlay.MarkDirtyRepaint();
         }
 
+        /// <summary>Label-local TOP of the line containing
+        /// <paramref name="charIndex"/>: the previous line's cursor bottom,
+        /// or the content top for the first line. Cursor positions sit at
+        /// each line's BOTTOM, and lines within one label can have DIFFERENT
+        /// heights (rich-text &lt;size&gt; headings render inside 12px body
+        /// labels), so per-line tops must be measured — any per-label line
+        /// height clips the tall lines and pads the short ones.</summary>
+        float LineTopOf(Label l, int charIndex)
+        {
+            float yBottom = CursorPos(l, charIndex).y;
+            int lo = 0, hi = charIndex;
+            while (lo < hi)
+            {
+                int mid = (lo + hi) / 2;
+                if (CursorPos(l, mid).y < yBottom - 0.5f) lo = mid + 1; else hi = mid;
+            }
+            return lo == 0 ? l.contentRect.yMin : CursorPos(l, lo - 1).y;
+        }
+
         /// <summary>Rects for a range with both ends inside one label — a
-        /// single rect on one line, else the usual three-part shape.</summary>
+        /// single rect on one line, else the usual three-part shape. Each
+        /// line's band runs from its measured top to its cursor bottom.</summary>
         void AddRangeRects(Label label, int fromChar, int toChar)
         {
             var sel = label.selection;
@@ -523,15 +542,17 @@ namespace ADKOM.TextEditor
             if (sel == null) { _selRects.Add(box); return; }
             Vector2 pa = label.ChangeCoordinatesTo(_selOverlay, CursorPos(label, fromChar));
             Vector2 pb = label.ChangeCoordinatesTo(_selOverlay, CursorPos(label, toChar));
-            float lh = LineHeight(label);
-            if (Mathf.Abs(pa.y - pb.y) < lh * 0.5f)
+            float yOff = label.ChangeCoordinatesTo(_selOverlay, Vector2.zero).y;
+            float topA = LineTopOf(label, fromChar) + yOff;
+            float topB = LineTopOf(label, toChar) + yOff;
+            if (Mathf.Abs(pa.y - pb.y) < 0.5f) // same line = same cursor bottom
             {
-                _selRects.Add(new Rect(pa.x, pa.y - lh, Mathf.Max(0f, pb.x - pa.x), lh));
+                _selRects.Add(new Rect(pa.x, topA, Mathf.Max(0f, pb.x - pa.x), pa.y - topA));
                 return;
             }
-            _selRects.Add(new Rect(pa.x, pa.y - lh, Mathf.Max(0f, box.xMax - pa.x), lh));
-            if (pb.y - lh > pa.y) _selRects.Add(new Rect(box.x, pa.y, box.width, pb.y - lh - pa.y));
-            _selRects.Add(new Rect(box.x, pb.y - lh, Mathf.Max(0f, pb.x - box.x), lh));
+            _selRects.Add(new Rect(pa.x, topA, Mathf.Max(0f, box.xMax - pa.x), pa.y - topA));
+            if (topB > pa.y) _selRects.Add(new Rect(box.x, pa.y, box.width, topB - pa.y));
+            _selRects.Add(new Rect(box.x, topB, Mathf.Max(0f, pb.x - box.x), pb.y - topB));
         }
 
         /// <summary>Rects for a partially covered label: from
@@ -544,20 +565,19 @@ namespace ADKOM.TextEditor
             if (sel == null) { _selRects.Add(box); return; }
 
             Vector2 at = label.ChangeCoordinatesTo(_selOverlay, CursorPos(label, ch));
-            float lh = LineHeight(label);
-            float lineTop = at.y - lh;
+            float lineTop = LineTopOf(label, ch) + label.ChangeCoordinatesTo(_selOverlay, Vector2.zero).y;
 
             if (toEnd)
             {
                 // Rest of the anchor's line, then everything below it.
-                _selRects.Add(new Rect(at.x, lineTop, Mathf.Max(0f, box.xMax - at.x), lh));
+                _selRects.Add(new Rect(at.x, lineTop, Mathf.Max(0f, box.xMax - at.x), at.y - lineTop));
                 if (box.yMax > at.y) _selRects.Add(new Rect(box.x, at.y, box.width, box.yMax - at.y));
             }
             else
             {
                 // Everything above the focus line, then the start of its line.
                 if (lineTop > box.y) _selRects.Add(new Rect(box.x, box.y, box.width, lineTop - box.y));
-                _selRects.Add(new Rect(box.x, lineTop, Mathf.Max(0f, at.x - box.x), lh));
+                _selRects.Add(new Rect(box.x, lineTop, Mathf.Max(0f, at.x - box.x), at.y - lineTop));
             }
         }
 
@@ -605,40 +625,6 @@ namespace ADKOM.TextEditor
         /// (a segment can mix sizes, so the style's font size alone would be
         /// wrong): the first index whose cursor y differs from index 0's is
         /// the start of line two. Cleared in Render.</summary>
-        readonly Dictionary<Label, float> _lineHeights = new Dictionary<Label, float>();
-
-        float LineHeight(Label label)
-        {
-            if (_lineHeights.TryGetValue(label, out float cached)) return cached;
-            string t = label.text ?? string.Empty;
-            float lh = Mathf.Max(4f, label.resolvedStyle.fontSize * 1.2f);
-            if (label.selection != null && t.Length > 0)
-            {
-                float y0 = CursorPos(label, 0).y;
-                int lo = 0, hi = t.Length;
-                while (lo < hi)
-                {
-                    int mid = (lo + hi) / 2;
-                    if (CursorPos(label, mid).y <= y0 + 0.5f) lo = mid + 1; else hi = mid;
-                }
-                if (lo < t.Length)
-                {
-                    float y1 = CursorPos(label, lo).y;
-                    if (y1 > y0) lh = y1 - y0;
-                }
-                else
-                {
-                    // Single-line label: its content height IS the line
-                    // height. The fontSize*1.2 guess undershoots the larger
-                    // heading fonts (h1-h3), clipping the selection tint.
-                    float ch = label.contentRect.height;
-                    if (ch > lh) lh = ch;
-                }
-            }
-            _lineHeights[label] = lh;
-            return lh;
-        }
-
         /// <summary>True when <paramref name="v"/> sits inside the document
         /// content — as opposed to the scroll bars or the view chrome.</summary>
         bool IsInContent(VisualElement v)
@@ -708,17 +694,16 @@ namespace ADKOM.TextEditor
             if (sel == null || t.Length == 0) return 0;
 
             Vector2 local = l.WorldToLocal(panelPos);
-            // Positions sit on the text baseline, so compare lines with a
-            // tolerance of roughly one line rather than exact equality.
-            float lineTol = Mathf.Max(4f, l.resolvedStyle.fontSize * 0.6f);
-
+            // Cursor positions sit at each line's BOTTOM; the line's band is
+            // [measured top, bottom]. The old fontSize-based tolerance around
+            // the anchor made only a slice of tall (heading) lines hittable.
             int lo = 0, hi = t.Length;
             while (lo < hi)
             {
                 int mid = (lo + hi) / 2;
                 Vector2 p = CursorPos(l, mid);
-                bool beforePoint = p.y < local.y - lineTol
-                                   || (p.y <= local.y + lineTol && p.x < local.x);
+                bool beforePoint = p.y < local.y
+                                   || (LineTopOf(l, mid) <= local.y && p.x < local.x);
                 if (beforePoint) lo = mid + 1; else hi = mid;
             }
             return lo;
@@ -848,8 +833,7 @@ namespace ADKOM.TextEditor
             var c = _scroll.contentContainer;
             c.Clear();
             _selRects.Clear();
-            _lineHeights.Clear();       // the labels they were measured on are gone
-            _cursorPos.Clear();
+            _cursorPos.Clear();         // the labels they were measured on are gone
             c.Add(_selOverlay);         // first child: paints behind the blocks
             _selDragging = false;
             StopEdgeScroll();           // the labels it was scrolling toward are gone
