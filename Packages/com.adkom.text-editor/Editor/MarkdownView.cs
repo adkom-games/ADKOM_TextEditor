@@ -110,8 +110,7 @@ namespace ADKOM.TextEditor
             RegisterCallback<PointerDownLinkTagEvent>(e =>
             {
                 if (!(e.ctrlKey || e.commandKey) || string.IsNullOrEmpty(e.linkID)) return;
-                if (!TextEditorWindow.TryOpenAteLink(e.linkID)) // ate:// opens in ATE
-                    Application.OpenURL(e.linkID);
+                OpenLinkTarget(e.linkID);
                 e.StopPropagation();
             }, TrickleDown.TrickleDown);
             // Link hover tip: a custom floating label at the CURSOR. The
@@ -169,11 +168,10 @@ namespace ADKOM.TextEditor
                 string link = _hoverLink;
                 if (!string.IsNullOrEmpty(link))
                 {
-                    evt.menu.AppendAction(L10n.Tr("Open Link in Browser"), _ =>
-                    {
-                        if (!TextEditorWindow.TryOpenAteLink(link)) // ate:// opens in ATE
-                            Application.OpenURL(link);
-                    });
+                    // Local file links open as ATE tabs; the label says so.
+                    evt.menu.AppendAction(System.IO.File.Exists(link)
+                            ? L10n.Tr("Open in Text Editor") : L10n.Tr("Open Link in Browser"),
+                        _ => OpenLinkTarget(link));
                     evt.menu.AppendAction(L10n.Tr("Copy Link URL"),
                         _ => EditorGUIUtility.systemCopyBuffer = link);
                     evt.menu.AppendSeparator();
@@ -1775,13 +1773,22 @@ namespace ADKOM.TextEditor
                         {
                             string target = nested.Groups["target"].Value;
                             string alt = nested.Groups["alt"].Value;
-                            RegisterLinkTitle(target, nested.Groups["rest"].Value, alt);
                             bool openable = IsOpenableUrl(target);
-                            if (openable) sb.Append("<link=\"").Append(target).Append("\">");
-                            sb.Append("<color=").Append(linkColor).Append("><u>");
-                            AppendEscaped(sb, alt.Length > 0 ? alt : target);
-                            sb.Append("</u></color>");
-                            if (openable) sb.Append("</link>");
+                            if (!openable)
+                            {
+                                string local = ResolveLocalLink(target);
+                                if (local != null) { target = local; openable = true; }
+                            }
+                            if (openable)
+                            {
+                                RegisterLinkTitle(target, nested.Groups["rest"].Value, alt);
+                                sb.Append("<link=\"").Append(target).Append("\">");
+                                sb.Append("<color=").Append(linkColor).Append("><u>");
+                                AppendEscaped(sb, alt.Length > 0 ? alt : target);
+                                sb.Append("</u></color></link>");
+                            }
+                            else
+                                AppendEscaped(sb, alt.Length > 0 ? alt : target);
                             i += nested.Length;
                             continue;
                         }
@@ -1795,13 +1802,26 @@ namespace ADKOM.TextEditor
                             string inside = src.Substring(close + 2, urlEnd - close - 2);
                             string target = inside.Split(' ')[0];
                             string text = src.Substring(i + 1, close - i - 1);
-                            RegisterLinkTitle(target, inside, text);
                             bool openable = IsOpenableUrl(target);
-                            if (openable) sb.Append("<link=\"").Append(target).Append("\">");
-                            sb.Append("<color=").Append(linkColor).Append("><u>");
-                            AppendEscaped(sb, text);
-                            sb.Append("</u></color>");
-                            if (openable) sb.Append("</link>");
+                            if (!openable)
+                            {
+                                // Relative file links open as ATE tabs.
+                                string local = ResolveLocalLink(target);
+                                if (local != null) { target = local; openable = true; }
+                            }
+                            if (openable)
+                            {
+                                RegisterLinkTitle(target, inside, text);
+                                sb.Append("<link=\"").Append(target).Append("\">");
+                                sb.Append("<color=").Append(linkColor).Append("><u>");
+                                AppendEscaped(sb, text);
+                                sb.Append("</u></color></link>");
+                            }
+                            else
+                            {
+                                // Nothing to open — don't dress it as a link.
+                                AppendEscaped(sb, text);
+                            }
                             i = urlEnd + 1;
                             continue;
                         }
@@ -1840,6 +1860,31 @@ namespace ADKOM.TextEditor
             u.StartsWith("https://", StringComparison.Ordinal) ||
             u.StartsWith("mailto:", StringComparison.Ordinal) ||
             u.StartsWith("ate://", StringComparison.Ordinal); // file:line links (security reports) open in ATE
+
+        /// <summary>A relative link target ([text](CHANGELOG.md)) resolved
+        /// against the document's directory — the absolute path when the
+        /// file exists, else null (anchors and dead paths stay null).</summary>
+        string ResolveLocalLink(string target)
+        {
+            if (string.IsNullOrEmpty(target) || string.IsNullOrEmpty(BaseDir)) return null;
+            if (target.StartsWith("#", StringComparison.Ordinal)) return null;
+            try
+            {
+                string full = System.IO.Path.GetFullPath(System.IO.Path.Combine(BaseDir, target));
+                return System.IO.File.Exists(full) ? full : null;
+            }
+            catch (Exception) { return null; }
+        }
+
+        /// <summary>One open path for every link activation (Ctrl+Click and
+        /// the context menu): ate:// opens in ATE, an existing local file
+        /// opens as an ATE tab, everything else goes to the system.</summary>
+        static void OpenLinkTarget(string link)
+        {
+            if (TextEditorWindow.TryOpenAteLink(link)) return;
+            if (System.IO.File.Exists(link)) { TextEditorWindow.OpenExternal(link, 1, 1); return; }
+            Application.OpenURL(link);
+        }
 
         static void AppendEscaped(StringBuilder sb, string s)
         {
