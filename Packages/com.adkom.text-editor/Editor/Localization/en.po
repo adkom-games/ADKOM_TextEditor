@@ -1427,6 +1427,18 @@ msgstr "That file's tab is no longer open."
 msgid "Copied this revision into the file's tab."
 msgstr "Copied this revision into the file's tab."
 
+msgid "Window Size"
+msgstr "Window Size"
+
+msgid "How many revisions stay fetched around the slider position; contents outside this sliding window are dropped and re-fetched when needed (5-500). Overrides the Options default for this window only."
+msgstr "How many revisions stay fetched around the slider position; contents outside this sliding window are dropped and re-fetched when needed (5-500). Overrides the Options default for this window only."
+
+msgid "Time Lapse Window Size"
+msgstr "Time Lapse Window Size"
+
+msgid "Default sliding-window size for new Git Time Lapse windows: how many revision contents stay fetched around the slider position (5-500). Each Time Lapse window can override its own copy."
+msgstr "Default sliding-window size for new Git Time Lapse windows: how many revision contents stay fetched around the slider position (5-500). Each Time Lapse window can override its own copy."
+
 msgid "Changes"
 msgstr "Changes"
 

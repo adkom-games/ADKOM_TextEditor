@@ -1425,6 +1425,18 @@ msgstr "该文件的标签页已关闭。"
 msgid "Copied this revision into the file's tab."
 msgstr "已将此修订版本复制到文件的标签页。"
 
+msgid "Window Size"
+msgstr "窗口大小"
+
+msgid "How many revisions stay fetched around the slider position; contents outside this sliding window are dropped and re-fetched when needed (5-500). Overrides the Options default for this window only."
+msgstr "在滑块位置周围保持已获取状态的修订版本数量；此滑动窗口之外的内容会被丢弃，需要时重新获取（5-500）。仅对此窗口覆盖选项中的默认值。"
+
+msgid "Time Lapse Window Size"
+msgstr "时光回放窗口大小"
+
+msgid "Default sliding-window size for new Git Time Lapse windows: how many revision contents stay fetched around the slider position (5-500). Each Time Lapse window can override its own copy."
+msgstr "新 Git 时光回放窗口的默认滑动窗口大小：在滑块位置周围保持已获取状态的修订版本数量（5-500）。每个时光回放窗口都可以单独覆盖自己的值。"
+
 msgid "Changes"
 msgstr "更改"
 
