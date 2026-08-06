@@ -204,6 +204,7 @@ namespace ADKOM.TextEditor
 
             if (_inSetup) BuildSetup();
             else RunCompare();
+            AteTooltip.Attach(rootVisualElement);
         }
 
         Button HeaderBtn(string text, string tip, Action act)

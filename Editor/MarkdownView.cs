@@ -119,23 +119,7 @@ namespace ADKOM.TextEditor
             // and links live inside tall multi-block segment labels, so the
             // tooltip appeared at the label's bottom edge, far from the
             // pointer.
-            _linkTip = new Label
-            {
-                pickingMode = PickingMode.Ignore,
-                style =
-                {
-                    position = Position.Absolute, display = DisplayStyle.None,
-                    backgroundColor = new Color(0.14f, 0.14f, 0.14f, 0.97f),
-                    color = new Color(0.85f, 0.85f, 0.85f),
-                    borderTopWidth = 1, borderBottomWidth = 1, borderLeftWidth = 1, borderRightWidth = 1,
-                    borderTopColor = new Color(0.5f, 0.5f, 0.5f, 0.5f),
-                    borderBottomColor = new Color(0.5f, 0.5f, 0.5f, 0.5f),
-                    borderLeftColor = new Color(0.5f, 0.5f, 0.5f, 0.5f),
-                    borderRightColor = new Color(0.5f, 0.5f, 0.5f, 0.5f),
-                    paddingLeft = 6, paddingRight = 6, paddingTop = 3, paddingBottom = 3,
-                    fontSize = 11, whiteSpace = WhiteSpace.Normal, maxWidth = 480
-                }
-            };
+            _linkTip = AteTooltip.MakeTip(); // ONE tooltip look across ATE
             Add(_linkTip);
             RegisterCallback<PointerOverLinkTagEvent>(e =>
             {
@@ -638,18 +622,9 @@ namespace ADKOM.TextEditor
 
         Label _linkTip; // cursor-following link tooltip (see BuildUI note)
 
-        /// <summary>Places the link tip just below-right of the pointer,
-        /// pulled back inside the view when it would overflow an edge.</summary>
-        void MoveLinkTip(Vector2 panelPos)
-        {
-            Vector2 local = this.WorldToLocal(panelPos);
-            float x = local.x + 14, y = local.y + 18;
-            float w = _linkTip.resolvedStyle.width, h = _linkTip.resolvedStyle.height;
-            if (!float.IsNaN(w) && w > 0 && x + w > layout.width) x = Mathf.Max(0, layout.width - w - 2);
-            if (!float.IsNaN(h) && h > 0 && y + h > layout.height) y = Mathf.Max(0, local.y - h - 6);
-            _linkTip.style.left = x;
-            _linkTip.style.top = y;
-        }
+        /// <summary>Places the link tip via the shared placement (same
+        /// offsets and edge handling as every other ATE tooltip).</summary>
+        void MoveLinkTip(Vector2 panelPos) => AteTooltip.Place(this, _linkTip, panelPos);
 
         static readonly System.Text.RegularExpressions.Regex TitleRx =
             new System.Text.RegularExpressions.Regex("\"([^\"]*)\"");
