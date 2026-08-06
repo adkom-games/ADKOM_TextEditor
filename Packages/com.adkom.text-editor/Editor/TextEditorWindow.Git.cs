@@ -75,12 +75,12 @@ namespace ADKOM.TextEditor
                         PostStatus(L10n.Tr("No blame available (not in a git repository?)."));
                         return;
                     }
-                    int authorW = System.Math.Min(18, blame.Max(b => (b.Author ?? "").Length));
-                    var sb = new System.Text.StringBuilder(lines.Length * 100);
+                    int authorW = System.Math.Min(44, blame.Max(b => GitService.AuthorWithEmail(b.Author, b.Email).Length));
+                    var sb = new System.Text.StringBuilder(lines.Length * 120);
                     for (int i = 0; i < lines.Length; i++)
                     {
                         var b = i < blame.Count ? blame[i] : default;
-                        string author = (b.Author ?? "").PadRight(authorW);
+                        string author = GitService.AuthorWithEmail(b.Author, b.Email).PadRight(authorW);
                         if (author.Length > authorW) author = author.Substring(0, authorW);
                         sb.Append(b.Hash ?? "????????").Append(' ')
                           .Append(b.Date ?? "????-??-??").Append(' ')
@@ -122,12 +122,12 @@ namespace ADKOM.TextEditor
                         return;
                     }
                     PostStatus("");
-                    int authorW = System.Math.Min(18, hist.Max(h => (h.Author ?? "").Length));
-                    var sb = new System.Text.StringBuilder(hist.Count * 96);
+                    int authorW = System.Math.Min(46, hist.Max(h => GitService.AuthorWithEmail(h.Author, h.Email).Length));
+                    var sb = new System.Text.StringBuilder(hist.Count * 120);
                     sb.Append(path).Append('\n').Append('\n');
                     foreach (var e in hist)
                     {
-                        string author = (e.Author ?? "").PadRight(authorW);
+                        string author = GitService.AuthorWithEmail(e.Author, e.Email).PadRight(authorW);
                         if (author.Length > authorW) author = author.Substring(0, authorW);
                         sb.Append(e.Hash).Append("  ").Append(e.Date).Append("  ")
                           .Append(author).Append("  ").Append(e.Subject).Append('\n');
