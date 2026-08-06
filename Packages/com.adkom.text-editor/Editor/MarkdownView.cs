@@ -207,9 +207,30 @@ namespace ADKOM.TextEditor
             RegisterCallback<PointerDownEvent>(e =>
             {
                 if (!Locked || e.button != 0) return;
+                // Triple-click: select the whole BLOCK (the paragraph) via
+                // the document-selection layer. The native label machinery
+                // never delivered a triple-click line select here, so the
+                // doc layer owns it — and the block is the natural unit in
+                // a rendered view.
+                if (e.clickCount >= 3 && !e.ctrlKey && !e.commandKey &&
+                    IsInContent(e.target as VisualElement))
+                {
+                    int idx = LabelIndexAt(e.position);
+                    if (idx >= 0)
+                    {
+                        ClearDocSelection();
+                        _selAnchor = _selFocus = idx;
+                        _selAnchorChar = 0;
+                        _selFocusChar = (_selLabels[idx].text ?? string.Empty).Length;
+                        ApplyDocSelection();
+                        Focus(); // so Ctrl+C routes through this view
+                        e.StopImmediatePropagation();
+                    }
+                    return;
+                }
                 // Pass through what the labels must handle natively:
-                // Ctrl+Click link opening, and double/triple-click word/line
-                // selection — those engage the label's own machinery.
+                // Ctrl+Click link opening and double-click word selection —
+                // those engage the label's own machinery.
                 if (e.ctrlKey || e.commandKey || e.clickCount > 1) return;
                 // And anything that is not the document itself — a scrollbar
                 // click has to scroll, not clear the selection.
