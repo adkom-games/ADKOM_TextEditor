@@ -1398,9 +1398,6 @@ msgstr "時光回放 {0}"
 msgid "Loading git history…"
 msgstr "正在讀取 git 歷史…"
 
-msgid "The revision shown below, and how the current tab differs from it."
-msgstr "下方顯示的修訂版本，以及目前分頁與它的差異資訊。"
-
 msgid "Drag through the file's git history — oldest commit on the left, the current tab contents on the right."
 msgstr "拖曳以瀏覽檔案的 git 歷史 — 最左側為最早的提交，最右側為目前分頁內容。"
 
@@ -1442,6 +1439,21 @@ msgstr "所示修訂版本的提交標題（主旨行）。唯讀；可以選取
 
 msgid "The shown revision's full commit message. Read-only; the text can be selected and copied."
 msgstr "所示修訂版本的完整提交訊息。唯讀；可以選取並複製文字。"
+
+msgid "The shown position in the timeline: version number / total. The last position is the current tab contents."
+msgstr "時間軸上的顯示位置：版本編號 / 總數。最後一個位置是目前分頁內容。"
+
+msgid "The shown revision's commit date. Read-only."
+msgstr "所示修訂版本的提交日期。唯讀。"
+
+msgid "The shown revision's short commit hash. Read-only."
+msgstr "所示修訂版本的短提交雜湊。唯讀。"
+
+msgid "The shown revision's author. Read-only."
+msgstr "所示修訂版本的作者。唯讀。"
+
+msgid "How many lines the current tab has added/removed against the shown revision."
+msgstr "目前分頁相對所示修訂版本新增/刪除的行數。"
 
 msgid "How many revisions stay fetched around the slider position; contents outside this sliding window are dropped and re-fetched when needed (5-500). Overrides the Options default for this window only."
 msgstr "在滑桿位置周圍保持已擷取狀態的修訂版本數量；此滑動視窗之外的內容會被捨棄，需要時重新擷取（5-500）。僅對此視窗覆寫選項中的預設值。"

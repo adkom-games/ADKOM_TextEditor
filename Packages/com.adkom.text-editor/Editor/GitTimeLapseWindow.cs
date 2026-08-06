@@ -13,9 +13,11 @@ namespace ADKOM.TextEditor
     /// read-only view through every revision in between. Each step paints
     /// the lines that revision introduced (diff-style added/changed tints
     /// plus the git gutter bars — deletions leave only the red gutter stub),
-    /// keeps whatever line was centered in view centered, and the header
-    /// shows the revision's commit info plus how the current tab differs
-    /// from it.
+    /// and keeps whatever line was centered in view centered. A
+    /// version/total readout sits between the step buttons; the revision's
+    /// date, hash, author, title and full commit message fill read-only
+    /// fields below the text area, and the bottom status line shows how the
+    /// current tab differs from the shown revision.
     ///
     /// Revision CONTENTS live in a sliding window around the slider
     /// position: while the slider rests (~400 ms), the window's missing
@@ -46,14 +48,16 @@ namespace ADKOM.TextEditor
         [SerializeField] string _tabText; // the buffer at open time — the slider's right end
         [SerializeField] int _windowSize; // per-window override, seeded from EditorConfig
 
-        Label _header;
         SliderInt _slider;
         Button _prevBtn, _nextBtn;
+        Label _posLabel; // "version/total", between the step buttons
         IntegerField _sizeField;
         CodeView _view;   // the REAL editor view, read-only — syntax colors,
                           // line numbers, wrap, selection/copy all intact
+        TextField _dateField, _hashField, _authorField; // commit meta, read-only
         TextField _titleField; // commit title (subject), read-only
         TextField _msgField;   // full commit message, read-only, 5 lines
+        Label _status;   // bottom-left: tab-vs-revision counts / load state
         Button _copyToTab;
 
         // Revision data: _hist[0] = oldest … _hist[N-1] = newest commit;
@@ -114,14 +118,6 @@ namespace ADKOM.TextEditor
             root.style.paddingTop = 6;
             if (_windowSize <= 0) _windowSize = EditorConfig.TimeLapseWindowSize;
 
-            _header = new Label
-            {
-                text = L10n.Tr("Loading git history…"),
-                tooltip = L10n.Tr("The revision shown below, and how the current tab differs from it."),
-                style = { unityFontStyleAndWeight = FontStyle.Bold, marginBottom = 2 }
-            };
-            root.Add(_header);
-
             var sliderRow = new VisualElement
             { style = { flexDirection = FlexDirection.Row, marginBottom = 2, flexShrink = 0 } };
             sliderRow.Add(new Label(L10n.Tr("Version"))
@@ -145,6 +141,12 @@ namespace ADKOM.TextEditor
             };
             _prevBtn.SetEnabled(false);
             sliderRow.Add(_prevBtn);
+            _posLabel = new Label
+            {
+                tooltip = L10n.Tr("The shown position in the timeline: version number / total. The last position is the current tab contents."),
+                style = { alignSelf = Align.Center, flexShrink = 0, marginLeft = 4, marginRight = 4 }
+            };
+            sliderRow.Add(_posLabel);
             _nextBtn = new Button(() => _slider.value = Mathf.Min(_slider.highValue, _slider.value + 1))
             {
                 text = "▶",
@@ -186,9 +188,36 @@ namespace ADKOM.TextEditor
             frame.Add(_view);
             root.Add(frame);
 
-            // Commit title above the full message, both read-only edit
-            // fields (selectable/copyable), in a smaller font; the message
-            // holds five lines and scrolls beyond that.
+            // Commit meta (date / hash / author) above the title, above the
+            // full message — all read-only edit fields (selectable and
+            // copyable) in a smaller font; the message holds five lines and
+            // scrolls beyond that.
+            var metaRow = new VisualElement
+            { style = { flexDirection = FlexDirection.Row, marginLeft = 4, marginRight = 4,
+                        marginBottom = 2, flexShrink = 0 } };
+            _dateField = new TextField
+            {
+                isReadOnly = true,
+                tooltip = L10n.Tr("The shown revision's commit date. Read-only."),
+                style = { fontSize = 11, width = 100, flexShrink = 0 }
+            };
+            metaRow.Add(_dateField);
+            _hashField = new TextField
+            {
+                isReadOnly = true,
+                tooltip = L10n.Tr("The shown revision's short commit hash. Read-only."),
+                style = { fontSize = 11, width = 90, flexShrink = 0 }
+            };
+            metaRow.Add(_hashField);
+            _authorField = new TextField
+            {
+                isReadOnly = true,
+                tooltip = L10n.Tr("The shown revision's author. Read-only."),
+                style = { fontSize = 11, flexGrow = 1 }
+            };
+            metaRow.Add(_authorField);
+            root.Add(metaRow);
+
             _titleField = new TextField
             {
                 isReadOnly = true,
@@ -208,9 +237,15 @@ namespace ADKOM.TextEditor
 
             var buttons = new VisualElement
             {
-                style = { flexDirection = FlexDirection.Row, justifyContent = Justify.FlexEnd,
-                          marginTop = 2, marginBottom = 6, flexShrink = 0 }
+                style = { flexDirection = FlexDirection.Row, marginTop = 2, marginBottom = 6, flexShrink = 0 }
             };
+            _status = new Label
+            {
+                text = L10n.Tr("Loading git history…"),
+                tooltip = L10n.Tr("How many lines the current tab has added/removed against the shown revision."),
+                style = { alignSelf = Align.Center, flexGrow = 1, unityTextAlign = TextAnchor.MiddleLeft }
+            };
+            buttons.Add(_status);
             _copyToTab = new Button(CopyToTab)
             {
                 text = L10n.Tr("Copy to Tab"),
@@ -236,7 +271,7 @@ namespace ADKOM.TextEditor
             // exists (see AteMainCtx for why not Current).
             _shown = -1;
             Render(PosCount());
-            _header.text = _displayName + "   —   " + L10n.Tr("Loading git history…");
+            _status.text = L10n.Tr("Loading git history…");
             AteMainCtx.WhenReady(c =>
             {
                 if (this == null) return;
@@ -306,7 +341,7 @@ namespace ADKOM.TextEditor
                     if (this == null || _view == null || _view.panel == null) return;
                     if (hist == null || hist.Count == 0)
                     {
-                        _header.text = _displayName + "   —   " + L10n.Tr("No history available (not in a git repository?).");
+                        _status.text = L10n.Tr("No history available (not in a git repository?).");
                         return;
                     }
                     hist.Reverse(); // git log is newest-first; the slider wants oldest on the left
@@ -319,7 +354,7 @@ namespace ADKOM.TextEditor
                     _prevBtn.SetEnabled(true);
                     _nextBtn.SetEnabled(true);
                     _shown = hist.Count; // the shown tab buffer is now the LAST position
-                    UpdateHeader(_shown);
+                    UpdateInfo(_shown);
                     _pauseTimer?.ExecuteLater(PauseMs); // fill the newest window
                 }, null);
             });
@@ -395,7 +430,7 @@ namespace ADKOM.TextEditor
             // The user pays this wait only when they didn't pause long
             // enough for the window prefetch to get here.
             _pending = pos;
-            _header.text = L10n.Tr("Loading git history…");
+            _status.text = L10n.Tr("Loading git history…");
             var need = new List<int>();
             int n = PosCount();
             if (pos < n && _cache[pos] == null) need.Add(pos);
@@ -448,21 +483,25 @@ namespace ADKOM.TextEditor
             _view.ApplyGitMarks(marks);
             if (center >= 0) _view.CenterOnLine(center);
 
-            UpdateHeader(pos);
+            UpdateInfo(pos);
             _copyToTab.SetEnabled(pos < PosCount() && _owner != null);
         }
 
-        /// <summary>Header: commit meta of the shown revision plus
-        /// +added/−removed line counts of the tab buffer against it. The
-        /// commit title and full message go to the read-only fields below
-        /// the text area.</summary>
-        void UpdateHeader(int pos)
+        /// <summary>Reflects the shown position everywhere it appears: the
+        /// version/total label between the step buttons, the commit meta,
+        /// title and message fields below the text area, and the bottom
+        /// status line with the tab-vs-revision +/− counts.</summary>
+        void UpdateInfo(int pos)
         {
+            _posLabel.text = (pos + 1) + "/" + (PosCount() + 1);
             if (pos >= PosCount())
             {
-                _header.text = _displayName + "   —   " + L10n.Tr("Current tab contents");
+                _dateField.SetValueWithoutNotify("");
+                _hashField.SetValueWithoutNotify("");
+                _authorField.SetValueWithoutNotify("");
                 _titleField.SetValueWithoutNotify(L10n.Tr("Current tab contents"));
                 _msgField.SetValueWithoutNotify("");
+                _status.text = L10n.Tr("Current tab contents");
                 return;
             }
             string cur = ContentAt(pos);
@@ -476,11 +515,12 @@ namespace ADKOM.TextEditor
                 }
             }
             var e = _hist[pos];
-            _header.text = (pos + 1) + "/" + (PosCount() + 1) + "   " +
-                e.Date + "  " + e.Hash + "  " + e.Author + "   —   " +
-                string.Format(L10n.Tr("Current tab vs this revision: +{0} −{1}"), add, del);
+            _dateField.SetValueWithoutNotify(e.Date);
+            _hashField.SetValueWithoutNotify(e.Hash);
+            _authorField.SetValueWithoutNotify(e.Author);
             _titleField.SetValueWithoutNotify(e.Subject);
             _msgField.SetValueWithoutNotify(_msgCache?[pos] ?? e.Subject);
+            _status.text = string.Format(L10n.Tr("Current tab vs this revision: +{0} −{1}"), add, del);
         }
 
         static bool Owns(VisualElement owner, IEventHandler target) =>
