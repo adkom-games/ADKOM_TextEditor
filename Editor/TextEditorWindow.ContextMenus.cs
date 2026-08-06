@@ -113,6 +113,10 @@ namespace ADKOM.TextEditor
             AddOrDisable(m, L10n.Tr("Show in File Explorer"), Active.HasFile,
                 () => EditorUtility.RevealInFinder(Path.GetFullPath(Active.FilePath)));
             m.AddSeparator("");
+
+            // --- Git (the same submenu as Tools → Git) ---
+            FillGitMenu(m);
+            m.AddSeparator("");
             m.AddItem(new GUIContent(WithSc("Find...", Dsp("find"))), false, () => FindReplaceWindow.Open(this, FindReplaceWindow.FrTab.Find));
             m.AddItem(new GUIContent(WithSc("Replace...", Dsp("replace"))), false, () => FindReplaceWindow.Open(this, FindReplaceWindow.FrTab.Replace));
             m.AddItem(new GUIContent(WithSc("Goto Line...", Dsp("goto-line"))), false, GotoLineCommand);

@@ -1389,6 +1389,42 @@ msgstr "无法获取历史（不在 git 仓库中？）。"
 msgid "Could not read that revision."
 msgstr "无法读取该修订版本。"
 
+msgid "Time Lapse Current File..."
+msgstr "当前文件时光回放..."
+
+msgid "Time Lapse {0}"
+msgstr "时光回放 {0}"
+
+msgid "Loading git history…"
+msgstr "正在读取 git 历史…"
+
+msgid "The revision shown below, and how the current tab differs from it."
+msgstr "下方显示的修订版本，以及当前标签页与它的差异信息。"
+
+msgid "Drag through the file's git history — oldest commit on the left, the current tab contents on the right."
+msgstr "拖动以浏览文件的 git 历史 — 最左侧为最早的提交，最右侧为当前标签页内容。"
+
+msgid "Read-only view of the file at the selected revision. Text can be selected and copied."
+msgstr "所选修订版本文件的只读视图。可以选择并复制文本。"
+
+msgid "Copy to Tab"
+msgstr "复制到标签页"
+
+msgid "Replace the file's tab contents with this revision. For the active tab this is undoable."
+msgstr "用此修订版本替换该文件标签页的内容。对活动标签页此操作可撤销。"
+
+msgid "Current tab contents"
+msgstr "当前标签页内容"
+
+msgid "Current tab vs this revision: +{0} −{1}"
+msgstr "当前标签页与此修订版本的差异：+{0} −{1}"
+
+msgid "That file's tab is no longer open."
+msgstr "该文件的标签页已关闭。"
+
+msgid "Copied this revision into the file's tab."
+msgstr "已将此修订版本复制到文件的标签页。"
+
 msgid "Changes"
 msgstr "更改"
 

@@ -135,6 +135,45 @@ namespace ADKOM.TextEditor
             });
         }
 
+        /// <summary>Opens a Git Time Lapse window on the active file, seeded
+        /// with the tab buffer as the slider's right end. Multi-instance:
+        /// every call opens its own window.</summary>
+        internal void GitTimeLapseCurrent()
+        {
+            if (!HasDocs || !Active.HasFile || _code == null) return;
+            GitTimeLapseWindow.Open(this, Active.FilePath, Active.DisplayName, _code.value);
+        }
+
+        /// <summary>The main editor's word-wrap setting, for auxiliary views
+        /// that mirror the reading experience.</summary>
+        internal bool WordWrapEnabled => _wordWrap;
+
+        internal TextDocument FindDocByPath(string path)
+        {
+            if (string.IsNullOrEmpty(path)) return null;
+            return _docs.Find(d => d.HasFile && string.Equals(
+                System.IO.Path.GetFullPath(d.FilePath), System.IO.Path.GetFullPath(path),
+                System.StringComparison.OrdinalIgnoreCase));
+        }
+
+        /// <summary>Time Lapse's Copy to Tab: replaces the file's tab buffer
+        /// with <paramref name="content"/> — one undoable Programmatic step
+        /// when that tab is active, a direct model write otherwise.</summary>
+        internal bool GitTimeLapseApply(string path, string content)
+        {
+            var d = FindDocByPath(path);
+            if (d == null)
+            {
+                PostStatus(L10n.Tr("That file's tab is no longer open."));
+                return false;
+            }
+            int end = HasDocs && Active == d && _code != null
+                ? _code.value.Length : (d.Content ?? "").Length;
+            ApiReplaceRange(d, 0, end, content);
+            PostStatus(L10n.Tr("Copied this revision into the file's tab."));
+            return true;
+        }
+
         void OpenRevision(string path, string name, string hash)
         {
             var ctx = _mainCtx;

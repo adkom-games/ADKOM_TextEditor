@@ -148,6 +148,18 @@ namespace ADKOM.TextEditor
             RefreshVisible();
         }
 
+        /// <summary>Inverse of CenterOnLine: the line whose row currently
+        /// sits in the vertical middle of the viewport.</summary>
+        internal int CenterLine()
+        {
+            float viewH = _scroll.contentViewport.layout.height;
+            if (float.IsNaN(viewH) || viewH <= 0) return 0;
+            int row = Mathf.RoundToInt(
+                (_scroll.verticalScroller.value + (viewH - _lineHeight) * 0.5f) / _lineHeight);
+            RowToLineSub(row, out int line, out _);
+            return line;
+        }
+
         /// <summary>Folds or unfolds the region opened on (or containing)
         /// <paramref name="line"/>.</summary>
         internal void ToggleFoldAt(int line)
