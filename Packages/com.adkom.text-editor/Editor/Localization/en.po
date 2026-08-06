@@ -1385,9 +1385,6 @@ msgstr "Reading history…"
 msgid "No history available (not in a git repository?)."
 msgstr "No history available (not in a git repository?)."
 
-msgid "Could not read that revision."
-msgstr "Could not read that revision."
-
 msgid "Time Lapse Current File..."
 msgstr "Time Lapse Current File..."
 
@@ -1543,6 +1540,21 @@ msgstr "Stage"
 
 msgid "Unstage"
 msgstr "Unstage"
+
+msgid "History {0}"
+msgstr "History {0}"
+
+msgid "Discard Changes..."
+msgstr "Discard Changes..."
+
+msgid "Discard Changes"
+msgstr "Discard Changes"
+
+msgid "Discard the working-tree changes to {0}? This cannot be undone."
+msgstr "Discard the working-tree changes to {0}? This cannot be undone."
+
+msgid "Discard"
+msgstr "Discard"
 
 msgid "How many revisions stay fetched around the slider position; contents outside this sliding window are dropped and re-fetched when needed (5-500). Overrides the Options default for this window only."
 msgstr "How many revisions stay fetched around the slider position; contents outside this sliding window are dropped and re-fetched when needed (5-500). Overrides the Options default for this window only."

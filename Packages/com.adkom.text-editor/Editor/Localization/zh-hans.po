@@ -1383,9 +1383,6 @@ msgstr "正在读取历史…"
 msgid "No history available (not in a git repository?)."
 msgstr "无法获取历史（不在 git 仓库中？）。"
 
-msgid "Could not read that revision."
-msgstr "无法读取该修订版本。"
-
 msgid "Time Lapse Current File..."
 msgstr "当前文件时光回放..."
 
@@ -1541,6 +1538,21 @@ msgstr "暂存"
 
 msgid "Unstage"
 msgstr "取消暂存"
+
+msgid "History {0}"
+msgstr "历史 {0}"
+
+msgid "Discard Changes..."
+msgstr "放弃更改..."
+
+msgid "Discard Changes"
+msgstr "放弃更改"
+
+msgid "Discard the working-tree changes to {0}? This cannot be undone."
+msgstr "放弃对 {0} 的工作树更改？此操作无法撤销。"
+
+msgid "Discard"
+msgstr "放弃"
 
 msgid "How many revisions stay fetched around the slider position; contents outside this sliding window are dropped and re-fetched when needed (5-500). Overrides the Options default for this window only."
 msgstr "在滑块位置周围保持已获取状态的修订版本数量；此滑动窗口之外的内容会被丢弃，需要时重新获取（5-500）。仅对此窗口覆盖选项中的默认值。"
