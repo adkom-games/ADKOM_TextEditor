@@ -2,6 +2,11 @@
 
 All notable changes to this package are documented here. Format follows [Keep a Changelog](https://keepachangelog.com); versions follow semver.
 
+## [Unreleased]
+
+### Changed
+- **Git window**: the horizontal branch-history layout now centers vertically in the view instead of hugging the top (recentering live on window resize; the vertical layout is unaffected).
+
 ## [1.1.0] - 2026-08-06
 
 ### Added
