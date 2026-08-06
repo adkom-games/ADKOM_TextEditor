@@ -57,15 +57,28 @@ foreach ($f in Get-ChildItem $pkg -Recurse -Filter link.xml -File |
     $failures += "link.xml (pins assemblies into player builds): $($f.FullName)"
 }
 
-# Every TRACKED package file must have a TRACKED .meta beside it (and every
-# directory implied by tracked files, its folder .meta). git ls-files, not
-# the working tree: Unity generates metas locally in the dev project, which
-# MASKS an uncommitted one — 1.1.1 shipped AteTooltip.cs without its meta,
-# Unity ignored the file in consumers' immutable PackageCache, and every
-# reference failed CS0103. Paths under '~' folders and dotfiles are exempt
-# (invisible to the asset pipeline).
-$tracked = git -C (Split-Path $pkg -Parent | Split-Path -Parent) ls-files -- "Packages/com.adkom.text-editor" |
-    ForEach-Object { $_ -replace '^Packages/com\.adkom\.text-editor/', '' }
+# Every SHIPPED package file must have a shipped .meta beside it (and every
+# directory implied by them, its folder .meta). In a git checkout this walks
+# git ls-files, NOT the working tree: Unity generates metas locally in the
+# dev project, which MASKS an uncommitted one — 1.1.1 shipped AteTooltip.cs
+# without its meta, Unity ignored the file in consumers' immutable
+# PackageCache, and every reference failed CS0103. Outside a repo (CI's
+# assembled store tree) the files ARE the shipped set, so the disk walk is
+# authoritative. Paths under '~' folders and dotfiles are exempt (invisible
+# to the asset pipeline).
+$inRepo = $true
+try { git -C $pkg rev-parse --show-toplevel 2>$null | Out-Null; if ($LASTEXITCODE -ne 0) { $inRepo = $false } }
+catch { $inRepo = $false }
+if ($inRepo) {
+    $prefix = (git -C $pkg rev-parse --show-prefix).Trim().TrimEnd('/')
+    $spec = if ($prefix) { $prefix } else { "." }
+    $tracked = git -C $pkg ls-files -- $spec |
+        ForEach-Object { if ($prefix) { $_.Substring($prefix.Length + 1) } else { $_ } }
+} else {
+    $pkgFull = (Get-Item $pkg).FullName
+    $tracked = Get-ChildItem $pkg -Recurse -File |
+        ForEach-Object { $_.FullName.Substring($pkgFull.Length + 1) -replace '\\', '/' }
+}
 $trackedSet = @{}
 foreach ($t in $tracked) { $trackedSet[$t] = $true }
 $dirSet = @{}
