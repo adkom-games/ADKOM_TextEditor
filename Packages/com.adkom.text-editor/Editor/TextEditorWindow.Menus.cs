@@ -279,12 +279,13 @@ namespace ADKOM.TextEditor
             m.AddItem(new GUIContent(WithSc("Options...", Dsp("settings"))), false, OpenSettingsPage);
         }
 
-        /// <summary>The Git submenu — shared between Tools and the document
-        /// area's right-click context menu, so it stays one list.</summary>
-        void FillGitMenu(GenericMenu m)
+        /// <summary>The Git submenu — shared between Tools, the document
+        /// area's right-click context menu, and the rendered-Markdown menu,
+        /// so it stays one list.</summary>
+        void FillGitMenu(MenuSink m)
         {
             string gitRoot = L10n.Tr("Git") + "/";
-            m.AddItem(new GUIContent(gitRoot + L10n.Tr("Git Panel...")), false, () =>
+            m.Item(gitRoot + L10n.Tr("Git Panel..."), () =>
             {
                 string repo = HasDocs && Active.HasFile
                     ? GitService.RepoRoot(Active.FilePath)
@@ -295,17 +296,19 @@ namespace ADKOM.TextEditor
             bool gitFile = HasDocs && Active != null && Active.HasFile;
             if (gitFile)
             {
-                m.AddItem(new GUIContent(gitRoot + L10n.Tr("Blame Current File")), false, GitBlameCurrent);
-                m.AddItem(new GUIContent(gitRoot + L10n.Tr("File History...")), false, GitFileHistory);
-                m.AddItem(new GUIContent(gitRoot + L10n.Tr("Time Lapse Current File...")), false, GitTimeLapseCurrent);
+                m.Item(gitRoot + L10n.Tr("Blame Current File"), GitBlameCurrent);
+                m.Item(gitRoot + L10n.Tr("File History..."), GitFileHistory);
+                m.Item(gitRoot + L10n.Tr("Time Lapse Current File..."), GitTimeLapseCurrent);
             }
             else
             {
-                m.AddDisabledItem(new GUIContent(gitRoot + L10n.Tr("Blame Current File")));
-                m.AddDisabledItem(new GUIContent(gitRoot + L10n.Tr("File History...")));
-                m.AddDisabledItem(new GUIContent(gitRoot + L10n.Tr("Time Lapse Current File...")));
+                m.Disabled(gitRoot + L10n.Tr("Blame Current File"));
+                m.Disabled(gitRoot + L10n.Tr("File History..."));
+                m.Disabled(gitRoot + L10n.Tr("Time Lapse Current File..."));
             }
         }
+
+        void FillGitMenu(GenericMenu m) => FillGitMenu(new MenuSink(m));
 
         /// <summary>Tools → Addons: entries from the shared addons folder,
         /// grouped by case-insensitive category. Incompatible or broken
