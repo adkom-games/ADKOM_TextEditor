@@ -1496,6 +1496,54 @@ msgstr "Copy Right Side ({0})"
 msgid "Git ({0})"
 msgstr "Git ({0})"
 
+msgid "Select"
+msgstr "Select"
+
+msgid "Change which files are checked (staged) in one step."
+msgstr "Change which files are checked (staged) in one step."
+
+msgid "Select All"
+msgstr "Select All"
+
+msgid "Select None"
+msgstr "Select None"
+
+msgid "Select Modified"
+msgstr "Select Modified"
+
+msgid "Select Untracked"
+msgstr "Select Untracked"
+
+msgid "Select Added"
+msgstr "Select Added"
+
+msgid "Select Deleted"
+msgstr "Select Deleted"
+
+msgid "Select Renamed"
+msgstr "Select Renamed"
+
+msgid "Invert Selection"
+msgstr "Invert Selection"
+
+msgid "Show only changed files whose path contains this text."
+msgstr "Show only changed files whose path contains this text."
+
+msgid "Diff Against Previous Version"
+msgstr "Diff Against Previous Version"
+
+msgid "Diff Against Parent"
+msgstr "Diff Against Parent"
+
+msgid "Open in Text Editor"
+msgstr "Open in Text Editor"
+
+msgid "Stage"
+msgstr "Stage"
+
+msgid "Unstage"
+msgstr "Unstage"
+
 msgid "How many revisions stay fetched around the slider position; contents outside this sliding window are dropped and re-fetched when needed (5-500). Overrides the Options default for this window only."
 msgstr "How many revisions stay fetched around the slider position; contents outside this sliding window are dropped and re-fetched when needed (5-500). Overrides the Options default for this window only."
 
