@@ -318,8 +318,7 @@ namespace ADKOM.TextEditor
                     _entries = entries ?? new List<GitService.StatusEntry>();
                     _nodes = nodes ?? new List<GitService.GraphNode>();
                     _header.text = rootDir + "   —   " + (branch ?? "").Trim();
-                    _status.text = _entries.Count == 0 ? L10n.Tr("Working tree clean.")
-                        : string.Format(L10n.Tr("{0} changed file(s)."), _entries.Count);
+                    UpdateSelectionStatus();
                     if (_inspectHash == null) RebuildChanges(); // keep an open commit inspection
                     RebuildGraph();
                 }, null);
@@ -651,12 +650,38 @@ namespace ADKOM.TextEditor
             AteDiffWindow.OpenTexts(relPath + " @ " + hash + "^", before, relPath + " @ " + hash, after);
         }
 
+        /// <summary>The second title line always mirrors the SELECTION: a
+        /// selected commit shows its identity line, the working-tree /
+        /// HEAD-marker selection shows the changed-file count. Called from
+        /// every selection change and from Refresh, so git operations no
+        /// longer overwrite it with stale working-tree text mid-inspection
+        /// (and label clicks update it like dot clicks always did).</summary>
+        void UpdateSelectionStatus()
+        {
+            if (_selectedHash != null)
+            {
+                var n = _nodes.FirstOrDefault(x => x.Hash == _selectedHash);
+                if (n != null)
+                {
+                    _status.text = n.Hash + "  " + n.Date + "  " + n.Author + "  —  " + n.Subject;
+                    return;
+                }
+            }
+            _status.text = _entries.Count == 0 ? L10n.Tr("Working tree clean.")
+                : string.Format(L10n.Tr("{0} changed file(s)."), _entries.Count);
+        }
+
         void LeaveInspect()
         {
             _inspectHash = null;
             _inspectOriginalMsg = "";
             _inspectIsHead = false;
             _lastNameStatus = null;
+            // Returning to the working tree DESELECTS the commit: the HEAD
+            // marker becomes the active node again, and the status line
+            // (which mirrors the selection) drops back to the change count.
+            _selectedHash = null;
+            UpdateSelectionStatus();
             _changesTitle.text = L10n.Tr("Changes");
             _backBtn.style.display = DisplayStyle.None;
             _selectBtn.style.display = DisplayStyle.Flex;
@@ -665,6 +690,7 @@ namespace ADKOM.TextEditor
             _commitMsg.isReadOnly = false;
             RebuildChanges();
             UpdateActionButtons();
+            RebuildGraph(); // drop the gold selection highlight too
         }
 
         void UpdateActionButtons()
@@ -833,7 +859,7 @@ namespace ADKOM.TextEditor
                 dot.RegisterCallback<PointerDownEvent>(e =>
                 {
                     _selectedHash = node.Hash;
-                    _status.text = node.Hash + "  " + node.Date + "  " + node.Author + "  —  " + node.Subject;
+                    UpdateSelectionStatus();
                     RebuildGraph();
                     InspectCommit(node.Hash);
                     if (e.button == 1 || e.clickCount >= 2) NodeMenu(node);
@@ -861,6 +887,7 @@ namespace ADKOM.TextEditor
                     lbl.RegisterCallback<PointerDownEvent>(e =>
                     {
                         _selectedHash = node.Hash;
+                        UpdateSelectionStatus();
                         RebuildGraph();
                         InspectCommit(node.Hash);
                         if (e.button == 1 || e.clickCount >= 2) NodeMenu(node);
