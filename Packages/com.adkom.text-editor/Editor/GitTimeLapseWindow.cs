@@ -52,13 +52,16 @@ namespace ADKOM.TextEditor
         IntegerField _sizeField;
         CodeView _view;   // the REAL editor view, read-only — syntax colors,
                           // line numbers, wrap, selection/copy all intact
+        TextField _titleField; // commit title (subject), read-only
+        TextField _msgField;   // full commit message, read-only, 5 lines
         Button _copyToTab;
 
         // Revision data: _hist[0] = oldest … _hist[N-1] = newest commit;
         // slider position N is the tab buffer itself. All rebuilt after a
         // domain reload — a mid-flight fetch must not appear finished.
         [System.NonSerialized] List<GitService.LogEntry> _hist;
-        [System.NonSerialized] string[] _cache;   // only in-window slots are non-null
+        [System.NonSerialized] string[] _cache;    // only in-window slots are non-null
+        [System.NonSerialized] string[] _msgCache; // full commit messages, windowed like _cache
         [System.NonSerialized] bool _loading;
         [System.NonSerialized] int _pending = -1; // slider position waiting for its content
         [System.NonSerialized] int _fetchGen;     // bumped on every move/resize; stale fetch loops stop
@@ -183,6 +186,26 @@ namespace ADKOM.TextEditor
             frame.Add(_view);
             root.Add(frame);
 
+            // Commit title above the full message, both read-only edit
+            // fields (selectable/copyable), in a smaller font; the message
+            // holds five lines and scrolls beyond that.
+            _titleField = new TextField
+            {
+                isReadOnly = true,
+                tooltip = L10n.Tr("The shown revision's commit title (subject line). Read-only; the text can be selected and copied."),
+                style = { fontSize = 11, marginLeft = 4, marginRight = 4, marginBottom = 2, flexShrink = 0 }
+            };
+            root.Add(_titleField);
+            _msgField = new TextField
+            {
+                isReadOnly = true,
+                multiline = true,
+                verticalScrollerVisibility = ScrollerVisibility.Auto,
+                tooltip = L10n.Tr("The shown revision's full commit message. Read-only; the text can be selected and copied."),
+                style = { fontSize = 11, height = 84, marginLeft = 4, marginRight = 4, flexShrink = 0 }
+            };
+            root.Add(_msgField);
+
             var buttons = new VisualElement
             {
                 style = { flexDirection = FlexDirection.Row, justifyContent = Justify.FlexEnd,
@@ -260,8 +283,11 @@ namespace ADKOM.TextEditor
             if (_cache == null || _shown < 0) return;
             WindowBounds(_shown, out int lo, out int hi);
             for (int i = 0; i < _cache.Length; i++)
-                if ((i < lo || i > hi) && _cache[i] != null)
+                if (i < lo || i > hi)
+                {
                     _cache[i] = null;
+                    _msgCache[i] = null;
+                }
         }
 
         void StartLoad()
@@ -286,6 +312,7 @@ namespace ADKOM.TextEditor
                     hist.Reverse(); // git log is newest-first; the slider wants oldest on the left
                     _hist = hist;
                     _cache = new string[hist.Count];
+                    _msgCache = new string[hist.Count];
                     _slider.highValue = hist.Count;
                     _slider.SetValueWithoutNotify(hist.Count);
                     _slider.SetEnabled(true);
@@ -332,8 +359,12 @@ namespace ADKOM.TextEditor
                 {
                     if (gen != _fetchGen) return; // benign race: worst case one extra fetch
                     if (_cache != null && _cache[idx] != null) continue;
-                    string content = null;
-                    try { content = GitService.ShowFileAt(path, _hist[idx].Hash); }
+                    string content = null, message = null;
+                    try
+                    {
+                        content = GitService.ShowFileAt(path, _hist[idx].Hash);
+                        message = GitService.CommitMessage(path, _hist[idx].Hash);
+                    }
                     catch (System.Exception) { }
                     string norm = Normalize(content ?? "");
                     ctx.Post(_ =>
@@ -342,6 +373,7 @@ namespace ADKOM.TextEditor
                         WindowBounds(_shown, out int lo, out int hi);
                         if (idx < lo || idx > hi) return; // slid away — don't resurrect evicted slots
                         _cache[idx] = norm;
+                        _msgCache[idx] = message;
                         if (_pending >= 0 && Ready(_pending))
                         {
                             int p = _pending;
@@ -420,14 +452,17 @@ namespace ADKOM.TextEditor
             _copyToTab.SetEnabled(pos < PosCount() && _owner != null);
         }
 
-        /// <summary>"revision info — how the tab differs from it": commit
-        /// meta of the shown revision plus +added/−removed line counts of
-        /// the tab buffer against it.</summary>
+        /// <summary>Header: commit meta of the shown revision plus
+        /// +added/−removed line counts of the tab buffer against it. The
+        /// commit title and full message go to the read-only fields below
+        /// the text area.</summary>
         void UpdateHeader(int pos)
         {
             if (pos >= PosCount())
             {
                 _header.text = _displayName + "   —   " + L10n.Tr("Current tab contents");
+                _titleField.SetValueWithoutNotify(L10n.Tr("Current tab contents"));
+                _msgField.SetValueWithoutNotify("");
                 return;
             }
             string cur = ContentAt(pos);
@@ -441,23 +476,24 @@ namespace ADKOM.TextEditor
                 }
             }
             var e = _hist[pos];
-            string subj = e.Subject.Length > 60 ? e.Subject.Substring(0, 57) + "..." : e.Subject;
             _header.text = (pos + 1) + "/" + (PosCount() + 1) + "   " +
-                e.Date + "  " + e.Hash + "  " + e.Author + " — " + subj + "   —   " +
+                e.Date + "  " + e.Hash + "  " + e.Author + "   —   " +
                 string.Format(L10n.Tr("Current tab vs this revision: +{0} −{1}"), add, del);
+            _titleField.SetValueWithoutNotify(e.Subject);
+            _msgField.SetValueWithoutNotify(_msgCache?[pos] ?? e.Subject);
         }
+
+        static bool Owns(VisualElement owner, IEventHandler target) =>
+            owner != null && target is VisualElement ve && (ve == owner || owner.Contains(ve));
 
         void OnKey(KeyDownEvent e)
         {
-            if (_view != null && e.target is VisualElement ve &&
-                (ve == _view || _view.Contains(ve)))
-                return; // the view owns its keys while focused
-            if (_slider != null && e.target is VisualElement se &&
-                (se == _slider || _slider.Contains(se)))
-                return; // the slider already steps on arrow keys itself
-            if (_sizeField != null && e.target is VisualElement fe &&
-                (fe == _sizeField || _sizeField.Contains(fe)))
-                return; // typing a number must not scrub the timeline
+            // Controls with their own key handling must not scrub the
+            // timeline: the view's caret, the slider's native arrow steps,
+            // the size field's typing, and selection in the message fields.
+            if (Owns(_view, e.target) || Owns(_slider, e.target) || Owns(_sizeField, e.target) ||
+                Owns(_titleField, e.target) || Owns(_msgField, e.target))
+                return;
             if (_slider == null || !_slider.enabledSelf) return;
             int target = e.keyCode switch
             {

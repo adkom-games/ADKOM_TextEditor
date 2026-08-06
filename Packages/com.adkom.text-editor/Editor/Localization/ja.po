@@ -1437,6 +1437,12 @@ msgstr "前の（より古い）リビジョンへ移動します。"
 msgid "Step to the next (newer) revision."
 msgstr "次の（より新しい）リビジョンへ移動します。"
 
+msgid "The shown revision's commit title (subject line). Read-only; the text can be selected and copied."
+msgstr "表示中のリビジョンのコミットタイトル（件名行）。読み取り専用で、テキストの選択とコピーは可能です。"
+
+msgid "The shown revision's full commit message. Read-only; the text can be selected and copied."
+msgstr "表示中のリビジョンの完全なコミットメッセージ。読み取り専用で、テキストの選択とコピーは可能です。"
+
 msgid "How many revisions stay fetched around the slider position; contents outside this sliding window are dropped and re-fetched when needed (5-500). Overrides the Options default for this window only."
 msgstr "スライダー位置の周囲で取得済みのまま保持するリビジョン数。このスライディングウィンドウの外の内容は破棄され、必要時に再取得されます（5-500）。このウィンドウに限りオプションの既定値を上書きします。"
 
