@@ -118,7 +118,14 @@ namespace ADKOM.TextEditor
             {
                 _hoverLink = e.linkID;
                 if (e.target is TextElement te && !string.IsNullOrEmpty(e.linkID))
-                    te.tooltip = string.Format(L10n.Tr("Ctrl+Click to open {0}"), e.linkID);
+                {
+                    // Destination plus the link's title/alt when the source
+                    // carried one ([text](url "title"), image alts).
+                    string tip = string.Format(L10n.Tr("Ctrl+Click to open {0}"), e.linkID);
+                    if (_linkTitles.TryGetValue(e.linkID, out var title) && !string.IsNullOrEmpty(title))
+                        tip = title + "\n" + tip;
+                    te.tooltip = tip;
+                }
             }, TrickleDown.TrickleDown);
             RegisterCallback<PointerOutLinkTagEvent>(e =>
             {
@@ -591,6 +598,22 @@ namespace ADKOM.TextEditor
         readonly Dictionary<Label, Dictionary<int, Vector2>> _cursorPos =
             new Dictionary<Label, Dictionary<int, Vector2>>();
 
+        /// <summary>URL → title/alt from the markdown source, feeding the
+        /// hover tooltip (destination + description). Rebuilt every Render;
+        /// kept OUTSIDE the link tag so the rich-text parser only ever sees
+        /// a plain URL as the linkID.</summary>
+        readonly Dictionary<string, string> _linkTitles = new Dictionary<string, string>();
+
+        static readonly System.Text.RegularExpressions.Regex TitleRx =
+            new System.Text.RegularExpressions.Regex("\"([^\"]*)\"");
+
+        void RegisterLinkTitle(string url, string inside, string fallback)
+        {
+            var tm = TitleRx.Match(inside ?? "");
+            string title = tm.Success ? tm.Groups[1].Value : fallback;
+            if (!string.IsNullOrEmpty(url) && !string.IsNullOrEmpty(title)) _linkTitles[url] = title;
+        }
+
         Vector2 CursorPos(Label label, int index)
         {
             if (!_cursorPos.TryGetValue(label, out var map))
@@ -834,6 +857,7 @@ namespace ADKOM.TextEditor
             c.Clear();
             _selRects.Clear();
             _cursorPos.Clear();         // the labels they were measured on are gone
+            _linkTitles.Clear();        // re-registered as InlineToRich re-runs
             c.Add(_selOverlay);         // first child: paints behind the blocks
             _selDragging = false;
             StopEdgeScroll();           // the labels it was scrolling toward are gone
@@ -1652,11 +1676,14 @@ namespace ADKOM.TextEditor
                         {
                             // Clickable when the image URL is openable — the
                             // picture itself can't render inline.
-                            string imgUrl = src.Substring(close + 2, urlEnd - close - 2).Split(' ')[0];
+                            string imgInside = src.Substring(close + 2, urlEnd - close - 2);
+                            string imgUrl = imgInside.Split(' ')[0];
+                            string imgAlt = src.Substring(i + 2, close - i - 2);
+                            RegisterLinkTitle(imgUrl, imgInside, imgAlt);
                             bool imgOpen = IsOpenableUrl(imgUrl);
                             if (imgOpen) sb.Append("<link=\"").Append(imgUrl).Append("\">");
                             sb.Append("<color=").Append(imgColor).Append(">[img] <u>");
-                            AppendEscaped(sb, src.Substring(i + 2, close - i - 2));
+                            AppendEscaped(sb, imgAlt);
                             sb.Append("</u></color>");
                             if (imgOpen) sb.Append("</link>");
                             i = urlEnd + 1;
@@ -1710,11 +1737,12 @@ namespace ADKOM.TextEditor
                     if (i + 1 < n && src[i + 1] == '!')
                     {
                         var nested = System.Text.RegularExpressions.Regex.Match(src.Substring(i),
-                            @"^\[!\[(?<alt>[^\]]*)\]\([^)]*\)\]\((?<target>[^)\s]+)[^)]*\)");
+                            @"^\[!\[(?<alt>[^\]]*)\]\([^)]*\)\]\((?<target>[^)\s]+)(?<rest>[^)]*)\)");
                         if (nested.Success)
                         {
                             string target = nested.Groups["target"].Value;
                             string alt = nested.Groups["alt"].Value;
+                            RegisterLinkTitle(target, nested.Groups["rest"].Value, alt);
                             bool openable = IsOpenableUrl(target);
                             if (openable) sb.Append("<link=\"").Append(target).Append("\">");
                             sb.Append("<color=").Append(linkColor).Append("><u>");
@@ -1731,11 +1759,14 @@ namespace ADKOM.TextEditor
                         int urlEnd = src.IndexOf(')', close + 2);
                         if (urlEnd > close)
                         {
-                            string target = src.Substring(close + 2, urlEnd - close - 2).Split(' ')[0];
+                            string inside = src.Substring(close + 2, urlEnd - close - 2);
+                            string target = inside.Split(' ')[0];
+                            string text = src.Substring(i + 1, close - i - 1);
+                            RegisterLinkTitle(target, inside, text);
                             bool openable = IsOpenableUrl(target);
                             if (openable) sb.Append("<link=\"").Append(target).Append("\">");
                             sb.Append("<color=").Append(linkColor).Append("><u>");
-                            AppendEscaped(sb, src.Substring(i + 1, close - i - 1));
+                            AppendEscaped(sb, text);
                             sb.Append("</u></color>");
                             if (openable) sb.Append("</link>");
                             i = urlEnd + 1;
