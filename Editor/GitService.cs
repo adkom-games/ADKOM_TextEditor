@@ -165,7 +165,12 @@ namespace ADKOM.TextEditor
 
         // ---- Blame / history ----
 
-        public struct BlameLine { public string Hash, Author, Date; }
+        public struct BlameLine { public string Hash, Author, Email, Date; }
+
+        /// <summary>Display form used everywhere an author appears:
+        /// "Name &lt;email&gt;" (just the name when no email is known).</summary>
+        public static string AuthorWithEmail(string author, string email) =>
+            string.IsNullOrEmpty(email) ? author ?? "" : (author ?? "") + " <" + email + ">";
 
         /// <summary>Per-line blame (0-based index into the result list).</summary>
         public static List<BlameLine> Blame(string filePath)
@@ -176,10 +181,12 @@ namespace ADKOM.TextEditor
             string rel = RelPath(root, filePath);
             if (Run(root, "blame --line-porcelain -- \"" + rel + "\"", out var o, out _) != 0)
                 return result;
-            string hash = null, author = null, date = null;
+            string hash = null, author = null, email = null, date = null;
             foreach (var line in Lines(o))
             {
                 if (line.StartsWith("author ", StringComparison.Ordinal)) author = line.Substring(7);
+                else if (line.StartsWith("author-mail ", StringComparison.Ordinal))
+                    email = line.Substring(12).Trim('<', '>');
                 else if (line.StartsWith("author-time ", StringComparison.Ordinal))
                 {
                     if (long.TryParse(line.Substring(12), out long t))
@@ -187,7 +194,7 @@ namespace ADKOM.TextEditor
                 }
                 else if (line.StartsWith("\t", StringComparison.Ordinal))
                 {
-                    result.Add(new BlameLine { Hash = hash, Author = author, Date = date });
+                    result.Add(new BlameLine { Hash = hash, Author = author, Email = email, Date = date });
                 }
                 else
                 {
@@ -209,7 +216,7 @@ namespace ADKOM.TextEditor
             return len >= 8;
         }
 
-        public struct LogEntry { public string Hash, Date, Author, Subject; }
+        public struct LogEntry { public string Hash, Date, Author, Email, Subject; }
 
         public static List<LogEntry> FileHistory(string filePath, int max = 100)
         {
@@ -217,14 +224,14 @@ namespace ADKOM.TextEditor
             string root = RepoRoot(filePath);
             if (root == null) return result;
             string rel = RelPath(root, filePath);
-            if (Run(root, "log --follow --date=short --pretty=format:%h%x01%ad%x01%an%x01%s -n "
+            if (Run(root, "log --follow --date=short --pretty=format:%h%x01%ad%x01%an%x01%ae%x01%s -n "
                     + max + " -- \"" + rel + "\"", out var o, out _) != 0)
                 return result;
             foreach (var line in Lines(o))
             {
                 var parts = line.Split('\u0001');
-                if (parts.Length == 4)
-                    result.Add(new LogEntry { Hash = parts[0], Date = parts[1], Author = parts[2], Subject = parts[3] });
+                if (parts.Length == 5)
+                    result.Add(new LogEntry { Hash = parts[0], Date = parts[1], Author = parts[2], Email = parts[3], Subject = parts[4] });
             }
             return result;
         }
@@ -269,7 +276,7 @@ namespace ADKOM.TextEditor
 
         public sealed class GraphNode
         {
-            public string Hash, Date, Author, Subject;
+            public string Hash, Date, Author, Email, Subject;
             public string[] Parents;
             public List<string> Refs = new List<string>(); // branch/tag names at this commit
             public bool IsHead;
@@ -286,20 +293,21 @@ namespace ADKOM.TextEditor
         {
             var nodes = new List<GraphNode>();
             if (Run(root, "log --all --topo-order --date=short " +
-                    "--pretty=format:%h%x01%p%x01%D%x01%an%x01%ad%x01%s -n " + max,
+                    "--pretty=format:%h%x01%p%x01%D%x01%an%x01%ae%x01%ad%x01%s -n " + max,
                     out var o, out _) != 0)
                 return nodes;
             foreach (var line in Lines(o))
             {
                 var parts = line.Split('\u0001');
-                if (parts.Length != 6) continue;
+                if (parts.Length != 7) continue;
                 var n = new GraphNode
                 {
                     Hash = parts[0],
                     Parents = parts[1].Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries),
                     Author = parts[3],
-                    Date = parts[4],
-                    Subject = parts[5],
+                    Email = parts[4],
+                    Date = parts[5],
+                    Subject = parts[6],
                     Row = nodes.Count
                 };
                 foreach (var r in parts[2].Split(','))

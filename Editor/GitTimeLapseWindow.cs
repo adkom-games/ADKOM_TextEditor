@@ -589,7 +589,7 @@ namespace ADKOM.TextEditor
             var e = _hist[pos];
             _dateField.SetValueWithoutNotify(e.Date);
             _hashField.SetValueWithoutNotify(e.Hash);
-            _authorField.SetValueWithoutNotify(e.Author);
+            _authorField.SetValueWithoutNotify(GitService.AuthorWithEmail(e.Author, e.Email));
             _titleField.SetValueWithoutNotify(e.Subject);
             _msgField.SetValueWithoutNotify(_msgCache?[pos] ?? e.Subject);
             _status.text = string.Format(L10n.Tr("Current tab vs this revision: +{0} −{1}"), add, del);

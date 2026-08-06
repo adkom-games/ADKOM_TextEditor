@@ -571,7 +571,7 @@ namespace ADKOM.TextEditor
                         GitService.Run(rootDir, "diff-tree --no-commit-id --name-status -r " + hash + "^ " + hash,
                             out files, out _);
                     GitService.Run(rootDir, "log -1 --format=%B " + hash, out msg, out _);
-                    GitService.Run(rootDir, "log -1 --date=short --format=%h%x01%an%x01%ad%x01%s " + hash, out meta, out _);
+                    GitService.Run(rootDir, "log -1 --date=short --format=%h%x01%an%x01%ae%x01%ad%x01%s " + hash, out meta, out _);
                     GitService.Run(rootDir, "rev-parse HEAD", out head, out _);
                 }
                 catch (System.Exception) { }
@@ -588,9 +588,10 @@ namespace ADKOM.TextEditor
                     // the Time Lapse window's read-only info block.
                     var mp = (meta ?? "").Trim().Split('\u0001');
                     _giHash.SetValueWithoutNotify(mp.Length > 0 ? mp[0] : hash);
-                    _giAuthor.SetValueWithoutNotify(mp.Length > 1 ? mp[1] : "");
-                    _giDate.SetValueWithoutNotify(mp.Length > 2 ? mp[2] : "");
-                    _giTitle.SetValueWithoutNotify(mp.Length > 3 ? mp[3] : "");
+                    _giAuthor.SetValueWithoutNotify(mp.Length > 2
+                        ? GitService.AuthorWithEmail(mp[1], mp[2]) : mp.Length > 1 ? mp[1] : "");
+                    _giDate.SetValueWithoutNotify(mp.Length > 3 ? mp[3] : "");
+                    _giTitle.SetValueWithoutNotify(mp.Length > 4 ? mp[4] : "");
                     SetInspectMetaVisible(true);
                     RebuildCommitFiles(files ?? "");
                     UpdateActionButtons();
@@ -681,7 +682,7 @@ namespace ADKOM.TextEditor
                 var n = _nodes.FirstOrDefault(x => x.Hash == _selectedHash);
                 if (n != null)
                 {
-                    _status.text = n.Hash + "  " + n.Date + "  " + n.Author + "  —  " + n.Subject;
+                    _status.text = n.Hash + "  " + n.Date + "  " + GitService.AuthorWithEmail(n.Author, n.Email) + "  —  " + n.Subject;
                     return;
                 }
             }
@@ -864,7 +865,7 @@ namespace ADKOM.TextEditor
                             ? new Color(0.95f, 0.8f, 0.3f)
                             : BranchColor(node.Segment),
                     },
-                    tooltip = node.Hash + "  " + node.Date + "  " + node.Author + "\n" + node.Subject
+                    tooltip = node.Hash + "  " + node.Date + "  " + GitService.AuthorWithEmail(node.Author, node.Email) + "\n" + node.Subject
                 };
                 if (node.IsHead)
                 {
@@ -919,7 +920,7 @@ namespace ADKOM.TextEditor
                     // inspect the commit, context/double-click for the menu.
                     var lbl = new Label(string.Join(",", node.Refs))
                     {
-                        tooltip = node.Hash + "  " + node.Date + "  " + node.Author + "\n" + node.Subject,
+                        tooltip = node.Hash + "  " + node.Date + "  " + GitService.AuthorWithEmail(node.Author, node.Email) + "\n" + node.Subject,
                         style = { position = Position.Absolute, left = p.x - 12, top = 16 + (maxLane + 1) * LaneGap + 4,
                                   rotate = new Rotate(45), color = new Color(0.55f, 0.85f, 0.6f), whiteSpace = WhiteSpace.NoWrap }
                     };
