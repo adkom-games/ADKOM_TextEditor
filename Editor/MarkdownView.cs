@@ -114,24 +114,56 @@ namespace ADKOM.TextEditor
                     Application.OpenURL(e.linkID);
                 e.StopPropagation();
             }, TrickleDown.TrickleDown);
+            // Link hover tip: a custom floating label at the CURSOR. The
+            // native element tooltip anchors to the hovered element's box —
+            // and links live inside tall multi-block segment labels, so the
+            // tooltip appeared at the label's bottom edge, far from the
+            // pointer.
+            _linkTip = new Label
+            {
+                pickingMode = PickingMode.Ignore,
+                style =
+                {
+                    position = Position.Absolute, display = DisplayStyle.None,
+                    backgroundColor = new Color(0.14f, 0.14f, 0.14f, 0.97f),
+                    color = new Color(0.85f, 0.85f, 0.85f),
+                    borderTopWidth = 1, borderBottomWidth = 1, borderLeftWidth = 1, borderRightWidth = 1,
+                    borderTopColor = new Color(0.5f, 0.5f, 0.5f, 0.5f),
+                    borderBottomColor = new Color(0.5f, 0.5f, 0.5f, 0.5f),
+                    borderLeftColor = new Color(0.5f, 0.5f, 0.5f, 0.5f),
+                    borderRightColor = new Color(0.5f, 0.5f, 0.5f, 0.5f),
+                    paddingLeft = 6, paddingRight = 6, paddingTop = 3, paddingBottom = 3,
+                    fontSize = 11, whiteSpace = WhiteSpace.Normal, maxWidth = 480
+                }
+            };
+            Add(_linkTip);
             RegisterCallback<PointerOverLinkTagEvent>(e =>
             {
                 _hoverLink = e.linkID;
-                if (e.target is TextElement te && !string.IsNullOrEmpty(e.linkID))
-                {
-                    // Destination plus the link's title/alt when the source
-                    // carried one ([text](url "title"), image alts).
-                    string tip = string.Format(L10n.Tr("Ctrl+Click to open {0}"), e.linkID);
-                    if (_linkTitles.TryGetValue(e.linkID, out var title) && !string.IsNullOrEmpty(title))
-                        tip = title + "\n" + tip;
-                    te.tooltip = tip;
-                }
+                if (string.IsNullOrEmpty(e.linkID)) return;
+                // Destination plus the link's title/alt when the source
+                // carried one ([text](url "title"), image alts).
+                string tip = string.Format(L10n.Tr("Ctrl+Click to open {0}"), e.linkID);
+                if (_linkTitles.TryGetValue(e.linkID, out var title) && !string.IsNullOrEmpty(title))
+                    tip = title + "\n" + tip;
+                _linkTip.text = tip;
+                _linkTip.style.display = DisplayStyle.Flex;
+                MoveLinkTip(e.position);
+            }, TrickleDown.TrickleDown);
+            RegisterCallback<PointerMoveEvent>(e =>
+            {
+                if (_linkTip.style.display == DisplayStyle.Flex) MoveLinkTip(e.position);
             }, TrickleDown.TrickleDown);
             RegisterCallback<PointerOutLinkTagEvent>(e =>
             {
                 _hoverLink = null;
-                if (e.target is TextElement te) te.tooltip = null;
+                _linkTip.style.display = DisplayStyle.None;
             }, TrickleDown.TrickleDown);
+            RegisterCallback<PointerLeaveEvent>(_ =>
+            {
+                _hoverLink = null;
+                _linkTip.style.display = DisplayStyle.None;
+            });
 
             // Right-click menu, via UITK's ContextualMenuPopulateEvent — the
             // only reliable hook here: the selectable labels bring their own
@@ -604,6 +636,21 @@ namespace ADKOM.TextEditor
         /// a plain URL as the linkID.</summary>
         readonly Dictionary<string, string> _linkTitles = new Dictionary<string, string>();
 
+        Label _linkTip; // cursor-following link tooltip (see BuildUI note)
+
+        /// <summary>Places the link tip just below-right of the pointer,
+        /// pulled back inside the view when it would overflow an edge.</summary>
+        void MoveLinkTip(Vector2 panelPos)
+        {
+            Vector2 local = this.WorldToLocal(panelPos);
+            float x = local.x + 14, y = local.y + 18;
+            float w = _linkTip.resolvedStyle.width, h = _linkTip.resolvedStyle.height;
+            if (!float.IsNaN(w) && w > 0 && x + w > layout.width) x = Mathf.Max(0, layout.width - w - 2);
+            if (!float.IsNaN(h) && h > 0 && y + h > layout.height) y = Mathf.Max(0, local.y - h - 6);
+            _linkTip.style.left = x;
+            _linkTip.style.top = y;
+        }
+
         static readonly System.Text.RegularExpressions.Regex TitleRx =
             new System.Text.RegularExpressions.Regex("\"([^\"]*)\"");
 
@@ -858,6 +905,7 @@ namespace ADKOM.TextEditor
             _selRects.Clear();
             _cursorPos.Clear();         // the labels they were measured on are gone
             _linkTitles.Clear();        // re-registered as InlineToRich re-runs
+            if (_linkTip != null) _linkTip.style.display = DisplayStyle.None;
             c.Add(_selOverlay);         // first child: paints behind the blocks
             _selDragging = false;
             StopEdgeScroll();           // the labels it was scrolling toward are gone
