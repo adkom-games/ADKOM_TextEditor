@@ -1398,9 +1398,6 @@ msgstr "타임랩스 {0}"
 msgid "Loading git history…"
 msgstr "git 기록 읽는 중…"
 
-msgid "The revision shown below, and how the current tab differs from it."
-msgstr "아래에 표시된 리비전과 현재 탭의 차이 정보입니다."
-
 msgid "Drag through the file's git history — oldest commit on the left, the current tab contents on the right."
 msgstr "파일의 git 기록을 드래그로 탐색 — 왼쪽 끝이 가장 오래된 커밋, 오른쪽 끝이 현재 탭 내용입니다."
 
@@ -1442,6 +1439,21 @@ msgstr "표시된 리비전의 커밋 제목(제목 줄)입니다. 읽기 전용
 
 msgid "The shown revision's full commit message. Read-only; the text can be selected and copied."
 msgstr "표시된 리비전의 전체 커밋 메시지입니다. 읽기 전용이며 텍스트 선택과 복사는 가능합니다."
+
+msgid "The shown position in the timeline: version number / total. The last position is the current tab contents."
+msgstr "타임라인에서 표시된 위치: 버전 번호 / 총수. 마지막 위치는 현재 탭 내용입니다."
+
+msgid "The shown revision's commit date. Read-only."
+msgstr "표시된 리비전의 커밋 날짜입니다. 읽기 전용."
+
+msgid "The shown revision's short commit hash. Read-only."
+msgstr "표시된 리비전의 짧은 커밋 해시입니다. 읽기 전용."
+
+msgid "The shown revision's author. Read-only."
+msgstr "표시된 리비전의 작성자입니다. 읽기 전용."
+
+msgid "How many lines the current tab has added/removed against the shown revision."
+msgstr "현재 탭이 표시된 리비전에 대해 추가/삭제한 줄 수입니다."
 
 msgid "How many revisions stay fetched around the slider position; contents outside this sliding window are dropped and re-fetched when needed (5-500). Overrides the Options default for this window only."
 msgstr "슬라이더 위치 주변에 가져온 상태로 유지할 리비전 수입니다. 이 슬라이딩 윈도우 밖의 내용은 버려지고 필요할 때 다시 가져옵니다(5-500). 이 창에 한해 옵션의 기본값을 재정의합니다."
