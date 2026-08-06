@@ -32,6 +32,11 @@ namespace ADKOM.TextEditor
         public static void Log(string message)
         {
             if (string.IsNullOrEmpty(message)) return;
+            // A pathological single line breaks the console's row renderer
+            // (a failed git command once echoed hundreds of file paths into
+            // one entry, garbling the rows) — truncate, don't trust it.
+            const int MaxChars = 2000;
+            if (message.Length > MaxChars) message = message.Substring(0, MaxChars) + " …";
             lock (_lock)
             {
                 _lines.Add($"[{DateTime.Now:HH:mm:ss}] {message}");

@@ -273,8 +273,13 @@ namespace ADKOM.TextEditor
             public string[] Parents;
             public List<string> Refs = new List<string>(); // branch/tag names at this commit
             public bool IsHead;
-            public int Lane;   // assigned by the layout
-            public int Row;    // topological order, newest first
+            public int Lane;    // assigned by the layout
+            public int Row;     // topological order, newest first
+            public int Segment; // contiguous chain id — the COLOR key. Lanes
+                                // are reused by later chains for compactness;
+                                // coloring by lane made an unmerged stale
+                                // branch read as one line with the newer
+                                // merged branches sharing its lane.
         }
 
         public static List<GraphNode> Graph(string root, int max = 200)
@@ -316,7 +321,9 @@ namespace ADKOM.TextEditor
         /// chain; a node takes the lane of the first chain expecting it.</summary>
         static void AssignLanes(List<GraphNode> nodes)
         {
-            var lanes = new List<string>(); // lane index -> next expected hash
+            var lanes = new List<string>();  // lane index -> next expected hash
+            var laneSeg = new List<int>();   // lane index -> segment id of that chain
+            int nextSeg = 1;                 // 0 = the primary (main) line
 
             // Lane 0 (and its color) is the PRIMARY line: the local
             // main/master branch when its tip is in the window, else HEAD's
@@ -331,7 +338,7 @@ namespace ADKOM.TextEditor
             if (primary == null)
                 foreach (var n in nodes)
                     if (n.IsHead) { primary = n.Hash; break; }
-            if (primary != null) lanes.Add(primary);
+            if (primary != null) { lanes.Add(primary); laneSeg.Add(0); }
 
             foreach (var n in nodes)
             {
@@ -339,17 +346,19 @@ namespace ADKOM.TextEditor
                 if (lane < 0)
                 {
                     lane = lanes.IndexOf(null);
-                    if (lane < 0) { lanes.Add(null); lane = lanes.Count - 1; }
+                    if (lane < 0) { lanes.Add(null); laneSeg.Add(0); lane = lanes.Count - 1; }
+                    laneSeg[lane] = nextSeg++; // a chain nobody expected: new segment
                 }
                 n.Lane = lane;
+                n.Segment = laneSeg[lane];
                 // This lane continues to the first parent; extra parents open lanes.
                 lanes[lane] = n.Parents.Length > 0 ? n.Parents[0] : null;
                 for (int p = 1; p < n.Parents.Length; p++)
                     if (!lanes.Contains(n.Parents[p]))
                     {
                         int free = lanes.IndexOf(null);
-                        if (free < 0) { lanes.Add(n.Parents[p]); }
-                        else lanes[free] = n.Parents[p];
+                        if (free < 0) { lanes.Add(n.Parents[p]); laneSeg.Add(nextSeg++); }
+                        else { lanes[free] = n.Parents[p]; laneSeg[free] = nextSeg++; }
                     }
                 // Collapse duplicate expectations (two lanes waiting on the
                 // same parent = a merge point): keep the leftmost.
