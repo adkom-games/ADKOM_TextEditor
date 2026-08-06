@@ -1494,6 +1494,54 @@ msgstr "复制右侧 ({0})"
 msgid "Git ({0})"
 msgstr "Git ({0})"
 
+msgid "Select"
+msgstr "选择"
+
+msgid "Change which files are checked (staged) in one step."
+msgstr "一步更改哪些文件被勾选（暂存）。"
+
+msgid "Select All"
+msgstr "全选"
+
+msgid "Select None"
+msgstr "全不选"
+
+msgid "Select Modified"
+msgstr "选择已修改"
+
+msgid "Select Untracked"
+msgstr "选择未跟踪"
+
+msgid "Select Added"
+msgstr "选择已添加"
+
+msgid "Select Deleted"
+msgstr "选择已删除"
+
+msgid "Select Renamed"
+msgstr "选择已重命名"
+
+msgid "Invert Selection"
+msgstr "反转选择"
+
+msgid "Show only changed files whose path contains this text."
+msgstr "仅显示路径包含此文本的变更文件。"
+
+msgid "Diff Against Previous Version"
+msgstr "与先前版本比较"
+
+msgid "Diff Against Parent"
+msgstr "与父提交比较"
+
+msgid "Open in Text Editor"
+msgstr "在文本编辑器中打开"
+
+msgid "Stage"
+msgstr "暂存"
+
+msgid "Unstage"
+msgstr "取消暂存"
+
 msgid "How many revisions stay fetched around the slider position; contents outside this sliding window are dropped and re-fetched when needed (5-500). Overrides the Options default for this window only."
 msgstr "在滑块位置周围保持已获取状态的修订版本数量；此滑动窗口之外的内容会被丢弃，需要时重新获取（5-500）。仅对此窗口覆盖选项中的默认值。"
 
