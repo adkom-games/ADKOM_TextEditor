@@ -57,10 +57,40 @@ foreach ($f in Get-ChildItem $pkg -Recurse -Filter link.xml -File |
     $failures += "link.xml (pins assemblies into player builds): $($f.FullName)"
 }
 
+# Every TRACKED package file must have a TRACKED .meta beside it (and every
+# directory implied by tracked files, its folder .meta). git ls-files, not
+# the working tree: Unity generates metas locally in the dev project, which
+# MASKS an uncommitted one — 1.1.1 shipped AteTooltip.cs without its meta,
+# Unity ignored the file in consumers' immutable PackageCache, and every
+# reference failed CS0103. Paths under '~' folders and dotfiles are exempt
+# (invisible to the asset pipeline).
+$tracked = git -C (Split-Path $pkg -Parent | Split-Path -Parent) ls-files -- "Packages/com.adkom.text-editor" |
+    ForEach-Object { $_ -replace '^Packages/com\.adkom\.text-editor/', '' }
+$trackedSet = @{}
+foreach ($t in $tracked) { $trackedSet[$t] = $true }
+$dirSet = @{}
+foreach ($t in $tracked) {
+    if ($t -match '(^|/)(\.|[^/]*~/)' ) { continue }              # ~ folders / dotfiles: exempt
+    $parts = $t -split '/'
+    for ($i = 1; $i -lt $parts.Count; $i++) {
+        $dirSet[($parts[0..($i-1)] -join '/')] = $true
+    }
+    if ($t.EndsWith('.meta') -or ($parts[-1].StartsWith('.'))) { continue }
+    if (-not $trackedSet.ContainsKey("$t.meta")) {
+        $failures += "MISSING TRACKED META (Unity ignores the asset in consumer installs): $t"
+    }
+}
+foreach ($d in $dirSet.Keys) {
+    if ($d -match '~$' -or $d -match '~/' -or $d -match '(^|/)\.'){ continue }
+    if (-not $trackedSet.ContainsKey("$d.meta")) {
+        $failures += "MISSING TRACKED FOLDER META: $d"
+    }
+}
+
 if ($failures.Count -gt 0) {
     Write-Host "EDITOR-GUARD CHECK FAILED ($($failures.Count) issue(s)):" -ForegroundColor Red
     $failures | ForEach-Object { Write-Host "  $_" -ForegroundColor Red }
     exit 1
 }
-Write-Host "Editor-guard check passed: all .cs files guarded, all asmdefs Editor-only, no unconditional-ship content (Resources/StreamingAssets/link.xml)."
+Write-Host "Editor-guard check passed: all .cs files guarded, all asmdefs Editor-only, no unconditional-ship content (Resources/StreamingAssets/link.xml), all tracked files carry tracked metas."
 exit 0
