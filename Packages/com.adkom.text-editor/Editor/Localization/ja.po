@@ -378,6 +378,12 @@ msgstr "自分の変更を保持"
 msgid "Discard"
 msgstr "破棄"
 
+msgid "Multiple Selections"
+msgstr "複数選択"
+
+msgid "Sel: {0} ch, {1} wd, {2} ln"
+msgstr "選択: {0} 文字, {1} 語, {2} 行"
+
 msgid "Discard All"
 msgstr "すべて破棄"
 

@@ -7,6 +7,8 @@ All notable changes to this package are documented here. Format follows [Keep a 
 ### Added
 - **Git window Changes-pane upgrades**: a **Select ▾ menu** beside the title bulk-sets the staging checkboxes (All / None / Modified / Untracked / Added / Deleted / Renamed / Invert, applied to the filtered rows); a right-aligned **Filter** field narrows both the working-tree and inspected-commit file lists; status letters are tinted like the gutter marks (green added/untracked, amber modified, red deleted, blue renamed); every file row gained a **context menu** (diff, open in editor, reveal, stage/unstage, and the Git submenu incl. Time Lapse — Git Panel pruned, it would recurse); inspecting a commit shows read-only **date / hash / author / title** fields above the message box, Time Lapse-style; and the commit-message box uses a smaller font.
 
+- **Selection readout in the status bar**: with a selection, the caret position becomes "Ln a, Col b — Ln c, Col d" plus the selected character/word/line counts; disjoint multi-caret selections show "Multiple Selections" with the counts summed over every range.
+
 ### Changed
 - **Author fields everywhere show the email too** — "Name \<email\>" in the Time Lapse author field, the Git window's inspected-commit author field, the branch graph's tooltips and selection status line, the History tab's author column, and Blame's author column.
 - **Git window**: the horizontal branch-history layout now centers vertically in the view instead of hugging the top (recentering live on window resize; the vertical layout is unaffected).

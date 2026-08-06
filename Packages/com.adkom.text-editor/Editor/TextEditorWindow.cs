@@ -2590,7 +2590,43 @@ namespace ADKOM.TextEditor
                 if (Active.Content[i] == '\n') { line++; col = 1; }
                 else col++;
             }
-            _statusLeft.text = $"Ln {line}, Col {col}";
+
+            // With a selection, the left side shows its range (or "Multiple
+            // Selections" when multi-caret ranges are disjoint) plus the
+            // character / word / line counts summed over every range.
+            var sels = _code.SelectionRangesPublic();
+            if (sels.Count > 0)
+            {
+                string content = Active.Content;
+                int chars = 0, words = 0, lineCount = 0;
+                foreach (var (s0, e0) in sels)
+                {
+                    int s = Mathf.Clamp(s0, 0, content.Length);
+                    int e = Mathf.Clamp(e0, s, content.Length);
+                    chars += e - s;
+                    lineCount++;
+                    bool inWord = false;
+                    for (int i = s; i < e; i++)
+                    {
+                        if (content[i] == '\n') lineCount++;
+                        bool ws = char.IsWhiteSpace(content[i]);
+                        if (!ws && !inWord) words++;
+                        inWord = !ws;
+                    }
+                }
+                string range;
+                if (sels.Count > 1) range = L10n.Tr("Multiple Selections");
+                else
+                {
+                    _code.IndexToLineCol(sels[0].start, out int l1, out int c1);
+                    _code.IndexToLineCol(sels[0].end, out int l2, out int c2);
+                    range = $"Ln {l1 + 1}, Col {c1 + 1} — Ln {l2 + 1}, Col {c2 + 1}";
+                }
+                _statusLeft.text = range + "  |  " +
+                    string.Format(L10n.Tr("Sel: {0} ch, {1} wd, {2} ln"), chars, words, lineCount);
+            }
+            else
+                _statusLeft.text = $"Ln {line}, Col {col}";
             _statusRight.text = $"{_code.ClassifierName ?? "Plain Text"}  |  UTF-8{(Active.HasBom ? " BOM" : "")}  |  {Active.EolLabel}";
         }
     }
