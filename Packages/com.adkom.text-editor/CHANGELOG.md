@@ -7,6 +7,9 @@ All notable changes to this package are documented here. Format follows [Keep a 
 ### Changed
 - **Git window**: the horizontal branch-history layout now centers vertically in the view instead of hugging the top (recentering live on window resize; the vertical layout is unaffected).
 
+### Fixed
+- **Branch history: the trunk lane belongs to main again.** Lane 0 — the graph's first color — used to go to whatever ref had the newest commit; mid-work that is the feature branch, whose first-parent chain runs straight down main's shared history, so the whole trunk line took the feature branch's color and identity. Lane 0 is now seeded with the local main/master tip (HEAD's branch when neither is in the window), so the trunk always reads as main.
+
 ## [1.1.0] - 2026-08-06
 
 ### Added

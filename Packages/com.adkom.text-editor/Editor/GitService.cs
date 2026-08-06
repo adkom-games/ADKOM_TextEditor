@@ -317,6 +317,22 @@ namespace ADKOM.TextEditor
         static void AssignLanes(List<GraphNode> nodes)
         {
             var lanes = new List<string>(); // lane index -> next expected hash
+
+            // Lane 0 (and its color) is the PRIMARY line: the local
+            // main/master branch when its tip is in the window, else HEAD's
+            // branch. Without this seed, lane 0 simply went to whatever ref
+            // had the NEWEST commit — mid-work that is the feature branch,
+            // whose first-parent chain runs straight down main's shared
+            // trunk, so the whole trunk took the feature branch's lane and
+            // read as that branch instead of main.
+            string primary = null;
+            foreach (var n in nodes)
+                if (n.Refs.Contains("main") || n.Refs.Contains("master")) { primary = n.Hash; break; }
+            if (primary == null)
+                foreach (var n in nodes)
+                    if (n.IsHead) { primary = n.Hash; break; }
+            if (primary != null) lanes.Add(primary);
+
             foreach (var n in nodes)
             {
                 int lane = lanes.IndexOf(n.Hash);
