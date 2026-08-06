@@ -164,12 +164,22 @@ namespace ADKOM.TextEditor
             RegisterCallback<ContextualMenuPopulateEvent>(evt =>
             {
                 if (!Locked && InBlockEditor(evt.target as VisualElement)) return;
+                // Link items lead the menu in BOTH modes when the pointer is
+                // on a link — opening comes first, the copy beside it.
+                string link = _hoverLink;
+                if (!string.IsNullOrEmpty(link))
+                {
+                    evt.menu.AppendAction(L10n.Tr("Open Link in Browser"), _ =>
+                    {
+                        if (!TextEditorWindow.TryOpenAteLink(link)) // ate:// opens in ATE
+                            Application.OpenURL(link);
+                    });
+                    evt.menu.AppendAction(L10n.Tr("Copy Link URL"),
+                        _ => EditorGUIUtility.systemCopyBuffer = link);
+                    evt.menu.AppendSeparator();
+                }
                 if (Locked)
                 {
-                    string link = _hoverLink;
-                    if (!string.IsNullOrEmpty(link))
-                        evt.menu.AppendAction(L10n.Tr("Copy Link URL"),
-                            _ => EditorGUIUtility.systemCopyBuffer = link);
                     if (HasDocSelection)
                         evt.menu.AppendAction(L10n.Tr("Copy Selection as Text"),
                             _ => EditorGUIUtility.systemCopyBuffer = SelectedPlainText());

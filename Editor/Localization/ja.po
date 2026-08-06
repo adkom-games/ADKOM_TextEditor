@@ -2103,6 +2103,9 @@ msgstr "レンダリング表示の Markdown を読み取り専用で開きま�
 msgid "Copy Link URL"
 msgstr "リンクの URL をコピー"
 
+msgid "Open Link in Browser"
+msgstr "リンクをブラウザーで開く"
+
 msgid "Copy Block as Text"
 msgstr "ブロックをテキストとしてコピー"
 
