@@ -1,5 +1,5 @@
 {
-  "name": "com.adkom.text-editor",
+  "name": "com.adkomgames.text-editor",
   "version": "1.1.1",
   "samples": [
     {
@@ -12,10 +12,10 @@
   "description": "An advanced text editor that lives inside the Unity Editor. Editor-only: contributes nothing to player builds.",
   "unity": "6000.0",
   "unityRelease": "80f1",
-  "license": "MIT",
+  "license": "Unity Asset Store EULA",
   "documentationUrl": "https://github.com/adkom-games/ADKOM_TextEditor/blob/main/Packages/com.adkom.text-editor/Manual.md",
   "changelogUrl": "https://github.com/adkom-games/ADKOM_TextEditor/blob/main/Packages/com.adkom.text-editor/CHANGELOG.md",
-  "licensesUrl": "https://github.com/adkom-games/ADKOM_TextEditor/blob/main/Packages/com.adkom.text-editor/LICENSE.md",
+  "licensesUrl": "https://unity.com/legal/as-terms",
   "author": {
     "name": "A Different Kind Of Mind Games",
     "url": "https://github.com/ADKOM"
