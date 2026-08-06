@@ -2105,6 +2105,9 @@ msgstr "Rendered Markdown opens read-only: clicks select text for copying instea
 msgid "Copy Link URL"
 msgstr "Copy Link URL"
 
+msgid "Open Link in Browser"
+msgstr "Open Link in Browser"
+
 msgid "Copy Block as Text"
 msgstr "Copy Block as Text"
 
