@@ -626,6 +626,14 @@ namespace ADKOM.TextEditor
                     float y1 = CursorPos(label, lo).y;
                     if (y1 > y0) lh = y1 - y0;
                 }
+                else
+                {
+                    // Single-line label: its content height IS the line
+                    // height. The fontSize*1.2 guess undershoots the larger
+                    // heading fonts (h1-h3), clipping the selection tint.
+                    float ch = label.contentRect.height;
+                    if (ch > lh) lh = ch;
+                }
             }
             _lineHeights[label] = lh;
             return lh;
