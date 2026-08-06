@@ -378,6 +378,12 @@ msgstr "내 변경 유지"
 msgid "Discard"
 msgstr "버리기"
 
+msgid "Multiple Selections"
+msgstr "다중 선택"
+
+msgid "Sel: {0} ch, {1} wd, {2} ln"
+msgstr "선택: {0}자, {1} 단어, {2}줄"
+
 msgid "Discard All"
 msgstr "모두 버리기"
 

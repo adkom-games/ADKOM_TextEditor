@@ -2292,6 +2292,22 @@ namespace ADKOM.TextEditor
         internal bool HasMultiCarets => _extra.Count > 0;
         internal int CaretCount => 1 + _extra.Count;
 
+        /// <summary>Every non-empty selection range (primary + extra
+        /// carets) as [start, end) index pairs — the status bar's
+        /// selection readout consumes this.</summary>
+        internal List<(int start, int end)> SelectionRangesPublic()
+        {
+            var list = new List<(int start, int end)>();
+            int a = Mathf.Min(cursorIndex, selectIndex), b = Mathf.Max(cursorIndex, selectIndex);
+            if (b > a) list.Add((a, b));
+            foreach (var e in _extra)
+            {
+                int s = Mathf.Min(e.anchor, e.caret), t = Mathf.Max(e.anchor, e.caret);
+                if (t > s) list.Add((s, t));
+            }
+            return list;
+        }
+
         internal void CollapseExtraCarets()
         {
             if (_extra.Count == 0) return;
