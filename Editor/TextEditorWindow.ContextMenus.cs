@@ -159,6 +159,31 @@ namespace ADKOM.TextEditor
             return m;
         }
 
+        /// <summary>Shared entries appended to the rendered-Markdown view's
+        /// context menu — a rendered .md is still a document (usually a file
+        /// in the repo), so tab navigation, file ops, and the Git submenu
+        /// stay reachable there; the view itself only contributes its
+        /// clipboard/lock items. Virtual rendered docs (release notes) get
+        /// no file/git entries, matching the source-view tailoring.</summary>
+        internal void ExtendMdContextMenu(GenericMenu m)
+        {
+            if (!HasDocs || Active.IsSettings) return;
+            if (m.GetItemCount() > 0) m.AddSeparator("");
+            AddTabsSubmenu(m);
+            m.AddSeparator("");
+            if (ActiveIsMarkdown && Active.MdRendered)
+                m.AddItem(new GUIContent(L10n.Tr("Switch to Markdown Source")), false, ToggleMdMode);
+            m.AddItem(new GUIContent(L10n.Tr("Save As...")), false, () => SaveFile(true));
+            m.AddItem(new GUIContent(WithSc("Close Tab", Dsp("close-tab"))), false, () => CloseTab(_active));
+            if (Active.HasFile)
+            {
+                m.AddItem(new GUIContent(L10n.Tr("Show in File Explorer")), false,
+                    () => EditorUtility.RevealInFinder(Path.GetFullPath(Active.FilePath)));
+                m.AddSeparator("");
+                FillGitMenu(m);
+            }
+        }
+
         /// <summary>The Settings tab's context menu: tab navigation and
         /// closing — the only document actions that apply to it.</summary>
         internal void OnSettingsContextMenu(MouseUpEvent e)

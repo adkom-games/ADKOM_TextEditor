@@ -418,6 +418,7 @@ namespace ADKOM.TextEditor
             _mdView.onInsertBlock += OnMdInsertBlock;
             _mdView.onUnlockRequest += () =>
             { if (ActiveIsMarkdown && Active.MdLocked) ToggleMdLock(); };
+            _mdView.onContextMenuExtend = ExtendMdContextMenu;
             _editorArea.Add(_mdView);
 
             _emptyHint = new Label(L10n.Tr("No file open.\nFile → New, File → Open…, or right-click a text asset in the Project window."));
