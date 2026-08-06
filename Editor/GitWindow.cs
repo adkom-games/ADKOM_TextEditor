@@ -194,6 +194,11 @@ namespace ADKOM.TextEditor
             });
             changesHeader.Add(_filterField);
             changesHeader.Add(_backBtn);
+            // A rule under the header separates title/filter from the list.
+            changesHeader.style.borderBottomWidth = 1;
+            changesHeader.style.borderBottomColor = new Color(0.5f, 0.5f, 0.5f, 0.4f);
+            changesHeader.style.paddingBottom = 2;
+            changesHeader.style.marginBottom = 3;
             left.Add(changesHeader);
             _changes = new ScrollView(ScrollViewMode.Vertical) { style = { flexGrow = 1 } };
             left.Add(_changes);
@@ -268,6 +273,11 @@ namespace ADKOM.TextEditor
             var refresh = new Button(Refresh) { text = L10n.Tr("Refresh"),
                 tooltip = L10n.Tr("Re-read the repository status and branch history.") };
             graphBar.Add(refresh);
+            // Matching rule under the Branch History bar.
+            graphBar.style.borderBottomWidth = 1;
+            graphBar.style.borderBottomColor = new Color(0.5f, 0.5f, 0.5f, 0.4f);
+            graphBar.style.paddingBottom = 2;
+            graphBar.style.marginBottom = 3;
             right.Add(graphBar);
             _graphScroll = new ScrollView(ScrollViewMode.VerticalAndHorizontal) { style = { flexGrow = 1 } };
             _graphCanvas = new VisualElement { style = { position = Position.Relative, flexShrink = 0 } };
@@ -537,6 +547,12 @@ namespace ADKOM.TextEditor
                 try
                 {
                     GitService.Run(rootDir, "show --name-status --format= " + hash, out files, out _);
+                    // A clean MERGE commit shows an empty combined diff —
+                    // fall back to the first-parent diff, which is "what
+                    // this merge landed on the branch".
+                    if (string.IsNullOrWhiteSpace(files))
+                        GitService.Run(rootDir, "diff-tree --no-commit-id --name-status -r " + hash + "^ " + hash,
+                            out files, out _);
                     GitService.Run(rootDir, "log -1 --format=%B " + hash, out msg, out _);
                     GitService.Run(rootDir, "log -1 --date=short --format=%h%x01%an%x01%ad%x01%s " + hash, out meta, out _);
                     GitService.Run(rootDir, "rev-parse HEAD", out head, out _);
