@@ -194,9 +194,6 @@ msgstr "Release Notes"
 msgid "Go to Definition"
 msgstr "Go to Definition"
 
-msgid "Find Occurrences"
-msgstr "Find Occurrences"
-
 msgid "Find Occurrences of '{0}'"
 msgstr "Find Occurrences of '{0}'"
 
@@ -1456,6 +1453,48 @@ msgstr "The shown revision's author. Read-only."
 
 msgid "How many lines the current tab has added/removed against the shown revision."
 msgstr "How many lines the current tab has added/removed against the shown revision."
+
+msgid "Jump to the previous change in the shown revision."
+msgstr "Jump to the previous change in the shown revision."
+
+msgid "Jump to the next change in the shown revision."
+msgstr "Jump to the next change in the shown revision."
+
+msgid "Wrap Searches"
+msgstr "Wrap Searches"
+
+msgid "When on, the previous/next change buttons wrap around at the first and last change instead of stopping."
+msgstr "When on, the previous/next change buttons wrap around at the first and last change instead of stopping."
+
+msgid "No changes in this revision."
+msgstr "No changes in this revision."
+
+msgid "No more changes."
+msgstr "No more changes."
+
+msgid "Could not read that file."
+msgstr "Could not read that file."
+
+msgid "Goto Line"
+msgstr "Goto Line"
+
+msgid "Line number to jump to (clamped to the document)."
+msgstr "Line number to jump to (clamped to the document)."
+
+msgid "Go"
+msgstr "Go"
+
+msgid "Jump to the entered line."
+msgstr "Jump to the entered line."
+
+msgid "Copy Left Side ({0})"
+msgstr "Copy Left Side ({0})"
+
+msgid "Copy Right Side ({0})"
+msgstr "Copy Right Side ({0})"
+
+msgid "Git ({0})"
+msgstr "Git ({0})"
 
 msgid "How many revisions stay fetched around the slider position; contents outside this sliding window are dropped and re-fetched when needed (5-500). Overrides the Options default for this window only."
 msgstr "How many revisions stay fetched around the slider position; contents outside this sliding window are dropped and re-fetched when needed (5-500). Overrides the Options default for this window only."

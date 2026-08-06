@@ -452,10 +452,46 @@ namespace ADKOM.TextEditor
 
             _list = new ListView(_rows, RowH, MakeRow, BindRow) { style = { flexGrow = 1 } };
             _list.selectionType = SelectionType.None;
+            _list.RegisterCallback<MouseUpEvent>(OnDiffContextMenu);
             _frameBox.Add(_list);
             SyncHeaderToScrollbar(cols, _list);
             if (_changeRows.Count == 0) Status(L10n.Tr("No differences."));
             else Status(string.Format(L10n.Tr("{0} change region(s)."), _changeRows.Count));
+        }
+
+        /// <summary>Context menu on the side-by-side diff rows: copy either
+        /// side's (possibly merged) text, and each file-backed side gets its
+        /// own Git submenu — WITHOUT Diff/Merge, which would recurse.</summary>
+        void OnDiffContextMenu(MouseUpEvent e)
+        {
+            if (e.button != 1) return;
+            e.StopPropagation();
+            var m = new GenericMenu();
+            if (_linesA != null)
+                m.AddItem(new GUIContent(string.Format(L10n.Tr("Copy Left Side ({0})"), _a.DisplayLabel)),
+                    false, () => EditorGUIUtility.systemCopyBuffer = string.Join("\n", _linesA));
+            if (_linesB != null)
+                m.AddItem(new GUIContent(string.Format(L10n.Tr("Copy Right Side ({0})"), _b.DisplayLabel)),
+                    false, () => EditorGUIUtility.systemCopyBuffer = string.Join("\n", _linesB));
+            AddSideGitMenu(m, _a);
+            AddSideGitMenu(m, _b);
+            m.DropDown(new Rect(e.mousePosition, Vector2.zero));
+        }
+
+        void AddSideGitMenu(GenericMenu m, DiffSide side)
+        {
+            if (side == null || string.IsNullOrEmpty(side.Path) || !System.IO.File.Exists(side.Path)) return;
+            var owners = Resources.FindObjectsOfTypeAll<TextEditorWindow>();
+            if (owners.Length == 0) return;
+            var owner = owners[0];
+            string path = side.Path, name = side.DisplayLabel;
+            string root = string.Format(L10n.Tr("Git ({0})"), name) + "/";
+            m.AddItem(new GUIContent(root + L10n.Tr("Blame Current File")), false,
+                () => owner.GitBlameFor(path, name));
+            m.AddItem(new GUIContent(root + L10n.Tr("File History...")), false,
+                () => owner.GitFileHistoryFor(path, name, _list));
+            m.AddItem(new GUIContent(root + L10n.Tr("Time Lapse Current File...")), false,
+                () => owner.GitTimeLapseFor(path, name));
         }
 
         // ---- Column framing / splitter ----
