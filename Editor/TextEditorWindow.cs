@@ -1462,6 +1462,15 @@ namespace ADKOM.TextEditor
             _settingsPane.Add(diffRow);
             SyncDiffToolRow();
 
+            var tlWindowSize = new IntegerField(L10n.Tr("Time Lapse Window Size")) { value = EditorConfig.TimeLapseWindowSize };
+            tlWindowSize.RegisterValueChangedCallback(e =>
+            {
+                EditorConfig.TimeLapseWindowSize = e.newValue;
+                tlWindowSize.SetValueWithoutNotify(EditorConfig.TimeLapseWindowSize); // clamp echo (5-500)
+            });
+            tlWindowSize.tooltip = L10n.Tr("Default sliding-window size for new Git Time Lapse windows: how many revision contents stay fetched around the slider position (5-500). Each Time Lapse window can override its own copy.");
+            _settingsPane.Add(tlWindowSize);
+
             Section("Display");
             _settingsSmooth = new Toggle(L10n.Tr("Smooth Scrolling")) { value = EditorConfig.SmoothScrolling };
             _settingsSmooth.RegisterValueChangedCallback(e => EditorConfig.SmoothScrolling = e.newValue);
