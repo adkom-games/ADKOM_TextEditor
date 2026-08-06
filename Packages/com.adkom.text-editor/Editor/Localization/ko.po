@@ -1389,6 +1389,42 @@ msgstr "히스토리를 사용할 수 없습니다(git 리포지토리가 아닌
 msgid "Could not read that revision."
 msgstr "해당 리비전을 읽을 수 없습니다."
 
+msgid "Time Lapse Current File..."
+msgstr "현재 파일 타임랩스..."
+
+msgid "Time Lapse {0}"
+msgstr "타임랩스 {0}"
+
+msgid "Loading git history…"
+msgstr "git 기록 읽는 중…"
+
+msgid "The revision shown below, and how the current tab differs from it."
+msgstr "아래에 표시된 리비전과 현재 탭의 차이 정보입니다."
+
+msgid "Drag through the file's git history — oldest commit on the left, the current tab contents on the right."
+msgstr "파일의 git 기록을 드래그로 탐색 — 왼쪽 끝이 가장 오래된 커밋, 오른쪽 끝이 현재 탭 내용입니다."
+
+msgid "Read-only view of the file at the selected revision. Text can be selected and copied."
+msgstr "선택한 리비전의 파일 읽기 전용 보기입니다. 텍스트 선택과 복사는 가능합니다."
+
+msgid "Copy to Tab"
+msgstr "탭으로 복사"
+
+msgid "Replace the file's tab contents with this revision. For the active tab this is undoable."
+msgstr "파일 탭의 내용을 이 리비전으로 바꿉니다. 활성 탭에서는 실행 취소할 수 있습니다."
+
+msgid "Current tab contents"
+msgstr "현재 탭 내용"
+
+msgid "Current tab vs this revision: +{0} −{1}"
+msgstr "현재 탭과 이 리비전의 차이: +{0} −{1}"
+
+msgid "That file's tab is no longer open."
+msgstr "해당 파일의 탭이 더 이상 열려 있지 않습니다."
+
+msgid "Copied this revision into the file's tab."
+msgstr "이 리비전을 파일의 탭으로 복사했습니다."
+
 msgid "Changes"
 msgstr "변경 사항"
 

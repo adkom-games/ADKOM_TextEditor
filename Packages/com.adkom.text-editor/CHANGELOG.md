@@ -2,6 +2,12 @@
 
 All notable changes to this package are documented here. Format follows [Keep a Changelog](https://keepachangelog.com); versions follow semver.
 
+## [Unreleased]
+
+### Added
+- **Git Time Lapse** (Tools → Git → Time Lapse Current File…, also in the document context menu): replays the current file's git history under a slider — oldest commit on the left, the live tab buffer on the right. A read-only editor view (copyable, framed, wrap/scrollbars as needed) steps through every revision; each step tints added/changed lines diff-style with matching gutter bars, the header shows the revision's hash/date/author/subject plus +/− line counts of the current tab against it, and the centered line is held while content changes. **Copy to Tab** pushes the shown revision back into the file's tab (undoable while active). Multi-instance: every invocation opens its own window.
+- The **Git submenu now also appears in the document right-click context menu**, mirroring Tools → Git.
+
 ## [1.0.4] - 2026-08-05
 
 ### Changed

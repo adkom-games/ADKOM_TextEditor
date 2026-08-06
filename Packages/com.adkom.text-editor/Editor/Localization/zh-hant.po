@@ -1389,6 +1389,42 @@ msgstr "無法取得歷史（不在 git 存放庫中？）。"
 msgid "Could not read that revision."
 msgstr "無法讀取該修訂版本。"
 
+msgid "Time Lapse Current File..."
+msgstr "目前檔案時光回放..."
+
+msgid "Time Lapse {0}"
+msgstr "時光回放 {0}"
+
+msgid "Loading git history…"
+msgstr "正在讀取 git 歷史…"
+
+msgid "The revision shown below, and how the current tab differs from it."
+msgstr "下方顯示的修訂版本，以及目前分頁與它的差異資訊。"
+
+msgid "Drag through the file's git history — oldest commit on the left, the current tab contents on the right."
+msgstr "拖曳以瀏覽檔案的 git 歷史 — 最左側為最早的提交，最右側為目前分頁內容。"
+
+msgid "Read-only view of the file at the selected revision. Text can be selected and copied."
+msgstr "所選修訂版本檔案的唯讀檢視。可以選取並複製文字。"
+
+msgid "Copy to Tab"
+msgstr "複製到分頁"
+
+msgid "Replace the file's tab contents with this revision. For the active tab this is undoable."
+msgstr "以此修訂版本取代該檔案分頁的內容。對使用中的分頁此操作可復原。"
+
+msgid "Current tab contents"
+msgstr "目前分頁內容"
+
+msgid "Current tab vs this revision: +{0} −{1}"
+msgstr "目前分頁與此修訂版本的差異：+{0} −{1}"
+
+msgid "That file's tab is no longer open."
+msgstr "該檔案的分頁已關閉。"
+
+msgid "Copied this revision into the file's tab."
+msgstr "已將此修訂版本複製到檔案的分頁。"
+
 msgid "Changes"
 msgstr "變更"
 

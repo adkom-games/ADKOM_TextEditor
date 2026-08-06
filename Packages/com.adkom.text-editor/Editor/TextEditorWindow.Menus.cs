@@ -265,6 +265,24 @@ namespace ADKOM.TextEditor
                 m.AddItem(new GUIContent(L10n.Tr("Ask Unity AI About This File...")), false, AskUnityAiDocument);
                 m.AddSeparator("");
             }
+            FillGitMenu(m);
+            m.AddSeparator("");
+            m.AddItem(new GUIContent(L10n.Tr("Diff / Merge...")), false, AteDiffWindow.OpenSetup);
+            // Snippets are one plain-text file the user edits in ATE itself;
+            // saving it hot-reloads the set (timestamp watch in SnippetStore).
+            m.AddItem(new GUIContent(L10n.Tr("Edit Snippets...")), false, () =>
+            {
+                var unused = SnippetStore.All; // materializes the default file on first use
+                OpenExternal(SnippetStore.SnippetsPath, 1, 1);
+            });
+            m.AddSeparator("");
+            m.AddItem(new GUIContent(WithSc("Options...", Dsp("settings"))), false, OpenSettingsPage);
+        }
+
+        /// <summary>The Git submenu — shared between Tools and the document
+        /// area's right-click context menu, so it stays one list.</summary>
+        void FillGitMenu(GenericMenu m)
+        {
             string gitRoot = L10n.Tr("Git") + "/";
             m.AddItem(new GUIContent(gitRoot + L10n.Tr("Git Panel...")), false, () =>
             {
@@ -279,23 +297,14 @@ namespace ADKOM.TextEditor
             {
                 m.AddItem(new GUIContent(gitRoot + L10n.Tr("Blame Current File")), false, GitBlameCurrent);
                 m.AddItem(new GUIContent(gitRoot + L10n.Tr("File History...")), false, GitFileHistory);
+                m.AddItem(new GUIContent(gitRoot + L10n.Tr("Time Lapse Current File...")), false, GitTimeLapseCurrent);
             }
             else
             {
                 m.AddDisabledItem(new GUIContent(gitRoot + L10n.Tr("Blame Current File")));
                 m.AddDisabledItem(new GUIContent(gitRoot + L10n.Tr("File History...")));
+                m.AddDisabledItem(new GUIContent(gitRoot + L10n.Tr("Time Lapse Current File...")));
             }
-            m.AddSeparator("");
-            m.AddItem(new GUIContent(L10n.Tr("Diff / Merge...")), false, AteDiffWindow.OpenSetup);
-            // Snippets are one plain-text file the user edits in ATE itself;
-            // saving it hot-reloads the set (timestamp watch in SnippetStore).
-            m.AddItem(new GUIContent(L10n.Tr("Edit Snippets...")), false, () =>
-            {
-                var unused = SnippetStore.All; // materializes the default file on first use
-                OpenExternal(SnippetStore.SnippetsPath, 1, 1);
-            });
-            m.AddSeparator("");
-            m.AddItem(new GUIContent(WithSc("Options...", Dsp("settings"))), false, OpenSettingsPage);
         }
 
         /// <summary>Tools → Addons: entries from the shared addons folder,
