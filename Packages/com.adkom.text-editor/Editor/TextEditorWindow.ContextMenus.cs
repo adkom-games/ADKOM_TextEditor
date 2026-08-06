@@ -36,18 +36,49 @@ namespace ADKOM.TextEditor
             BuildCodeContextMenu(line, col).DropDown(new Rect(e.mousePosition, Vector2.zero));
         }
 
+        /// <summary>Writes menu items into either menu system: GenericMenu
+        /// (IMGUI, used by the code view and most windows) or DropdownMenu
+        /// (UI Toolkit's ContextualMenuPopulateEvent, used by the rendered
+        /// Markdown view — the only way to REPLACE the native selectable-
+        /// text "Copy" menu instead of losing a fight with it). Lets the
+        /// shared builders (Tabs, Git) serve both.</summary>
+        internal readonly struct MenuSink
+        {
+            readonly GenericMenu _gm;
+            readonly DropdownMenu _dm;
+            public MenuSink(GenericMenu gm) { _gm = gm; _dm = null; }
+            public MenuSink(DropdownMenu dm) { _dm = dm; _gm = null; }
+            public void Item(string path, System.Action a, bool on = false)
+            {
+                if (_gm != null) _gm.AddItem(new GUIContent(path), on, () => a());
+                else _dm.AppendAction(path, _ => a(),
+                    on ? DropdownMenuAction.Status.Checked : DropdownMenuAction.Status.Normal);
+            }
+            public void Disabled(string path)
+            {
+                if (_gm != null) _gm.AddDisabledItem(new GUIContent(path));
+                else _dm.AppendAction(path, null, DropdownMenuAction.Status.Disabled);
+            }
+            public void Separator(string root = "")
+            {
+                if (_gm != null) _gm.AddSeparator(root);
+                else _dm.AppendSeparator(root);
+            }
+        }
+
         /// <summary>The Tabs submenu (jump to any open tab) — shared with
-        /// the Settings tab's context menu.</summary>
-        void AddTabsSubmenu(GenericMenu m)
+        /// the Settings tab's and rendered-Markdown menus.</summary>
+        void AddTabsSubmenu(MenuSink m)
         {
             for (int i = 0; i < _docs.Count; i++)
             {
                 int idx = i;
                 string name = (_docs[i].IsDirty ? "*" : "") + _docs[i].DisplayName.Replace('/', '∕');
-                m.AddItem(new GUIContent(L10n.Tr("Tabs") + $"/{i + 1}  {name}"),
-                    i == _active, () => SwitchTo(idx));
+                m.Item(L10n.Tr("Tabs") + $"/{i + 1}  {name}", () => SwitchTo(idx), on: i == _active);
             }
         }
+
+        void AddTabsSubmenu(GenericMenu m) => AddTabsSubmenu(new MenuSink(m));
 
         GenericMenu BuildCodeContextMenu(int line, int col)
         {
@@ -165,21 +196,22 @@ namespace ADKOM.TextEditor
         /// stay reachable there; the view itself only contributes its
         /// clipboard/lock items. Virtual rendered docs (release notes) get
         /// no file/git entries, matching the source-view tailoring.</summary>
-        internal void ExtendMdContextMenu(GenericMenu m)
+        internal void ExtendMdContextMenu(DropdownMenu dm)
         {
             if (!HasDocs || Active.IsSettings) return;
-            if (m.GetItemCount() > 0) m.AddSeparator("");
+            var m = new MenuSink(dm);
+            if (dm.MenuItems().Count > 0) m.Separator();
             AddTabsSubmenu(m);
-            m.AddSeparator("");
+            m.Separator();
             if (ActiveIsMarkdown && Active.MdRendered)
-                m.AddItem(new GUIContent(L10n.Tr("Switch to Markdown Source")), false, ToggleMdMode);
-            m.AddItem(new GUIContent(L10n.Tr("Save As...")), false, () => SaveFile(true));
-            m.AddItem(new GUIContent(WithSc("Close Tab", Dsp("close-tab"))), false, () => CloseTab(_active));
+                m.Item(L10n.Tr("Switch to Markdown Source"), ToggleMdMode);
+            m.Item(L10n.Tr("Save As..."), () => SaveFile(true));
+            m.Item(WithSc("Close Tab", Dsp("close-tab")), () => CloseTab(_active));
             if (Active.HasFile)
             {
-                m.AddItem(new GUIContent(L10n.Tr("Show in File Explorer")), false,
+                m.Item(L10n.Tr("Show in File Explorer"),
                     () => EditorUtility.RevealInFinder(Path.GetFullPath(Active.FilePath)));
-                m.AddSeparator("");
+                m.Separator();
                 FillGitMenu(m);
             }
         }
