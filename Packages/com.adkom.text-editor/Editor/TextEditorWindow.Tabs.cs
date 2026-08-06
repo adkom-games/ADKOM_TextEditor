@@ -303,6 +303,11 @@ namespace ADKOM.TextEditor
                 m.AddDisabledItem(new GUIContent(L10n.Tr("Save")));
                 m.AddDisabledItem(new GUIContent(L10n.Tr("Save As...")));
             }
+            // Only for file-backed tabs — generated buffers (blame, history,
+            // release notes, untitled, Settings) have nothing to reveal.
+            if (doc.HasFile)
+                m.AddItem(new GUIContent(L10n.Tr("Show in File Explorer")), false,
+                    () => EditorUtility.RevealInFinder(System.IO.Path.GetFullPath(doc.FilePath)));
             m.AddSeparator("");
             m.AddItem(new GUIContent(L10n.Tr("Close")), false, () => CloseTab(index));
             if (_docs.Count > 1)
