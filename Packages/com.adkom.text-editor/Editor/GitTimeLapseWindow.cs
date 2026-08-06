@@ -120,6 +120,11 @@ namespace ADKOM.TextEditor
 
             var sliderRow = new VisualElement
             { style = { flexDirection = FlexDirection.Row, marginBottom = 2, flexShrink = 0 } };
+            sliderRow.Add(new Label(L10n.Tr("Version"))
+            {
+                tooltip = L10n.Tr("Drag through the file's git history — oldest commit on the left, the current tab contents on the right."),
+                style = { alignSelf = Align.Center, flexShrink = 0, marginRight = 4 }
+            });
             _slider = new SliderInt(0, 0)
             {
                 tooltip = L10n.Tr("Drag through the file's git history — oldest commit on the left, the current tab contents on the right."),
@@ -134,6 +139,10 @@ namespace ADKOM.TextEditor
                 tooltip = L10n.Tr("How many revisions stay fetched around the slider position; contents outside this sliding window are dropped and re-fetched when needed (5-500). Overrides the Options default for this window only."),
                 style = { flexShrink = 0, marginLeft = 8, width = 190 }
             };
+            // The stock field label reserves Unity's inspector label width,
+            // leaving a gap — shrink it to its text so it hugs the input.
+            _sizeField.labelElement.style.minWidth = StyleKeyword.Auto;
+            _sizeField.labelElement.style.width = StyleKeyword.Auto;
             _sizeField.RegisterValueChangedCallback(e =>
             {
                 _windowSize = Mathf.Clamp(e.newValue, 5, 500);
