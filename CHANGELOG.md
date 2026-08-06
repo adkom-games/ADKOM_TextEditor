@@ -10,6 +10,7 @@ All notable changes to this package are documented here. Format follows [Keep a 
 ### Changed
 - **Git window**: the horizontal branch-history layout now centers vertically in the view instead of hugging the top (recentering live on window resize; the vertical layout is unaffected).
 - **Git window file rows: state-eligible git operations in the Git submenu.** Working-tree rows now offer exactly what the file's state allows — Stage (unstaged or untracked changes), Unstage (staged changes), and Discard Changes… (tracked working-tree modifications, confirmed before running) — inside the context menu's Git submenu; the old top-level Stage/Unstage items are gone.
+- **Tab-strip context menu: Show in File Explorer** on every file-backed tab (hidden for generated buffers — blame, history, release notes, untitled, Settings).
 - **File History opens as a focused tab.** Git → File History… (everywhere it appears) now opens a read-only "History \<file\>" tab — one hash/date/author/subject line per commit, searchable and copyable — instead of a transient dropdown popup.
 
 ### Fixed
