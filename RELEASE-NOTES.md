@@ -2,6 +2,28 @@
 
 **Enjoying ATE? Support development on Ko-fi:** [https://ko-fi.com/adkomgames](https://ko-fi.com/adkomgames)
 
+## 1.1.1 — 2026-08-06
+
+The polish patch: a same-day round of Git-window, Time Lapse, and rendered-Markdown refinements.
+
+### Added
+- **Git window Changes pane, upgraded**: a **Select ▾ menu** bulk-sets the staging checkboxes (All / None / Modified / Untracked / Added / Deleted / Renamed / Invert — applied to the filtered rows), a right-aligned **Filter** narrows the file list, status letters are tinted like the gutter marks, and every file row has a **context menu** — diff, open, reveal, and a Git submenu that offers exactly the operations the file's state allows (Stage / Unstage / Discard Changes…, plus Blame / File History / Time Lapse). Inspecting a commit shows read-only date / hash / author / title fields, Time Lapse-style.
+- **Time Lapse**: ▲/▼ buttons hop between the shown revision's change regions, wrapping per the new **Wrap Searches** checkbox.
+- **Selection readout in the status bar**: the range (or "Multiple Selections") plus selected character/word/line counts.
+- **File History opens as a focused tab** (searchable, copyable) instead of a transient popup; **Show in File Explorer** joined the tab-strip context menu for file-backed tabs.
+- **Rendered Markdown**: triple-click selects the paragraph; badge links (`[![alt](badge)](target)`) render as real links; **link tooltips** show the destination plus the link's title/alt; right-clicking a link offers **Open Link in Browser** / Copy Link URL; and **relative file links** (`[text](CHANGELOG.md)`) open the file as an ATE tab — dead link syntax renders as plain text instead of a fake link.
+- **ATE draws its own tooltips**: every window now shows a bordered, cursor-following tooltip that hugs the pointer, replacing Unity's element-anchored native tooltip.
+
+### Changed
+- **Author fields everywhere read "Name \<email\>"** — Time Lapse, Git window, graph tooltips and status, History and Blame columns.
+- **Context menus are truly context sensitive**: inapplicable items are hidden rather than disabled; virtual tabs get a read-oriented menu; the Settings tab gets tab navigation; the Time Lapse / Edit History / Diff views have context menus of their own with self-recursive entries pruned.
+- The horizontal branch-history layout centers vertically in the view.
+
+### Fixed
+- **Branch history**: the trunk lane (and its color) always belongs to main; unmerged branches no longer read as merged (colors are per-branch-segment now); the horizontal layout's branch labels are clickable; merge commits list their files (first-parent diff); the title's second line mirrors the selection.
+- **Git window**: bulk staging no longer fails on big file sets or floods the console (chunked commands, capped logging).
+- **Rendered Markdown**: the full document context menu (Tabs, file ops, Git submenu) works on .md tabs in both rendered modes — it previously lost a race against the native "Copy" menu on text; selection tint and pointer hit zones are correct on headings (per-line geometry).
+
 ## 1.1.0 — 2026-08-06
 
 The Time Lapse release.
