@@ -212,6 +212,9 @@ namespace ADKOM.TextEditor
             _graphCanvas = new VisualElement { style = { position = Position.Relative, flexShrink = 0 } };
             _graphCanvas.generateVisualContent += DrawGraphEdges;
             _graphScroll.Add(_graphCanvas);
+            // The horizontal layout is short — keep it vertically centered
+            // in the view instead of hugging the top (re-runs on resize).
+            _graphScroll.contentViewport.RegisterCallback<GeometryChangedEvent>(_ => CenterGraphVertically());
             right.Add(_graphScroll);
             split.Add(right);
 
@@ -636,6 +639,25 @@ namespace ADKOM.TextEditor
                 }
             }
             _graphCanvas.MarkDirtyRepaint();
+            CenterGraphVertically();
+        }
+
+        /// <summary>Horizontal layout: pads the canvas's top so the lane
+        /// band (plus a modest ref-label allowance — NOT the canvas's full
+        /// label slack, which would bias the band upward) sits vertically
+        /// centered in the viewport. Vertical layout resets the pad.</summary>
+        void CenterGraphVertically()
+        {
+            if (_graphCanvas == null || _graphScroll == null) return;
+            float margin = 0;
+            if (_horizontal && _nodes.Count > 0)
+            {
+                int maxLane = _nodes.Max(n => n.Lane);
+                float visualH = 32 + (maxLane + 1) * LaneGap + 40;
+                float viewH = _graphScroll.contentViewport.layout.height;
+                if (!float.IsNaN(viewH) && viewH > visualH) margin = (viewH - visualH) * 0.5f;
+            }
+            _graphCanvas.style.marginTop = margin;
         }
 
         void DrawGraphEdges(MeshGenerationContext ctx)
