@@ -1430,6 +1430,9 @@ msgstr "Copied this revision into the file's tab."
 msgid "Window Size"
 msgstr "Window Size"
 
+msgid "Version"
+msgstr "Version"
+
 msgid "How many revisions stay fetched around the slider position; contents outside this sliding window are dropped and re-fetched when needed (5-500). Overrides the Options default for this window only."
 msgstr "How many revisions stay fetched around the slider position; contents outside this sliding window are dropped and re-fetched when needed (5-500). Overrides the Options default for this window only."
 
