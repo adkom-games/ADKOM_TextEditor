@@ -290,6 +290,7 @@ namespace ADKOM.TextEditor
             split.Add(right);
 
             root.Add(split);
+            AteTooltip.Attach(rootVisualElement);
         }
 
         void Refresh()

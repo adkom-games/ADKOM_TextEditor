@@ -147,6 +147,7 @@ namespace ADKOM.TextEditor
             _lastTabSig = null;
             Poll();
             _rowScroll.schedule.Execute(() => _rowScroll.Focus());
+            AteTooltip.Attach(rootVisualElement);
         }
 
         void OnKey(KeyDownEvent e)

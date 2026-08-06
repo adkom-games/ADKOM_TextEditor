@@ -170,6 +170,7 @@ namespace ADKOM.TextEditor
             }
 
             root.schedule.Execute(PollValues).Every(500);
+            AteTooltip.Attach(rootVisualElement);
         }
 
         void Section(string title) => _scroll.Add(new Label(title)

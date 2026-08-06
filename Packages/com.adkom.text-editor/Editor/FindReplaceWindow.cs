@@ -252,6 +252,7 @@ namespace ADKOM.TextEditor
             }).Every(300);
 
             BuildBody();
+            AteTooltip.Attach(rootVisualElement);
         }
 
         /// <summary>(Re)builds the body for the active tab. State lives in

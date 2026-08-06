@@ -496,6 +496,7 @@ namespace ADKOM.TextEditor
                 Scripting.AteAddonManager.DeliverPendingStates();
             }).ExecuteLater(300);
 
+            AteTooltip.Attach(rootVisualElement);
             _uiReady = true;
         }
 
