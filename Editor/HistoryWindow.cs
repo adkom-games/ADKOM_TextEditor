@@ -111,6 +111,11 @@ namespace ADKOM.TextEditor
 
             _preview = new CodeView { readOnly = true, style = { flexGrow = 1 } };
             _owner.StyleAuxView(_preview, _doc);
+            // Context menu: aux feature set for whichever document the
+            // window is browsing (git entries only when it is file-backed).
+            AuxTextMenu.Attach(_preview, _owner,
+                () => _doc != null && _doc.HasFile ? _doc.FilePath : null,
+                () => _doc?.DisplayName, AuxTextMenu.Prune.None);
             right.Add(_preview);
             split.Add(right);
             root.Add(split);

@@ -192,9 +192,6 @@ msgstr "版本說明"
 msgid "Go to Definition"
 msgstr "移至定義"
 
-msgid "Find Occurrences"
-msgstr "尋找符合項目"
-
 msgid "Find Occurrences of '{0}'"
 msgstr "尋找 '{0}' 的符合項目"
 
@@ -1454,6 +1451,48 @@ msgstr "所示修訂版本的作者。唯讀。"
 
 msgid "How many lines the current tab has added/removed against the shown revision."
 msgstr "目前分頁相對所示修訂版本新增/刪除的行數。"
+
+msgid "Jump to the previous change in the shown revision."
+msgstr "跳到所示修訂版本中的上一處變更。"
+
+msgid "Jump to the next change in the shown revision."
+msgstr "跳到所示修訂版本中的下一處變更。"
+
+msgid "Wrap Searches"
+msgstr "循環搜尋"
+
+msgid "When on, the previous/next change buttons wrap around at the first and last change instead of stopping."
+msgstr "開啟時，上一處/下一處變更按鈕會在第一處和最後一處變更時循環，而不是停止。"
+
+msgid "No changes in this revision."
+msgstr "此修訂版本沒有變更。"
+
+msgid "No more changes."
+msgstr "沒有更多變更。"
+
+msgid "Could not read that file."
+msgstr "無法讀取該檔案。"
+
+msgid "Goto Line"
+msgstr "跳至行"
+
+msgid "Line number to jump to (clamped to the document)."
+msgstr "要跳至的行號（限制在文件範圍內）。"
+
+msgid "Go"
+msgstr "跳至"
+
+msgid "Jump to the entered line."
+msgstr "跳至輸入的行。"
+
+msgid "Copy Left Side ({0})"
+msgstr "複製左側 ({0})"
+
+msgid "Copy Right Side ({0})"
+msgstr "複製右側 ({0})"
+
+msgid "Git ({0})"
+msgstr "Git ({0})"
 
 msgid "How many revisions stay fetched around the slider position; contents outside this sliding window are dropped and re-fetched when needed (5-500). Overrides the Options default for this window only."
 msgstr "在滑桿位置周圍保持已擷取狀態的修訂版本數量；此滑動視窗之外的內容會被捨棄，需要時重新擷取（5-500）。僅對此視窗覆寫選項中的預設值。"
