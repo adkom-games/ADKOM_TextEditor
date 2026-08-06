@@ -2,6 +2,15 @@
 
 **Enjoying ATE? Support development on Ko-fi:** [https://ko-fi.com/adkomgames](https://ko-fi.com/adkomgames)
 
+## 1.1.0 — 2026-08-06
+
+The Time Lapse release.
+
+### Added
+- **Git Time Lapse** (Tools → Git → Time Lapse Current File…): scrub a slider through a file's **entire git history** — oldest commit on the left, your live tab buffer on the right — and watch the file evolve in a read-only editor view with full syntax coloring. Every step tints the lines that revision added (green) or changed (amber) exactly like a diff, with matching gutter bars (deletions leave the red stub); whatever line you had centered stays centered while the file changes around you. ◀ ▶ buttons step one revision with a version x/y readout between them; ▲ ▼ hop between the revision's change regions (wrapping at the ends per the **Wrap Searches** checkbox). The revision's date, hash, author, commit title, and **full commit message** sit in read-only fields below the text; a status line shows how many lines your current tab has added/removed against the shown revision; and **Copy to Tab** replaces the file's tab with the shown revision (undoable while the tab is active). Open as many Time Lapse windows as you like — each is independent and survives domain reloads.
+- **Sliding-window fetching** keeps Time Lapse cheap on any history: only a window of revisions around the slider stays fetched (filled during pauses, nearest first; dropped as you move on). Outrun it and the revision loads on the spot — the only cost is a brief wait. The window size is adjustable per window (field beside the slider) and defaults to the new **Time Lapse Window Size** setting in Options (5–500, default 50).
+- **Truly context-sensitive right-click menus.** The document menu now shows only what applies — inapplicable items are hidden, not disabled. Virtual tabs (blame output, revision snapshots, release notes) get a read-oriented menu that keeps Copy, Find, Goto Line, Save As, and C# navigation but drops editing/file/git entries; the Settings tab gets tab navigation. The **Git submenu joined the document context menu**, and the read-only views in the **Time Lapse, Edit History, and Diff windows** each gained context menus of their own — git commands there act on the *viewed* file, and anything that would recurse (Time Lapse inside Time Lapse) is omitted.
+
 ## 1.0.4 — 2026-08-05
 
 Asset Store submission compliance. No feature changes.

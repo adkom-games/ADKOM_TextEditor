@@ -2,7 +2,7 @@
 
 All notable changes to this package are documented here. Format follows [Keep a Changelog](https://keepachangelog.com); versions follow semver.
 
-## [Unreleased]
+## [1.1.0] - 2026-08-06
 
 ### Added
 - **Git Time Lapse** (Tools → Git → Time Lapse Current File…, also in the document context menu): replays the current file's git history under a slider — oldest commit on the left, the live tab buffer on the right. A read-only editor view (copyable, framed, wrap/scrollbars as needed) steps through every revision; each step tints added/changed lines diff-style with matching gutter bars, a version x/y readout sits between the step buttons, the revision's date/hash/author, commit title and full message sit in read-only fields below the text area, a bottom status line shows +/− line counts of the current tab against it, and the centered line is held while content changes. **Copy to Tab** pushes the shown revision back into the file's tab (undoable while active). Multi-instance: every invocation opens its own window. Arbitrarily long histories are handled by a **sliding window** of fetched revision contents around the slider position — filled during pauses nearest-first, dropped as the window slides on, and fetched on the spot when the slider outruns it. The window size is a per-window override (field beside the slider) seeded from the new **Time Lapse Window Size** setting in Options (5–500, default 50).

@@ -73,7 +73,7 @@ feature pitch.
 - **Visual edit history**: an undo/redo timeline showing the document at any point — restore, open as tab, or copy
 - **Find/Replace in Files**: project-wide, buffer-aware, filters/root/sub-folder options, and **global undo** across all touched files
 - **Reflection inspector**: live static/instance values (play mode included), editable primitives, run parameterless static methods
-- **Git integration**: gutter diff markers, blame, file history, stage/commit/push panel, and an **interactive branch-history tree** (vertical ⇄ horizontal)
+- **Git integration**: gutter diff markers, blame, file history, a **Time Lapse** replay of any file's git history, stage/commit/push panel, and an **interactive branch-history tree** (vertical ⇄ horizontal)
 - **Optional spell checking**: 115k-word SCOWL dictionary, Hunspell imports, user + per-project dictionaries
 - **More languages colored**: JSON (.json/.asmdef) and Unity shaders (.shader/.hlsl/.cginc/.compute); **#region** folding + navigation; auto-save on focus loss
 
@@ -99,7 +99,7 @@ https://github.com/adkom-games/ADKOM_TextEditor.git#upm
 Pinned release:
 
 ```
-https://github.com/adkom-games/ADKOM_TextEditor.git#1.0.4
+https://github.com/adkom-games/ADKOM_TextEditor.git#1.1.0
 ```
 
 The `upm` branch contains only the package, so consumer downloads stay

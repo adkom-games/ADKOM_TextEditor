@@ -85,7 +85,7 @@ With Semantic Features on, completion becomes **compiler-accurate**: type `.` an
 Right-click a symbol → **Inspect Symbol…** and a reflection inspector opens on its type: static fields and properties with **live values** (play-mode state updates as it changes), writable primitives editable in place, **Run buttons for parameterless static methods**, and — for MonoBehaviours — a scene-instance picker with the instance's fields live too.
 
 ### Git, built in
-Gutter markers show **added/modified/deleted lines** against HEAD as you work. Tools → Git brings **Blame** (a read-only annotated view), **File History** (open any past revision of the file), and the **Git Panel**: stage and unstage with checkboxes, commit, push, inspect any commit (files + message; amend HEAD's message in place), and a **branch-history tree** — an interactive commit graph, switchable vertical ⇄ horizontal, where you can check out branches or create one at any commit (guarded while your tree is dirty). Uses your system git; no bundled VCS.
+Gutter markers show **added/modified/deleted lines** against HEAD as you work. Tools → Git brings **Blame** (a read-only annotated view), **File History** (open any past revision of the file), **Time Lapse** (replay a file's entire git history under a slider — per-revision change highlights, prev/next revision and change hopping, commit title/message/meta in read-only fields, and Copy to Tab; a sliding window of fetched revisions keeps even huge histories cheap), and the **Git Panel**: stage and unstage with checkboxes, commit, push, inspect any commit (files + message; amend HEAD's message in place), and a **branch-history tree** — an interactive commit graph, switchable vertical ⇄ horizontal, where you can check out branches or create one at any commit (guarded while your tree is dirty). The whole Git submenu is also in the document right-click menu, and the special windows (Time Lapse, History, Diff) carry context menus of their own. Uses your system git; no bundled VCS.
 
 ### Diff / Merge
 A first-class comparison tool (Tools → Diff / Merge…): side-by-side diffs of **files, folders, or open tabs** with intra-line change highlights and change-region navigation, plus a **three-way merge** with per-conflict Take Left/Base/Right/Both resolution and an editable, saveable result. Double-click any file in the Git Panel to diff it against its previous version. One Settings click makes ATE **Unity's Revision Control Diff/Merge tool** (Preferences → External Tools) — and every diff window survives domain reloads, merge-in-progress included.
@@ -143,7 +143,7 @@ https://github.com/adkom-games/ADKOM_TextEditor.git#upm
 Prefer a pinned version?
 
 ```
-https://github.com/adkom-games/ADKOM_TextEditor.git#1.0.4
+https://github.com/adkom-games/ADKOM_TextEditor.git#1.1.0
 ```
 
 Semantic Features (compiler-accurate colors + Go to Definition) are built in — the first use, or the Settings toggle, sets everything up automatically.
