@@ -378,6 +378,12 @@ msgstr "保留我的版本"
 msgid "Discard"
 msgstr "放棄"
 
+msgid "Multiple Selections"
+msgstr "多重選取"
+
+msgid "Sel: {0} ch, {1} wd, {2} ln"
+msgstr "選取: {0} 字元, {1} 詞, {2} 行"
+
 msgid "Discard All"
 msgstr "全部放棄"
 

@@ -380,6 +380,12 @@ msgstr "Keep Mine"
 msgid "Discard"
 msgstr "Discard"
 
+msgid "Multiple Selections"
+msgstr "Multiple Selections"
+
+msgid "Sel: {0} ch, {1} wd, {2} ln"
+msgstr "Sel: {0} ch, {1} wd, {2} ln"
+
 msgid "Discard All"
 msgstr "Discard All"
 
