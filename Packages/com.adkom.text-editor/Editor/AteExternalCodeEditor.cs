@@ -21,11 +21,48 @@ namespace ADKOM.TextEditor
         static AteExternalCodeEditor()
         {
             CodeEditor.Register(new AteExternalCodeEditor());
+
+            // Heal a selection left stale by a Unity version change: the pref
+            // stores the absolute path of the editor binary ATE registered
+            // under, so after an upgrade it names the OLD install's Unity.exe.
+            // Deferred because other IExternalCodeEditors may not have
+            // registered yet while InitializeOnLoad ctors are still running.
+            EditorApplication.delayCall += () =>
+            {
+                string current = CodeEditor.CurrentEditorInstallation;
+                if (IsAteEditorPath(current) &&
+                    !string.Equals(Norm(current), Norm(AtePath), System.StringComparison.OrdinalIgnoreCase))
+                    CodeEditor.SetExternalScriptEditor(AtePath);
+            };
         }
 
         // ATE lives inside Unity, so its "installation" is the Unity Editor
         // itself — the standard registration trick for in-editor editors.
         static string AtePath => EditorApplication.applicationPath;
+
+        static string Norm(string p) => (p ?? string.Empty).Replace('\\', '/').TrimEnd('/');
+
+        /// <summary>
+        /// True when the path means "ATE". Any Unity Editor binary counts, not
+        /// just the running one: the External Script Editor pref persists the
+        /// absolute path ATE registered under, so after the project moves to a
+        /// new Unity version the stored path still names the old install. If
+        /// ATE only claimed the exact running binary, nothing would claim the
+        /// stale path and Unity's DefaultExternalCodeEditor would "open" the
+        /// script by launching it — booting a second Unity Editor that grabs
+        /// the last-used project and dies on its lock file.
+        /// </summary>
+        internal static bool IsAteEditorPath(string path)
+        {
+            if (string.IsNullOrEmpty(path)) return false;
+            string norm = Norm(path);
+            if (string.Equals(norm, Norm(AtePath), System.StringComparison.OrdinalIgnoreCase))
+                return true;
+            string name = Path.GetFileName(norm);
+            return name.Equals("Unity.exe", System.StringComparison.OrdinalIgnoreCase)
+                || name.Equals("Unity.app", System.StringComparison.OrdinalIgnoreCase)
+                || name.Equals("Unity", System.StringComparison.Ordinal);
+        }
 
         static readonly HashSet<string> EditableExtensions = new HashSet<string>
         {
@@ -44,7 +81,7 @@ namespace ADKOM.TextEditor
 
         public bool TryGetInstallationForPath(string editorPath, out CodeEditor.Installation installation)
         {
-            if (editorPath == AtePath)
+            if (IsAteEditorPath(editorPath))
             {
                 installation = Installations[0];
                 return true;
@@ -65,7 +102,7 @@ namespace ADKOM.TextEditor
         public static void DrawFallbackPicker()
         {
             var found = CodeEditor.Editor.GetFoundScriptEditorPaths()
-                .Where(kv => kv.Key != AtePath)
+                .Where(kv => !IsAteEditorPath(kv.Key))
                 .ToList();
             var labels = new List<string> { "(OS default application)" };
             labels.AddRange(found.Select(kv => kv.Value));
