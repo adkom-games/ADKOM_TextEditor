@@ -1394,7 +1394,7 @@ namespace ADKOM.TextEditor
             // External-editor fallback (used when ATE is Unity's selected
             // external script editor and a request isn't a text file).
             var editors = Unity.CodeEditor.CodeEditor.Editor.GetFoundScriptEditorPaths()
-                .Where(kv => kv.Key != EditorApplication.applicationPath).ToList();
+                .Where(kv => !AteExternalCodeEditor.IsAteEditorPath(kv.Key)).ToList();
             var fallbackLabels = new List<string> { "(OS default application)" };
             fallbackLabels.AddRange(editors.Select(kv => kv.Value));
             string currentLabel = fallbackLabels[0];

@@ -2,6 +2,11 @@
 
 All notable changes to this package are documented here. Format follows [Keep a Changelog](https://keepachangelog.com); versions follow semver.
 
+## [1.1.2] - 2026-08-12
+
+### Fixed
+- **Upgrading the project to a new Unity version no longer breaks ATE as the External Script Editor.** ATE registers under the running Unity binary's absolute path, and Unity persists that path in the External Script Editor pref — so after a version change the pref still named the OLD install's Unity.exe, ATE's exact-match claim failed, and Unity's DefaultExternalCodeEditor "opened" scripts by launching that stale binary: a second Unity Editor booted, grabbed the last-used project, and died on the "Multiple Unity instances cannot open the same project" lock dialog. ATE now claims any Unity Editor binary path (a Unity exe set as the script editor can't mean anything else) and, on load, rewrites a stale selection to the running editor's path. The fallback-editor pickers (Preferences and ATE Settings) exclude such paths by the same rule.
+
 ## [1.1.1] - 2026-08-06
 
 ### Added
