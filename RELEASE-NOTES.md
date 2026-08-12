@@ -2,6 +2,13 @@
 
 **Enjoying ATE? Support development on Ko-fi:** [https://ko-fi.com/adkomgames](https://ko-fi.com/adkomgames)
 
+## 1.1.2 — 2026-08-12
+
+Bugfix release: setting ATE as the External Script Editor now survives Unity version upgrades.
+
+### Fixed
+- **Upgrading the project to a new Unity version broke ATE as the External Script Editor — double-clicking a script launched a second Unity instance that died on the "Multiple Unity instances cannot open the same project" dialog.** Unity persists the External Script Editor as the absolute path of the editor binary ATE registered under; after a version change that path names the *old* install's Unity executable, ATE's exact-match claim failed, and Unity's default handler "opened" scripts by launching the stale binary. ATE now claims any Unity Editor binary path and, on load, rewrites a stale selection to the running editor — so the selection self-heals after every upgrade. The fallback-editor pickers exclude such paths by the same rule. (No GitHub issue; reported from a Unity 6000.7.0a4 project.)
+
 ## 1.1.1 — 2026-08-06
 
 The polish patch: a same-day round of Git-window, Time Lapse, and rendered-Markdown refinements.
