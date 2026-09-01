@@ -177,6 +177,28 @@ namespace ADKOM.TextEditor
         }
 
         /// <summary>Re-runs the pass now (after a dictionary addition).</summary>
+        /// <summary>The misspelled word under (line, col) AND its absolute span,
+        /// so a caller can replace it. The word alone is not enough: the same
+        /// misspelling can occur several times on one line, and replacing the
+        /// wrong occurrence is worse than not offering the fix.</summary>
+        internal bool MisspelledSpanAt(int line, int col, out int start, out int end, out string word)
+        {
+            start = end = 0;
+            word = null;
+            if (_spellLines == null || !_spellLines.TryGetValue(line, out var flags))
+                return false;
+            foreach (var (s, len) in flags)
+            {
+                if (col < s || col > s + len || s + len > _lines[line].Length)
+                    continue;
+                word = _lines[line].Substring(s, len);
+                start = LineColToIndex(line, s);
+                end = start + len;
+                return true;
+            }
+            return false;
+        }
+
         internal void RespellNow() { if (_spellOn) RunSpellPass(); }
     }
 }

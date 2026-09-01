@@ -18,6 +18,19 @@ namespace ADKOM.TextEditor
     public partial class TextEditorWindow : EditorWindow
     {
         static string UssPath => AtePackage.AssetRoot + "/Editor/UI/TextEditor.uss";
+
+        // IconContent logs a console error when an icon name is missing from
+        // the running editor (built-in icons get renamed across versions —
+        // "Download-Available" became "Update-Available" in 6000.7). The
+        // internal loader it wraps returns null silently, so probe through
+        // that; callers fall back to a text glyph on null.
+        static Texture2D LoadIconSilent(string name)
+        {
+            var loadIcon = typeof(EditorGUIUtility).GetMethod("LoadIcon",
+                System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic,
+                null, new[] { typeof(string) }, null);
+            return loadIcon?.Invoke(null, new object[] { name }) as Texture2D;
+        }
         const string ThemePrefKey = "ADKOM.TextEditor.Theme";
         const string ThemeModePrefKey = "ADKOM.TextEditor.ThemeMode";
 
@@ -289,7 +302,8 @@ namespace ADKOM.TextEditor
             _updateBtn = new ToolbarButton(OnUpdateIconClicked)
             { tooltip = L10n.Tr("A new ATE version is available — click to update.") };
             _updateBtn.style.flexShrink = 0; // the MD bar shrinks, never this icon
-            var dlTex = EditorGUIUtility.IconContent("Download-Available").image;
+            // Renamed to "Update-Available" in 6000.7; probe both names.
+            var dlTex = LoadIconSilent("Download-Available") ?? LoadIconSilent("Update-Available");
             if (dlTex != null)
             {
                 var dlIcon = new Image { image = dlTex, scaleMode = ScaleMode.ScaleToFit };
@@ -307,7 +321,7 @@ namespace ADKOM.TextEditor
             toolbar.Add(_updateBtn);
             var gear = new ToolbarButton(OpenSettings) { tooltip = L10n.Tr("Settings") };
             gear.style.flexShrink = 0; // like the update icon: never squeezed out
-            var gearTex = EditorGUIUtility.IconContent("SettingsIcon").image;
+            var gearTex = LoadIconSilent("SettingsIcon");
             if (gearTex != null)
             {
                 var icon = new Image { image = gearTex, scaleMode = ScaleMode.ScaleToFit };
@@ -375,6 +389,7 @@ namespace ADKOM.TextEditor
             _code = new CodeView { TabSize = EditorConfig.TabSize };
             _code.SetValueWithoutNotify(HasDocs ? Active.Content : string.Empty);
             _code.onValueChanged += OnTextChanged;
+            CoEditAttach(); // §co-edit: capture hooks live on the CodeView
             _code.showLineNumbers = _showLineNumbers;
             _code.wordWrap = _wordWrap;
             _code.showHiddenChars = _showHiddenChars;
@@ -1667,6 +1682,7 @@ namespace ADKOM.TextEditor
                 };
                 _docs.Add(vdoc);
                 Scripting.AteApi.NotifyOpened(this, vdoc);
+                CoEdit.Bridge.DocumentOpened(CoEditPathOf(vdoc));
                 SwitchTo(_docs.Count - 1);
             }
         }
@@ -1846,6 +1862,7 @@ namespace ADKOM.TextEditor
             var doc = new TextDocument();
             _docs.Add(doc);
             Scripting.AteApi.NotifyOpened(this, doc);
+            CoEdit.Bridge.DocumentOpened(CoEditPathOf(doc));
             SwitchTo(_docs.Count - 1);
         }
 
@@ -1892,12 +1909,19 @@ namespace ADKOM.TextEditor
             _docs.Add(doc);
             EditorConfig.AddRecentFile(full);
             Scripting.AteApi.NotifyOpened(this, doc);
+            CoEdit.Bridge.DocumentOpened(CoEditPathOf(doc));
             SwitchTo(_docs.Count - 1);
         }
 
         void SaveFile(bool saveAs)
         {
             if (!CanEditDoc) return;
+            // Shared documents are host-authoritative: only the host's save
+            // reaches disk, and it goes through ALS so the recompile can be
+            // held while peers are mid-edit (co-editing contract §3). Returning
+            // here also means ATE's per-user save transforms never run on a
+            // shared buffer, which is what keeps peers byte-identical (§4).
+            if (!saveAs && CoEdit.Bridge.InterceptSave(CoEditPathOf(Active))) return;
             bool saved = saveAs ? FileService.SaveAs(Active) : FileService.Save(Active);
             if (saved)
             {
@@ -2563,6 +2587,42 @@ namespace ADKOM.TextEditor
         // is AteUnsavedNotice (popup after close) + the reopen banner; unsaved
         // content is never at risk because the session persists it.
 
+        /// <summary>Size the buffer would occupy ON DISK: UTF-8 bytes, the BOM if
+        /// the file carries one, and the document's own line endings — not the
+        /// in-memory string length, which normalizes CRLF to \n and would under-
+        /// report every Windows file by one byte per line.</summary>
+        int BufferByteSize()
+        {
+            var text = _code?.value ?? Active?.Content ?? string.Empty;
+            var bytes = System.Text.Encoding.UTF8.GetByteCount(text);
+            if (Active != null)
+            {
+                if (Active.HasBom)
+                    bytes += 3;
+                if (Active.Eol == TextDocument.LineEnding.Windows)
+                    bytes += CountNewlines(text); // each \n becomes \r\n on save
+            }
+            return bytes;
+        }
+
+        static int CountNewlines(string text)
+        {
+            var n = 0;
+            foreach (var c in text)
+                if (c == '\n')
+                    n++;
+            return n;
+        }
+
+        static string FormatBytes(int bytes)
+        {
+            if (bytes < 1024)
+                return string.Format(L10n.Tr("{0} B"), bytes);
+            if (bytes < 1024 * 1024)
+                return string.Format(L10n.Tr("{0:0.#} KB"), bytes / 1024.0);
+            return string.Format(L10n.Tr("{0:0.##} MB"), bytes / (1024.0 * 1024.0));
+        }
+
         void UpdateStatus()
         {
             if (_statusLeft == null || _code == null) return;
@@ -2627,7 +2687,7 @@ namespace ADKOM.TextEditor
                     string.Format(L10n.Tr("Sel: {0} ch, {1} wd, {2} ln"), chars, words, lineCount);
             }
             else
-                _statusLeft.text = $"Ln {line}, Col {col}";
+                _statusLeft.text = $"Ln {line}, Col {col}  |  {FormatBytes(BufferByteSize())}";
             _statusRight.text = $"{_code.ClassifierName ?? "Plain Text"}  |  UTF-8{(Active.HasBom ? " BOM" : "")}  |  {Active.EolLabel}";
         }
     }

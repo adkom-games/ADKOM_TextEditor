@@ -33,3 +33,6 @@ crashlytics-build.properties
 
 # Local tooling (AI session config and MCP-generated skills)
 .claude/
+
+# local build output
+_build_in_out/
