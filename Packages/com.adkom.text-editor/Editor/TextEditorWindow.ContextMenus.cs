@@ -117,6 +117,28 @@ namespace ADKOM.TextEditor
             string misspelled = _code.MisspelledWordAt(line, col);
             if (misspelled != null)
             {
+                // Suggestions first: fixing the typo is what the user came for,
+                // and teaching the dictionary a new word is the rarer intent.
+                if (_code.MisspelledSpanAt(line, col, out int msStart, out int msEnd, out string msWord))
+                {
+                    var suggestions = SpellChecker.Suggest(msWord);
+                    foreach (var s in suggestions)
+                    {
+                        var choice = s; // capture per item, not per loop
+                        m.AddItem(new GUIContent(choice), false, () =>
+                        {
+                            _code.ReplaceRangeInternal(msStart, msEnd, choice,
+                                msStart + choice.Length, CodeView.EditKind.Programmatic);
+                            _code.RespellNow();
+                        });
+                    }
+                    if (suggestions.Count == 0)
+                        m.AddDisabledItem(new GUIContent(SpellChecker.Loaded
+                            ? L10n.Tr("No spelling suggestions")
+                            : L10n.Tr("Dictionary still loading…")));
+                }
+                // One separator only: the dictionary entries below already had
+                // it, and adding another for the suggestions doubled it up.
                 m.AddSeparator("");
                 m.AddItem(new GUIContent(string.Format(L10n.Tr("Add '{0}' to User Dictionary"), misspelled)),
                     false, () => { SpellChecker.Add(misspelled, project: false); _code.RespellNow(); });

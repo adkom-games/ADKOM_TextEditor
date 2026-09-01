@@ -56,6 +56,7 @@ namespace ADKOM.TextEditor
 
         void PaintGhost()
         {
+            if (_ghostDocVersion != DocVersion) { ClearGhost(); return; }
             var it = _ghostItems[_ghostIndex];
             string doc = GetValueInternal();
             int caretIdx = LineColToIndex(_ghostLine, _ghostCol);
@@ -124,25 +125,42 @@ namespace ADKOM.TextEditor
             var ghostColor = new Color(c.r, c.g, c.b, 0.55f);
             _ghost.style.color = ghostColor;
             _ghostBlock.style.color = ghostColor;
-            // First line rides the caret; lines 2+ start at COLUMN 0 of the
-            // following rows — a single caret-anchored label shifted every
-            // continuation line right by the caret x (field report: 'indented
-            // strangely').
-            int nl = display.IndexOf('\n');
-            string firstLine = nl < 0 ? display : display.Substring(0, nl);
-            string block = nl < 0 ? null : display.Substring(nl + 1);
-            _ghost.text = firstLine;
+            // The ghost lives in the VISUAL row layout, not the logical line:
+            // with word wrap on, the caret's line may span several rows, so
+            // anchor at the caret's row (not the line's first row) and measure
+            // x from that row's start column (not column 0) — exactly as
+            // RefreshCaret does.
+            int sub = SubRowOfCol(_ghostLine, _ghostCol);
+            RowBounds(_ghostLine, sub, out int rowStart, out _);
+            float x = MeasureRange(_ghostLine, rowStart, _ghostCol);
+            float y = (RowOfLine(_ghostLine) + sub) * _lineHeight;
+
+            // First row rides the caret; every later row starts at COLUMN 0
+            // (a single caret-anchored label shifted every continuation line
+            // right by the caret x — field report: 'indented strangely').
+            // Word wrap: each suggestion line breaks at the same width, with
+            // the same greedy rule, as the document itself — the first row
+            // starting from the caret x — so a long suggestion folds onto
+            // the following rows instead of running off the right edge.
+            var rows = new List<string>();
+            string[] ghostLines = display.Split('\n');
+            if (_wordWrap)
+            {
+                float width = _wrapWidth > 0 ? _wrapWidth : Mathf.Max(40, AvailableWrapWidth());
+                for (int i = 0; i < ghostLines.Length; i++)
+                    AppendWrappedRows(rows, ghostLines[i], width, i == 0 ? x : 0);
+            }
+            else rows.AddRange(ghostLines);
+            string block = rows.Count > 1 ? string.Join("\n", rows.GetRange(1, rows.Count - 1)) : null;
+            _ghost.text = rows[0];
             _ghostBlock.text = block ?? string.Empty;
             _ghostBlock.style.display = block != null ? DisplayStyle.Flex : DisplayStyle.None;
-            // Multi-line suggestions extend BELOW the last document row; the
-            // content canvas must grow or those lines are clipped invisible
+            // Multi-row suggestions extend BELOW the last document row; the
+            // content canvas must grow or those rows are clipped invisible
             // (field report 2026-07-27: arrows visible, no text).
-            _ghostExtraRows = 0;
-            foreach (char ch in display) if (ch == '\n') _ghostExtraRows++;
+            _ghostExtraRows = rows.Count - 1;
             if (_ghostExtraRows > 0)
                 _content.style.height = (_totalRows + _ghostExtraRows) * _lineHeight;
-            float x = MeasureRange(_ghostLine, 0, _ghostCol);
-            float y = RowOfLine(_ghostLine) * _lineHeight;
             _ghost.style.left = x;
             _ghost.style.top = y;
             _ghost.style.display = DisplayStyle.Flex;
@@ -153,6 +171,26 @@ namespace ADKOM.TextEditor
             _ghostBar.style.left = x;
             _ghostBar.style.top = Mathf.Max(0, y - _lineHeight - 4);
             _ghostBar.style.display = DisplayStyle.Flex;
+        }
+
+        /// <summary>Splits one suggestion line into visual rows using the
+        /// document's own wrap rule; the first row may begin mid-row (at
+        /// <paramref name="startX"/>, the caret's x).</summary>
+        void AppendWrappedRows(List<string> rows, string text, float width, float startX)
+        {
+            var br = ComputeBreaks(text, width, startX);
+            if (br == null) { rows.Add(text); return; }
+            int from = 0;
+            foreach (int b in br) { rows.Add(text.Substring(from, b - from)); from = b; }
+            rows.Add(text.Substring(from));
+        }
+
+        /// <summary>Re-lays the ghost out after the wrap geometry changed
+        /// (viewport resize, word wrap toggled) — its rows and anchor depend
+        /// on the current break columns.</summary>
+        void RelayoutGhost()
+        {
+            if (HasGhost) PaintGhost();
         }
 
         internal void ClearGhost()

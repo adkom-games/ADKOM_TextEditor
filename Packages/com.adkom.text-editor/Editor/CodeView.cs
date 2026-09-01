@@ -429,6 +429,7 @@ namespace ADKOM.TextEditor
                     value ? ScrollerVisibility.Hidden : ScrollerVisibility.Auto;
                 if (value) _scroll.horizontalScroller.value = 0;
                 RecomputeWrap();
+                RelayoutGhost();
                 RefreshVisible();
             }
         }
@@ -753,24 +754,27 @@ namespace ADKOM.TextEditor
                 int pos = rs;
                 // skip leading whitespace of the row
                 while (pos < re && pos < text.Length && text[pos] == ' ') pos++;
+                // x is relative to the ROW's start column, not the line's:
+                // with word wrap on, a continuation row starts at column rs
+                // and must draw flush left like the editor shows it — drawing
+                // at the absolute column staggered wrapped rows into stairs.
+                void Seg(Color color, int from, int to)
+                {
+                    float x0 = (from - rs) * charPx;
+                    Add(color, Mathf.Min(x0, w - 2), y, Mathf.Min((to - from) * charPx, w - 2 - x0), bh);
+                }
                 if (spans != null)
                 {
                     foreach (var sp in spans)
                     {
                         int ss = Mathf.Max(sp.Start, pos), se = Mathf.Min(sp.Start + sp.Length, re);
                         if (se <= ss) continue;
-                        if (ss > pos) // default-colored gap
-                            Add(defaultColor, Mathf.Min(pos * charPx, w - 2), y,
-                                Mathf.Min((ss - pos) * charPx, w - 2 - pos * charPx), bh);
-                        Add(_minimapColors.TryGetValue(sp.Class, out var c) ? c : defaultColor,
-                            Mathf.Min(ss * charPx, w - 2), y,
-                            Mathf.Min((se - ss) * charPx, w - 2 - ss * charPx), bh);
+                        if (ss > pos) Seg(defaultColor, pos, ss); // default-colored gap
+                        Seg(_minimapColors.TryGetValue(sp.Class, out var c) ? c : defaultColor, ss, se);
                         pos = se;
                     }
                 }
-                if (pos < re)
-                    Add(defaultColor, Mathf.Min(pos * charPx, w - 2), y,
-                        Mathf.Min((re - pos) * charPx, w - 2 - pos * charPx), bh);
+                if (pos < re) Seg(defaultColor, pos, re);
             }
             foreach (var kv in batches)
             {
@@ -786,6 +790,10 @@ namespace ADKOM.TextEditor
                 }
                 p.Fill();
             }
+
+            // Peer positions, under the viewport tint so the tint never hides
+            // them but the viewport still reads as the foreground element.
+            PaintRemoteFlags(p, w, rowH);
 
             // Viewport indicator
             float contentH = _totalRows * _lineHeight;
@@ -810,6 +818,7 @@ namespace ADKOM.TextEditor
         {
             RemeasureLineHeight();
             RecomputeWrap();
+            RelayoutGhost();
             RefreshVisible();
         }
 
@@ -1150,12 +1159,14 @@ namespace ADKOM.TextEditor
 
         /// <summary>Greedy word wrap: returns the columns where new visual rows
         /// start, or null for a single-row line. Breaks prefer the last space
-        /// in the row; a word longer than the width hard-breaks mid-word.</summary>
-        List<int> ComputeBreaks(string line, float width)
+        /// in the row; a word longer than the width hard-breaks mid-word.
+        /// <paramref name="startX"/> is the x already consumed on the first
+        /// row (the ghost text continues a row from the caret).</summary>
+        List<int> ComputeBreaks(string line, float width, float startX = 0)
         {
             if (line.Length == 0) return null;
             List<int> breaks = null;
-            float x = 0;
+            float x = startX;
             int rowStart = 0, lastSpace = -1;
             for (int i = 0; i < line.Length; i++)
             {
@@ -1349,6 +1360,7 @@ namespace ADKOM.TextEditor
             RefreshOccurrences(firstRow, visible);
             RefreshBracketMatch(firstRow, visible);
             RefreshExtraCarets(firstRow, visible);
+            RefreshRemoteCarets(firstRow, visible); // co-editing peers (contract §7)
             RefreshIndentGuides(firstRow, visible);
             RefreshDiagnostics(firstRow, visible);
             RefreshSpelling(firstRow, visible);
@@ -1591,6 +1603,7 @@ namespace ADKOM.TextEditor
 
         void AfterCaretMove()
         {
+            RaiseCaretMoved(); // co-editing presence: the single caret funnel
             _blinkOn = true;
             // A stale ghost anchored elsewhere is just noise — drop it.
             if (HasGhost && (_ghostLine != _caretLine || _ghostCol != _caretCol))
@@ -1815,6 +1828,7 @@ namespace ADKOM.TextEditor
             if (!_inMultiEdit) CollapseExtraCarets(); // single-point edits drop extras
             SetValueWithoutNotify(v.Substring(0, start) + replacement + v.Substring(end));
             _internalReplace = false;
+            RaiseTextEdit(start, end - start, replacement); // co-editing capture
             cursorIndex = Mathf.Clamp(caret, 0, GetValueInternal().Length);
             CollapseAnchor();
             // Keep the group's redo caret current across coalesced edits.
@@ -1852,7 +1866,10 @@ namespace ADKOM.TextEditor
                 // Multi-caret op: inverses ascending land exactly at Start.
                 var sb = new System.Text.StringBuilder(v);
                 foreach (var seg in op.Segments)
+                {
                     sb.Remove(seg.Start, seg.Inserted.Length).Insert(seg.Start, seg.Removed);
+                    RaiseTextEdit(seg.Start, seg.Inserted.Length, seg.Removed); // co-editing
+                }
                 SetValueWithoutNotify(sb.ToString());
             }
             else
@@ -1862,6 +1879,7 @@ namespace ADKOM.TextEditor
             int start = Mathf.Clamp(op.Start, 0, v.Length);
             int end = Mathf.Clamp(start + op.Inserted.Length, start, v.Length);
             SetValueWithoutNotify(v.Substring(0, start) + op.Removed + v.Substring(end));
+            RaiseTextEdit(start, end - start, op.Removed); // undo IS an ordinary edit
             }
             int len = GetValueInternal().Length;
             cursorIndex = Mathf.Clamp(op.CursorBefore, 0, len);
@@ -1888,6 +1906,7 @@ namespace ADKOM.TextEditor
                 {
                     var seg = op.Segments[i];
                     sb.Remove(seg.Start, seg.Removed.Length).Insert(seg.Start, seg.Inserted);
+                    RaiseTextEdit(seg.Start, seg.Removed.Length, seg.Inserted); // co-editing
                 }
                 SetValueWithoutNotify(sb.ToString());
             }
@@ -1896,6 +1915,7 @@ namespace ADKOM.TextEditor
             int start = Mathf.Clamp(op.Start, 0, v.Length);
             int end = Mathf.Clamp(start + op.Removed.Length, start, v.Length);
             SetValueWithoutNotify(v.Substring(0, start) + op.Inserted + v.Substring(end));
+            RaiseTextEdit(start, end - start, op.Inserted); // redo IS an ordinary edit
             }
             int len = GetValueInternal().Length;
             cursorIndex = Mathf.Clamp(op.CursorAfter, 0, len);
@@ -2465,6 +2485,16 @@ namespace ADKOM.TextEditor
             _inMultiEdit = true;
             SetValueWithoutNotify(sb.ToString());
             _inMultiEdit = false;
+            {
+                // Co-editing capture: segments carry PRE-edit offsets, so walk
+                // ascending with the running delta to describe the same result.
+                int coCum = 0;
+                foreach (var seg in op.Segments)
+                {
+                    RaiseTextEdit(seg.Start + coCum, seg.Removed.Length, seg.Inserted);
+                    coCum += seg.Inserted.Length - seg.Removed.Length;
+                }
+            }
             _extra.Clear();
             cursorIndex = newCarets[0];
             CollapseAnchor();

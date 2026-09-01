@@ -114,6 +114,127 @@ namespace ADKOM.TextEditor
             return words.Contains(word.ToLowerInvariant());
         }
 
+        /// <summary>Replacement candidates for a misspelling, best first.
+        ///
+        /// Classic edit-distance generation: build every one-edit variant of the
+        /// word (delete, transpose, replace, insert) and keep the ones the
+        /// dictionary knows. Only if that finds nothing do we pay for two-edit
+        /// variants, because that search is roughly the square of the first and
+        /// is not worth it when the user has merely fat-fingered one key.
+        ///
+        /// With no frequency data to rank by, ordering falls back to what
+        /// actually helps a reader scanning a short menu: fewer edits first,
+        /// then candidates that keep the first letter (typos rarely change it),
+        /// then the shortest, then alphabetical so the list is stable between
+        /// invocations rather than shuffling.</summary>
+        public static List<string> Suggest(string word, int max = 6)
+        {
+            var result = new List<string>();
+            if (string.IsNullOrEmpty(word) || max <= 0)
+                return result;
+
+            HashSet<string> words;
+            lock (_lock) words = _words;
+            if (words == null || words.Count == 0)
+                return result; // dictionary still loading — offer nothing rather than nonsense
+
+            var lower = word.ToLowerInvariant();
+            var near = new List<string>();
+            var seen = new HashSet<string>();
+
+            foreach (var candidate in Edits(lower))
+                if (words.Contains(candidate) && candidate != lower && seen.Add(candidate))
+                    near.Add(candidate);
+
+            // Two-edit search costs roughly the square of the first pass, so it
+            // is a fallback only, it is capped, and it is skipped for long words
+            // where it is both slowest and least likely to be what was meant.
+            if (near.Count == 0 && lower.Length <= 10)
+            {
+                var budget = max * 4;
+                foreach (var once in Edits(lower))
+                {
+                    foreach (var twice in Edits(once))
+                        if (words.Contains(twice) && twice != lower && seen.Add(twice))
+                            near.Add(twice);
+                    if (near.Count >= budget)
+                        break;
+                }
+            }
+
+            near.Sort((a, b) =>
+            {
+                // Everyday words win. Without frequency data the ordering was
+                // alphabetical among equals, which buried the one answer that
+                // is almost always right: "teh" offered tea, ted, tee, ten, tet
+                // and only then "the". A short common-word list fixes exactly
+                // that class of typo and costs nothing.
+                var aCommon = Common.Contains(a);
+                var bCommon = Common.Contains(b);
+                if (aCommon != bCommon) return aCommon ? -1 : 1;
+                var aFirst = a.Length > 0 && lower.Length > 0 && a[0] == lower[0];
+                var bFirst = b.Length > 0 && lower.Length > 0 && b[0] == lower[0];
+                if (aFirst != bFirst) return aFirst ? -1 : 1;
+                var byLen = Math.Abs(a.Length - lower.Length).CompareTo(Math.Abs(b.Length - lower.Length));
+                if (byLen != 0) return byLen;
+                return string.CompareOrdinal(a, b);
+            });
+
+            for (var i = 0; i < near.Count && result.Count < max; i++)
+                result.Add(MatchCase(word, near[i]));
+            return result;
+        }
+
+        /// <summary>The most frequent English words, used only to break ties
+        /// between equally-close candidates. Deliberately small: it is a nudge
+        /// toward the obvious answer, not a language model.</summary>
+        static readonly HashSet<string> Common = new HashSet<string>(StringComparer.Ordinal)
+        {
+            "the","be","to","of","and","a","in","that","have","it","for","not","on","with","he",
+            "as","you","do","at","this","but","his","by","from","they","we","say","her","she","or",
+            "an","will","my","one","all","would","there","their","what","so","up","out","if","about",
+            "who","get","which","go","me","when","make","can","like","time","no","just","him","know",
+            "take","people","into","year","your","good","some","could","them","see","other","than",
+            "then","now","look","only","come","its","over","think","also","back","after","use","two",
+            "how","our","work","first","well","way","even","new","want","because","any","these",
+            "give","day","most","us","is","are","was","were","been","has","had","did","said","made",
+            "set","get","file","line","text","code","name","type","value","data","list","string",
+        };
+
+        /// <summary>Every one-edit variant of a lowercase word.</summary>
+        static IEnumerable<string> Edits(string w)
+        {
+            const string alphabet = "abcdefghijklmnopqrstuvwxyz";
+            for (var i = 0; i < w.Length; i++)                       // deletions
+                yield return w.Remove(i, 1);
+            for (var i = 0; i < w.Length - 1; i++)                   // transpositions
+                yield return w.Substring(0, i) + w[i + 1] + w[i] + w.Substring(i + 2);
+            for (var i = 0; i < w.Length; i++)                       // replacements
+                foreach (var c in alphabet)
+                    if (c != w[i])
+                        yield return w.Substring(0, i) + c + w.Substring(i + 1);
+            for (var i = 0; i <= w.Length; i++)                      // insertions
+                foreach (var c in alphabet)
+                    yield return w.Substring(0, i) + c + w.Substring(i);
+        }
+
+        /// <summary>Give the suggestion the original word's capitalisation, so
+        /// replacing "Teh" offers "The" rather than "the" at the start of a
+        /// sentence.</summary>
+        static string MatchCase(string original, string suggestion)
+        {
+            if (string.IsNullOrEmpty(original) || string.IsNullOrEmpty(suggestion))
+                return suggestion;
+            var hasLower = false;
+            foreach (var c in original)
+                if (char.IsLower(c)) { hasLower = true; break; }
+            if (!hasLower && original.Length > 1)
+                return suggestion.ToUpperInvariant();          // ALL CAPS
+            if (char.IsUpper(original[0]))
+                return char.ToUpperInvariant(suggestion[0]) + suggestion.Substring(1);
+            return suggestion;
+        }
+
         /// <summary>Adds a word to the global or project dictionary (file +
         /// live set), so it stops being flagged everywhere immediately.</summary>
         public static void Add(string word, bool project)

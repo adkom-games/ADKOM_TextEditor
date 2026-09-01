@@ -124,7 +124,9 @@ namespace ADKOM.TextEditor
             Color baseColor = EditorConfig.TabColor;
             var sigB = new System.Text.StringBuilder();
             for (int i = 0; i < _docs.Count; i++)
-                sigB.Append(_docs[i].IsDirty ? '*' : ' ').Append(_docs[i].DisplayName).Append(char.MinValue);
+                sigB.Append(_docs[i].IsDirty ? '*' : ' ')
+                    .Append(CoEdit.Bridge.HasRemotePresence(CoEditPathOf(_docs[i])) ? '@' : ' ')
+                    .Append(_docs[i].DisplayName).Append(char.MinValue);
             sigB.Append(_active).Append('#').Append(ColorUtility.ToHtmlStringRGB(baseColor));
             string sig = sigB.ToString();
             if (sig == _tabSignature) return;
@@ -139,7 +141,11 @@ namespace ADKOM.TextEditor
                 var tab = new VisualElement();
                 tab.AddToClassList("tab");
                 if (i == _active) tab.AddToClassList("tab--active");
-                tab.style.backgroundColor = TabShade(baseColor, doc, i == _active);
+                // Tinted when someone else is IN this document, not merely when
+                // it has ever been shared — sticky sharing would turn every tab
+                // green over a session and say nothing.
+                bool coEdited = CoEdit.Bridge.HasRemotePresence(CoEditPathOf(doc));
+                tab.style.backgroundColor = TabShade(baseColor, doc, i == _active, coEdited);
                 tab.RegisterCallback<MouseDownEvent>(e =>
                 {
                     // Button 0 (switch) is handled in the pointer-drag handler:
@@ -156,6 +162,8 @@ namespace ADKOM.TextEditor
                         ? L10n.Tr("This game's live state was lost to a domain reload (script compile, play mode, or an editor restart). The transcript remains as plain text; start a new game from the Games menu — a save made in-game can be restored there.")
                         : doc.HasFile ? doc.FilePath : L10n.Tr("New unsaved document — protected by the session, saved to disk on Save.")
                 };
+                if (coEdited)
+                    label.tooltip += "\n" + L10n.Tr("Someone else is editing this document right now.");
                 tab.Add(label);
 
                 var close = new Button(() => CloseTab(index))
@@ -204,13 +212,25 @@ namespace ADKOM.TextEditor
         /// shade variation was tried and retired 2026-07-27 — too busy). The
         /// active tab is brighter and fully opaque so it pops; the accent top
         /// border comes from the .tab--active USS rule.</summary>
-        static Color TabShade(Color baseColor, TextDocument doc, bool active)
+        /// <summary>Tab background. A co-edited tab is tinted toward the "live"
+        /// accent so a glance at the strip says which documents other people are
+        /// in. Deliberately a shift of the user's own tab colour rather than a
+        /// fixed colour: it has to read as "this tab, but online" under every
+        /// theme and custom TabColor, and it must not fight the active/inactive
+        /// contrast that tells you where you are.</summary>
+        static Color TabShade(Color baseColor, TextDocument doc, bool active, bool coEdited = false)
         {
             var c = baseColor;
+            if (coEdited) c = Color.Lerp(c, CoEditTabAccent, active ? 0.55f : 0.40f);
             if (active) { c = Color.Lerp(c, Color.white, 0.25f); c.a = 1f; }
-            else c.a = 0.45f;
+            else c.a = coEdited ? 0.70f : 0.45f; // an online tab stays legible when inactive
             return c;
         }
+
+        /// <summary>The "someone else is in here" accent — the same green ALS
+        /// uses for a live session, so the two products agree on what live
+        /// looks like.</summary>
+        static readonly Color CoEditTabAccent = new Color(0.31f, 0.72f, 0.48f);
 
         void RegisterTabDrag(VisualElement tab, TextDocument doc)
         {
@@ -438,6 +458,7 @@ namespace ADKOM.TextEditor
             if (!(ActiveIsMarkdown && Active.MdRendered))
                 _code?.schedule.Execute(() => _code.Focus()).ExecuteLater(0);
             Scripting.AteApi.NotifyActiveChanged(this, Active);
+            CoEditOnTabChanged(); // remote carets follow the active document
         }
 
         void CloseTabForce(TextDocument doc)
@@ -446,6 +467,7 @@ namespace ADKOM.TextEditor
             if (index < 0) return;
             _docs.RemoveAt(index);
             Scripting.AteApi.NotifyClosed(this, doc);
+            CoEdit.Bridge.DocumentClosed(CoEditPathOf(doc));
             if (index < _active || _active >= _docs.Count)
                 _active = Mathf.Max(0, _active - 1);
             SwitchTo(_active); // handles the now-empty case without auto-Untitled

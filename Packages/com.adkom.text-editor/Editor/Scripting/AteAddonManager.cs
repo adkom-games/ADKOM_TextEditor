@@ -284,6 +284,32 @@ namespace ADKOM.TextEditor.Scripting
         static readonly Dictionary<Type, IAteAddonResident> _residents =
             new Dictionary<Type, IAteAddonResident>();
 
+        // Residents are re-scanned on every domain reload — which means every
+        // script compile — so a plain log here repeated the same "awaiting
+        // approval" line all day and buried everything else in the console.
+        // SessionState is the right granularity: say it once per editor run,
+        // and say it again after a restart, when it is news rather than noise.
+        const string AnnouncedKey = "ADKOM.TextEditor.Addons.ApprovalAnnounced";
+
+        static void AnnounceAwaitingApprovalOnce(string addonName)
+        {
+            if (string.IsNullOrEmpty(addonName))
+                return;
+            var announced = SessionState.GetString(AnnouncedKey, string.Empty);
+            var token = "\u0001" + addonName + "\u0001";
+            if (announced.Contains(token))
+                return;
+            SessionState.SetString(AnnouncedKey, announced + token);
+            AteConsole.Log(string.Format(
+                L10n.Tr("Addon '{0}' is awaiting your one-time approval — run it from Tools > Addons to review."),
+                addonName));
+        }
+
+        /// <summary>Forget what has been announced, so approving or removing an
+        /// addon lets a genuinely new one speak up again.</summary>
+        internal static void ResetApprovalAnnouncements() =>
+            SessionState.EraseString(AnnouncedKey);
+
         static void RunResidents()
         {
             foreach (var e in _entries)
@@ -291,9 +317,7 @@ namespace ADKOM.TextEditor.Scripting
                 if (!e.Compatible || !typeof(IAteAddonResident).IsAssignableFrom(e.Type)) continue;
                 if (!e.Approved)
                 {
-                    AteConsole.Log(string.Format(
-                        L10n.Tr("Addon '{0}' is awaiting your one-time approval — run it from Tools > Addons to review."),
-                        e.Name));
+                    AnnounceAwaitingApprovalOnce(e.Name);
                     continue;
                 }
                 StartResident(e);
